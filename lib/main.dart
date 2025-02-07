@@ -2,14 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:palseapp/core/routes/app_router.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Firebase'i başlat
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -32,7 +30,7 @@ class MyApp extends StatelessWidget {
           primarySwatch: Colors.blue,
           useMaterial3: true,
         ),
-        routerConfig: appRouter,
+        routerConfig: AppRouter.router,
       ),
     );
   }

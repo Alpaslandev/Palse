@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/features/auth/profile_setup_steps/nickname_step.dart';
+import 'package:provider/provider.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -16,6 +18,7 @@ class _LoginViewState extends State<LoginView> {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -87,7 +90,9 @@ class _LoginViewState extends State<LoginView> {
               children: [
                 IconButton(
                   icon: SvgPicture.asset('assets/vectors/google.svg', width: 24),
-                  onPressed: () {},
+                  onPressed: () async {
+                    await authProvider.loginWithGoogle();
+                  },
                 ),
                 const SizedBox(width: 16),
                 IconButton(

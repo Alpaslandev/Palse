@@ -6,7 +6,7 @@ import 'package:palseapp/core/services/auth/auth_service.dart';
 // Auth durumunu yöneten provider sınıfı
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService = AuthService();
-  bool _isLoading = false;
+  bool _isLoading = true;
   User? _firebaseUser;
   Customer? _user;
 
@@ -15,10 +15,27 @@ class AuthProvider extends ChangeNotifier {
   Customer? get user => _user;
   User? get firebaseUser => _firebaseUser;
 
+  // Constructor'da auth state'i dinlemeye başla
   AuthProvider() {
+    debugPrint('AuthProvider initialized');
     // Firebase auth durumu değişikliklerini dinle
-    _authService.authStateChanges.listen((User? user) {
+    _authService.authStateChanges.listen((User? user) async {
+      debugPrint('Auth State Changed: ${user?.email}');
+
+      _isLoading = true;
+      notifyListeners();
+
       _firebaseUser = user;
+
+      if (user != null) {
+        debugPrint('User logged in, loading data...');
+        await _loadUserData();
+      } else {
+        debugPrint('User logged out');
+        _user = null;
+      }
+
+      _isLoading = false;
       notifyListeners();
     });
   }
@@ -29,16 +46,14 @@ class AuthProvider extends ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
-      final user = await _authService.loginWithEmail(email, password);
-      _firebaseUser = user;
-
-      // TODO: Firestore'dan kullanıcı bilgilerini çek ve Customer nesnesini oluştur
-      // _user = await _firestoreService.getCustomer(user!.uid);
+      // Login işlemi
+      await _authService.loginWithEmail(email, password);
+      // Auth state listener otomatik olarak değişiklikleri yakalayacak
     } catch (e) {
-      rethrow;
-    } finally {
+      debugPrint('Login error: $e');
       _isLoading = false;
       notifyListeners();
+      rethrow;
     }
   }
 
@@ -83,13 +98,30 @@ class AuthProvider extends ChangeNotifier {
   // Çıkış yap
   Future<void> logout() async {
     try {
-      await _authService.signOut();
-      _firebaseUser = null;
-      _user = null;
+      _isLoading = true;
       notifyListeners();
+
+      await _authService.signOut();
     } catch (e) {
-      debugPrint('Logout Error: $e');
+      debugPrint('Logout error: $e');
       rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      debugPrint('Loading user data');
+      // TODO: Firestore'dan kullanıcı verilerini yükle
+      // Örnek:
+      // final userData = await _firestoreService.getUser(_firebaseUser!.uid);
+      // _user = Customer.fromMap(userData);
+
+      // Şimdilik basit bir Customer objesi oluşturalım
+    } catch (e) {
+      debugPrint('Error loading user data: $e');
     }
   }
 }
