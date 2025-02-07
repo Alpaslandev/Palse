@@ -1,0 +1,22 @@
+Otomatik Yenilenen Abonelikler
+
+Abonelik Detayları:
+
+Abonelik Planları: Uygulama, farklı süreler ve özelliklerle çeşitli abonelik planları sunar ve bunlar, takdirimize bağlı olarak değiştirilebilir.
+Ödeme ve Faturalandırma: Abone olduğunuzda, ödeme satın alma işleminizin onayı sırasında Apple ID hesabınıza yansıtılacaktır. Abonelikler, mevcut dönemin bitiminden en az 24 saat önce iptal edilmedikçe otomatik olarak yenilenir. Hesabınız, mevcut dönemin bitiminden 24 saat önce yenileme ücreti ile faturalandırılacaktır.
+İptal ve İadeler: Satın alma işlemi sonrasında Hesap Ayarları üzerinden abonelikleri yönetebilir ve otomatik yenilemeyi kapatabilirsiniz. Aktif abonelik dönemi sırasında iptal yapılamaz. Abonelik döneminin kullanılmayan kısmı için iade yapılmaz.
+Abonelik Planlarındaki Değişiklikler: Abonelik planlarını, fiyatlandırmayı veya abonelik hizmetlerinin herhangi bir yönünü değiştirme hakkımız saklıdır. Değişiklikler hakkında abonelere önceden bildirimde bulunulacaktır.
+
+Kullanım Koşulları (EULA):
+
+Uygulamanın otomatik yenilenen aboneliklerle birlikte kullanımını düzenleyen Kullanım Koşulları [buraya Kullanım Koşulları bağlantısını ekleyin] adresinde bulunabilir.
+
+Abonelik Planları:
+
+Aylık Abonelik: Uygulama, her abonelik döneminde detaylandırılan özellikler ve hizmetlerle aylık bir abonelik planı sunar.
+
+Aboneliklerin Sona Ermesi:
+
+Abonelik hizmetlerini önceden bildirimde bulunmadan sonlandırma veya askıya alma hakkımız saklıdır. Sonlandırma durumunda, kullanıcılar abonelik özelliklerine ve içeriğine erişimlerini kaybederler.
+
+Otomatik yenilenen aboneliklerimize abone olarak, bu şartları ve koşulları okuduğunuzu, anladığınızı ve kabul ettiğinizi beyan edersiniz.

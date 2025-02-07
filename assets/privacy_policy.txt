@@ -1,0 +1,35 @@
+Gizlilik Politikası
+
+Palse Uygulaması Gizlilik Politikası
+
+Palse uygulaması olarak, kullanıcılarımızın gizliliğine büyük önem veriyoruz. Bu Gizlilik Politikası, Palse uygulaması üzerinden topladığımız kişisel verilerin nasıl kullanıldığını, korunduğunu ve paylaşıldığını açıklamaktadır.
+
+1. Toplanan Bilgiler Palse uygulamasını kullanırken, aşağıdaki bilgileri toplayabiliriz:
+
+Ad, soyad, e-posta adresi ve telefon numarası gibi kimlik bilgileri.
+Kullanıcıların etkinlik paylaşımı ve uygulama içi mesajlaşma sırasında paylaştığı bilgiler.
+Uygulamanın kullanımına dair teknik veriler ve analizler (IP adresi, cihaz bilgileri, tarayıcı türü, işletim sistemi, vb.).
+Konum bilgileri, kullanıcıların izin vermesi halinde.
+
+2. Bilgilerin Kullanımı Topladığımız bilgileri şu amaçlarla kullanabiliriz:
+
+Uygulamanın verimli bir şekilde çalışmasını sağlamak ve kullanıcı deneyimini geliştirmek.
+Kullanıcıların etkinlikler oluşturmasını, paylaşmasını ve uygulama içi mesajlaşma yapmasını sağlamak.
+Kullanıcılara teknik destek sağlamak ve müşteri hizmetleri sunmak.
+Uygulama ile ilgili güncellemeler, haberler ve promosyonlar hakkında bilgilendirmeler yapmak.
+
+3. Bilgilerin Korunması Kullanıcı bilgilerinin güvenliği bizim için önceliklidir. Bu nedenle, kişisel verilerin korunmasını sağlamak için uygun teknik ve organizasyonel önlemleri alıyoruz. Bilgilerinize yetkisiz erişimi, değiştirilmeyi, ifşa edilmeyi veya imha edilmeyi önlemek için sürekli olarak güvenlik prosedürlerimizi gözden geçiriyor ve geliştiriyoruz.
+
+4. Bilgilerin Paylaşımı Kullanıcı bilgileriniz hiçbir üçüncü taraf ile paylaşılmayacaktır. Topladığımız tüm veriler yalnızca Palse uygulaması içinde belirtilen amaçlarla kullanılacak ve bu gizlilik politikasına uygun olarak işlenecektir.
+
+5. Çerezler (Cookies) Palse uygulaması, kullanıcı deneyimini iyileştirmek ve uygulamanın daha etkili bir şekilde çalışmasını sağlamak amacıyla çerezler kullanabilir. Çerezler, tarayıcınız tarafından cihazınıza yerleştirilen küçük veri dosyalarıdır. Çerezlerin nasıl yönetileceği konusunda tarayıcı ayarlarınızı kontrol edebilirsiniz.
+
+6. Gizlilik Politikasında Değişiklikler Bu Gizlilik Politikası'nda zaman zaman değişiklikler yapabiliriz. Herhangi bir değişiklik yaptığımızda, güncellenmiş politikayı uygulamada yayımlayarak sizlere bildireceğiz. Gizlilik politikamızdaki değişikliklerden haberdar olmanız için bu sayfayı periyodik olarak kontrol etmenizi öneririz.
+
+7. İletişim Gizlilik politikamız hakkında herhangi bir sorunuz veya endişeniz varsa, bizimle iletişime geçmekten çekinmeyin. Sorularınızı ve geri bildirimlerinizi aşağıdaki iletişim bilgileri üzerinden iletebilirsiniz:
+
+E-posta: orderbrosstudio@gmail.com
+
+Adres: OrderBros Studio
+
+Palse uygulamasını kullandığınız için teşekkür ederiz. Güvenliğiniz ve gizliliğiniz bizim için önemlidir.

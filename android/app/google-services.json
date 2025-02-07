@@ -1,0 +1,72 @@
+{
+  "project_info": {
+    "project_number": "904894098695",
+    "project_id": "orti-app-2c44b",
+    "storage_bucket": "orti-app-2c44b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:904894098695:android:078e41f4d0f2928617a9a2",
+        "android_client_info": {
+          "package_name": "com.orderbros.palse"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "904894098695-8ts1opkceqip396fs9hqpuvvmdgvuokm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.orderbros.palse",
+            "certificate_hash": "c986654725d36fab617246bb84f9e1bd687342bf"
+          }
+        },
+        {
+          "client_id": "904894098695-jncoujeju2pke52231duthlthgllp6ge.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.orderbros.palse",
+            "certificate_hash": "8d38967e760b5d0c54c0eaf5c48f371a909526c3"
+          }
+        },
+        {
+          "client_id": "904894098695-r6v23hc9p09ci6acp52qrslopvoiq0ef.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.orderbros.palse",
+            "certificate_hash": "d674a5de539a0d7a3b42142a74b29dfdf236ac55"
+          }
+        },
+        {
+          "client_id": "904894098695-82m7ldtcb5ms31qc9aeqhf96fcvo1vjd.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAvfALCYuW9Ux-Qe0NpxomB25DcslTdz6w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "904894098695-82m7ldtcb5ms31qc9aeqhf96fcvo1vjd.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "904894098695-dijlrg3vokogs6kt3r0af41tieqfq7vg.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.alpkaan.dostumolsana",
+                "app_store_id": "6502776249"
+              }
+            }
+          ]
+        }
+      },
+      "admob_app_id": "ca-app-pub-4607763683457173~9387040742"
+    }
+  ],
+  "configuration_version": "1"
+}
