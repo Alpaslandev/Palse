@@ -7,36 +7,36 @@ enum Gender {
 }
 
 class Customer {
-  String profilePictureUrl;
-  String email;
-  String phoneNumber;
-  String firstName;
-  String lastName;
-  String userID;
-  String appIdentifier;
+  String? profilePictureUrl;
+  String? email;
+  String? phoneNumber;
+  String? firstName;
+  String? lastName;
+  String? userID;
+  String? appIdentifier;
   int? coins;
-  List<String> adverts;
-  bool verification;
-  bool isPremium;
+  List<String>? adverts;
+  bool? verification;
+  bool? isPremium;
   String? city;
   String? district;
-  Gender gender;
-  String birthday;
-  List<double> userReview;
-  double average;
-  List<String> userReviewUUIDs;
-  List<String> messagefriends;
-  List<String> userComments;
-  List<String> userCommentsDate;
-  List<String> userCommentUUIDs;
-  List<String> commenderUrl;
-  List<String> commenderFullName;
-  int age;
+  Gender? gender;
+  String? birthday;
+  List<double>? userReview;
+  double? average;
+  List<String>? userReviewUUIDs;
+  List<String>? messagefriends;
+  List<String>? userComments;
+  List<String>? userCommentsDate;
+  List<String>? userCommentUUIDs;
+  List<String>? commenderUrl;
+  List<String>? commenderFullName;
+  int? age;
   GeoPoint? geoPoint;
-  List<String> favoriteCategories;
-  List<String> blockUsers;
-  List<String> favoriteAdverts;
-  bool firstNotification;
+  List<String>? favoriteCategories;
+  List<String>? blockUsers;
+  List<String>? favoriteAdverts;
+  bool? firstNotification;
 
   Customer({
     this.profilePictureUrl = '',
@@ -74,7 +74,7 @@ class Customer {
 
   factory Customer.fromJson(Map<String, dynamic> parsedJson) {
     return Customer(
-      profilePictureUrl: parsedJson['profilePictureUrl'],
+      profilePictureUrl: parsedJson['profilePictureUrl'] ?? '',
       email: parsedJson['email'] ?? '',
       phoneNumber: parsedJson['phoneNumber'] ?? '',
       firstName: parsedJson['firstName'] ?? '',

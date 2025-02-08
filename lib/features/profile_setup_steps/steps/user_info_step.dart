@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:palseapp/features/auth/profile_setup_steps/profile_picture_step.dart';
+import 'package:palseapp/features/profile_setup_steps/steps/profile_picture_step.dart';
 
 class UserInfoStep extends StatelessWidget {
   const UserInfoStep({super.key});

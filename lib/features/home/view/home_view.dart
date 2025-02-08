@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:palseapp/core/models/advert.dart';
+import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/widgets/advert/advert_card.dart';
 import 'package:palseapp/features/home/viewmodel/home_view_model.dart';
 import 'package:provider/provider.dart';
@@ -9,6 +10,8 @@ class HomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+
     return ChangeNotifierProvider(
       create: (context) => HomeViewModel()..getAdverts(),
       child: Scaffold(
@@ -23,8 +26,7 @@ class HomeView extends StatelessWidget {
                       final Advert advert = viewModel.adverts[index];
                       return AdvertCard(
                         advert: advert,
-                        //    user: snapshot.data![index].customer,
-                        ///TODO: User bilgilerini al
+                        user: authProvider.user,
                       );
                     },
                   );

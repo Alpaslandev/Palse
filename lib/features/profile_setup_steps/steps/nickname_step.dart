@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:palseapp/features/auth/profile_setup_steps/location_step.dart';
+import 'package:palseapp/features/profile_setup_steps/steps/location_step.dart';
 
 class NicknameStep extends StatelessWidget {
   NicknameStep({super.key});

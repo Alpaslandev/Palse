@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:palseapp/features/auth/profile_setup_steps/favorite_category_step.dart';
+import 'package:palseapp/features/profile_setup_steps/steps/favorite_category_step.dart';
 
 class ProfilePictureStep extends StatelessWidget {
   const ProfilePictureStep({super.key});

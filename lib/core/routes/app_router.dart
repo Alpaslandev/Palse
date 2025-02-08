@@ -1,120 +1,75 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
-import 'package:palseapp/features/auth/views/login_view.dart';
-import 'package:palseapp/features/home/view/home_view.dart';
-import 'package:palseapp/features/profile/view/profile_view.dart';
+import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 
 // Router sınıfını oluştur
 class AppRouter {
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
-  static final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
-  // Route isimleri için sabitler
-  static const String home = '/home';
-  static const String login = '/login';
-  static const String profile = '/profile';
+  // Tek bir AuthProvider instance'ı tutacağız
+  static late final AuthProvider _authProvider;
 
   // Router instance'ı oluştur
-  static GoRouter get router => _router;
+  static late final GoRouter router;
 
-  // Private constructor ile instance oluşturmayı engelle
-  AppRouter._();
+  // Router'ı initialize et
+  static void initialize(AuthProvider authProvider) {
+    _authProvider = authProvider;
 
-  // Router yapılandırması
-  static final _router = GoRouter(
-    navigatorKey: _rootNavigatorKey,
-    initialLocation: home,
-    debugLogDiagnostics: true,
-    refreshListenable: _getAuthProvider(),
-    redirect: _handleRedirect,
-    routes: _routes,
-  );
-
-  // Auth provider'a erişim için yardımcı metod
-  static ChangeNotifier _getAuthProvider() {
-    if (_rootNavigatorKey.currentContext != null) {
-      return Provider.of<AuthProvider>(
-        _rootNavigatorKey.currentContext!,
-        listen: false,
-      );
-    }
-    return AuthProvider();
+    router = GoRouter(
+      navigatorKey: _rootNavigatorKey,
+      initialLocation: splash,
+      debugLogDiagnostics: true,
+      refreshListenable: _authProvider,
+      redirect: _handleRedirect,
+      routes: routes,
+    );
   }
 
-  // Yönlendirme mantığı
   static String? _handleRedirect(BuildContext context, GoRouterState state) {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-
+    debugPrint('Redirect Check:');
     debugPrint('Current Location: ${state.matchedLocation}');
-    debugPrint('Is Authenticated: ${authProvider.isAuthenticated}');
-    debugPrint('Is Loading: ${authProvider.isLoading}');
+    debugPrint('Is Loading: ${_authProvider.isLoading}');
+    debugPrint('Is Authenticated: ${_authProvider.isAuthenticated}');
+    debugPrint('Is Profile Setup Completed: ${_authProvider.isProfileSetupCompleted}');
 
-    // Loading durumunda bekle
-    if (authProvider.isLoading) return null;
-
-    // Auth gerektiren route'ları kontrol et
-    final isAuthRoute = authProvider.isAuthenticated || authProvider.isLoading == false;
-
-    // Auth kontrolü
-    if (isAuthRoute && state.matchedLocation != login) {
+    // Loading durumunda redirect yok
+    if (_authProvider.isLoading) {
+      return null;
+    }
+    // Splash ekranı kontrolü
+    if (state.matchedLocation == splash) {
+      if (_authProvider.isAuthenticated) {
+        return _authProvider.isProfileSetupCompleted ? navigationBar : profileSetup;
+      }
       return login;
     }
+    // Auth olmayan kullanıcı için
+    if (!_authProvider.isAuthenticated) {
+      // Sadece login ve splash'e izin ver
+      return (state.matchedLocation == login || state.matchedLocation == splash) ? null : login;
+    }
 
-    // Giriş yapılmışsa login sayfasından yönlendir
-    if (state.matchedLocation == login && authProvider.isAuthenticated) {
-      return home;
+    // Auth olan kullanıcı için
+    if (_authProvider.isAuthenticated) {
+      // Profile setup tamamlanmamışsa
+      if (!_authProvider.isProfileSetupCompleted) {
+        return state.matchedLocation == profileSetup ? null : profileSetup;
+      }
+
+      // Profile setup tamamlanmışsa
+      if (_authProvider.isProfileSetupCompleted) {
+        // Login veya setup sayfalarında kalmasına izin verme
+        if (state.matchedLocation == login || state.matchedLocation == profileSetup || state.matchedLocation == splash) {
+          return navigationBar;
+        }
+      }
     }
 
     return null;
   }
 
-  // Route tanımlamaları
-  static final List<RouteBase> _routes = [
-    GoRoute(
-      path: login,
-      name: 'login',
-      builder: (context, state) => const LoadingWrapper(
-        child: LoginView(),
-      ),
-    ),
-    GoRoute(
-      path: home,
-      name: 'home',
-      builder: (context, state) => const LoadingWrapper(
-        child: HomeView(),
-      ),
-    ),
-    GoRoute(
-      path: profile,
-      name: 'profile',
-      builder: (context, state) => const LoadingWrapper(
-        child: ProfileView(),
-      ),
-    ),
-  ];
-}
-
-// Loading durumu için wrapper widget
-class LoadingWrapper extends StatelessWidget {
-  final Widget child;
-
-  const LoadingWrapper({super.key, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<AuthProvider>(
-      builder: (context, auth, _) {
-        if (auth.isLoading) {
-          return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
-          );
-        }
-        return child;
-      },
-    );
-  }
+  // Private constructor ile instance oluşturmayı engelle
+  AppRouter._();
 }

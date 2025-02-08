@@ -7,7 +7,7 @@ class UserService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   Future<Customer?> getCurrentUser(String uid) async {
-    DocumentSnapshot<Map<String, dynamic>> userDocument = await _firestore.collection("usersCollection").doc(uid).get();
+    DocumentSnapshot<Map<String, dynamic>> userDocument = await _firestore.collection("customers").doc(uid).get();
     if (userDocument.data() != null && userDocument.exists) {
       return Customer.fromJson(userDocument.data()!);
     } else {

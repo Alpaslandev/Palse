@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
-import 'package:palseapp/features/auth/profile_setup_steps/nickname_step.dart';
+import 'package:palseapp/core/routes/routes.dart';
+import 'package:palseapp/features/profile_setup_steps/steps/nickname_step.dart';
 import 'package:provider/provider.dart';
 
 class LoginView extends StatefulWidget {
@@ -92,12 +94,28 @@ class _LoginViewState extends State<LoginView> {
                   icon: SvgPicture.asset('assets/vectors/google.svg', width: 24),
                   onPressed: () async {
                     await authProvider.loginWithGoogle();
+                    if (!context.mounted) return;
+                    // context.go(profileSetup);
                   },
                 ),
                 const SizedBox(width: 16),
                 IconButton(
-                  icon: SvgPicture.asset('assets/vectors/apple.svg', width: 24),
-                  onPressed: () {},
+                  icon: authProvider.isLoading ? const CircularProgressIndicator() : SvgPicture.asset('assets/vectors/apple.svg', width: 24),
+                  onPressed: authProvider.isLoading
+                      ? null
+                      : () async {
+                          try {
+                            await authProvider.loginWithGoogle();
+                            // Router otomatik olarak yönlendirecek
+                          } catch (e) {
+                            // Hata yönetimi
+                            debugPrint('Giriş hatası: $e');
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Giriş başarısız: $e')),
+                            );
+                          }
+                        },
                 ),
               ],
             ),
