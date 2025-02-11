@@ -17,6 +17,7 @@ class Customer {
   String? phoneNumber;
   String? firstName;
   String? lastName;
+  String? nickname;
   String? userID;
   String? appIdentifier;
   int? coins;
@@ -51,6 +52,7 @@ class Customer {
     this.phoneNumber,
     this.firstName,
     this.lastName,
+    this.nickname,
     this.coins,
     this.average,
     this.firstNotification,
@@ -130,6 +132,7 @@ class Customer {
       profilePictureUrl: parsedJson['profilePictureUrl'] ?? '',
       email: parsedJson['email'] ?? '',
       phoneNumber: parsedJson['phoneNumber'] ?? '',
+      nickname: parsedJson['nickname'] ?? '',
       firstName: parsedJson['firstName'] ?? '',
       lastName: parsedJson['lastName'] ?? '',
       userID: userID,
@@ -164,6 +167,7 @@ class Customer {
   Map<String, dynamic> toJson() {
     return {
       'profilePictureUrl': profilePictureUrl,
+      'nickname': nickname,
       'email': email,
       'phoneNumber': phoneNumber,
       'firstName': firstName,

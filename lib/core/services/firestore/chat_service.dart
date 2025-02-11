@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:palseapp/core/models/chat_model.dart';
 import 'package:palseapp/core/models/customer.dart';
-import 'package:palseapp/core/models/message_model.dart';
 import 'package:flutter/foundation.dart';
 
 class ChatService {

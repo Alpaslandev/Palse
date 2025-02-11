@@ -1,31 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:palseapp/features/profile_setup_steps/steps/location_step.dart';
+import 'package:palseapp/features/profile_setup_steps/viewmodel/profile_setup_view_model.dart';
+import 'package:provider/provider.dart';
 
 class NicknameStep extends StatelessWidget {
-  NicknameStep({super.key});
+  final ProfileSetupViewModel viewModel;
+  const NicknameStep({super.key, required this.viewModel});
 
-  final TextEditingController _nicknameController = TextEditingController();
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Nickname"),
-      ),
-      body: Column(
+    final controller = TextEditingController();
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Sana nasıl hitap edelim?"),
-          TextField(
-            controller: _nicknameController,
-            decoration: InputDecoration(
-              labelText: "Nickname",
+          Text(
+            'Merhaba, ${context.read<ProfileSetupViewModel>().customer.firstName}',
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+          const SizedBox(height: 32),
+          TextFormField(
+            controller: controller,
+            decoration: const InputDecoration(
+              labelText: 'Takma Ad',
+              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.email),
             ),
+            onChanged: (value) => context.read<ProfileSetupViewModel>().updateNickname(value),
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => LocationStep(nickname: _nicknameController.text)));
-            },
-            child: const Text("Next"),
-          ),
+          const SizedBox(height: 16),
+          Text(
+            'Bu isim profilinizde görünecektir',
+            style: Theme.of(context).textTheme.bodySmall,
+          )
         ],
       ),
     );

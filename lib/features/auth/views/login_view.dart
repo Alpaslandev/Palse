@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
-import 'package:palseapp/core/routes/routes.dart';
-import 'package:palseapp/features/profile_setup_steps/steps/nickname_step.dart';
 import 'package:provider/provider.dart';
 
 class LoginView extends StatefulWidget {
@@ -73,7 +70,7 @@ class _LoginViewState extends State<LoginView> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => NicknameStep()));
+                  //    Navigator.push(context, MaterialPageRoute(builder: (context) => NicknameStep(controller: _emailController)));
                 },
                 child: const Padding(
                   padding: EdgeInsets.symmetric(vertical: 16),

@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
+import 'package:provider/provider.dart';
 
 class ProjectAppBar extends StatelessWidget implements PreferredSizeWidget {
   const ProjectAppBar({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
     return AppBar(
       backgroundColor: Colors.white,
       scrolledUnderElevation: 0,
@@ -35,9 +38,10 @@ class ProjectAppBar extends StatelessWidget implements PreferredSizeWidget {
             shape: const CircleBorder(),
             clipBehavior: Clip.hardEdge,
             child: IconButton(
-              onPressed: () {
+              onPressed: () async {
                 debugPrint('ringtone');
-                context.push(notification);
+                await authProvider.logout();
+                //       context.push(notification);
               },
               icon: SvgPicture.asset(
                 'assets/vectors/ringtone_iconly_pro_1_x2.svg',
