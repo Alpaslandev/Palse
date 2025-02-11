@@ -1,0 +1,57 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import 'package:palseapp/core/models/customer.dart';
+
+class CustomerService {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  // Firestore'dan kullanıcı verisini çeker
+  Future<Customer?> fetchUserFromFirestore(String uid) async {
+    final userDocument = await _firestore.collection("customers").doc(uid).get();
+    return userDocument.exists ? Customer.fromJson(userDocument.data()!, uid) : null; // Kullanıcı verisi varsa Customer nesnesi döner
+  }
+
+  // Silinen ilanlara ait referansları kullanıcılardan temizle
+  Future<void> cleanupDeletedAdvertReferences() async {
+    try {
+      // Mevcut tüm ilan ID'lerini al
+      final advertsSnapshot = await _firestore.collection('adverts').get();
+      final existingAdvertIds = advertsSnapshot.docs.map((doc) => doc.id).toSet();
+
+      // Tüm kullanıcıları çek
+      final customersSnapshot = await _firestore.collection('customers').get();
+
+      // Batch işlemi başlat
+      final batch = _firestore.batch();
+      var updatedCount = 0;
+
+      for (var customerDoc in customersSnapshot.docs) {
+        final data = customerDoc.data();
+
+        // Kullanıcının ilan listelerini al
+        List<String> adverts = List<String>.from(data['adverts'] ?? []);
+        List<String> favoriteAdverts = List<String>.from(data['favoriteAdverts'] ?? []);
+
+        // Silinmiş ilanları filtrele
+        final newAdverts = adverts.where((id) => existingAdvertIds.contains(id)).toList();
+        final newFavorites = favoriteAdverts.where((id) => existingAdvertIds.contains(id)).toList();
+
+        // Eğer herhangi bir değişiklik varsa güncelle
+        if (adverts.length != newAdverts.length || favoriteAdverts.length != newFavorites.length) {
+          batch.update(customerDoc.reference, {
+            'adverts': newAdverts,
+            'favoriteAdverts': newFavorites,
+          });
+
+          updatedCount++;
+        }
+      }
+
+      // Batch işlemini uygula
+      await batch.commit();
+      debugPrint('$updatedCount kullanıcının ilan referansları temizlendi');
+    } catch (e) {
+      debugPrint('Kullanıcı ilan referansları temizlenirken hata: $e');
+    }
+  }
+}

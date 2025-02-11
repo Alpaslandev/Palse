@@ -24,7 +24,7 @@ class AdvertDetail extends StatelessWidget {
         children: [
           Image.network(advert.advertImage),
           Text(advert.advertName),
-          Text(advert.advertLastUsage),
+          Text(advert.createdAt.toString()),
         ],
       ),
     );

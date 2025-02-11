@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:palseapp/core/widgets/project_app_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class NotificationView extends StatelessWidget {
@@ -22,48 +23,13 @@ class NotificationView extends StatelessWidget {
     // final authViewModel = Provider.of<AuthViewModel>(context);
 
     return Scaffold(
+      appBar: AppBar(
+        title: Text('Bildirimler'),
+      ),
       body: Column(
         children: [
           SizedBox(
             height: 100,
-          ),
-          Stack(
-            children: [
-              Align(
-                alignment: Alignment.center,
-                child: Text(
-                  'Bildirimler',
-                ),
-              ),
-              GestureDetector(
-                onTap: () => {Navigator.pop(context)},
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 10.0),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Transform(
-                      alignment: Alignment.center,
-                      transform: Matrix4.rotationZ(-1.5708), // Rotate 90 degrees to the left (negative direction)
-                      child: Container(
-                        width: 48,
-                        height: 48,
-                        margin: EdgeInsets.only(left: 16), // Adjust left margin as needed
-                        padding: EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Color(0xFFEEEEEE)),
-                          borderRadius: BorderRadius.circular(50),
-                        ),
-                        child: SvgPicture.asset(
-                          'assets/vectors/stroke_11_x2.svg',
-                          width: 14,
-                          height: 7,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
           ),
           Expanded(
             child: FutureBuilder<List<String>>(

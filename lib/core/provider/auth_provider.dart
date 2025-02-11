@@ -2,21 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/services/auth/auth_service.dart';
-import 'package:palseapp/core/services/firestore/user_service.dart';
+import 'package:palseapp/core/services/firestore/customer_service.dart';
 
 // Auth durumunu yöneten provider sınıfı
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService = AuthService();
-  final UserService _userService = UserService();
+  final CustomerService _userService = CustomerService();
 
   bool _isLoading = true;
-  bool _isInitialized = false; // Yeni eklenen flag
   User? _firebaseUser;
   Customer? _user;
   bool _isProfileSetupCompleted = false;
 
   // Getterlar
-  bool get isInitialized => _isInitialized;
   bool get isLoading => _isLoading;
   bool get isAuthenticated => _firebaseUser != null;
   Customer? get user => _user;
@@ -27,24 +25,9 @@ class AuthProvider extends ChangeNotifier {
   AuthProvider() {
     debugPrint('AuthProvider initialized');
   }
-  // Batch update için yeni metod
-  void _batchUpdate({
-    required bool isLoading,
-    required bool isInitialized,
-    bool? isProfileCompleted,
-  }) {
-    _isLoading = isLoading;
-    _isInitialized = isInitialized;
-    if (isProfileCompleted != null) {
-      _isProfileSetupCompleted = isProfileCompleted;
-    }
-    notifyListeners(); // Tek bir notify
-  }
 
   // Initialize metodu - dışarıdan çağrılacak
   Future<void> initializeAuth() async {
-    if (_isInitialized) return; // Eğer zaten initialize edildiyse tekrar etme
-
     debugPrint('Initializing auth state...');
     try {
       _isLoading = true;
@@ -70,7 +53,6 @@ class AuthProvider extends ChangeNotifier {
       debugPrint('Auth initialization error: $e');
     } finally {
       _isLoading = false;
-      _isInitialized = true;
       notifyListeners();
     }
   }
@@ -156,7 +138,8 @@ class AuthProvider extends ChangeNotifier {
       _isLoading = true;
       notifyListeners();
       debugPrint('Firebase user: ${_firebaseUser?.uid}');
-      _user = await _userService.getCurrentUser(_firebaseUser!.uid);
+      _user = await _userService.fetchUserFromFirestore(_firebaseUser!.uid);
+      debugPrint('User data: ${_user?.toJson()}');
       _isProfileSetupCompleted = _user != null;
       debugPrint('User data loaded');
     } catch (e) {

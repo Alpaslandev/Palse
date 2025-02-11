@@ -1,9 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import 'package:palseapp/core/models/chat_model.dart';
 
 enum Gender {
-  Male,
-  Female,
-  Others,
+  male(icon: 'assets/images/male.png'),
+  female(icon: 'assets/images/female.png'),
+  others(icon: 'assets/images/others.png');
+
+  const Gender({required this.icon});
+  final String icon;
 }
 
 class Customer {
@@ -15,13 +20,14 @@ class Customer {
   String? userID;
   String? appIdentifier;
   int? coins;
-  List<String>? adverts;
+  List<String>? events;
   bool? verification;
   bool? isPremium;
+  String? country;
   String? city;
   String? district;
   Gender? gender;
-  String? birthday;
+  DateTime? birthday;
   List<double>? userReview;
   double? average;
   List<String>? userReviewUUIDs;
@@ -37,51 +43,97 @@ class Customer {
   List<String>? blockUsers;
   List<String>? favoriteAdverts;
   bool? firstNotification;
+  Map<String, Chat>? chatInfos;
 
   Customer({
-    this.profilePictureUrl = '',
-    this.email = '',
-    this.phoneNumber = '',
-    this.firstName = '',
-    this.lastName = '',
-    this.userID = '',
-    this.coins = 10,
-    this.average = 0.0,
-    this.firstNotification = false,
-    this.userReview = const [],
-    this.userReviewUUIDs = const [],
-    this.favoriteCategories = const [],
-    this.adverts = const [],
-    this.blockUsers = const [],
-    this.verification = false,
-    this.isPremium = false,
-    this.city = '',
-    this.district = '',
-    this.gender = Gender.Others,
-    this.birthday = '',
-    this.age = 18,
-    this.messagefriends = const [],
-    this.userComments = const [],
-    this.userCommentsDate = const [],
-    this.userCommentUUIDs = const [],
-    this.commenderFullName = const [],
-    this.commenderUrl = const [],
+    this.profilePictureUrl,
+    this.email,
+    this.phoneNumber,
+    this.firstName,
+    this.lastName,
+    this.coins,
+    this.average,
+    this.firstNotification,
+    this.userReview,
+    this.userReviewUUIDs,
+    this.favoriteCategories,
+    this.events,
+    this.blockUsers,
+    this.verification,
+    this.isPremium,
+    this.city,
+    this.country,
+    this.district,
+    this.gender,
+    this.birthday,
+    this.age,
+    this.userID,
+    this.messagefriends,
+    this.userComments,
+    this.userCommentsDate,
+    this.userCommentUUIDs,
+    this.commenderFullName,
+    this.commenderUrl,
     this.geoPoint,
-    this.favoriteAdverts = const [],
+    this.favoriteAdverts,
+    this.chatInfos,
   }) : appIdentifier = 'Customer App';
 
   String fullName() => '$firstName $lastName';
 
-  factory Customer.fromJson(Map<String, dynamic> parsedJson) {
+  factory Customer.fromJson(Map<String, dynamic> parsedJson, String userID) {
+    Map<String, Chat> chatInfos = {};
+    if (parsedJson['chatInfos'] != null) {
+      final chatInfosMap = parsedJson['chatInfos'] as Map<String, dynamic>;
+      chatInfosMap.forEach((key, value) {
+        chatInfos[key] = Chat.fromChatInfo(
+          value as Map<String, dynamic>,
+          value['chatId'] as String? ?? '',
+          key,
+        );
+      });
+    }
+    // Tarih ve saat parse etme fonksiyonu güncellendi
+    DateTime? parseDateTime(dynamic dateData) {
+      if (dateData == null) return null;
+
+      // Eğer zaten DateTime ise
+      if (dateData is DateTime) return dateData;
+
+      // Eğer Timestamp ise
+      if (dateData is Timestamp) return dateData.toDate();
+
+      // Eğer String ise
+      if (dateData is String) {
+        try {
+          // Önce "dd/MM/yyyy" formatını dene (eski format)
+          if (dateData.contains('/')) {
+            final dateParts = dateData.split('/');
+            // tarih oluştur
+            return DateTime(
+              int.parse(dateParts[2]), // yıl
+              int.parse(dateParts[1]), // ay
+              int.parse(dateParts[0]), // gün
+            );
+          }
+          // Eğer başarısız olursa ISO formatını dene
+          return DateTime.parse(dateData);
+        } catch (e) {
+          debugPrint('Tarih parse hatası: $e');
+          return null;
+        }
+      }
+      return null;
+    }
+
     return Customer(
       profilePictureUrl: parsedJson['profilePictureUrl'] ?? '',
       email: parsedJson['email'] ?? '',
       phoneNumber: parsedJson['phoneNumber'] ?? '',
       firstName: parsedJson['firstName'] ?? '',
       lastName: parsedJson['lastName'] ?? '',
-      userID: parsedJson['id'] ?? parsedJson['userID'] ?? '',
+      userID: userID,
       coins: parsedJson['coins'] ?? 10,
-      // average: parsedJson['average'] ?? 0.0,
       average: (parsedJson['average'] is int) ? (parsedJson['average'] as int).toDouble() : (parsedJson['average'] ?? 0.0),
       userReview: List<double>.from(parsedJson['userReview'] ?? []),
       userReviewUUIDs: List<String>.from(parsedJson['userReviewUUIDs'] ?? []),
@@ -93,23 +145,19 @@ class Customer {
       commenderUrl: List<String>.from(parsedJson['commenderUrl'] ?? []),
       favoriteCategories: List<String>.from(parsedJson['favoriteCategories'] ?? []),
       favoriteAdverts: List<String>.from(parsedJson['favoriteAdverts'] ?? []),
-      adverts: List<String>.from(parsedJson['usedCampaigns'] ?? []),
+      events: List<String>.from(parsedJson['adverts'] ?? List<String>.from(parsedJson['events'] ?? [])),
       verification: parsedJson['verification'] ?? false,
       isPremium: parsedJson['isPremium'] ?? false,
       firstNotification: parsedJson['firstNotification'] ?? false,
-
+      country: parsedJson['country'] ?? '',
       city: parsedJson['city'] ?? '',
       district: parsedJson['district'] ?? '',
       gender: parseGender(parsedJson['gender']),
-      birthday: parsedJson['birthday'] ?? '',
+      birthday: parseDateTime(parsedJson['birthday']),
       age: parsedJson['age'] ?? '',
       messagefriends: List<String>.from(parsedJson['messageFriends'] ?? []),
-      geoPoint: parsedJson['geoPoint'] != null
-          ? GeoPoint(
-              parsedJson['geoPoint'].latitude,
-              parsedJson['geoPoint'].longitude,
-            )
-          : null,
+      geoPoint: parsedJson['geoPoint'],
+      chatInfos: chatInfos,
     );
   }
 
@@ -124,18 +172,16 @@ class Customer {
       'appIdentifier': appIdentifier,
       'coins': coins,
       'average': average,
-      'userReview': userReview,
       'userReviewUUIDs': userReviewUUIDs,
-      'adverts': adverts,
+      'events': events,
       'verification': verification,
       'isPremium': isPremium,
       'firstNotification': firstNotification,
       'city': city,
       'blockUsers': blockUsers,
       'district': district,
-      'gender': gender.toString().split('.').last,
-      'birthday': birthday,
-      'age': age,
+      'gender': gender?.name,
+      'birthday': Timestamp.fromDate(birthday!),
       'favoriteCategories': favoriteCategories,
       'favoriteAdverts': favoriteAdverts,
       'messageFriends': messagefriends,
@@ -144,30 +190,26 @@ class Customer {
       'userComments': userComments,
       'commenderUrl': commenderUrl,
       'commenderFullName': commenderFullName,
-      'geoPoint': geoPoint != null ? {'latitude': geoPoint!.latitude, 'longitude': geoPoint!.longitude} : null,
+      'geoPoint': geoPoint,
+      'chatInfos': chatInfos?.map((key, chat) => MapEntry(
+            key,
+            {
+              'chatId': chat.id,
+              'lastMessageTime': chat.lastMessageTime,
+              'unreadCount': chat.unreadCount,
+            },
+          )),
     };
   }
 
   static Gender parseGender(String value) {
-    switch (value) {
-      case 'Male':
-        return Gender.Male;
-      case 'Female':
-        return Gender.Female;
-      case 'Others':
-        return Gender.Others;
+    switch (value.toLowerCase()) {
+      case 'male':
+        return Gender.male;
+      case 'female':
+        return Gender.female;
       default:
-        return Gender.Others;
+        return Gender.others;
     }
-  }
-
-  static List<String> getAllGenders() {
-    return Gender.values.map((gender) => gender.name).toList();
-  }
-
-  factory Customer.empty() {
-    return Customer(
-      messagefriends: [],
-    );
   }
 }
