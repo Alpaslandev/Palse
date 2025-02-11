@@ -35,8 +35,8 @@ class ProfileSetupView extends StatelessWidget {
               children: [
                 UserInfoStep(viewModel: viewModel),
                 BirthdayGenderStep(viewModel: viewModel),
-                NicknameStep(viewModel: viewModel),
                 LocationStep(viewModel: viewModel),
+                NicknameStep(viewModel: viewModel),
                 ProfilePictureStep(viewModel: viewModel),
                 FavoriteCategoryStep(viewModel: viewModel),
               ],

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:palseapp/features/profile_setup_steps/steps/location_step.dart';
 import 'package:palseapp/features/profile_setup_steps/viewmodel/profile_setup_view_model.dart';
 import 'package:provider/provider.dart';
 

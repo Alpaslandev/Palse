@@ -15,7 +15,7 @@ class BirthdayGenderStep extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Biraz Daha Bilgi',
+            'Merhaba, ${viewModel.customer.firstName}',
             style: Theme.of(context).textTheme.headlineSmall,
           ),
           const SizedBox(height: 32),
@@ -29,17 +29,27 @@ class BirthdayGenderStep extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           const Text('Cinsiyetiniz'),
-          RadioListTile<String>(
+          RadioListTile<Gender>(
             title: const Text('Erkek'),
-            value: 'Erkek',
-            groupValue: viewModel.customer.gender?.name,
-            onChanged: (value) => viewModel.updateGender(Gender.values.firstWhere((e) => e.name == value)),
+            value: Gender.male,
+            groupValue: viewModel.customer.gender,
+            onChanged: (value) => viewModel.updateGender(value!),
           ),
-          RadioListTile<String>(
+          RadioListTile<Gender>(
             title: const Text('Kadın'),
-            value: 'Kadın',
-            groupValue: viewModel.customer.gender?.name,
-            onChanged: (value) => viewModel.updateGender(Gender.values.firstWhere((e) => e.name == value)),
+            value: Gender.female,
+            groupValue: viewModel.customer.gender,
+            onChanged: (value) => viewModel.updateGender(value!),
+          ),
+          RadioListTile<Gender>(
+            title: const Text('Diğer'),
+            value: Gender.others,
+            groupValue: viewModel.customer.gender,
+            onChanged: (value) => viewModel.updateGender(value!),
+          ),
+          ListTile(
+            title: const Text('Bu bilgilerini daha sonra değiştiremeyeceksin. O yüzden lütfen dikkatli ol'),
+            trailing: const Icon(Icons.info),
           ),
         ],
       ),
@@ -49,11 +59,11 @@ class BirthdayGenderStep extends StatelessWidget {
   void _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
+      initialDate: DateTime.now().subtract(const Duration(days: 365 * 18)),
+      firstDate: DateTime(1950),
+      lastDate: DateTime.now().subtract(const Duration(days: 365 * 18)), // 18 yıl öncesine kadar
     );
-    if (picked != null) {
+    if (picked != null && picked.isBefore(DateTime.now().subtract(const Duration(days: 365 * 18))) && context.mounted) {
       context.read<ProfileSetupViewModel>().updateBirthDate(picked);
     }
   }

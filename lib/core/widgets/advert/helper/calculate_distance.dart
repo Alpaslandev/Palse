@@ -1,6 +1,3 @@
-import 'dart:math';
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 // // İki konum arasındaki mesafeyi kilometre cinsinden hesaplar
 // String calculateDistance(GeoPoint customerLocation, GeoPoint advertLocation) {
 //   final GeoPoint customerLocation = GeoPoint(38.4843365, 27.130625);

@@ -11,7 +11,7 @@ class ProfileSetupViewModel extends ChangeNotifier {
   PageController get pageController => _pageController;
 
   void nextStep() {
-    if (_currentStep < 5 && _validateCurrentStep()) {
+    if (_currentStep < 5) {
       _currentStep++;
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
@@ -29,19 +29,6 @@ class ProfileSetupViewModel extends ChangeNotifier {
         curve: Curves.easeInOut,
       );
       notifyListeners();
-    }
-  }
-
-  bool _validateCurrentStep() {
-    switch (_currentStep) {
-      case 0:
-        return _customer.firstName != null && _customer.lastName != null;
-      case 1:
-        return _customer.nickname != null;
-      case 2:
-        return _customer.city != null && _customer.district != null;
-      default:
-        return true;
     }
   }
 

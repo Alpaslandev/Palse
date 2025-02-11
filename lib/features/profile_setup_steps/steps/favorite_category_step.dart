@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:palseapp/core/constant/categories.dart';
 import 'package:palseapp/features/profile_setup_steps/viewmodel/profile_setup_view_model.dart';
-import 'package:provider/provider.dart';
 
 class FavoriteCategoryStep extends StatelessWidget {
   const FavoriteCategoryStep({super.key, required this.viewModel});

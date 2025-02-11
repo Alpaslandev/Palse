@@ -3,10 +3,6 @@ import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/widgets/project_app_bar.dart';
-import 'package:palseapp/features/favorites/view/favorites_view.dart';
-import 'package:palseapp/features/home/view/home_view.dart';
-import 'package:palseapp/features/my_advert/view/my_advert_view.dart';
-import 'package:palseapp/features/profile/view/profile_view.dart';
 
 class LandingView extends StatefulWidget {
   const LandingView({super.key, required this.child});

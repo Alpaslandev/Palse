@@ -6,7 +6,6 @@ import 'package:palseapp/features/chats/widgets/chat_list_item.dart';
 import 'package:provider/provider.dart';
 import 'package:palseapp/core/models/chat_model.dart';
 import 'package:palseapp/features/chats/viewmodel/chats_view_model.dart';
-import 'package:palseapp/features/messages/view/messages_view.dart';
 
 class ChatsView extends StatelessWidget {
   const ChatsView({

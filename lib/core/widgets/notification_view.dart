@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
-import 'package:palseapp/core/widgets/project_app_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class NotificationView extends StatelessWidget {
