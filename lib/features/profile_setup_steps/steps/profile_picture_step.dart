@@ -16,17 +16,21 @@ class ProfilePictureStep extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            'Profil Fotoğrafınızı Ekleyin',
+            'Neredeyse Bitti.',
             style: Theme.of(context).textTheme.headlineSmall,
           ),
           const SizedBox(height: 32),
+          Text(
+            'Profil fotoğrafını ekleyen kullanıcılar daha fazla mesaj alıyor. Eklemek ister misin?',
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
           GestureDetector(
-            onTap: () => _pickImage(context),
+            onTap: () => viewModel.pickImage(),
             child: CircleAvatar(
               radius: 60,
               backgroundColor: Colors.grey[200],
-              backgroundImage: viewModel.customer.profilePictureUrl != null ? FileImage(File(viewModel.customer.profilePictureUrl!)) : null,
-              child: viewModel.customer.profilePictureUrl == null ? const Icon(Icons.camera_alt, size: 40) : null,
+              backgroundImage: viewModel.selectedImage != null ? FileImage(File(viewModel.selectedImage!.path)) : null,
+              child: viewModel.selectedImage == null ? const Icon(Icons.camera_alt, size: 40) : null,
             ),
           ),
           const SizedBox(height: 24),
@@ -37,12 +41,5 @@ class ProfilePictureStep extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  void _pickImage(BuildContext context) async {
-    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      context.read<ProfileSetupViewModel>().updateProfileImage(pickedFile.path);
-    }
   }
 }

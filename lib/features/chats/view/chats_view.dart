@@ -50,7 +50,9 @@ class ChatsView extends StatelessWidget {
           return ListView.builder(
             itemCount: chats.length,
             itemBuilder: (context, index) {
-              final chat = chats[index];
+              // Sohbetleri son mesaj zamanına göre sırala
+              final sortedChats = chats.toList()..sort((a, b) => b.lastMessageTime.compareTo(a.lastMessageTime));
+              final chat = sortedChats[index];
 
               // Diğer kullanıcının ID'sini güvenli bir şekilde al
               final otherUserId = chat.participants.where((id) => id != currentUserId).firstOrNull; // firstWhere yerine firstOrNull kullan

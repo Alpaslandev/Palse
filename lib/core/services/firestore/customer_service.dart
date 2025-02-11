@@ -5,10 +5,33 @@ import 'package:palseapp/core/models/customer.dart';
 class CustomerService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+// Kullanıcıyı günceller veya yeni bir kullanıcı oluşturur
+  Future<void> updateCustomer(String uuid, Customer customer) async {
+    try {
+      final docRef = _firestore.collection("customers").doc(uuid);
+
+      // Belgeyi güncelle veya oluştur
+      await docRef.set(customer.toJson(), SetOptions(merge: true));
+
+      debugPrint('Kullanıcı başarıyla güncellendi: $uuid');
+    } on FirebaseException catch (e) {
+      debugPrint('Firestore hatası: ${e.message}');
+      throw Exception('Kullanıcı güncelleme başarısız: ${e.message}');
+    } catch (e) {
+      debugPrint('Beklenmeyen hata: $e');
+      throw Exception('Kullanıcı güncelleme başarısız: $e');
+    }
+  }
+
   // Firestore'dan kullanıcı verisini çeker
   Future<Customer?> fetchUserFromFirestore(String uid) async {
-    final userDocument = await _firestore.collection("customers").doc(uid).get();
-    return userDocument.exists ? Customer.fromJson(userDocument.data()!, uid) : null; // Kullanıcı verisi varsa Customer nesnesi döner
+    try {
+      final userDocument = await _firestore.collection("customers").doc(uid).get();
+      return userDocument.exists ? Customer.fromJson(userDocument.data()!, uid) : null; // Kullanıcı verisi varsa Customer nesnesi döner
+    } catch (e) {
+      debugPrint(e.toString());
+      return null;
+    }
   }
 
   // Silinen ilanlara ait referansları kullanıcılardan temizle

@@ -1,22 +1,92 @@
 // Profil kurulum sürecini yöneten ViewModel
+import 'dart:io';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:palseapp/core/models/customer.dart';
+import 'package:palseapp/core/provider/auth_provider.dart';
+import 'package:palseapp/core/services/cloud_storage.dart';
+import 'package:palseapp/core/services/firestore/customer_service.dart';
 
 class ProfileSetupViewModel extends ChangeNotifier {
   int _currentStep = 0;
   final Customer _customer = Customer();
   final PageController _pageController = PageController();
-  int get currentStep => _currentStep;
-  Customer get customer => _customer;
-  PageController get pageController => _pageController;
+  final TextEditingController _firstNameController = TextEditingController();
+  final TextEditingController _lastNameController = TextEditingController();
+  final TextEditingController _nicknameController = TextEditingController();
+  final TextEditingController _cityController = TextEditingController();
+  final TextEditingController _districtController = TextEditingController();
+  final TextEditingController _profilePictureUrlController = TextEditingController();
+  final TextEditingController _birthdayController = TextEditingController();
+  final TextEditingController _genderController = TextEditingController();
+
+  XFile? selectedImage;
+
+  final CloudStorageService _storageService = CloudStorageService();
+  final CustomerService _customerService = CustomerService();
+
+  // AuthProvider'ı tanımlayıp, yapıcıda gerekli atamayı yapıyoruz
+  final AuthProvider _authProvider;
+
+  ProfileSetupViewModel({required AuthProvider authProvider}) : _authProvider = authProvider;
+
+  int get currentStep => _currentStep; // Mevcut adımı döndürür
+  Customer get customer => _customer; // Müşteri bilgilerini döndürür
+  PageController get pageController => _pageController; // Sayfa kontrolcüsünü döndürür
+  bool get isLastStep => _currentStep == 5;
+
+  TextEditingController get firstNameController => _firstNameController;
+  TextEditingController get lastNameController => _lastNameController;
+  TextEditingController get nicknameController => _nicknameController;
+  TextEditingController get cityController => _cityController;
+  TextEditingController get districtController => _districtController;
+  TextEditingController get profilePictureUrlController => _profilePictureUrlController;
+  TextEditingController get birthdayController => _birthdayController;
+  TextEditingController get genderController => _genderController;
 
   void nextStep() {
-    if (_currentStep < 5) {
+    if (_currentStep < 6) {
       _currentStep++;
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
+      notifyListeners();
+    }
+  }
+
+  Future<bool> completeProfileSetup() async {
+    debugPrint('Profile setup completed');
+
+    debugPrint(_authProvider.firebaseUser?.uid ?? 'User ID not found');
+
+    debugPrint(_customer.toJson().toString());
+    debugPrint(_customer.geoPoint!.latitude.toString());
+    debugPrint(_customer.geoPoint!.longitude.toString());
+
+    String? storageUrl;
+
+    try {
+      if (selectedImage != null) {
+        storageUrl = await _storageService.uploadUserFile(
+            userId: _authProvider.firebaseUser!.uid,
+            fileType: FileType.profile,
+            fileName: DateTime.now().millisecondsSinceEpoch.toString(),
+            file: File(selectedImage!.path));
+        _customer.profilePictureUrl = storageUrl;
+        debugPrint(storageUrl);
+      }
+
+      _customer.userID = _authProvider.firebaseUser!.uid;
+      await _customerService.updateCustomer(_authProvider.firebaseUser!.uid, _customer);
+      debugPrint('Profile setup completed');
+      return true;
+    } catch (e) {
+      debugPrint(e.toString());
+      return false;
+    } finally {
       notifyListeners();
     }
   }
@@ -30,6 +100,23 @@ class ProfileSetupViewModel extends ChangeNotifier {
       );
       notifyListeners();
     }
+  }
+
+  void handleCategorySelection(String category, bool selected) {
+    final categories = List<String>.from(_customer.favoriteCategories ?? []);
+    if (selected) {
+      categories.add(category);
+    } else {
+      categories.remove(category);
+    }
+    _customer.favoriteCategories = categories;
+    notifyListeners();
+  }
+
+  void updateCoordinates(double lat, double lon) {
+    GeoPoint location = GeoPoint(lat, lon);
+    _customer.geoPoint = location;
+    notifyListeners();
   }
 
   void updateFirstName(String firstName) {
@@ -57,9 +144,24 @@ class ProfileSetupViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void updateProfileImage(String imagePath) {
-    _customer.profilePictureUrl = imagePath;
-    notifyListeners();
+  void pickImage() async {
+    try {
+      final XFile? image = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 60, // 0-100 arası kalite
+        maxWidth: 800, // maksimum genişlik
+        maxHeight: 800, // maksimum yükseklik
+        preferredCameraDevice: CameraDevice.front,
+      );
+
+      if (image != null) {
+        selectedImage = image;
+      }
+    } catch (e) {
+      debugPrint('Görsel seçme hatası: $e');
+    } finally {
+      notifyListeners();
+    }
   }
 
   void updateBirthDate(DateTime date) {

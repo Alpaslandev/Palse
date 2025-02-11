@@ -4,7 +4,7 @@ class Chat {
   final String id;
   final List<String> participants;
   final String lastMessage;
-  final Timestamp lastMessageTime;
+  final DateTime lastMessageTime;
   final String lastMessageSenderId;
   final int unreadCount;
 
@@ -22,7 +22,7 @@ class Chat {
       id: map['id'] ?? '',
       participants: List<String>.from(map['participants'] ?? []),
       lastMessage: map['lastMessage'] ?? '',
-      lastMessageTime: map['lastMessageTime'] ?? Timestamp.now(),
+      lastMessageTime: map['lastMessageTime'] != null ? (map['lastMessageTime'] as Timestamp).toDate() : DateTime.now(),
       lastMessageSenderId: map['lastMessageSenderId'] ?? '',
       unreadCount: map['unreadCount'] ?? 0,
     );
@@ -33,7 +33,7 @@ class Chat {
       'id': id,
       'participants': participants,
       'lastMessage': lastMessage,
-      'lastMessageTime': lastMessageTime,
+      'lastMessageTime': Timestamp.fromDate(lastMessageTime),
       'lastMessageSenderId': lastMessageSenderId,
       'unreadCount': unreadCount,
     };
@@ -44,7 +44,7 @@ class Chat {
       id: chatId,
       participants: [otherUserId],
       lastMessage: '',
-      lastMessageTime: json['lastMessageTime'] != null ? (json['lastMessageTime'] as Timestamp) : Timestamp.now(),
+      lastMessageTime: json['lastMessageTime'] != null ? (json['lastMessageTime'] as Timestamp).toDate() : DateTime.now(),
       lastMessageSenderId: '',
       unreadCount: json['unreadCount'] as int? ?? 0,
     );
@@ -55,7 +55,7 @@ class Chat {
       id: '',
       participants: [],
       lastMessage: '',
-      lastMessageTime: Timestamp.now(),
+      lastMessageTime: DateTime.now(),
       lastMessageSenderId: '',
       unreadCount: 0,
     );

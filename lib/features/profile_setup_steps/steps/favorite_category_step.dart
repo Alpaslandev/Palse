@@ -7,27 +7,29 @@ class FavoriteCategoryStep extends StatelessWidget {
   final ProfileSetupViewModel viewModel;
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'İlgi Alanlarınız',
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'En az 3 kategori seçiniz',
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
-          const SizedBox(height: 32),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: _buildCategoryChips(context, viewModel),
-          ),
-        ],
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Son olarak,\nilgi alanlarınızı seçiniz',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'En az 3 kategori seçiniz',
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _buildCategoryChips(context, viewModel),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -38,20 +40,9 @@ class FavoriteCategoryStep extends StatelessWidget {
       return ChoiceChip(
         label: Text(category),
         selected: isSelected,
-        onSelected: (selected) => _handleCategorySelection(viewModel, category, selected),
+        onSelected: (selected) => viewModel.handleCategorySelection(category, selected),
         selectedColor: Theme.of(context).primaryColor,
       );
     }).toList();
-  }
-
-  void _handleCategorySelection(ProfileSetupViewModel viewModel, String category, bool selected) {
-    final categories = List<String>.from(viewModel.customer.favoriteCategories ?? []);
-    if (selected) {
-      categories.add(category);
-    } else {
-      categories.remove(category);
-    }
-    viewModel.customer.favoriteCategories = categories;
-    viewModel.notifyListeners();
   }
 }

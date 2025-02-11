@@ -45,7 +45,7 @@ class _MyAdvertViewState extends State<MyAdvertView> with TickerProviderStateMix
                   children: [
                     // İlanlarım sekmesi
                     viewModel.myAdverts.isEmpty
-                        ? const Center(child: CircularProgressIndicator())
+                        ? _buildEmptyAdvert()
                         : ListView.builder(
                             itemCount: viewModel.myAdverts.length,
                             itemBuilder: (context, index) {
@@ -57,7 +57,7 @@ class _MyAdvertViewState extends State<MyAdvertView> with TickerProviderStateMix
                           ),
                     // Beğendiklerim
                     viewModel.favorites.isEmpty
-                        ? const Center(child: CircularProgressIndicator())
+                        ? _buildEmptyAdvert()
                         : ListView.builder(
                             itemCount: viewModel.favorites.length,
                             itemBuilder: (context, index) {
@@ -85,7 +85,7 @@ class _MyAdvertViewState extends State<MyAdvertView> with TickerProviderStateMix
                           ),
                     // Son Baktıklarım
                     viewModel.favorites.isEmpty
-                        ? const Center(child: CircularProgressIndicator())
+                        ? _buildEmptyAdvert()
                         : ListView.builder(
                             itemCount: viewModel.favorites.length,
                             itemBuilder: (context, index) {
@@ -116,6 +116,12 @@ class _MyAdvertViewState extends State<MyAdvertView> with TickerProviderStateMix
           );
         },
       ),
+    );
+  }
+
+  Widget _buildEmptyAdvert() {
+    return const Center(
+      child: Text('İlan bulunamadı'),
     );
   }
 }

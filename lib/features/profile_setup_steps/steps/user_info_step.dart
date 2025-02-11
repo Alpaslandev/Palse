@@ -18,6 +18,7 @@ class UserInfoStep extends StatelessWidget {
           ),
           const SizedBox(height: 32),
           TextFormField(
+            controller: viewModel.firstNameController,
             decoration: const InputDecoration(
               labelText: 'Adınız',
               border: OutlineInputBorder(),
@@ -27,6 +28,7 @@ class UserInfoStep extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           TextFormField(
+            controller: viewModel.lastNameController,
             decoration: const InputDecoration(
               labelText: 'Soyadınız',
               border: OutlineInputBorder(),

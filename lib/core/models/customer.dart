@@ -83,6 +83,13 @@ class Customer {
 
   String fullName() => '$firstName $lastName';
 
+  int getAge() {
+    if (birthday == null) return 0;
+    final now = DateTime.now();
+    final age = now.year - birthday!.year;
+    return age;
+  }
+
   factory Customer.fromJson(Map<String, dynamic> parsedJson, String userID) {
     Map<String, Chat> chatInfos = {};
     if (parsedJson['chatInfos'] != null) {
@@ -157,7 +164,7 @@ class Customer {
       district: parsedJson['district'] ?? '',
       gender: parseGender(parsedJson['gender']),
       birthday: parseDateTime(parsedJson['birthday']),
-      age: parsedJson['age'] ?? '',
+      age: parsedJson['age'] ?? 0,
       messagefriends: List<String>.from(parsedJson['messageFriends'] ?? []),
       geoPoint: parsedJson['geoPoint'],
       chatInfos: chatInfos,
@@ -204,6 +211,70 @@ class Customer {
             },
           )),
     };
+  }
+
+  Customer copyWith({
+    String? profilePictureUrl,
+    String? email,
+    String? phoneNumber,
+    String? firstName,
+    String? lastName,
+    String? nickname,
+    int? coins,
+    double? average,
+    List<double>? userReview,
+    List<String>? userReviewUUIDs,
+    List<String>? favoriteCategories,
+    List<String>? favoriteAdverts,
+    List<String>? events,
+    bool? verification,
+    bool? isPremium,
+    String? country,
+    String? city,
+    String? district,
+    Gender? gender,
+    DateTime? birthday,
+    int? age,
+    String? userID,
+    List<String>? messagefriends,
+    List<String>? userComments,
+    List<String>? userCommentsDate,
+    List<String>? userCommentUUIDs,
+    List<String>? commenderUrl,
+    List<String>? commenderFullName,
+    GeoPoint? geoPoint,
+    Map<String, Chat>? chatInfos,
+  }) {
+    return Customer(
+      profilePictureUrl: profilePictureUrl ?? this.profilePictureUrl,
+      email: email ?? this.email,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
+      nickname: nickname ?? this.nickname,
+      coins: coins ?? this.coins,
+      average: average ?? this.average,
+      userReview: userReview ?? this.userReview,
+      userReviewUUIDs: userReviewUUIDs ?? this.userReviewUUIDs,
+      favoriteCategories: favoriteCategories ?? this.favoriteCategories,
+      favoriteAdverts: favoriteAdverts ?? this.favoriteAdverts,
+      events: events ?? this.events,
+      verification: verification ?? this.verification,
+      isPremium: isPremium ?? this.isPremium,
+      country: country ?? this.country,
+      city: city ?? this.city,
+      district: district ?? this.district,
+      gender: gender ?? this.gender,
+      birthday: birthday ?? this.birthday,
+      age: age ?? this.age,
+      userID: userID ?? this.userID,
+      messagefriends: messagefriends ?? this.messagefriends,
+      userComments: userComments ?? this.userComments,
+      userCommentsDate: userCommentsDate ?? this.userCommentsDate,
+      userCommentUUIDs: userCommentUUIDs ?? this.userCommentUUIDs,
+      commenderUrl: commenderUrl ?? this.commenderUrl,
+      commenderFullName: commenderFullName ?? this.commenderFullName,
+      geoPoint: geoPoint ?? this.geoPoint,
+      chatInfos: chatInfos ?? this.chatInfos,
+    );
   }
 
   static Gender parseGender(String value) {

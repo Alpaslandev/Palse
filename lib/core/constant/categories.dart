@@ -1,4 +1,4 @@
-// Kategori listesi
+/// TODO: Turn this into a Enum and add a icon for each category
 const List<String> categories = [
   'Kahve ve Sohbet',
   'Kitap Buluşmaları',

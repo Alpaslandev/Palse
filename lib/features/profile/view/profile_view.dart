@@ -69,15 +69,16 @@ Widget profileHeader(BuildContext context, AuthProvider authProvider) {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '${authProvider.user?.fullName()} (${authProvider.user?.age})',
+            '${authProvider.user?.fullName()} (${authProvider.user?.getAge()})',
             style: Theme.of(context).textTheme.titleLarge,
           ),
-          Text(
-            '@charlielevin',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey,
-                ),
-          ),
+          if (authProvider.user?.nickname != null)
+            Text(
+              '@${authProvider.user?.nickname}',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.grey,
+                  ),
+            ),
         ],
       ),
       const Spacer(),

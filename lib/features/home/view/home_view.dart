@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:palseapp/core/models/advert.dart';
+import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/widgets/advert/advert_card.dart';
@@ -22,6 +24,11 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) {
+        setState(() {});
+      }
+    });
   }
 
   @override
@@ -68,36 +75,53 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
         ),
         body: Consumer<HomeViewModel>(
           builder: (context, viewModel, child) {
-            return viewModel.isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: viewModel.adverts.length,
-                    itemBuilder: (context, index) {
-                      final advert = viewModel.adverts[index];
-                      final customer = viewModel.getCustomerForAdvert(advert);
+            if (viewModel.isLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-                      if (customer == null) return const SizedBox.shrink();
+            // Filtrelenmiş ve sıralanmış listeler
+            final filteredAdverts = _getFilteredAdverts(
+              viewModel.adverts,
+              authProvider.user,
+              _tabController.index,
+            );
 
-                      return AdvertCard(
-                        advert: advert,
-                        customer: customer,
-                        onProfileTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => FriendProfileView(customer: customer)),
-                          );
-                        },
-                        onMessageTap: () async {
-                          final chatId = await chatsViewModel.startOrGetChat(authProvider.user!.userID ?? '', customer.userID ?? '');
+            return ListView.builder(
+              shrinkWrap: true,
+              itemCount: filteredAdverts.length,
+              itemBuilder: (context, index) {
+                final advert = filteredAdverts[index];
+                final customer = viewModel.getCustomerForAdvert(advert);
 
-                          if (context.mounted) {
-                            context.pushNamed('messages', extra: {'chatId': chatId, 'otherUserId': customer.userID});
-                          }
-                        },
+                if (customer == null) return const SizedBox.shrink();
+
+                return AdvertCard(
+                  advert: advert,
+                  customer: customer,
+                  onProfileTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => FriendProfileView(customer: customer),
+                      ),
+                    );
+                  },
+                  onMessageTap: () async {
+                    final chatId = await chatsViewModel.startOrGetChat(
+                      authProvider.user!.userID ?? '',
+                      customer.userID ?? '',
+                    );
+
+                    if (context.mounted) {
+                      context.pushNamed(
+                        'messages',
+                        extra: {'chatId': chatId, 'otherUserId': customer.userID},
                       );
-                    },
-                  );
+                    }
+                  },
+                );
+              },
+            );
           },
         ),
         floatingActionButton: FloatingActionButton.extended(
@@ -111,5 +135,32 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
         ),
       ),
     );
+  }
+
+  List<Advert> _getFilteredAdverts(
+    List<Advert> adverts,
+    Customer? user,
+    int tabIndex,
+  ) {
+    if (user == null) return adverts;
+
+    switch (tabIndex) {
+      case 0: // İlgine Göre
+        final favoriteCategories = user.favoriteCategories?.map((e) => e.toLowerCase().trim()).toList();
+        if (favoriteCategories != null && favoriteCategories.isNotEmpty) {
+          return adverts.where((advert) => favoriteCategories.contains(advert.advertType?.toLowerCase().trim() ?? '')).toList();
+        }
+        return adverts;
+
+      case 1: // Şehrine Göre
+        final userCity = user.city?.toLowerCase().trim();
+        if (userCity != null && userCity.isNotEmpty) {
+          return adverts.where((advert) => (advert.city?.toLowerCase().trim() ?? '') == userCity).toList();
+        }
+        return adverts;
+
+      default: // Diğer
+        return adverts;
+    }
   }
 }

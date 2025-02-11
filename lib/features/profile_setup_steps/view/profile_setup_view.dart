@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/features/profile_setup_steps/steps/birthday_gender_step.dart';
 import 'package:palseapp/features/profile_setup_steps/steps/favorite_category_step.dart';
 import 'package:palseapp/features/profile_setup_steps/steps/location_step.dart';
@@ -14,16 +15,17 @@ class ProfileSetupView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => ProfileSetupViewModel(),
+      create: (_) => ProfileSetupViewModel(authProvider: Provider.of<AuthProvider>(context, listen: false)),
       child: Consumer<ProfileSetupViewModel>(
         builder: (context, viewModel, child) {
           return Scaffold(
             appBar: AppBar(
+              backgroundColor: Colors.white,
               title: Image.asset('assets/images/dostum_olsana.png', width: 50, height: 50),
               bottom: PreferredSize(
                 preferredSize: const Size.fromHeight(4),
                 child: LinearProgressIndicator(
-                  value: (viewModel.currentStep + 1) / 5,
+                  value: (viewModel.currentStep + 1) / 6,
                   backgroundColor: Colors.grey[200],
                   valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor),
                 ),
@@ -62,26 +64,13 @@ class ProfileSetupView extends StatelessWidget {
               backgroundColor: Theme.of(context).primaryColor,
             ),
           FloatingActionButton.extended(
-            onPressed: () => _handleNextStep(context, viewModel),
+            onPressed: () => viewModel.isLastStep ? viewModel.completeProfileSetup() : viewModel.nextStep(),
             icon: const Icon(Icons.arrow_forward),
-            label: Text(viewModel.currentStep == 4 ? 'Tamamla' : 'İleri'),
+            label: Text(viewModel.isLastStep ? 'Tamamla' : 'İleri'),
             backgroundColor: Theme.of(context).primaryColor,
           ),
         ],
       ),
     );
-  }
-
-  void _handleNextStep(BuildContext context, ProfileSetupViewModel viewModel) {
-    if (viewModel.currentStep == 4) {
-      _completeProfileSetup(context);
-    } else {
-      viewModel.nextStep();
-    }
-  }
-
-  void _completeProfileSetup(BuildContext context) {
-    // Profil tamamlama işlemleri
-    Navigator.of(context).pushReplacementNamed('/home');
   }
 }

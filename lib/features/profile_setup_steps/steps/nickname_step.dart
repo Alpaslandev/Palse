@@ -8,19 +8,22 @@ class NicknameStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = TextEditingController();
     return Padding(
       padding: const EdgeInsets.all(24.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Merhaba, ${context.read<ProfileSetupViewModel>().customer.firstName}',
+            'Çok az kaldı...',
             style: Theme.of(context).textTheme.headlineSmall,
           ),
           const SizedBox(height: 32),
+          Text(
+            'Havalı bir kullanıcı adına ne dersin?',
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
           TextFormField(
-            controller: controller,
+            controller: viewModel.nicknameController,
             decoration: const InputDecoration(
               labelText: 'Takma Ad',
               border: OutlineInputBorder(),
