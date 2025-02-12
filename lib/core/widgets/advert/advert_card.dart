@@ -14,7 +14,6 @@ class AdvertCard extends StatelessWidget {
     required this.advert,
     required this.customer,
     this.isUserAdvert = false,
-    this.isLiked = false,
     this.onProfileTap,
     this.onAdvertDetailTap,
     this.onLikeTap,
@@ -24,7 +23,7 @@ class AdvertCard extends StatelessWidget {
   final Advert advert;
   final Customer customer;
   final bool isUserAdvert;
-  final bool isLiked;
+
   final VoidCallback? onProfileTap;
   final VoidCallback? onAdvertDetailTap;
   final VoidCallback? onLikeTap;
@@ -50,7 +49,7 @@ class AdvertCard extends StatelessWidget {
                   customer.firstName ?? "advert",
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
-                if (advert.likesUUID.length > 1)
+                if (advert.countUUIDs.length > 1)
                   const Padding(
                     padding: EdgeInsets.only(left: 4),
                     child: Icon(Icons.verified, color: Colors.blue, size: 16),
@@ -152,12 +151,11 @@ class AdvertCard extends StatelessWidget {
                     ),
                     child: Row(
                       children: [
-                        if (!isLiked)
-                          TextButton.icon(
-                            onPressed: onLikeTap,
-                            icon: const Icon(Icons.favorite_border),
-                            label: Text('| ${advert.likesUUID.length}'),
-                          ),
+                        TextButton.icon(
+                          onPressed: onLikeTap,
+                          icon: isLiked ? const Icon(Icons.favorite) : const Icon(Icons.favorite_border),
+                          label: Text('| ${advert.countUUIDs.length}'),
+                        ),
                         TextButton.icon(
                           onPressed: onMessageTap,
                           icon: const Icon(Icons.message_outlined),
@@ -171,6 +169,8 @@ class AdvertCard extends StatelessWidget {
           ),
         ]));
   }
+
+  bool get isLiked => advert.countUUIDs.contains(customer.userID ?? '');
 
   // İki konum arasındaki mesafeyi kilometre cinsinden hesaplar
   String calculateDistance(GeoPoint customerLocation, GeoPoint advertLocation) {

@@ -21,19 +21,38 @@ class AdvertService {
     }
   }
 
+// İlanı hem events hem de adverts koleksiyonlarında arar
   Future<Advert?> fetchAdvertById(String advertID) async {
     try {
+      // Önce events koleksiyonunda ara
+      DocumentSnapshot eventSnapshot = await _firestore.collection('adverts').doc(advertID).get();
+      if (eventSnapshot.exists) {
+        return Advert.fromJson(eventSnapshot.data() as Map<String, dynamic>, advertID);
+      }
+
+      // Events'de bulunamazsa adverts koleksiyonunda ara
       DocumentSnapshot advertSnapshot = await _firestore.collection('events').doc(advertID).get();
       if (advertSnapshot.exists) {
-        final advert = Advert.fromJson(advertSnapshot.data() as Map<String, dynamic>, advertID);
-        return advert;
-      } else {
-        return null;
+        return Advert.fromJson(advertSnapshot.data() as Map<String, dynamic>, advertID);
       }
+
+      return null;
     } catch (e) {
-      debugPrint(e.toString());
+      debugPrint('İlan arama hatası: $e');
       return null;
     }
+  }
+
+  Future<void> likeAdvert(String advertId, String userId) async {
+    await _firestore.collection('adverts').doc(advertId).update({
+      'countUUIDs': FieldValue.arrayUnion([userId])
+    });
+  }
+
+  Future<void> unlikeAdvert(String advertId, String userId) async {
+    await _firestore.collection('adverts').doc(advertId).update({
+      'countUUIDs': FieldValue.arrayRemove([userId])
+    });
   }
 
   // Süresi geçmiş ilanları sil

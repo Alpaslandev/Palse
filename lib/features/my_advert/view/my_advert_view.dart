@@ -68,7 +68,6 @@ class _MyAdvertViewState extends State<MyAdvertView> with TickerProviderStateMix
                               return AdvertCard(
                                   advert: advert,
                                   customer: customer!,
-                                  isLiked: true,
                                   onProfileTap: () {
                                     Navigator.push(
                                       context,

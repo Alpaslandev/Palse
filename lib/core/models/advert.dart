@@ -10,8 +10,9 @@ class Advert {
   //  DateTime? endEventDate;
   String advertType;
   String advertImage;
-  List<String> likesUUID;
+  List<String> countUUIDs;
   GeoPoint? geoPoint;
+
   final String? country; // Yeni alan
   final String? city; // Yeni alan
   final String? district; // Yeni alan
@@ -27,7 +28,7 @@ class Advert {
     //  required this.endEventDate,
     required this.advertType,
     required this.advertImage,
-    required this.likesUUID,
+    required this.countUUIDs,
     this.geoPoint,
     this.country,
     this.city,
@@ -115,7 +116,7 @@ class Advert {
       startEventDate: parseDateTime(json['startEventDate'] ?? json['advertDate'], json['advertTime']),
       advertType: json['advertType'] ?? '',
       advertImage: json['advertImage'] ?? '',
-      likesUUID: List<String>.from(json['likesUUID'] ?? []),
+      countUUIDs: List<String>.from(json['countUUIDs'] ?? []),
       geoPoint: parseGeoPoint(json['geoPoint']),
       country: json['country'] ?? '',
       city: json['city'] ?? '',
@@ -134,7 +135,7 @@ class Advert {
       'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : null,
       'advertType': advertType,
       'advertImage': advertImage,
-      'likesUUID': likesUUID,
+      'countUUIDs': countUUIDs,
       'geoPoint': geoPoint,
       'country': country,
       'city': city,

@@ -69,13 +69,14 @@ class Message {
   final Timestamp timestamp; // Gönderilme zamanı
   final bool isRead; // Okundu durumu
   final String type; // Mesaj tipi (text, image, vs)
-
+  final String? quotedMessage; // Alıntı mesajı
   Message({
     required this.senderId,
     required this.content,
     required this.timestamp,
     required this.isRead,
     required this.type,
+    this.quotedMessage,
   });
 
   // Firestore'dan veri okuma
@@ -86,6 +87,7 @@ class Message {
       timestamp: map['timestamp'] ?? Timestamp.now(),
       isRead: map['isRead'] ?? false,
       type: map['type'] ?? 'text',
+      quotedMessage: map['quotedMessage'],
     );
   }
 
@@ -97,6 +99,7 @@ class Message {
       'timestamp': timestamp,
       'isRead': isRead,
       'type': type,
+      'quotedMessage': quotedMessage,
     };
   }
 
@@ -108,6 +111,7 @@ class Message {
       timestamp: Timestamp.now(),
       isRead: false,
       type: 'text',
+      quotedMessage: null,
     );
   }
 
@@ -118,6 +122,7 @@ class Message {
     Timestamp? timestamp,
     bool? isRead,
     String? type,
+    String? quotedMessage,
   }) {
     return Message(
       senderId: senderId ?? this.senderId,
@@ -125,6 +130,7 @@ class Message {
       timestamp: timestamp ?? this.timestamp,
       isRead: isRead ?? this.isRead,
       type: type ?? this.type,
+      quotedMessage: quotedMessage ?? this.quotedMessage,
     );
   }
 }

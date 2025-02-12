@@ -131,18 +131,16 @@ class CreateAdvertViewModel extends ChangeNotifier {
         startEventDate: startDate ?? DateTime.now(),
         //  endEventDate: endDate ?? DateTime.now(),
         createdAt: DateTime.now(),
-        likesUUID: [],
+        countUUIDs: [],
       );
 
       debugPrint('Advert: ${advert.toJson()}');
-      // Add the new campaign to the Firestore collection
-      await FirebaseFirestore.instance.collection('events').doc().set(advert.toJson());
-
-      // Update the buissnessUsers collection
+      // Yeni kampanyayı Firestore koleksiyonuna ekle ve döküman ID'sini al
+      DocumentReference docRef = await FirebaseFirestore.instance.collection('events').add(advert.toJson());
+      // Müşteri koleksiyonunu güncelle
       await FirebaseFirestore.instance.collection('customers').doc(authProvider.user!.userID).update({
-        'adverts': FieldValue.arrayUnion([advert.advertID]),
+        'adverts': FieldValue.arrayUnion([docRef.id]), // Döküman ID'sini kullan
       });
-      // await authProvider.createAdvert(advert);
     } catch (e) {
       debugPrint('Error creating advert: $e');
     } finally {

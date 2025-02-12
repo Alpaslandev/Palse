@@ -15,11 +15,6 @@ class ChatsViewModel extends ChangeNotifier {
     return _chatService.getUserInfo(userId);
   }
 
-  // Yeni sohbet başlat
-  Future<void> startNewChat(String userId1, String userId2) async {
-    await _chatService.startNewChat(userId1, userId2);
-  }
-
   // Sohbet başlat veya var olan sohbeti bul
   Future<String> startOrGetChat(String userId1, String userId2) async {
     try {

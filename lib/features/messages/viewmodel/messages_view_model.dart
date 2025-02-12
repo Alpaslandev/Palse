@@ -1,15 +1,53 @@
 import 'package:flutter/material.dart';
 import 'package:palseapp/core/models/chat_model.dart';
+import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/services/firestore/chat_service.dart';
+import 'package:palseapp/core/services/firestore/customer_service.dart';
 
 class MessagesViewModel extends ChangeNotifier {
   final ChatService _chatService = ChatService();
+  final CustomerService _customerService = CustomerService();
+
+  Customer? otherUser;
   List<Message> messages = [];
   bool isLoading = false;
+
+  MessagesViewModel(String otherUserId) {
+    getUserInfo(otherUserId);
+  }
 
   // Mesajları dinle
   Stream<List<Message>> getMessages(String chatId) {
     return _chatService.getMessages(chatId);
+  }
+
+  // Müşteri bilgilerini al
+  Future<Customer?> getUserInfo(String userId) async {
+    isLoading = true;
+    notifyListeners();
+    try {
+      otherUser = await _customerService.fetchUserFromFirestore(userId);
+      return otherUser;
+    } catch (e) {
+      debugPrint('Müşteri bilgileri alınamadı: $e');
+      return null;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // Alıntı mesajı
+  Message? quotedMessage;
+
+  // Alıntı mesajını temizle
+  void clearQuotedMessage() {
+    quotedMessage = null;
+  }
+
+  // Alıntı mesajını ayarla
+  void setQuotedMessage(Message message) {
+    quotedMessage = message;
   }
 
   // Yeni sohbet başlat

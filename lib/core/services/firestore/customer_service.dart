@@ -34,6 +34,18 @@ class CustomerService {
     }
   }
 
+  Future<void> likeAdvert(String advertId, String userId) async {
+    await _firestore.collection('customers').doc(userId).update({
+      'favoriteAdverts': FieldValue.arrayUnion([advertId])
+    });
+  }
+
+  Future<void> unlikeAdvert(String advertId, String userId) async {
+    await _firestore.collection('customers').doc(userId).update({
+      'favoriteAdverts': FieldValue.arrayRemove([advertId])
+    });
+  }
+
   // Silinen ilanlara ait referansları kullanıcılardan temizle
   Future<void> cleanupDeletedAdvertReferences() async {
     try {

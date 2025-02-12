@@ -155,7 +155,7 @@ class Customer {
       commenderUrl: List<String>.from(parsedJson['commenderUrl'] ?? []),
       favoriteCategories: List<String>.from(parsedJson['favoriteCategories'] ?? []),
       favoriteAdverts: List<String>.from(parsedJson['favoriteAdverts'] ?? []),
-      events: List<String>.from(parsedJson['adverts'] ?? List<String>.from(parsedJson['events'] ?? [])),
+      events: List<String>.from(parsedJson['events'] ?? []),
       verification: parsedJson['verification'] ?? false,
       isPremium: parsedJson['isPremium'] ?? false,
       firstNotification: parsedJson['firstNotification'] ?? false,

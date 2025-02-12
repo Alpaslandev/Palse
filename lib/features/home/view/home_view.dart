@@ -98,6 +98,15 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                 return AdvertCard(
                   advert: advert,
                   customer: customer,
+                  onLikeTap: () async {
+                    if (advert.countUUIDs.contains(authProvider.user!.userID ?? '')) {
+                      await viewModel.unlikeAdvert(advert.advertID ?? '', authProvider.user!.userID ?? '');
+                      debugPrint('unlikeAdvert');
+                    } else {
+                      await viewModel.likeAdvert(advert.advertID ?? '', authProvider.user!.userID ?? '');
+                      debugPrint('likeAdvert');
+                    }
+                  },
                   onProfileTap: () {
                     Navigator.push(
                       context,

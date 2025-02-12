@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:palseapp/core/models/chat_model.dart';
+import 'package:palseapp/core/services/firestore/customer_service.dart';
 import 'package:provider/provider.dart';
 import 'package:palseapp/features/messages/viewmodel/messages_view_model.dart';
 import 'package:palseapp/features/messages/widgets/message_bubble.dart';
@@ -46,50 +47,66 @@ class _MessagesViewState extends State<MessagesView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Mesajlar'),
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: StreamBuilder<List<Message>>(
-              stream: context.read<MessagesViewModel>().getMessages(widget.chatId),
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return const Center(child: Text('Bir hata oluştu'));
-                }
-
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                final messages = snapshot.data ?? [];
-
-                return ListView.builder(
-                  controller: _scrollController,
-                  reverse: true,
-                  itemCount: messages.length,
-                  itemBuilder: (context, index) {
-                    final message = messages[index];
-                    final isMe = message.senderId == widget.currentUserId;
-
-                    return MessageBubble(
-                      message: message,
-                      isMe: isMe,
-                    );
-                  },
-                );
-              },
+    return ChangeNotifierProvider(
+      create: (_) => MessagesViewModel(widget.otherUserId),
+      child: Consumer<MessagesViewModel>(
+        builder: (context, vm, _) => Scaffold(
+          appBar: AppBar(
+            title: Row(
+              children: [
+                CircleAvatar(
+                  backgroundImage: vm.otherUser?.profilePictureUrl != null
+                      ? NetworkImage(vm.otherUser!.profilePictureUrl!)
+                      : const AssetImage('assets/images/dostum_olsana.png') as ImageProvider,
+                  radius: 18,
+                ),
+                const SizedBox(width: 12),
+                Text(vm.otherUser?.nickname ?? vm.otherUser?.firstName ?? vm.otherUser?.lastName ?? ''),
+              ],
             ),
           ),
-          _buildMessageInput(),
-        ],
+          body: Column(
+            children: [
+              Expanded(
+                child: StreamBuilder<List<Message>>(
+                  stream: vm.getMessages(widget.chatId),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasError) {
+                      return const Center(child: Text('Bir hata oluştu'));
+                    }
+
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    final messages = snapshot.data ?? [];
+
+                    return ListView.builder(
+                      controller: _scrollController,
+                      reverse: true,
+                      itemCount: messages.length,
+                      itemBuilder: (context, index) {
+                        final message = messages[index];
+                        final isMe = message.senderId == widget.currentUserId;
+
+                        return MessageBubble(
+                          message: message,
+                          isMe: isMe,
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+              _buildMessageInput(vm),
+            ],
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildMessageInput() {
+  Widget _buildMessageInput(MessagesViewModel vm) {
     return Container(
       padding: const EdgeInsets.all(8.0),
       decoration: BoxDecoration(
@@ -102,44 +119,85 @@ class _MessagesViewState extends State<MessagesView> {
           ),
         ],
       ),
-      child: Row(
+      child: Column(
         children: [
-          Expanded(
-            child: TextField(
-              controller: _messageController,
-              decoration: const InputDecoration(
-                hintText: 'Mesajınızı yazın...',
-                border: InputBorder.none,
+          if (vm.quotedMessage != null) _buildQuotePreview(vm.quotedMessage!, vm),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _messageController,
+                  decoration: const InputDecoration(
+                    hintText: 'Mesajınızı yazın...',
+                    border: InputBorder.none,
+                  ),
+                  maxLines: null,
+                ),
               ),
-              maxLines: null,
-            ),
-          ),
-          IconButton(
-            icon: context.watch<MessagesViewModel>().isLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.send),
-            onPressed: context.watch<MessagesViewModel>().isLoading ? null : () => _sendMessage(),
+              IconButton(
+                icon: vm.isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.send),
+                onPressed: vm.isLoading ? null : () => _sendMessage(vm),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  void _sendMessage() async {
+  Widget _buildQuotePreview(Message quotedMessage, MessagesViewModel vm) {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: Colors.grey[200],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey[400]!),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Alıntı: ${quotedMessage.senderId}',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  quotedMessage.content,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close, size: 18),
+            onPressed: () => vm.clearQuotedMessage(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _sendMessage(MessagesViewModel vm) async {
     final content = _messageController.text.trim();
     if (content.isEmpty) return;
 
     _messageController.clear();
 
-    await context.read<MessagesViewModel>().sendMessage(
-          widget.chatId,
-          widget.currentUserId,
-          widget.otherUserId,
-          content,
-        );
+    await vm.sendMessage(
+      widget.chatId,
+      widget.currentUserId,
+      widget.otherUserId,
+      content,
+    );
   }
 }

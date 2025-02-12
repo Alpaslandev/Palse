@@ -50,6 +50,26 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> likeAdvert(String advertId, String userId) async {
+    try {
+      await _advertService.likeAdvert(advertId, userId);
+      await _customerService.likeAdvert(advertId, userId);
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Hata: $e');
+    }
+  }
+
+  Future<void> unlikeAdvert(String advertId, String userId) async {
+    try {
+      await _advertService.unlikeAdvert(advertId, userId);
+      await _customerService.unlikeAdvert(advertId, userId);
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Hata: $e');
+    }
+  }
+
   @override
   void dispose() {
     _adverts.clear();

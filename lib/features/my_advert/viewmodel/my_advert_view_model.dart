@@ -68,13 +68,6 @@ class MyAdvertViewModel extends ChangeNotifier {
       final List<Future<Advert?>> futures = _authProvider.user!.events!.map((advertId) => _advertService.fetchAdvertById(advertId)).toList();
 
       final List<Advert?> adverts = await Future.wait(futures);
-      debugPrint('My Adverts length: ${adverts.length}');
-      for (var advert in adverts) {
-        if (advert != null) {
-          debugPrint('Advert Image URL: ${advert.advertImage}');
-          debugPrint('Advert Creator ID: ${advert.creatorUserID}');
-        }
-      }
       _myAdverts.addAll(adverts.where((advert) => advert != null));
     }
   }
@@ -84,13 +77,7 @@ class MyAdvertViewModel extends ChangeNotifier {
       final List<Future<Advert?>> futures = _authProvider.user!.favoriteAdverts!.map((advertId) => _advertService.fetchAdvertById(advertId)).toList();
 
       final List<Advert?> adverts = await Future.wait(futures);
-      // debugPrint('Favorites length: ${adverts.length}');
-      for (var advert in adverts) {
-        if (advert != null) {
-          //    debugPrint('Favorite Image URL: ${advert.advertImage}');
-          //  debugPrint('Favorite Creator ID: ${advert.creatorUserID}');
-        }
-      }
+
       _favorites.addAll(adverts.where((advert) => advert != null));
     }
   }
