@@ -1,16 +1,25 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:palseapp/core/models/chat_model.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/services/firestore/chat_service.dart';
+import 'package:palseapp/core/provider/auth_provider.dart';
+import 'package:provider/provider.dart';
 
 class ChatsViewModel extends ChangeNotifier {
   final ChatService _chatService = ChatService();
+  final AuthProvider _authProvider;
+
+  ChatsViewModel(this._authProvider);
+
+  String? get currentUserId => _authProvider.user?.userID;
 
   // Sohbetleri dinle
   Stream<List<Chat>> getChats(String userId) {
     return _chatService.getChats(userId);
   }
 
+  // Kullanıcı bilgilerini al
   Stream<Customer?> getUserInfo(String userId) {
     return _chatService.getUserInfo(userId);
   }

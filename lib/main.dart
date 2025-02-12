@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:palseapp/core/routes/app_router.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -13,12 +14,15 @@ void main() async {
   final authProvider = AuthProvider();
   await authProvider.initializeAuth();
   AppRouter.initialize(authProvider);
+  // Cihazın diline uygun tarih formatlamasını başlat
+  final locale = WidgetsBinding.instance.platformDispatcher.locale;
+  await initializeDateFormatting(locale.toString(), null);
 
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: authProvider),
-        ChangeNotifierProvider(create: (_) => ChatsViewModel()),
+        ChangeNotifierProvider(create: (_) => ChatsViewModel(authProvider)),
       ],
       child: const MyApp(),
     ),

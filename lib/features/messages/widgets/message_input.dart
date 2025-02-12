@@ -85,35 +85,54 @@ class MessageInput extends StatelessWidget {
                   ),
                 ],
               ),
-              child: Row(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.attach_file),
-                    onPressed: () => viewModel.handleAttachment(context),
-                  ),
-                  Expanded(
-                    child: TextField(
-                      controller: _messageController,
-                      decoration: const InputDecoration(
-                        hintText: 'Mesaj yazın...',
-                        border: InputBorder.none,
-                      ),
-                      maxLines: null,
+                  if (viewModel.isUploadingImage)
+                    LinearProgressIndicator(
+                      value: viewModel.uploadProgress,
+                      backgroundColor: Colors.grey[200],
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
                     ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.send),
-                    onPressed: () {
-                      if (_messageController.text.trim().isNotEmpty) {
-                        viewModel.sendMessage(
-                          chatId,
-                          currentUserId,
-                          otherUserId,
-                          _messageController.text,
-                        );
-                        _messageController.clear();
-                      }
-                    },
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: viewModel.isUploadingImage
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.attach_file),
+                        onPressed: viewModel.isUploadingImage ? null : () => viewModel.handleAttachment(context),
+                      ),
+                      Expanded(
+                        child: TextField(
+                          controller: _messageController,
+                          decoration: const InputDecoration(
+                            hintText: 'Mesaj yazın...',
+                            border: InputBorder.none,
+                          ),
+                          maxLines: null,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.send),
+                        onPressed: () {
+                          if (_messageController.text.trim().isNotEmpty) {
+                            viewModel.sendMessage(
+                              chatId,
+                              currentUserId,
+                              otherUserId,
+                              _messageController.text,
+                            );
+                            _messageController.clear();
+                          }
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),

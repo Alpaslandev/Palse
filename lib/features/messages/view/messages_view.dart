@@ -24,17 +24,21 @@ class MessagesView extends StatefulWidget {
 
 class _MessagesViewState extends State<MessagesView> {
   final ScrollController _scrollController = ScrollController();
+  late final MessagesViewModel _viewModel;
 
   @override
   void initState() {
     super.initState();
+    _viewModel = MessagesViewModel(widget.otherUserId);
+    _viewModel.initialize(widget.chatId, widget.currentUserId);
+
     // Mesajları okundu olarak işaretle
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<MessagesViewModel>().markMessagesAsRead(
-            widget.chatId,
-            widget.currentUserId,
-            widget.otherUserId,
-          );
+      _viewModel.markMessagesAsRead(
+        widget.chatId,
+        widget.currentUserId,
+        widget.otherUserId,
+      );
     });
   }
 
@@ -46,8 +50,8 @@ class _MessagesViewState extends State<MessagesView> {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => MessagesViewModel(widget.otherUserId),
+    return ChangeNotifierProvider.value(
+      value: _viewModel,
       child: Consumer<MessagesViewModel>(
         builder: (context, vm, _) => Scaffold(
           appBar: MessageAppBar(vm: vm),
@@ -66,6 +70,19 @@ class _MessagesViewState extends State<MessagesView> {
                     }
 
                     final messages = snapshot.data ?? [];
+
+                    // Yeni mesaj geldiğinde otomatik olarak okundu olarak işaretle
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      final unreadMessages = messages.where((msg) => msg.senderId == widget.otherUserId && !msg.isRead).toList();
+
+                      if (unreadMessages.isNotEmpty) {
+                        vm.markMessagesAsRead(
+                          widget.chatId,
+                          widget.currentUserId,
+                          widget.otherUserId,
+                        );
+                      }
+                    });
 
                     return ListView.builder(
                       controller: _scrollController,

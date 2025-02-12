@@ -163,20 +163,26 @@ class ChatService {
   // Mesaj gönderme
   Future<void> sendMessage(String chatId, Message message) async {
     try {
+      debugPrint('ChatService - Mesaj gönderiliyor... ChatId: $chatId');
+      debugPrint('ChatService - Mesaj içeriği: ${message.toMap()}');
+
       final batch = _db.batch();
 
       // Mesajı ekle
       final messageRef = _db.collection('chats').doc(chatId).collection('messages').doc();
       batch.set(messageRef, message.toMap());
+      debugPrint('ChatService - Mesaj Firestore\'a ekleniyor...');
 
       // Son mesajı güncelle
       batch.update(_db.collection('chats').doc(chatId), {
-        'lastMessage': message.content,
+        'lastMessage': message.type == 'image' ? '📷 Fotoğraf' : message.content,
         'lastMessageTime': message.timestamp,
         'lastMessageSenderId': message.senderId,
       });
+      debugPrint('ChatService - Son mesaj bilgileri güncelleniyor...');
 
       await batch.commit();
+      debugPrint('ChatService - Batch işlemi tamamlandı');
 
       // Okunmamış mesaj sayısını artır
       final chat = await _db.collection('chats').doc(chatId).get();
@@ -184,8 +190,9 @@ class ChatService {
       final receiverId = participants.firstWhere((id) => id != message.senderId);
 
       await incrementUnreadCount(chatId, message.senderId, receiverId);
+      debugPrint('ChatService - Okunmamış mesaj sayısı güncellendi');
     } catch (e) {
-      debugPrint('Mesaj gönderme hatası: $e');
+      debugPrint('ChatService - Mesaj gönderme hatası: $e');
       rethrow;
     }
   }
@@ -205,16 +212,35 @@ class ChatService {
   Stream<List<Chat>> getChats(String userId) {
     debugPrint('Getting chats for user: $userId');
 
-    return _db.collection('chats').where('participants', arrayContains: userId).snapshots().map((snapshot) {
-      debugPrint('Chat documents: ${snapshot.docs.length}');
-      debugPrint('Raw data: ${snapshot.docs.map((doc) => doc.data())}');
+    // Kullanıcının chatInfos bilgilerini ve sohbetlerini aynı anda dinle
+    return _db.collection('customers').doc(userId).snapshots().asyncMap((userDoc) async {
+      final chatInfos = (userDoc.data()?['chatInfos'] as Map<String, dynamic>?) ?? {};
 
-      return snapshot.docs.map((doc) {
+      // Sohbetleri dinle
+      final chatsSnapshot = await _db
+          .collection('chats')
+          .where('participants', arrayContains: userId)
+          .orderBy('lastMessageTime', descending: true)
+          .snapshots()
+          .first; // Son durumu al
+
+      final chats = chatsSnapshot.docs.map((doc) {
         final data = doc.data();
-        // ID'yi ekleyelim
         data['id'] = doc.id;
+
+        // Diğer kullanıcının ID'sini bul
+        final otherUserId = (data['participants'] as List<dynamic>).firstWhere((id) => id != userId, orElse: () => '');
+
+        // ChatInfos'dan unreadCount bilgisini al
+        final unreadCount = (chatInfos[otherUserId]?['unreadCount'] as int?) ?? 0;
+        data['unreadCount'] = unreadCount;
+
+        debugPrint('Chat data for ${doc.id}: $data');
+        debugPrint('Unread count for chat ${doc.id}: $unreadCount');
         return Chat.fromMap(data);
       }).toList();
+
+      return chats;
     });
   }
 }

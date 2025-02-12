@@ -104,8 +104,14 @@ class Message {
       'isRead': isRead,
       'type': type,
       'quotedMessage': quotedMessage,
-      'quotedMessageId': quotedMessageId, // Yeni alan
+      'quotedMessageId': quotedMessageId,
     };
+  }
+
+  // Debug için toString metodunu ekleyelim
+  @override
+  String toString() {
+    return 'Message{senderId: $senderId, content: $content, type: $type, isRead: $isRead}';
   }
 
   // Boş mesaj oluşturma

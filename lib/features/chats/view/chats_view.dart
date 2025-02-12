@@ -24,50 +24,53 @@ class ChatsView extends StatelessWidget {
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Sohbetler'),
-      ),
-      body: StreamBuilder<List<Chat>>(
-        stream: context.read<ChatsViewModel>().getChats(currentUserId),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Center(child: Text('Bir hata oluştu: ${snapshot.error}'));
-          }
+    return ChangeNotifierProvider(
+      create: (context) => ChatsViewModel(context.read<AuthProvider>()),
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Sohbetler'),
+        ),
+        body: StreamBuilder<List<Chat>>(
+          stream: context.read<ChatsViewModel>().getChats(currentUserId),
+          builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return Center(child: Text('Bir hata oluştu: ${snapshot.error}'));
+            }
 
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          final chats = snapshot.data ?? [];
+            final chats = snapshot.data ?? [];
 
-          if (chats.isEmpty) {
-            return const Center(
-              child: Text('Henüz bir sohbet bulunmuyor'),
-            );
-          }
-
-          return ListView.builder(
-            itemCount: chats.length,
-            itemBuilder: (context, index) {
-              // Sohbetleri son mesaj zamanına göre sırala
-              final sortedChats = chats.toList()..sort((a, b) => b.lastMessageTime.compareTo(a.lastMessageTime));
-              final chat = sortedChats[index];
-
-              // Diğer kullanıcının ID'sini güvenli bir şekilde al
-              final otherUserId = chat.participants.where((id) => id != currentUserId).firstOrNull; // firstWhere yerine firstOrNull kullan
-
-              // Eğer diğer kullanıcı bulunamazsa bu sohbeti gösterme
-              if (otherUserId == null) return const SizedBox.shrink();
-
-              return ChatListItem(
-                chat: chat,
-                otherUserId: otherUserId,
-                onTap: () => _navigateToChat(context, chat.id, otherUserId),
+            if (chats.isEmpty) {
+              return const Center(
+                child: Text('Henüz bir sohbet bulunmuyor'),
               );
-            },
-          );
-        },
+            }
+
+            return ListView.builder(
+              itemCount: chats.length,
+              itemBuilder: (context, index) {
+                // Sohbetleri son mesaj zamanına göre sırala
+                final sortedChats = chats.toList()..sort((a, b) => b.lastMessageTime.compareTo(a.lastMessageTime));
+                final chat = sortedChats[index];
+
+                // Diğer kullanıcının ID'sini güvenli bir şekilde al
+                final otherUserId = chat.participants.where((id) => id != currentUserId).firstOrNull; // firstWhere yerine firstOrNull kullan
+
+                // Eğer diğer kullanıcı bulunamazsa bu sohbeti gösterme
+                if (otherUserId == null) return const SizedBox.shrink();
+
+                return ChatListItem(
+                  chat: chat,
+                  otherUserId: otherUserId,
+                  onTap: () => _navigateToChat(context, chat.id, otherUserId),
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }
