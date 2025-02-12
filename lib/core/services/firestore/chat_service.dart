@@ -161,18 +161,33 @@ class ChatService {
   }
 
   // Mesaj gönderme
-  Future<void> sendMessage(String chatId, String senderId, String receiverId, String content) async {
-    await _db.runTransaction((transaction) async {
+  Future<void> sendMessage(String chatId, Message message) async {
+    try {
+      final batch = _db.batch();
+
+      // Mesajı ekle
       final messageRef = _db.collection('chats').doc(chatId).collection('messages').doc();
+      batch.set(messageRef, message.toMap());
 
-      transaction
-          .set(messageRef, {'content': content, 'senderId': senderId, 'timestamp': FieldValue.serverTimestamp(), 'isRead': false, 'type': 'text'});
+      // Son mesajı güncelle
+      batch.update(_db.collection('chats').doc(chatId), {
+        'lastMessage': message.content,
+        'lastMessageTime': message.timestamp,
+        'lastMessageSenderId': message.senderId,
+      });
 
-      transaction.update(_db.collection('chats').doc(chatId),
-          {'lastMessage': content, 'lastMessageTime': FieldValue.serverTimestamp(), 'lastMessageSenderId': senderId});
+      await batch.commit();
 
-      await incrementUnreadCount(chatId, senderId, receiverId);
-    });
+      // Okunmamış mesaj sayısını artır
+      final chat = await _db.collection('chats').doc(chatId).get();
+      final participants = List<String>.from(chat.data()?['participants'] ?? []);
+      final receiverId = participants.firstWhere((id) => id != message.senderId);
+
+      await incrementUnreadCount(chatId, message.senderId, receiverId);
+    } catch (e) {
+      debugPrint('Mesaj gönderme hatası: $e');
+      rethrow;
+    }
   }
 
   // Mesajları dinle

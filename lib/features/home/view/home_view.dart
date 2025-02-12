@@ -157,7 +157,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       case 0: // İlgine Göre
         final favoriteCategories = user.favoriteCategories?.map((e) => e.toLowerCase().trim()).toList();
         if (favoriteCategories != null && favoriteCategories.isNotEmpty) {
-          return adverts.where((advert) => favoriteCategories.contains(advert.advertType?.toLowerCase().trim() ?? '')).toList();
+          return adverts.where((advert) => favoriteCategories.contains(advert.advertType.toLowerCase().trim() ?? '')).toList();
         }
         return adverts;
 

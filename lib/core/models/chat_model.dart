@@ -70,6 +70,8 @@ class Message {
   final bool isRead; // Okundu durumu
   final String type; // Mesaj tipi (text, image, vs)
   final String? quotedMessage; // Alıntı mesajı
+  final String? quotedMessageId; // Yeni alan
+
   Message({
     required this.senderId,
     required this.content,
@@ -77,6 +79,7 @@ class Message {
     required this.isRead,
     required this.type,
     this.quotedMessage,
+    this.quotedMessageId, // Yeni parametre
   });
 
   // Firestore'dan veri okuma
@@ -88,6 +91,7 @@ class Message {
       isRead: map['isRead'] ?? false,
       type: map['type'] ?? 'text',
       quotedMessage: map['quotedMessage'],
+      quotedMessageId: map['quotedMessageId'], // Yeni alan
     );
   }
 
@@ -100,6 +104,7 @@ class Message {
       'isRead': isRead,
       'type': type,
       'quotedMessage': quotedMessage,
+      'quotedMessageId': quotedMessageId, // Yeni alan
     };
   }
 
@@ -112,6 +117,7 @@ class Message {
       isRead: false,
       type: 'text',
       quotedMessage: null,
+      quotedMessageId: null,
     );
   }
 
@@ -123,6 +129,7 @@ class Message {
     bool? isRead,
     String? type,
     String? quotedMessage,
+    String? quotedMessageId,
   }) {
     return Message(
       senderId: senderId ?? this.senderId,
@@ -131,6 +138,7 @@ class Message {
       isRead: isRead ?? this.isRead,
       type: type ?? this.type,
       quotedMessage: quotedMessage ?? this.quotedMessage,
+      quotedMessageId: quotedMessageId ?? this.quotedMessageId,
     );
   }
 }

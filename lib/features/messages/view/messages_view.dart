@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:palseapp/core/models/chat_model.dart';
-import 'package:palseapp/core/services/firestore/customer_service.dart';
+import 'package:palseapp/features/messages/widgets/message_app_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:palseapp/features/messages/viewmodel/messages_view_model.dart';
 import 'package:palseapp/features/messages/widgets/message_bubble.dart';
+import 'package:palseapp/features/messages/widgets/message_input.dart';
 
 class MessagesView extends StatefulWidget {
   final String chatId;
@@ -22,7 +23,6 @@ class MessagesView extends StatefulWidget {
 }
 
 class _MessagesViewState extends State<MessagesView> {
-  final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -40,7 +40,6 @@ class _MessagesViewState extends State<MessagesView> {
 
   @override
   void dispose() {
-    _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -51,20 +50,7 @@ class _MessagesViewState extends State<MessagesView> {
       create: (_) => MessagesViewModel(widget.otherUserId),
       child: Consumer<MessagesViewModel>(
         builder: (context, vm, _) => Scaffold(
-          appBar: AppBar(
-            title: Row(
-              children: [
-                CircleAvatar(
-                  backgroundImage: vm.otherUser?.profilePictureUrl != null
-                      ? NetworkImage(vm.otherUser!.profilePictureUrl!)
-                      : const AssetImage('assets/images/dostum_olsana.png') as ImageProvider,
-                  radius: 18,
-                ),
-                const SizedBox(width: 12),
-                Text(vm.otherUser?.nickname ?? vm.otherUser?.firstName ?? vm.otherUser?.lastName ?? ''),
-              ],
-            ),
-          ),
+          appBar: MessageAppBar(vm: vm),
           body: Column(
             children: [
               Expanded(
@@ -98,106 +84,17 @@ class _MessagesViewState extends State<MessagesView> {
                   },
                 ),
               ),
-              _buildMessageInput(vm),
             ],
+          ),
+          bottomNavigationBar: SafeArea(
+            child: MessageInput(
+              chatId: widget.chatId,
+              currentUserId: widget.currentUserId,
+              otherUserId: widget.otherUserId,
+            ),
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildMessageInput(MessagesViewModel vm) {
-    return Container(
-      padding: const EdgeInsets.all(8.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.5),
-            spreadRadius: 1,
-            blurRadius: 5,
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          if (vm.quotedMessage != null) _buildQuotePreview(vm.quotedMessage!, vm),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _messageController,
-                  decoration: const InputDecoration(
-                    hintText: 'Mesajınızı yazın...',
-                    border: InputBorder.none,
-                  ),
-                  maxLines: null,
-                ),
-              ),
-              IconButton(
-                icon: vm.isLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.send),
-                onPressed: vm.isLoading ? null : () => _sendMessage(vm),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildQuotePreview(Message quotedMessage, MessagesViewModel vm) {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: Colors.grey[200],
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey[400]!),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Alıntı: ${quotedMessage.senderId}',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  quotedMessage.content,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.close, size: 18),
-            onPressed: () => vm.clearQuotedMessage(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _sendMessage(MessagesViewModel vm) async {
-    final content = _messageController.text.trim();
-    if (content.isEmpty) return;
-
-    _messageController.clear();
-
-    await vm.sendMessage(
-      widget.chatId,
-      widget.currentUserId,
-      widget.otherUserId,
-      content,
     );
   }
 }

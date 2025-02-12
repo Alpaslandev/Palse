@@ -54,12 +54,4 @@ class ChatListItem extends StatelessWidget {
       onTap: onTap,
     );
   }
-
-  String _formatTime(DateTime time) {
-    final now = DateTime.now();
-    if (time.year == now.year && time.month == now.month && time.day == now.day) {
-      return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
-    }
-    return '${time.day}/${time.month}/${time.year}';
-  }
 }

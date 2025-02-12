@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:palseapp/core/models/chat_model.dart';
 import 'package:palseapp/core/models/customer.dart';
@@ -11,6 +12,9 @@ class MessagesViewModel extends ChangeNotifier {
   Customer? otherUser;
   List<Message> messages = [];
   bool isLoading = false;
+  Message? _quotedMessage;
+
+  Message? get quotedMessage => _quotedMessage;
 
   MessagesViewModel(String otherUserId) {
     getUserInfo(otherUserId);
@@ -37,17 +41,16 @@ class MessagesViewModel extends ChangeNotifier {
     }
   }
 
-  // Alıntı mesajı
-  Message? quotedMessage;
+  // Alıntı mesajını ayarla
+  void setQuotedMessage(Message? message) {
+    _quotedMessage = message;
+    notifyListeners();
+  }
 
   // Alıntı mesajını temizle
   void clearQuotedMessage() {
-    quotedMessage = null;
-  }
-
-  // Alıntı mesajını ayarla
-  void setQuotedMessage(Message message) {
-    quotedMessage = message;
+    _quotedMessage = null;
+    notifyListeners();
   }
 
   // Yeni sohbet başlat
@@ -70,7 +73,24 @@ class MessagesViewModel extends ChangeNotifier {
       isLoading = true;
       notifyListeners();
 
-      await _chatService.sendMessage(chatId, senderId, receiverId, content);
+      // Alıntı mesajı varsa, mesajı alıntıyla birlikte gönder
+      final messageToSend = Message(
+        senderId: senderId,
+        content: content,
+        timestamp: Timestamp.now(),
+        isRead: false,
+        type: 'text',
+        quotedMessage: _quotedMessage?.content,
+        quotedMessageId: _quotedMessage?.senderId,
+      );
+
+      await _chatService.sendMessage(
+        chatId,
+        messageToSend,
+      );
+
+      // Mesaj gönderildikten sonra alıntıyı temizle
+      setQuotedMessage(null);
     } finally {
       isLoading = false;
       notifyListeners();
@@ -85,5 +105,11 @@ class MessagesViewModel extends ChangeNotifier {
     } catch (e) {
       debugPrint('Mesajları okundu işaretleme hatası: $e');
     }
+  }
+
+  // Dosya ekleme işlemini yönet
+  Future<void> handleAttachment(BuildContext context) async {
+    // TODO: Dosya ekleme işlemi için gerekli kodlar eklenecek
+    debugPrint('Dosya ekleme özelliği yakında eklenecek');
   }
 }

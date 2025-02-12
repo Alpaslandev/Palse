@@ -1,4 +1,4 @@
-// Mesaj baloncuğu widget'ı (görsel ve alıntı desteği eklendi)
+// Mesaj baloncuğu widget'ı - WhatsApp tarzı alıntılama
 import 'package:flutter/material.dart';
 import 'package:palseapp/core/models/chat_model.dart';
 import 'package:palseapp/features/messages/viewmodel/messages_view_model.dart';
@@ -18,12 +18,19 @@ class MessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-      child: Row(
-        mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
-        children: [
-          GestureDetector(
-            onLongPress: () => _handleQuote(context),
-            child: Container(
+      child: Dismissible(
+        key: Key(message.timestamp.toString()),
+        direction: DismissDirection.startToEnd, // Sadece sağa kaydırma
+        confirmDismiss: (direction) async {
+          // Direkt alıntıla ve false döndür ki mesaj silinmesin
+          context.read<MessagesViewModel>().setQuotedMessage(message);
+          return false;
+        },
+        background: _buildSwipeBackground(),
+        child: Row(
+          mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+          children: [
+            Container(
               constraints: BoxConstraints(
                 maxWidth: MediaQuery.of(context).size.width * 0.7,
               ),
@@ -64,13 +71,15 @@ class MessageBubble extends StatelessWidget {
                 ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildQuotedMessage(Message quotedMessage) {
+  Widget _buildQuotedMessage(Message message) {
+    if (message.quotedMessage == null) return const SizedBox.shrink();
+
     return Container(
       padding: const EdgeInsets.all(8),
       margin: const EdgeInsets.only(bottom: 8),
@@ -79,20 +88,11 @@ class MessageBubble extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Colors.grey[400]!),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            quotedMessage.senderId,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-          ),
-          Text(
-            quotedMessage.content,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 14),
-          ),
-        ],
+      child: Text(
+        message.quotedMessage!,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(fontSize: 14),
       ),
     );
   }
@@ -127,31 +127,19 @@ class MessageBubble extends StatelessWidget {
     return content.startsWith('http') && (content.contains('.jpg') || content.contains('.jpeg') || content.contains('.png'));
   }
 
-  void _handleQuote(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Alıntı Yap'),
-        content: const Text('Bu mesajı alıntılamak istiyor musunuz?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('İptal'),
-          ),
-          TextButton(
-            onPressed: () {
-              // ViewModel üzerinden alıntı işlemi tetiklenecek
-              context.read<MessagesViewModel>().setQuotedMessage(message);
-              Navigator.pop(ctx);
-            },
-            child: const Text('Alıntı Yap'),
-          ),
-        ],
-      ),
-    );
-  }
-
   String _formatTime(DateTime time) {
     return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+  }
+
+  Widget _buildSwipeBackground() {
+    return Container(
+      padding: const EdgeInsets.only(left: 16),
+      alignment: Alignment.centerLeft,
+      color: Colors.blue.withOpacity(0.2),
+      child: const Icon(
+        Icons.format_quote,
+        color: Colors.blue,
+      ),
+    );
   }
 }
