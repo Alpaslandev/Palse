@@ -23,19 +23,23 @@ class EditProfileViewModel extends ChangeNotifier {
   }
 
   void _initializeControllers() {
-    nicknameController.text = '@${user.nickname}';
-    nameController.text = user.firstName ?? '';
-    lastNameController.text = user.lastName ?? '';
-    phoneController.text = user.phoneNumber ?? '';
-    addressController.text = '${user.district}, ${user.city}';
-    birthDateController.text = user.birthday != null ? DateFormat('dd/MM/yyyy').format(user.birthday!) : '';
-    genderController.text = user.gender?.name ?? '';
+    _updateControllersFromUser();
 
     // Controller'ların değişikliklerini dinle
     nicknameController.addListener(() => updateNickname(nicknameController.text.replaceAll('@', '')));
     nameController.addListener(() => updateName(nameController.text));
     lastNameController.addListener(() => updateLastName(lastNameController.text));
     phoneController.addListener(() => updatePhoneNumber(phoneController.text));
+  }
+
+  void _updateControllersFromUser() {
+    nicknameController.text = '@${user.nickname ?? ''}';
+    nameController.text = user.firstName ?? '';
+    lastNameController.text = user.lastName ?? '';
+    phoneController.text = user.phoneNumber ?? '';
+    addressController.text = '${user.district ?? ''}, ${user.city ?? ''}'.replaceAll(', ,', ',').trim().replaceAll(RegExp(r'^,|,$'), '');
+    birthDateController.text = user.birthday != null ? DateFormat('dd/MM/yyyy').format(user.birthday!) : '';
+    genderController.text = user.gender?.name ?? '';
   }
 
   @override
@@ -81,20 +85,77 @@ class EditProfileViewModel extends ChangeNotifier {
   void updateCity(String city) {
     debugPrint('Updating city to: $city');
     user.city = city;
-    addressController.text = '${user.district}, $city';
+    _updateAddressText();
     notifyListeners();
   }
 
   void updateDistrict(String district) {
     debugPrint('Updating district to: $district');
     user.district = district;
-    addressController.text = '$district, ${user.city}';
+    _updateAddressText();
     notifyListeners();
   }
 
-  void updateGeoPoint(double latitude, double longitude) {
-    debugPrint('Updating geoPoint to: lat=$latitude, lon=$longitude');
-    user.geoPoint = GeoPoint(latitude, longitude);
+  void updateCountry(String country) {
+    debugPrint('Updating country to: $country');
+    user.country = country;
+    notifyListeners();
+  }
+
+  void _updateAddressText() {
+    final district = user.district ?? '';
+    final city = user.city ?? '';
+    if (district.isNotEmpty || city.isNotEmpty) {
+      addressController.text = '$district, $city';
+    }
+  }
+
+  void updateLocation({String? country, String? city, String? district, double? latitude, double? longitude}) {
+    debugPrint('Updating location - country: $country, city: $city, district: $district, lat: $latitude, lon: $longitude');
+
+    // Mevcut değerleri koru
+    final updatedUser = Customer(
+      userID: user.userID,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      nickname: user.nickname,
+      phoneNumber: user.phoneNumber,
+      email: user.email,
+      birthday: user.birthday,
+      gender: user.gender,
+      verification: user.verification,
+      isPremium: user.isPremium,
+      profilePictureUrl: user.profilePictureUrl,
+      coins: user.coins,
+      average: user.average,
+      userReview: user.userReview,
+      userReviewUUIDs: user.userReviewUUIDs,
+      favoriteCategories: user.favoriteCategories,
+      events: user.events,
+      blockUsers: user.blockUsers,
+      messagefriends: user.messagefriends,
+      userComments: user.userComments,
+      userCommentsDate: user.userCommentsDate,
+      userCommentUUIDs: user.userCommentUUIDs,
+      commenderUrl: user.commenderUrl,
+      commenderFullName: user.commenderFullName,
+      favoriteAdverts: user.favoriteAdverts,
+      chatInfos: user.chatInfos,
+      // Yeni konum bilgilerini güncelle
+      country: country ?? user.country,
+      city: city ?? user.city,
+      district: district ?? user.district,
+      geoPoint: latitude != null && longitude != null ? GeoPoint(latitude, longitude) : user.geoPoint,
+    );
+
+    user = updatedUser;
+    _updateControllersFromUser();
+    notifyListeners();
+  }
+
+  void updateCoordinates(double lat, double lon) {
+    debugPrint('Updating coordinates: lat=$lat, lon=$lon');
+    user.geoPoint = GeoPoint(lat, lon);
     notifyListeners();
   }
 

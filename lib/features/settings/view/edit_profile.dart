@@ -105,11 +105,20 @@ class _EditProfileViewState extends State<EditProfileView> {
                       controller: viewModel.addressController,
                       label: 'Konum',
                       prefixIcon: Icons.location_on,
-                      onTap: () {
-                        showModalBottomSheet(
+                      onTap: () async {
+                        final result = await showModalBottomSheet<Map<String, dynamic>>(
                           context: context,
                           builder: (context) => const LocationSheet(),
                         );
+
+                        if (result != null) {
+                          viewModel.updateLocation(
+                            city: result['city'],
+                            district: result['district'],
+                            latitude: result['lat'],
+                            longitude: result['lon'],
+                          );
+                        }
                       },
                       readOnly: true,
                     ),
