@@ -17,7 +17,6 @@ class MessagesViewModel extends ChangeNotifier {
   String? chatId;
   String? currentUserId;
   String? otherUserId;
-  Customer? otherUser;
   List<Message> messages = [];
   bool isLoading = false;
   bool isUploadingImage = false;
@@ -28,7 +27,6 @@ class MessagesViewModel extends ChangeNotifier {
 
   MessagesViewModel(String otherUserId) {
     this.otherUserId = otherUserId;
-    getUserInfo(otherUserId);
   }
 
   void initialize(String chatId, String currentUserId) {
@@ -42,19 +40,8 @@ class MessagesViewModel extends ChangeNotifier {
   }
 
   // Müşteri bilgilerini al
-  Future<Customer?> getUserInfo(String userId) async {
-    isLoading = true;
-    notifyListeners();
-    try {
-      otherUser = await _customerService.fetchUserFromFirestore(userId);
-      return otherUser;
-    } catch (e) {
-      debugPrint('Müşteri bilgileri alınamadı: $e');
-      return null;
-    } finally {
-      isLoading = false;
-      notifyListeners();
-    }
+  Stream<Customer?> getUserInfo(String userId) {
+    return _customerService.getUserStream(userId);
   }
 
   // Alıntı mesajını ayarla

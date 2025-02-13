@@ -4,6 +4,7 @@ import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/features/chats/viewmodel/chats_view_model.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class ChatListItem extends StatelessWidget {
   final Chat chat;
@@ -27,7 +28,9 @@ class ChatListItem extends StatelessWidget {
         builder: (context, snapshot) {
           final user = snapshot.data;
           return CircleAvatar(
-            backgroundImage: user?.profilePictureUrl != null && user!.profilePictureUrl!.isNotEmpty ? NetworkImage(user.profilePictureUrl!) : null,
+            backgroundImage: user?.profilePictureUrl != null && user!.profilePictureUrl!.isNotEmpty
+                ? CachedNetworkImageProvider(user.profilePictureUrl!) as ImageProvider
+                : null,
             child: user?.profilePictureUrl == null || user!.profilePictureUrl!.isEmpty ? const Icon(Icons.person) : null,
           );
         },
@@ -61,9 +64,9 @@ class ChatListItem extends StatelessWidget {
         children: [
           if (isLastMessageMine) ...[
             Icon(
-              chat.unreadCount == 0 ? Icons.done_all : Icons.done,
+              chat.lastMessageIsRead ? Icons.done_all : Icons.done,
               size: 16,
-              color: chat.unreadCount == 0 ? Colors.blue : Colors.grey,
+              color: chat.lastMessageIsRead ? Colors.blue : Colors.grey,
             ),
             const SizedBox(width: 4),
           ],

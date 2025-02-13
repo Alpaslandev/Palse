@@ -89,4 +89,13 @@ class CustomerService {
       debugPrint('Kullanıcı ilan referansları temizlenirken hata: $e');
     }
   }
+
+  // Kullanıcı bilgilerini stream olarak al
+  Stream<Customer?> getUserStream(String userId) {
+    return _firestore
+        .collection('customers')
+        .doc(userId)
+        .snapshots()
+        .map((snapshot) => snapshot.data() != null ? Customer.fromJson(snapshot.data()!, userId) : null);
+  }
 }

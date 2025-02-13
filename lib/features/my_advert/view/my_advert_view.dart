@@ -52,7 +52,18 @@ class _MyAdvertViewState extends State<MyAdvertView> with TickerProviderStateMix
                               final advert = viewModel.myAdverts[index];
                               final customer = authProvider.user;
                               if (advert == null) return const SizedBox();
-                              return AdvertCard(advert: advert, isUserAdvert: true, customer: customer!);
+                              return AdvertCard(
+                                advert: advert,
+                                isUserAdvert: true,
+                                customer: customer!,
+                                onDeleteTap: () {
+                                  debugPrint('sil');
+                                  //  viewModel.deleteAdvert(advert.advertID);
+                                },
+                                onSeeViewersTap: () {
+                                  debugPrint('gör');
+                                },
+                              );
                             },
                           ),
                     // Beğendiklerim
@@ -66,20 +77,22 @@ class _MyAdvertViewState extends State<MyAdvertView> with TickerProviderStateMix
                               final customer = viewModel.getCustomerForAdvert(advert);
                               if (advert == null) return const SizedBox();
                               return AdvertCard(
-                                  advert: advert,
-                                  customer: customer!,
-                                  onProfileTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(builder: (context) => FriendProfileView(customer: customer)),
-                                    );
-                                  },
-                                  onAdvertDetailTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(builder: (context) => AdvertDetail(advert: advert)),
-                                    );
-                                  });
+                                advert: advert,
+                                customer: customer!,
+                                isLiked: advert.countUUIDs.contains(authProvider.user?.userID ?? ''),
+                                onProfileTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => FriendProfileView(customer: customer)),
+                                  );
+                                },
+                                onMessageTap: () {
+                                  debugPrint('mesaj');
+                                },
+                                onLikeTap: () {
+                                  debugPrint('beğen');
+                                },
+                              );
                             },
                           ),
                     // Son Baktıklarım
@@ -92,20 +105,15 @@ class _MyAdvertViewState extends State<MyAdvertView> with TickerProviderStateMix
                               final customer = viewModel.getCustomerForAdvert(advert);
                               if (advert == null) return const SizedBox();
                               return AdvertCard(
-                                  advert: advert,
-                                  customer: customer!,
-                                  onProfileTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(builder: (context) => FriendProfileView(customer: customer)),
-                                    );
-                                  },
-                                  onAdvertDetailTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(builder: (context) => AdvertDetail(advert: advert)),
-                                    );
-                                  });
+                                advert: advert,
+                                customer: customer!,
+                                onProfileTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => FriendProfileView(customer: customer)),
+                                  );
+                                },
+                              );
                             },
                           ),
                   ],

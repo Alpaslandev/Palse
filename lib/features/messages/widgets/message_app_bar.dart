@@ -1,14 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/features/messages/viewmodel/messages_view_model.dart';
 
 class MessageAppBar extends StatelessWidget implements PreferredSizeWidget {
   final MessagesViewModel vm;
-  const MessageAppBar({super.key, required this.vm});
+  final String otherUserId;
+
+  const MessageAppBar({
+    super.key,
+    required this.vm,
+    required this.otherUserId,
+  });
 
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      backgroundColor: const Color(0xFF2196F3), // Mavi renk
+      backgroundColor: const Color(0xFF2196F3),
       elevation: 0,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
@@ -20,56 +28,62 @@ class MessageAppBar extends StatelessWidget implements PreferredSizeWidget {
         onPressed: () => Navigator.pop(context),
       ),
       titleSpacing: 0,
-      title: Row(
-        children: [
-          CircleAvatar(
-            backgroundImage: vm.otherUser?.profilePictureUrl != null
-                ? NetworkImage(vm.otherUser!.profilePictureUrl!)
-                : const AssetImage('assets/images/dostum_olsana.png') as ImageProvider,
-            radius: 18,
-          ),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      title: StreamBuilder<Customer?>(
+        stream: vm.getUserInfo(otherUserId),
+        builder: (context, snapshot) {
+          final user = snapshot.data;
+          return Row(
             children: [
-              Text(
-                '${vm.otherUser?.firstName ?? vm.otherUser?.lastName ?? ''} ${vm.otherUser?.getAge() != null ? '(${vm.otherUser?.getAge()})' : ''}',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+              CircleAvatar(
+                backgroundImage: user?.profilePictureUrl != null && user!.profilePictureUrl!.isNotEmpty
+                    ? CachedNetworkImageProvider(user.profilePictureUrl!) as ImageProvider
+                    : const AssetImage('assets/images/dostum_olsana.png'),
+                radius: 18,
               ),
-              if (vm.otherUser?.nickname != null && vm.otherUser?.nickname != '')
-                Text(
-                  '@${vm.otherUser?.nickname ?? ''}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w300,
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${user?.firstName ?? user?.lastName ?? ''} ${user?.getAge() != null ? '(${user?.getAge()})' : ''}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-              if (vm.otherUser?.isPremium != true)
-                Row(
-                  children: [
-                    const Icon(Icons.workspace_premium, color: Colors.yellow, size: 14),
-                    const SizedBox(width: 4),
+                  if (user?.nickname != null && user?.nickname != '')
                     Text(
-                      'Sosyal Usta (${vm.otherUser?.coins ?? 0} XP)',
+                      '@${user?.nickname ?? ''}',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 12,
+                        fontWeight: FontWeight.w300,
                       ),
                     ),
-                  ],
-                ),
+                  if (user?.isPremium != true)
+                    Row(
+                      children: [
+                        const Icon(Icons.workspace_premium, color: Colors.yellow, size: 14),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Sosyal Usta (${user?.coins ?? 0} XP)',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                ],
+              ),
             ],
-          ),
-        ],
+          );
+        },
       ),
     );
   }
 
   @override
-  Size get preferredSize => Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }

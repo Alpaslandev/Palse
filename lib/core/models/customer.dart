@@ -142,7 +142,7 @@ class Customer {
       nickname: parsedJson['nickname'] ?? '',
       firstName: parsedJson['firstName'] ?? '',
       lastName: parsedJson['lastName'] ?? '',
-      userID: userID,
+      userID: userID ?? parsedJson['id'] ?? '',
       coins: parsedJson['coins'] ?? 10,
       average: (parsedJson['average'] is int) ? (parsedJson['average'] as int).toDouble() : (parsedJson['average'] ?? 0.0),
       userReview: List<double>.from(parsedJson['userReview'] ?? []),

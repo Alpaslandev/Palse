@@ -8,6 +8,7 @@ class SettingsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Ayarlar'),
@@ -18,10 +19,15 @@ class SettingsView extends StatelessWidget {
           _SettingsTile(
             icon: Icons.person_outline,
             title: 'Profil',
-            trailing: const Text(
-              'Hesabın Onaylı Değil',
-              style: TextStyle(color: Colors.red),
-            ),
+            trailing: authProvider.user?.verification == false
+                ? const Text(
+                    'Hesabın Onaylı Değil',
+                    style: TextStyle(color: Colors.red),
+                  )
+                : const Text(
+                    'Hesabın Onaylı',
+                    style: TextStyle(color: Colors.green),
+                  ),
           ),
           const _SectionTitle(title: 'Uygulama'),
           _SettingsTile(

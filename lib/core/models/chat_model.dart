@@ -7,6 +7,7 @@ class Chat {
   final DateTime lastMessageTime;
   final String lastMessageSenderId;
   final int unreadCount;
+  final bool lastMessageIsRead;
 
   Chat({
     required this.id,
@@ -15,6 +16,7 @@ class Chat {
     required this.lastMessageTime,
     required this.lastMessageSenderId,
     this.unreadCount = 0,
+    this.lastMessageIsRead = false,
   });
 
   factory Chat.fromMap(Map<String, dynamic> map) {
@@ -25,6 +27,7 @@ class Chat {
       lastMessageTime: map['lastMessageTime'] != null ? (map['lastMessageTime'] as Timestamp).toDate() : DateTime.now(),
       lastMessageSenderId: map['lastMessageSenderId'] ?? '',
       unreadCount: map['unreadCount'] ?? 0,
+      lastMessageIsRead: map['lastMessageIsRead'] ?? false,
     );
   }
 
@@ -36,6 +39,7 @@ class Chat {
       'lastMessageTime': Timestamp.fromDate(lastMessageTime),
       'lastMessageSenderId': lastMessageSenderId,
       'unreadCount': unreadCount,
+      'lastMessageIsRead': lastMessageIsRead,
     };
   }
 
@@ -47,6 +51,7 @@ class Chat {
       lastMessageTime: json['lastMessageTime'] != null ? (json['lastMessageTime'] as Timestamp).toDate() : DateTime.now(),
       lastMessageSenderId: '',
       unreadCount: json['unreadCount'] as int? ?? 0,
+      lastMessageIsRead: json['lastMessageIsRead'] ?? false,
     );
   }
 
@@ -58,6 +63,7 @@ class Chat {
       lastMessageTime: DateTime.now(),
       lastMessageSenderId: '',
       unreadCount: 0,
+      lastMessageIsRead: false,
     );
   }
 }

@@ -40,6 +40,11 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: Colors.white,
         primarySwatch: Colors.blue,
         useMaterial3: true,
+        appBarTheme: AppBarTheme(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+        ),
       ),
       routerConfig: AppRouter.router,
     );

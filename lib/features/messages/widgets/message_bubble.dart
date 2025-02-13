@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
 import 'package:palseapp/core/models/chat_model.dart';
+import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/features/messages/viewmodel/messages_view_model.dart';
 import 'package:provider/provider.dart';
 
@@ -36,11 +37,17 @@ class MessageBubble extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             if (!isMe) ...[
-              CircleAvatar(
-                radius: 16,
-                backgroundImage: vm.otherUser?.profilePictureUrl != null
-                    ? CachedNetworkImageProvider(vm.otherUser!.profilePictureUrl!) as ImageProvider
-                    : const AssetImage('assets/images/dostum_olsana.png'),
+              StreamBuilder<Customer?>(
+                stream: vm.getUserInfo(message.senderId),
+                builder: (context, snapshot) {
+                  final user = snapshot.data;
+                  return CircleAvatar(
+                    radius: 16,
+                    backgroundImage: user?.profilePictureUrl != null && user!.profilePictureUrl!.isNotEmpty
+                        ? CachedNetworkImageProvider(user.profilePictureUrl!) as ImageProvider
+                        : const AssetImage('assets/images/dostum_olsana.png'),
+                  );
+                },
               ),
               const SizedBox(width: 8),
             ],

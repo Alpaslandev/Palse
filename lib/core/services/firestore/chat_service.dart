@@ -135,7 +135,7 @@ class ChatService {
 
     // Transaction başlat
     await db.runTransaction((transaction) async {
-      // 1. Mesajları okundu olarak işaretle
+      // 1. Önce tüm okumaları yapalım
       final messagesQuery = await db
           .collection('chats')
           .doc(chatId)
@@ -144,11 +144,21 @@ class ChatService {
           .where('isRead', isEqualTo: false)
           .get();
 
+      final chatDoc = await transaction.get(db.collection('chats').doc(chatId));
+      final lastMessageSenderId = chatDoc.data()?['lastMessageSenderId'];
+
+      // 2. Şimdi yazma işlemlerini yapalım
+      // Mesajları okundu olarak işaretle
       for (var doc in messagesQuery.docs) {
         transaction.update(doc.reference, {'isRead': true});
       }
 
-      // 2. unreadCount'u sıfırla
+      // Son mesajın göndereni karşı tarafsa, son mesajı okundu olarak işaretle
+      if (lastMessageSenderId == otherUserId) {
+        transaction.update(db.collection('chats').doc(chatId), {'lastMessageIsRead': true});
+      }
+
+      // unreadCount'u sıfırla
       transaction.set(
           db.collection('customers').doc(currentUserId),
           {
@@ -178,6 +188,7 @@ class ChatService {
         'lastMessage': message.type == 'image' ? '📷 Fotoğraf' : message.content,
         'lastMessageTime': message.timestamp,
         'lastMessageSenderId': message.senderId,
+        'lastMessageIsRead': false,
       });
       debugPrint('ChatService - Son mesaj bilgileri güncelleniyor...');
 

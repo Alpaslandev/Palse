@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:palseapp/features/messages/viewmodel/messages_view_model.dart';
 import 'package:palseapp/features/messages/widgets/message_bubble.dart';
 import 'package:palseapp/features/messages/widgets/message_input.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class MessagesView extends StatefulWidget {
   final String chatId;
@@ -54,7 +55,10 @@ class _MessagesViewState extends State<MessagesView> {
       value: _viewModel,
       child: Consumer<MessagesViewModel>(
         builder: (context, vm, _) => Scaffold(
-          appBar: MessageAppBar(vm: vm),
+          appBar: MessageAppBar(
+            vm: vm,
+            otherUserId: widget.otherUserId,
+          ),
           body: Column(
             children: [
               Expanded(
@@ -65,7 +69,8 @@ class _MessagesViewState extends State<MessagesView> {
                       return const Center(child: Text('Bir hata oluştu'));
                     }
 
-                    if (snapshot.connectionState == ConnectionState.waiting) {
+                    // İlk yüklemede loading göster
+                    if (!snapshot.hasData && snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(child: CircularProgressIndicator());
                     }
 
@@ -83,6 +88,12 @@ class _MessagesViewState extends State<MessagesView> {
                         );
                       }
                     });
+
+                    if (messages.isEmpty) {
+                      return const Center(
+                        child: Text('Henüz mesaj yok'),
+                      );
+                    }
 
                     return ListView.builder(
                       controller: _scrollController,
