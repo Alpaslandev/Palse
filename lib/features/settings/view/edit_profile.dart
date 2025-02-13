@@ -16,39 +16,6 @@ class EditProfileView extends StatefulWidget {
 }
 
 class _EditProfileViewState extends State<EditProfileView> {
-  late final TextEditingController _nicknameController;
-  late final TextEditingController _nameController;
-  late final TextEditingController _lastNameController;
-  late final TextEditingController _phoneController;
-  late final TextEditingController _addressController;
-  late final TextEditingController _birthDateController;
-  late final TextEditingController _genderController;
-
-  @override
-  void initState() {
-    super.initState();
-    // Mevcut kullanıcı bilgilerini form alanlarına yerleştir
-    _nicknameController = TextEditingController(text: '@${widget.user.nickname}');
-    _nameController = TextEditingController(text: widget.user.firstName);
-    _lastNameController = TextEditingController(text: widget.user.lastName);
-    _phoneController = TextEditingController(text: widget.user.phoneNumber);
-    _addressController = TextEditingController(text: '${widget.user.district}, ${widget.user.city}');
-    _birthDateController = TextEditingController(text: DateFormat('dd/MM/yyyy').format(widget.user.birthday!));
-    _genderController = TextEditingController(text: widget.user.gender?.name);
-  }
-
-  @override
-  void dispose() {
-    _nicknameController.dispose();
-    _nameController.dispose();
-    _lastNameController.dispose();
-    _phoneController.dispose();
-    _addressController.dispose();
-    _birthDateController.dispose();
-    _genderController.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
@@ -59,10 +26,29 @@ class _EditProfileViewState extends State<EditProfileView> {
             title: const Text('Profili Düzenle'),
             actions: [
               TextButton(
-                onPressed: () async {
-                  await viewModel.updateProfil();
-                },
-                child: const Text('Kaydet', style: TextStyle(color: Colors.blue)),
+                onPressed: viewModel.isLoading
+                    ? null
+                    : () async {
+                        await viewModel.updateProfil();
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Profil başarıyla güncellendi'),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        }
+                      },
+                child: viewModel.isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                        ),
+                      )
+                    : const Text('Kaydet', style: TextStyle(color: Colors.blue)),
               ),
             ],
           ),
@@ -73,8 +59,8 @@ class _EditProfileViewState extends State<EditProfileView> {
               children: [
                 CircleAvatar(
                   radius: 50,
-                  backgroundImage: widget.user.profilePictureUrl != null
-                      ? NetworkImage(widget.user.profilePictureUrl!)
+                  backgroundImage: viewModel.user.profilePictureUrl != null
+                      ? NetworkImage(viewModel.user.profilePictureUrl!)
                       : const AssetImage('assets/images/dostum_olsana.png'),
                 ),
                 TextButton(
@@ -89,34 +75,34 @@ class _EditProfileViewState extends State<EditProfileView> {
                   spacing: 16,
                   children: [
                     _buildTextField(
-                      controller: _nicknameController,
+                      controller: viewModel.nicknameController,
                       label: 'Kullanıcı Adı',
                       keyboardType: TextInputType.name,
-                      readOnly: widget.user.nickname!.length > 4,
+                      readOnly: viewModel.user.nickname!.length > 4,
                     ),
                     _buildTextField(
-                      controller: _nameController,
+                      controller: viewModel.nameController,
                       label: 'Ad',
                       keyboardType: TextInputType.name,
                       prefixIcon: Icons.person,
                     ),
                     _buildTextField(
-                      controller: _lastNameController,
+                      controller: viewModel.lastNameController,
                       label: 'Soyad',
                       keyboardType: TextInputType.name,
                       prefixIcon: Icons.person,
                     ),
                     _buildTextField(
-                      controller: _phoneController,
+                      controller: viewModel.phoneController,
                       label: 'Telefon',
                       keyboardType: TextInputType.phone,
-                      readOnly: widget.user.verification == true,
+                      readOnly: viewModel.user.verification == true,
                       prefixIcon: Icons.phone,
                     ),
-                    if (widget.user.verification == false) const Text('Telefon Doğrulanmamıştır.', style: TextStyle(color: Colors.red)),
-                    if (widget.user.verification == true) const Text('Telefon Doğrulanmıştır.', style: TextStyle(color: Colors.green)),
+                    if (viewModel.user.verification == false) const Text('Telefon Doğrulanmamıştır.', style: TextStyle(color: Colors.red)),
+                    if (viewModel.user.verification == true) const Text('Telefon Doğrulanmıştır.', style: TextStyle(color: Colors.green)),
                     _buildTextField(
-                      controller: _addressController,
+                      controller: viewModel.addressController,
                       label: 'Konum',
                       prefixIcon: Icons.location_on,
                       onTap: () {
@@ -128,18 +114,18 @@ class _EditProfileViewState extends State<EditProfileView> {
                       readOnly: true,
                     ),
                     _buildTextField(
-                      controller: _birthDateController,
+                      controller: viewModel.birthDateController,
                       label: 'Doğum Tarihi',
                       keyboardType: TextInputType.datetime,
                       readOnly: true,
                       prefixIcon: Icons.calendar_month,
                     ),
                     _buildTextField(
-                      controller: _genderController,
+                      controller: viewModel.genderController,
                       label: 'Cinsiyet',
                       keyboardType: TextInputType.name,
                       readOnly: true,
-                      prefixIcon: widget.user.gender?.name == 'Male' ? Icons.male : Icons.female,
+                      prefixIcon: viewModel.user.gender?.name == 'Male' ? Icons.male : Icons.female,
                     ),
                   ],
                 ),
