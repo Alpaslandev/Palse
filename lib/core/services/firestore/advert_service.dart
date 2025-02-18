@@ -9,7 +9,7 @@ class AdvertService {
   // Firestore'dan 10 ilan çeker
   Future<List<Advert>?> fetchAdvertsFromFirestore() async {
     try {
-      final querySnapshot = await _firestore.collection('adverts').orderBy('createdAt', descending: true).limit(10).get();
+      final querySnapshot = await _firestore.collection('adverts').orderBy('createdAt', descending: true).limit(30).get();
 
       return querySnapshot.docs.map((doc) {
         final data = doc.data();
@@ -19,6 +19,13 @@ class AdvertService {
       debugPrint('İlanlar çekilirken hata: $e');
       return null;
     }
+  }
+
+  Stream<List<Advert>> streamAdverts() {
+    return _firestore.collection('adverts').orderBy('createdAt', descending: true).limit(30).snapshots().map((snapshot) => snapshot.docs.map((doc) {
+          final data = doc.data();
+          return Advert.fromJson(data, doc.id);
+        }).toList());
   }
 
 // İlanı hem events hem de adverts koleksiyonlarında arar

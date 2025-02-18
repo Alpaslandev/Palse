@@ -5,6 +5,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
 import 'package:palseapp/core/models/advert.dart';
 import 'package:palseapp/core/models/customer.dart';
+import 'package:palseapp/core/widgets/advert/helper/calculate_distance.dart';
 
 // Kullanıcı ilanlarını gösteren kart tasarımı
 class AdvertCard extends StatelessWidget {
@@ -19,11 +20,15 @@ class AdvertCard extends StatelessWidget {
     this.isLiked = false,
     this.onDeleteTap,
     this.onSeeViewersTap,
+    this.isMyLikes = false,
+    this.isFriendProfile = false,
   });
 
   final Advert advert;
   final Customer customer;
   final bool isUserAdvert;
+  final bool isMyLikes;
+  final bool isFriendProfile;
 
   final VoidCallback? onProfileTap;
 
@@ -53,7 +58,7 @@ class AdvertCard extends StatelessWidget {
                   customer.firstName ?? "advert",
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
-                if (advert.countUUIDs.length > 1)
+                if (customer.verification == true && customer.phoneNumber != null)
                   const Padding(
                     padding: EdgeInsets.only(left: 4),
                     child: Icon(Icons.verified, color: Colors.blue, size: 16),
@@ -126,27 +131,28 @@ class AdvertCard extends StatelessWidget {
               ),
 
               const SizedBox(height: 10),
+              if (!isFriendProfile) ...[
+                if (isUserAdvert)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      _buildButton('Beğenenleri Gör', Icons.visibility_outlined, onSeeViewersTap ?? () {}),
+                      const SizedBox(width: 10),
+                      _buildButton('Sil', Icons.delete_outlined, onDeleteTap ?? () {}, isDelete: true),
+                    ],
+                  ),
 
-              if (isUserAdvert)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    _buildButton('Beğenenleri Gör', Icons.visibility_outlined, onSeeViewersTap ?? () {}),
-                    const SizedBox(width: 10),
-                    _buildButton('Sil', Icons.delete_outlined, onDeleteTap ?? () {}, isDelete: true),
-                  ],
-                ),
-
-              // Alt kısım - Beğeni ve mesaj butonları
-              if (!isUserAdvert)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    _buildButton('Beğen', isLiked ? Icons.favorite : Icons.favorite_border, onLikeTap ?? () {}, showCount: true),
-                    const SizedBox(width: 10),
-                    _buildButton('Mesaj', Icons.message_outlined, onMessageTap ?? () {}),
-                  ],
-                ),
+                // Alt kısım - Beğeni ve mesaj butonları
+                if (!isUserAdvert)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      if (!isMyLikes) _buildButton('Beğen', isLiked ? Icons.favorite : Icons.favorite_border, onLikeTap ?? () {}, showCount: true),
+                      const SizedBox(width: 10),
+                      _buildButton('Mesaj', Icons.message_outlined, onMessageTap ?? () {}),
+                    ],
+                  ),
+              ],
             ],
           ),
         ]));
@@ -196,25 +202,25 @@ class AdvertCard extends StatelessWidget {
     );
   }
 
-  // İki konum arasındaki mesafeyi kilometre cinsinden hesaplar
-  String calculateDistance(GeoPoint customerLocation, GeoPoint advertLocation) {
-    const int earthRadius = 6371000; // Dünya yarıçapı (metre)
+  // // İki konum arasındaki mesafeyi kilometre cinsinden hesaplar
+  // String calculateDistance(GeoPoint customerLocation, GeoPoint advertLocation) {
+  //   const int earthRadius = 6371000; // Dünya yarıçapı (metre)
 
-    double lat1 = customerLocation.latitude * (pi / 180);
-    double lon1 = customerLocation.longitude * (pi / 180);
-    double lat2 = advertLocation.latitude * (pi / 180);
-    double lon2 = advertLocation.longitude * (pi / 180);
+  //   double lat1 = customerLocation.latitude * (pi / 180);
+  //   double lon1 = customerLocation.longitude * (pi / 180);
+  //   double lat2 = advertLocation.latitude * (pi / 180);
+  //   double lon2 = advertLocation.longitude * (pi / 180);
 
-    double dLat = lat2 - lat1;
-    double dLon = lon2 - lon1;
+  //   double dLat = lat2 - lat1;
+  //   double dLon = lon2 - lon1;
 
-    double a = sin(dLat / 2) * sin(dLat / 2) + cos(lat1) * cos(lat2) * sin(dLon / 2) * sin(dLon / 2);
-    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+  //   double a = sin(dLat / 2) * sin(dLat / 2) + cos(lat1) * cos(lat2) * sin(dLon / 2) * sin(dLon / 2);
+  //   double c = 2 * atan2(sqrt(a), sqrt(1 - a));
 
-    final distance = (earthRadius * c / 1000).ceil();
+  //   final distance = (earthRadius * c / 1000).ceil();
 
-    final distanceString = "$distance km";
+  //   final distanceString = "$distance km";
 
-    return distanceString; // Direkt olarak km cinsinden sonuç
-  }
+  //   return distanceString; // Direkt olarak km cinsinden sonuç
+  // }
 }

@@ -43,6 +43,7 @@ class Customer {
   List<String>? favoriteCategories;
   List<String>? blockUsers;
   List<String>? favoriteAdverts;
+  List<String>? profileViewers;
   bool? firstNotification;
   Map<String, Chat>? chatInfos;
 
@@ -79,6 +80,7 @@ class Customer {
     this.geoPoint,
     this.favoriteAdverts,
     this.chatInfos,
+    this.profileViewers,
   }) : appIdentifier = 'Customer App';
 
   String fullName() => '$firstName $lastName';
@@ -142,7 +144,7 @@ class Customer {
       nickname: parsedJson['nickname'] ?? '',
       firstName: parsedJson['firstName'] ?? '',
       lastName: parsedJson['lastName'] ?? '',
-      userID: userID ?? parsedJson['id'] ?? '',
+      userID: userID,
       coins: parsedJson['coins'] ?? 10,
       average: (parsedJson['average'] is int) ? (parsedJson['average'] as int).toDouble() : (parsedJson['average'] ?? 0.0),
       userReview: List<double>.from(parsedJson['userReview'] ?? []),
@@ -155,7 +157,7 @@ class Customer {
       commenderUrl: List<String>.from(parsedJson['commenderUrl'] ?? []),
       favoriteCategories: List<String>.from(parsedJson['favoriteCategories'] ?? []),
       favoriteAdverts: List<String>.from(parsedJson['favoriteAdverts'] ?? []),
-      events: List<String>.from(parsedJson['events'] ?? []),
+      events: List<String>.from(parsedJson['events'] ?? List<String>.from(parsedJson['adverts'] ?? [])),
       verification: parsedJson['verification'] ?? false,
       isPremium: parsedJson['isPremium'] ?? false,
       firstNotification: parsedJson['firstNotification'] ?? false,
@@ -168,6 +170,7 @@ class Customer {
       messagefriends: List<String>.from(parsedJson['messageFriends'] ?? []),
       geoPoint: parsedJson['geoPoint'],
       chatInfos: chatInfos,
+      profileViewers: List<String>.from(parsedJson['profileViewers'] ?? []),
     );
   }
 
@@ -193,6 +196,7 @@ class Customer {
       'city': city,
       'district': district,
       'blockUsers': blockUsers,
+      'profileViewers': profileViewers,
       'gender': gender?.name,
       'birthday': birthday != null ? Timestamp.fromDate(birthday!) : null,
       'favoriteCategories': favoriteCategories,
@@ -246,6 +250,7 @@ class Customer {
     List<String>? commenderFullName,
     GeoPoint? geoPoint,
     Map<String, Chat>? chatInfos,
+    List<String>? profileViewers,
   }) {
     return Customer(
       profilePictureUrl: profilePictureUrl ?? this.profilePictureUrl,
@@ -276,6 +281,7 @@ class Customer {
       commenderFullName: commenderFullName ?? this.commenderFullName,
       geoPoint: geoPoint ?? this.geoPoint,
       chatInfos: chatInfos ?? this.chatInfos,
+      profileViewers: profileViewers ?? this.profileViewers,
     );
   }
 

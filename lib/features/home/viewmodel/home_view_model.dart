@@ -16,6 +16,14 @@ class HomeViewModel extends ChangeNotifier {
   Map<String, Customer> get customers => _customers;
   bool get isLoading => _isLoading;
 
+  // İlanları stream olarak dinle
+  Stream<List<Advert>> get advertsStream => _advertService.streamAdverts();
+
+  // Belirli bir kullanıcıyı stream olarak al
+  Stream<Customer?> streamCustomer(String userId) {
+    return _customerService.getUserStream(userId);
+  }
+
   Future<void> getAdverts() async {
     _setLoading(true);
     try {
@@ -50,13 +58,14 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Like/Unlike işlemleri
   Future<void> likeAdvert(String advertId, String userId) async {
     try {
       await _advertService.likeAdvert(advertId, userId);
       await _customerService.likeAdvert(advertId, userId);
-      notifyListeners();
+      // Stream kullandığımız için notifyListeners() gerekmiyor
     } catch (e) {
-      debugPrint('Hata: $e');
+      debugPrint('Like hatası: $e');
     }
   }
 
@@ -64,9 +73,9 @@ class HomeViewModel extends ChangeNotifier {
     try {
       await _advertService.unlikeAdvert(advertId, userId);
       await _customerService.unlikeAdvert(advertId, userId);
-      notifyListeners();
+      // Stream kullandığımız için notifyListeners() gerekmiyor
     } catch (e) {
-      debugPrint('Hata: $e');
+      debugPrint('Unlike hatası: $e');
     }
   }
 

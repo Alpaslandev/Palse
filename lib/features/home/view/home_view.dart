@@ -40,10 +40,10 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
-
     final chatsViewModel = Provider.of<ChatsViewModel>(context);
+
     return ChangeNotifierProvider(
-      create: (context) => HomeViewModel()..getAdverts(),
+      create: (context) => HomeViewModel(),
       child: Scaffold(
         appBar: PreferredSize(
           preferredSize: const Size.fromHeight(48),
@@ -52,22 +52,15 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
               Expanded(
                 child: TabBar(
                   controller: _tabController,
-                  indicatorColor: Colors.blue,
-                  labelColor: Colors.blue,
-                  unselectedLabelColor: Colors.grey,
-                  dividerHeight: 0.2,
-                  isScrollable: false,
                   tabs: const [
-                    Tab(text: 'İlgine Göre'),
                     Tab(text: 'Şehrine Göre'),
+                    Tab(text: 'İlgine Göre'),
                     Tab(text: 'Diğer'),
                   ],
                 ),
               ),
               IconButton(
-                onPressed: () {
-                  debugPrint('filter button');
-                },
+                onPressed: () => debugPrint('filter button'),
                 icon: const Icon(Icons.tune, color: Colors.blue),
               ),
             ],
@@ -75,59 +68,78 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
         ),
         body: Consumer<HomeViewModel>(
           builder: (context, viewModel, child) {
-            if (viewModel.isLoading) {
-              return const Center(child: CircularProgressIndicator());
-            }
+            return StreamBuilder<List<Advert>>(
+              stream: viewModel.advertsStream,
+              builder: (context, advertSnapshot) {
+                if (advertSnapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-            // Filtrelenmiş ve sıralanmış listeler
-            final filteredAdverts = _getFilteredAdverts(
-              viewModel.adverts,
-              authProvider.user,
-              _tabController.index,
-            );
+                if (advertSnapshot.hasError) {
+                  return Center(child: Text('Hata: ${advertSnapshot.error}'));
+                }
 
-            return ListView.builder(
-              shrinkWrap: true,
-              itemCount: filteredAdverts.length,
-              itemBuilder: (context, index) {
-                final advert = filteredAdverts[index];
-                final customer = viewModel.getCustomerForAdvert(advert);
+                if (!advertSnapshot.hasData || advertSnapshot.data!.isEmpty) {
+                  return const Center(child: Text('Henüz ilan bulunmuyor'));
+                }
 
-                if (customer == null) return const SizedBox.shrink();
+                final filteredAdverts = _getFilteredAdverts(
+                  advertSnapshot.data!,
+                  authProvider.user,
+                  _tabController.index,
+                );
 
-                return AdvertCard(
-                  advert: advert,
-                  customer: customer,
-                  isLiked: advert.countUUIDs.contains(authProvider.user?.userID ?? ''),
-                  onLikeTap: () async {
-                    if (advert.countUUIDs.contains(authProvider.user!.userID ?? '')) {
-                      await viewModel.unlikeAdvert(advert.advertID ?? '', authProvider.user!.userID ?? '');
-                      debugPrint('unlikeAdvert');
-                    } else {
-                      await viewModel.likeAdvert(advert.advertID ?? '', authProvider.user!.userID ?? '');
-                      debugPrint('likeAdvert');
-                    }
-                  },
-                  onProfileTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => FriendProfileView(customer: customer),
-                      ),
+                return ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: filteredAdverts.length,
+                  itemBuilder: (context, index) {
+                    final advert = filteredAdverts[index];
+
+                    return StreamBuilder<Customer?>(
+                      stream: viewModel.streamCustomer(advert.creatorUserID),
+                      builder: (context, customerSnapshot) {
+                        if (!customerSnapshot.hasData) {
+                          return const SizedBox.shrink();
+                        }
+
+                        final customer = customerSnapshot.data!;
+
+                        return AdvertCard(
+                          advert: advert,
+                          customer: customer,
+                          isLiked: advert.countUUIDs.contains(authProvider.user?.userID),
+                          onLikeTap: () async {
+                            final userId = authProvider.user?.userID;
+                            if (userId == null) return;
+
+                            if (advert.countUUIDs.contains(userId)) {
+                              await viewModel.unlikeAdvert(advert.advertID ?? '', userId);
+                            } else {
+                              await viewModel.likeAdvert(advert.advertID ?? '', userId);
+                            }
+                          },
+                          onProfileTap: () {
+                            context.push(friendProfile, extra: customer);
+                          },
+                          onMessageTap: () async {
+                            final userId = authProvider.user?.userID;
+                            if (userId == null) return;
+
+                            final chatId = await chatsViewModel.startOrGetChat(
+                              userId,
+                              customer.userID ?? '',
+                            );
+
+                            if (context.mounted) {
+                              context.pushNamed(
+                                'messages',
+                                extra: {'chatId': chatId, 'otherUserId': customer.userID},
+                              );
+                            }
+                          },
+                        );
+                      },
                     );
-                  },
-                  onMessageTap: () async {
-                    final chatId = await chatsViewModel.startOrGetChat(
-                      authProvider.user!.userID ?? '',
-                      customer.userID ?? '',
-                    );
-
-                    if (context.mounted) {
-                      context.pushNamed(
-                        'messages',
-                        extra: {'chatId': chatId, 'otherUserId': customer.userID},
-                      );
-                    }
                   },
                 );
               },
@@ -137,10 +149,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
         floatingActionButton: FloatingActionButton.extended(
           backgroundColor: Colors.blue,
           shape: const StadiumBorder(),
-          onPressed: () {
-            debugPrint('floating action button');
-            context.push(createAdvert);
-          },
+          onPressed: () => context.push(createAdvert),
           label: const Text('İlan Ver', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         ),
       ),
@@ -155,17 +164,16 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     if (user == null) return adverts;
 
     switch (tabIndex) {
-      case 0: // İlgine Göre
-        final favoriteCategories = user.favoriteCategories?.map((e) => e.toLowerCase().trim()).toList();
-        if (favoriteCategories != null && favoriteCategories.isNotEmpty) {
-          return adverts.where((advert) => favoriteCategories.contains(advert.advertType.toLowerCase().trim() ?? '')).toList();
-        }
-        return adverts;
-
-      case 1: // Şehrine Göre
+      case 0: // Şehrine Göre
         final userCity = user.city?.toLowerCase().trim();
         if (userCity != null && userCity.isNotEmpty) {
           return adverts.where((advert) => (advert.city?.toLowerCase().trim() ?? '') == userCity).toList();
+        }
+        return adverts;
+      case 1: // İlgine Göre
+        final favoriteCategories = user.favoriteCategories?.map((e) => e.toLowerCase().trim()).toList();
+        if (favoriteCategories != null && favoriteCategories.isNotEmpty) {
+          return adverts.where((advert) => favoriteCategories.contains(advert.advertType.toLowerCase().trim() ?? '')).toList();
         }
         return adverts;
 

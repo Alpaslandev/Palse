@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:palseapp/core/models/advert.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
+import 'package:palseapp/core/services/auth/auth_service.dart';
 import 'package:palseapp/core/services/firestore/advert_service.dart';
 import 'package:palseapp/core/services/firestore/customer_service.dart';
 
@@ -14,13 +15,13 @@ class MyAdvertViewModel extends ChangeNotifier {
   final List<Advert?> _favorites = [];
   final Map<String, Customer> _customers = {}; // userId -> Customer eşleşmesi
   bool _isLoading = false;
-  final List<Advert?> _recentlyViewed = [];
+  final List<Customer?> _recentlyViewed = [];
 
   List<Advert?> get myAdverts => _myAdverts;
   List<Advert?> get favorites => _favorites;
   Map<String, Customer> get customers => _customers;
   bool get isLoading => _isLoading;
-  List<Advert?> get recentlyViewed => _recentlyViewed;
+  List<Customer?> get recentlyViewed => _recentlyViewed;
 
   MyAdvertViewModel({required AuthProvider authProvider}) : _authProvider = authProvider {
     fetchAdvertsWithCustomers();
@@ -33,6 +34,7 @@ class MyAdvertViewModel extends ChangeNotifier {
       await Future.wait([
         fetchMyAdverts(),
         fetchFavorites(),
+        fetchRecentlyViewed(),
       ]);
 
       // Tüm ilanlardan benzersiz userId'leri topla
@@ -63,6 +65,17 @@ class MyAdvertViewModel extends ChangeNotifier {
     }
   }
 
+  // Kullanıcı UID'leri ile kullanıcıları çekiyoruz
+  Future<void> fetchRecentlyViewed() async {
+    if (_authProvider.user?.profileViewers != null) {
+      final List<Future<Customer?>> futures =
+          _authProvider.user!.profileViewers!.map((userId) => _customerService.fetchUserFromFirestore(userId)).toList();
+
+      final List<Customer?> customers = await Future.wait(futures);
+      _recentlyViewed.addAll(customers.where((customer) => customer != null));
+    }
+  }
+
   Future<void> fetchMyAdverts() async {
     if (_authProvider.user?.events != null) {
       final List<Future<Advert?>> futures = _authProvider.user!.events!.map((advertId) => _advertService.fetchAdvertById(advertId)).toList();
@@ -90,6 +103,27 @@ class MyAdvertViewModel extends ChangeNotifier {
   void _setLoading(bool value) {
     _isLoading = value;
     notifyListeners();
+  }
+
+  // Like/Unlike işlemleri
+  Future<void> likeAdvert(String advertId, String userId) async {
+    try {
+      await _advertService.likeAdvert(advertId, userId);
+      await _customerService.likeAdvert(advertId, userId);
+      // Stream kullandığımız için notifyListeners() gerekmiyor
+    } catch (e) {
+      debugPrint('Like hatası: $e');
+    }
+  }
+
+  Future<void> unlikeAdvert(String advertId, String userId) async {
+    try {
+      await _advertService.unlikeAdvert(advertId, userId);
+      await _customerService.unlikeAdvert(advertId, userId);
+      // Stream kullandığımız için notifyListeners() gerekmiyor
+    } catch (e) {
+      debugPrint('Unlike hatası: $e');
+    }
   }
 
   @override

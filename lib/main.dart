@@ -45,6 +45,12 @@ class MyApp extends StatelessWidget {
           elevation: 0,
           scrolledUnderElevation: 0,
         ),
+        tabBarTheme: TabBarTheme(
+          indicatorColor: Colors.blue,
+          labelColor: Colors.blue,
+          unselectedLabelColor: Colors.grey,
+          dividerHeight: 0.2,
+        ),
       ),
       routerConfig: AppRouter.router,
     );

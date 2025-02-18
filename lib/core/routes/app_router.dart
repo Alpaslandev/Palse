@@ -1,12 +1,17 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/widgets/landing_view.dart';
 import 'package:palseapp/core/widgets/notification_view.dart';
+import 'package:palseapp/core/widgets/see_likers.dart';
 import 'package:palseapp/features/auth/views/login_view.dart';
 import 'package:palseapp/features/chats/view/chats_view.dart';
 import 'package:palseapp/features/create_advert/view/create_advert_view.dart';
+import 'package:palseapp/features/friend_profile/friend_profile_view.dart';
 import 'package:palseapp/features/home/view/home_view.dart';
 import 'package:palseapp/features/messages/view/messages_view.dart';
 import 'package:palseapp/features/my_advert/view/my_advert_view.dart';
@@ -14,6 +19,7 @@ import 'package:palseapp/features/profile/view/profile_view.dart';
 import 'package:palseapp/features/profile_setup_steps/view/profile_setup_view.dart';
 import 'package:palseapp/features/settings/view/settings_view.dart';
 import 'package:palseapp/features/splash/splash_view.dart';
+import 'package:flutter/services.dart';
 
 // Router sınıfını oluştur
 class AppRouter {
@@ -36,6 +42,7 @@ class AppRouter {
       debugLogDiagnostics: true,
       refreshListenable: _authProvider,
       redirect: _handleRedirect,
+      extraCodec: CustomGoRouterCodec(),
       routes: [
         // Splash screen'i ekleyelim
         GoRoute(
@@ -77,20 +84,31 @@ class AppRouter {
           ],
         ),
         GoRoute(
+          path: seeViewers,
+          builder: (context, state) => SeeLikersView(
+            viewers: state.extra as List<String>? ?? [],
+          ),
+        ),
+        GoRoute(
+          path: friendProfile,
+          parentNavigatorKey: _rootNavigatorKey, // Ana navigator'ı kullan
+          builder: (context, state) {
+            final customer = state.extra! as Customer; // Null check eklendi
+            return FriendProfileView(customer: customer);
+          },
+        ),
+        GoRoute(
           path: notification,
-          name: 'notification',
           parentNavigatorKey: _rootNavigatorKey, // Ana navigator'ı kullan
           builder: (context, state) => const NotificationView(),
         ),
         GoRoute(
           path: createAdvert,
-          name: 'createAdvert',
           parentNavigatorKey: _rootNavigatorKey, // Ana navigator'ı kullan
           builder: (context, state) => const CreateAdvertView(),
         ),
         GoRoute(
           path: settings,
-          name: 'settings',
           parentNavigatorKey: _rootNavigatorKey, // Ana navigator'ı kullan
           builder: (context, state) => const SettingsView(),
         ),
@@ -174,7 +192,7 @@ class AppRouter {
         return home;
       }
 
-      // Profile setup tamamlanmamışsa
+      // Profile setup tamamlanmışsa
       if (!_authProvider.isProfileSetupCompleted && state.matchedLocation != profileSetup) {
         return profileSetup;
       }
@@ -192,4 +210,51 @@ class AppRouter {
 
   // Private constructor ile instance oluşturmayı engelle
   AppRouter._();
+}
+
+// Codec sınıfı düzeltildi
+class CustomGoRouterCodec extends Codec<Object?, Object?> {
+  @override
+  Converter<Object?, Object?> get encoder => _CustomEncoder();
+
+  @override
+  Converter<Object?, Object?> get decoder => _CustomDecoder();
+}
+
+class _CustomEncoder extends Converter<Object?, Object?> {
+  @override
+  Object? convert(Object? input) {
+    if (input is Customer) {
+      return {
+        'type': 'Customer',
+        'data': {
+          'userID': input.userID,
+          'firstName': input.firstName,
+          'lastName': input.lastName,
+          'email': input.email,
+          'profilePictureUrl': input.profilePictureUrl,
+          // Diğer gerekli alanları ekleyin
+        }
+      };
+    }
+    return input;
+  }
+}
+
+class _CustomDecoder extends Converter<Object?, Object?> {
+  @override
+  Object? convert(Object? input) {
+    if (input is Map && input['type'] == 'Customer') {
+      final data = input['data'] as Map<String, dynamic>;
+      return Customer(
+        userID: data['userID'],
+        firstName: data['firstName'],
+        lastName: data['lastName'],
+        email: data['email'],
+        profilePictureUrl: data['profilePictureUrl'],
+        // Diğer alanları ekleyin
+      );
+    }
+    return input;
+  }
 }
