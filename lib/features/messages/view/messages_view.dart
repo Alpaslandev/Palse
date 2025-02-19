@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import 'package:palseapp/features/messages/viewmodel/messages_view_model.dart';
 import 'package:palseapp/features/messages/widgets/message_bubble.dart';
 import 'package:palseapp/features/messages/widgets/message_input.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 
 class MessagesView extends StatefulWidget {
   final String chatId;

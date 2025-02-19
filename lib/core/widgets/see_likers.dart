@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/services/firestore/customer_service.dart';
-import 'package:palseapp/features/friend_profile/friend_profile_view.dart';
-import 'package:provider/provider.dart';
 
 class SeeLikersView extends StatelessWidget {
   const SeeLikersView({super.key, required this.viewers});

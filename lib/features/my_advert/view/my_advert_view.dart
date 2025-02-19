@@ -4,7 +4,6 @@ import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/widgets/advert/advert_card.dart';
 import 'package:palseapp/core/widgets/recently_viewer.dart';
-import 'package:palseapp/features/friend_profile/friend_profile_view.dart';
 import 'package:palseapp/features/my_advert/viewmodel/my_advert_view_model.dart';
 import 'package:provider/provider.dart';
 

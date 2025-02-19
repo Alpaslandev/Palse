@@ -1,6 +1,5 @@
 // Mesaj yazma alanı widget'ı - Alıntı gösterimi ile birlikte
 import 'package:flutter/material.dart';
-import 'package:palseapp/core/models/chat_model.dart';
 import 'package:palseapp/features/messages/viewmodel/messages_view_model.dart';
 import 'package:provider/provider.dart';
 

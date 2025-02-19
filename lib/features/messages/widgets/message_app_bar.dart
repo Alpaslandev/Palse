@@ -67,7 +67,7 @@ class MessageAppBar extends StatelessWidget implements PreferredSizeWidget {
                         const Icon(Icons.workspace_premium, color: Colors.yellow, size: 14),
                         const SizedBox(width: 4),
                         Text(
-                          'Sosyal Usta (${user?.coins ?? 0} XP)',
+                          'Sosyal Usta (${0} XP)',
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 12,

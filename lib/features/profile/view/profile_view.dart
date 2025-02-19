@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
 import 'package:provider/provider.dart';
@@ -16,12 +17,13 @@ class ProfileView extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
+            spacing: 10,
             children: [
               // Profil başlığı
               profileHeader(context, authProvider),
 
               // Yorumlar kartı
-              const RatingCard(),
+              _ratingCard(authProvider.user!, context),
 
               // XP İlerleme kartı
               const XPProgressCard(),
@@ -29,22 +31,14 @@ class ProfileView extends StatelessWidget {
               // Liderlik tablosu butonu
               const LeaderboardButton(),
 
-              const SizedBox(height: 16),
-
               // Günlük görev kartı
               const DailyTaskCard(),
-
-              const SizedBox(height: 16),
 
               // Profil doğrulama butonu
               const VerifyProfileButton(),
 
-              const SizedBox(height: 16),
-
               // Premium buton
               const PremiumButton(),
-
-              const SizedBox(height: 16),
 
               // XP Sistemi butonu
               const XPSystemButton(),
@@ -93,29 +87,35 @@ Widget profileHeader(BuildContext context, AuthProvider authProvider) {
 }
 
 // Yorumlar kartı
-class RatingCard extends StatelessWidget {
-  const RatingCard({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
+Widget _ratingCard(Customer customer, BuildContext context) {
+  return Card(
+      elevation: 4,
+      child: ListTile(
+        onTap: () => context.pushNamed(comment, extra: customer),
+        title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Row(
               children: [
                 Icon(Icons.star, color: Colors.amber),
-                Text('Yorumlar'),
+                Text('Yorumlar (${customer.comments?.length ?? 0})'),
               ],
             ),
-            Text('0.0'),
           ],
         ),
-      ),
-    );
-  }
+        trailing: Container(
+          decoration: BoxDecoration(
+            border: Border(left: BorderSide(color: Colors.grey, width: 1)), // Sol kenara gri çizgi ekleniyor
+          ),
+          child: Padding(
+            padding: const EdgeInsets.only(left: 8.0),
+            child: Text(
+              customer.getAverage().toStringAsFixed(1),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.orange),
+            ),
+          ),
+        ),
+      ));
 }
 
 // XP İlerleme kartı

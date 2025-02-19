@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/services/firestore/customer_service.dart';
 import 'package:palseapp/features/settings/view/widgets/location_sheet.dart';

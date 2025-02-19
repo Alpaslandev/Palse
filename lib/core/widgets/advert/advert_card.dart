@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -43,119 +42,109 @@ class AdvertCard extends StatelessWidget {
     return Card(
         color: Colors.white,
         elevation: 0,
-        margin: const EdgeInsets.all(8),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        margin: const EdgeInsets.all(0),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, spacing: 10, children: [
           // Üst kısım - Kullanıcı bilgileri
-          ListTile(
-            onTap: onProfileTap,
-            leading: CircleAvatar(
-              backgroundImage: NetworkImage(customer.profilePictureUrl ?? ""),
-            ),
-            title: Row(
-              spacing: 4,
-              children: [
-                Text(
-                  customer.firstName ?? "advert",
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                if (customer.verification == true && customer.phoneNumber != null)
-                  const Padding(
-                    padding: EdgeInsets.only(left: 4),
-                    child: Icon(Icons.verified, color: Colors.blue, size: 16),
-                  ),
-                SvgPicture.asset(
-                  'assets/vectors/vector_7_x2.svg',
-                  width: 16.7,
-                  height: 15.8,
-                ),
-                Text(
-                  '1',
-                  style: const TextStyle(fontSize: 11),
-                ),
-              ],
-            ),
-            subtitle: Text(' ${advert.advertType}'),
-            trailing: Text(DateFormat('dd/MM/yyyy').format(advert.createdAt!)),
-          ),
+          _profileHeader(),
 
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Row(
             children: [
-              // Konum bilgisi
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    const Icon(Icons.location_on_outlined, size: 12, color: Colors.blue),
-                    const SizedBox(width: 4),
-                    Text('${advert.city}, ${advert.district}', style: const TextStyle(fontSize: 11, color: Colors.grey)),
-                    const Spacer(),
-                    const Icon(Icons.calendar_month_outlined, size: 12, color: Colors.blue),
-                    const SizedBox(width: 4),
-                    if (advert.startEventDate != null)
-                      Text('${DateFormat('dd/MM/yyyy').format(advert.startEventDate!)} - ${DateFormat('HH:mm').format(advert.startEventDate!)}',
-                          style: const TextStyle(fontSize: 11, color: Colors.grey)),
-                  ],
-                ),
-              ),
-
-              // İlan Başlığı
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text(
-                  "${advert.advertName} ${calculateDistance(advert.geoPoint ?? GeoPoint(0, 0), customer.geoPoint ?? GeoPoint(0, 0))}",
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-
-              // Açıklama metni
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text(
-                  advert.description,
-                  style: const TextStyle(color: Colors.grey),
-                ),
-              ),
-
-              // Ana görsel
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.network(
-                  advert.advertImage,
-                  width: double.infinity,
-                  height: 200,
-                  fit: BoxFit.cover,
-                ),
-              ),
-
-              const SizedBox(height: 10),
-              if (!isFriendProfile) ...[
-                if (isUserAdvert)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      _buildButton('Beğenenleri Gör', Icons.visibility_outlined, onSeeViewersTap ?? () {}),
-                      const SizedBox(width: 10),
-                      _buildButton('Sil', Icons.delete_outlined, onDeleteTap ?? () {}, isDelete: true),
-                    ],
-                  ),
-
-                // Alt kısım - Beğeni ve mesaj butonları
-                if (!isUserAdvert)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      if (!isMyLikes) _buildButton('Beğen', isLiked ? Icons.favorite : Icons.favorite_border, onLikeTap ?? () {}, showCount: true),
-                      const SizedBox(width: 10),
-                      _buildButton('Mesaj', Icons.message_outlined, onMessageTap ?? () {}),
-                    ],
-                  ),
-              ],
+              const Icon(Icons.location_on_outlined, size: 12, color: Colors.blue),
+              const SizedBox(width: 4),
+              Text('${advert.city}, ${advert.district}', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+              const Spacer(),
+              const Icon(Icons.calendar_month_outlined, size: 12, color: Colors.blue),
+              const SizedBox(width: 4),
+              if (advert.startEventDate != null)
+                Text('${DateFormat('dd/MM/yyyy').format(advert.startEventDate!)} - ${DateFormat('HH:mm').format(advert.startEventDate!)}',
+                    style: const TextStyle(fontSize: 11, color: Colors.grey)),
             ],
           ),
+
+          // İlan Başlığı
+          Text(
+            "${advert.advertName} ${calculateDistance(advert.geoPoint ?? GeoPoint(0, 0), customer.geoPoint ?? GeoPoint(0, 0))}",
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+          ),
+
+          // Açıklama metni
+          Text(
+            advert.description,
+            style: const TextStyle(color: Colors.grey),
+          ),
+
+          // Ana görsel
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.network(
+              advert.advertImage,
+              width: double.infinity,
+              height: 200,
+              fit: BoxFit.cover,
+            ),
+          ),
+
+          const SizedBox(height: 10),
+          if (!isFriendProfile) ...[
+            if (isUserAdvert)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  _buildButton('Beğenenleri Gör', Icons.visibility_outlined, onSeeViewersTap ?? () {}),
+                  const SizedBox(width: 10),
+                  _buildButton('Sil', Icons.delete_outlined, onDeleteTap ?? () {}, isDelete: true),
+                ],
+              ),
+
+            // Alt kısım - Beğeni ve mesaj butonları
+            if (!isUserAdvert)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  if (!isMyLikes) _buildButton('Beğen', isLiked ? Icons.favorite : Icons.favorite_border, onLikeTap ?? () {}, showCount: true),
+                  const SizedBox(width: 10),
+                  _buildButton('Mesaj', Icons.message_outlined, onMessageTap ?? () {}),
+                ],
+              ),
+          ],
         ]));
+  }
+
+  Widget _profileHeader() {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      onTap: onProfileTap,
+      leading: CircleAvatar(
+        backgroundImage: NetworkImage(customer.profilePictureUrl ?? ""),
+      ),
+      title: Row(
+        spacing: 4,
+        children: [
+          Text(
+            customer.firstName ?? "advert",
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          if (customer.verification == true && customer.phoneNumber != null)
+            const Padding(
+              padding: EdgeInsets.only(left: 4),
+              child: Icon(Icons.verified, color: Colors.blue, size: 16),
+            ),
+          SvgPicture.asset(
+            'assets/vectors/vector_7_x2.svg',
+            width: 16.7,
+            height: 15.8,
+          ),
+          Text(
+            '1',
+            style: const TextStyle(fontSize: 11),
+          ),
+        ],
+      ),
+      subtitle: Text(' ${advert.advertType}'),
+      trailing: Text(DateFormat('dd/MM/yyyy').format(advert.createdAt!)),
+    );
   }
 
 // Özel buton tasarımı oluşturur

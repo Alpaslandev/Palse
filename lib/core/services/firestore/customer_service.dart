@@ -98,4 +98,16 @@ class CustomerService {
         .snapshots()
         .map((snapshot) => snapshot.data() != null ? Customer.fromJson(snapshot.data()!, userId) : null);
   }
+
+  Future<void> addComment(String userId, Comment comment) async {
+    try {
+      await _firestore.collection('customers').doc(userId).update({
+        'comments': FieldValue.arrayUnion([comment.toJson()])
+      });
+      debugPrint('Yorum başarıyla eklendi');
+    } catch (e) {
+      debugPrint('Yorum eklenirken hata oluştu: $e');
+      throw Exception('Yorum eklenemedi: $e');
+    }
+  }
 }
