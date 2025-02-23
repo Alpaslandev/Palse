@@ -3,11 +3,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/services/auth/auth_service.dart';
 import 'package:palseapp/core/services/firestore/customer_service.dart';
+import 'package:palseapp/core/services/notification_service.dart';
 
 // Auth durumunu yöneten provider sınıfı
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService = AuthService();
   final CustomerService _userService = CustomerService();
+  final NotificationService _notificationService = NotificationService();
 
   bool _isLoading = true;
   User? _firebaseUser;
@@ -41,6 +43,7 @@ class AuthProvider extends ChangeNotifier {
         if (user != null) {
           debugPrint('User logged in');
           await _loadUserData();
+          await _notificationService.saveUserToken(user.uid);
         } else {
           debugPrint('User logged out');
           _user = null;

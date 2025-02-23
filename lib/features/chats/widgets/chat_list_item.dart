@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:palseapp/core/models/chat_model.dart';
+import 'package:palseapp/features/chats/model/chat_model.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/features/chats/viewmodel/chats_view_model.dart';
 import 'package:provider/provider.dart';
@@ -22,17 +22,15 @@ class ChatListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool isLastMessageMine = chat.lastMessageSenderId == Provider.of<ChatsViewModel>(context, listen: false).currentUserId;
 
+    // Kullanıcı bilgilerini önbelleğe al
+    final _userCache = <String, Customer>{};
+
     return ListTile(
       leading: StreamBuilder<Customer?>(
         stream: context.read<ChatsViewModel>().getUserInfo(otherUserId),
         builder: (context, snapshot) {
-          final user = snapshot.data;
-          return CircleAvatar(
-            backgroundImage: user?.profilePictureUrl != null && user!.profilePictureUrl!.isNotEmpty
-                ? CachedNetworkImageProvider(user.profilePictureUrl!) as ImageProvider
-                : null,
-            child: user?.profilePictureUrl == null || user!.profilePictureUrl!.isEmpty ? const Icon(Icons.person) : null,
-          );
+          if (snapshot.hasData) _userCache[otherUserId] = snapshot.data!;
+          return _buildAvatar(_userCache[otherUserId]);
         },
       ),
       title: Row(
@@ -100,6 +98,15 @@ class ChatListItem extends StatelessWidget {
         ],
       ),
       onTap: onTap,
+    );
+  }
+
+  Widget _buildAvatar(Customer? user) {
+    return CircleAvatar(
+      backgroundImage: user?.profilePictureUrl != null && user!.profilePictureUrl!.isNotEmpty
+          ? CachedNetworkImageProvider(user.profilePictureUrl!) as ImageProvider
+          : null,
+      child: user?.profilePictureUrl == null || user!.profilePictureUrl!.isEmpty ? const Icon(Icons.person) : null,
     );
   }
 

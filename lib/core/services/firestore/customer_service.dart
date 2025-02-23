@@ -110,4 +110,29 @@ class CustomerService {
       throw Exception('Yorum eklenemedi: $e');
     }
   }
+
+  Future<void> deleteComment(String userId, Comment comment) async {
+    try {
+      await _firestore.collection('customers').doc(userId).update({
+        'comments': FieldValue.arrayRemove([comment.toJson()])
+      });
+      debugPrint('Yorum başarıyla silindi');
+    } catch (e) {
+      debugPrint('Yorum silinirken hata oluştu: $e');
+      throw Exception('Yorum silinemedi: $e');
+    }
+  }
+
+  Future<void> reportComment(String userId, Comment comment) async {
+    try {
+      await _firestore.collection('reports').doc(userId).update({
+        'reportedComments': FieldValue.arrayUnion([comment.toJson()])
+      });
+
+      debugPrint('Yorum başarıyla şikayet edildi');
+    } catch (e) {
+      debugPrint('Yorum şikayet edilirken hata oluştu: $e');
+      throw Exception('Yorum şikayet edilemedi: $e');
+    }
+  }
 }

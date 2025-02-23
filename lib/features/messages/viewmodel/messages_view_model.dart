@@ -3,9 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:palseapp/core/models/chat_model.dart';
+import 'package:palseapp/features/chats/model/chat_model.dart';
 import 'package:palseapp/core/models/customer.dart';
-import 'package:palseapp/core/services/firestore/chat_service.dart';
+import 'package:palseapp/features/chats/service/chat_service.dart';
 import 'package:palseapp/core/services/firestore/customer_service.dart';
 
 class MessagesViewModel extends ChangeNotifier {
@@ -56,18 +56,6 @@ class MessagesViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Yeni sohbet başlat
-  Future<void> startNewChat(String userId1, String userId2) async {
-    try {
-      isLoading = true;
-      notifyListeners();
-      await _chatService.startNewChat(userId1, userId2);
-    } finally {
-      isLoading = false;
-      notifyListeners();
-    }
-  }
-
   // Mesaj gönder
   Future<void> sendMessage(String chatId, String senderId, String receiverId, String content) async {
     if (content.trim().isEmpty) return;
@@ -80,7 +68,7 @@ class MessagesViewModel extends ChangeNotifier {
       final messageToSend = Message(
         senderId: senderId,
         content: content,
-        timestamp: Timestamp.now(),
+        timestamp: DateTime.now(),
         isRead: false,
         type: 'text',
         quotedMessage: _quotedMessage?.content,
@@ -90,6 +78,7 @@ class MessagesViewModel extends ChangeNotifier {
       await _chatService.sendMessage(
         chatId,
         messageToSend,
+        senderId,
       );
 
       // Mesaj gönderildikten sonra alıntıyı temizle
@@ -200,7 +189,7 @@ class MessagesViewModel extends ChangeNotifier {
       final messageToSend = Message(
         senderId: currentUserId!,
         content: imageUrl,
-        timestamp: Timestamp.now(),
+        timestamp: DateTime.now(),
         isRead: false,
         type: 'image',
         quotedMessage: _quotedMessage?.content,
@@ -212,6 +201,7 @@ class MessagesViewModel extends ChangeNotifier {
       await _chatService.sendMessage(
         chatId!,
         messageToSend,
+        currentUserId!,
       );
 
       debugPrint('Görsel mesaj başarıyla gönderildi!'); // Debug için başarı mesajı

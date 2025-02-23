@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/features/chats/widgets/chat_list_item.dart';
 import 'package:provider/provider.dart';
-import 'package:palseapp/core/models/chat_model.dart';
+import 'package:palseapp/features/chats/model/chat_model.dart';
 import 'package:palseapp/features/chats/viewmodel/chats_view_model.dart';
 
 class ChatsView extends StatelessWidget {
@@ -52,12 +52,10 @@ class ChatsView extends StatelessWidget {
             return ListView.builder(
               itemCount: chats.length,
               itemBuilder: (context, index) {
-                // Sohbetleri son mesaj zamanına göre sırala
-                final sortedChats = chats.toList()..sort((a, b) => b.lastMessageTime.compareTo(a.lastMessageTime));
-                final chat = sortedChats[index];
+                final chat = chats[index];
 
                 // Diğer kullanıcının ID'sini güvenli bir şekilde al
-                final otherUserId = chat.participants.where((id) => id != currentUserId).firstOrNull; // firstWhere yerine firstOrNull kullan
+                final otherUserId = chat.participants.where((id) => id != currentUserId).firstOrNull;
 
                 // Eğer diğer kullanıcı bulunamazsa bu sohbeti gösterme
                 if (otherUserId == null) return const SizedBox.shrink();

@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:palseapp/core/models/chat_model.dart';
+import 'package:palseapp/features/chats/model/chat_model.dart';
 
 enum Gender {
   male(icon: 'assets/images/male.png'),

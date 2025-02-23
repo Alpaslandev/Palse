@@ -12,6 +12,7 @@ class FriendProfileView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint(customer.userID);
     return ChangeNotifierProvider(
       create: (context) => FriendProfileViewModel(customer: customer),
       child: Consumer<FriendProfileViewModel>(

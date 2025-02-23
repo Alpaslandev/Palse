@@ -58,13 +58,14 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDtjiRluvhVW0xQGyLrXvLZ9aH8G_cqMVw',
-    appId: '1:904894098695:ios:04244f924e4a970e17a9a2',
+    apiKey: 'AIzaSyDzS1I1CLGMVwWrn1mLVmnz54Kz8PYv8Uw',
+    appId: '1:904894098695:ios:e6d2078f28a7466017a9a2',
     messagingSenderId: '904894098695',
     projectId: 'orti-app-2c44b',
     storageBucket: 'orti-app-2c44b.appspot.com',
     androidClientId: '904894098695-8ts1opkceqip396fs9hqpuvvmdgvuokm.apps.googleusercontent.com',
-    iosClientId: '904894098695-dijlrg3vokogs6kt3r0af41tieqfq7vg.apps.googleusercontent.com',
-    iosBundleId: 'com.alpkaan.dostumolsana',
+    iosClientId: '904894098695-624ihiiie4k3lqj5r1nl7cq7jughici8.apps.googleusercontent.com',
+    iosBundleId: 'com.alpkaan.dostumolsanaa',
   );
+
 }

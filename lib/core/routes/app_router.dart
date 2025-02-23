@@ -11,7 +11,7 @@ import 'package:palseapp/core/widgets/see_likers.dart';
 import 'package:palseapp/features/auth/views/login_view.dart';
 import 'package:palseapp/features/chats/view/chats_view.dart';
 import 'package:palseapp/features/create_advert/view/create_advert_view.dart';
-import 'package:palseapp/features/friend_profile/comment_view.dart';
+import 'package:palseapp/features/comment/view/comment_view.dart';
 import 'package:palseapp/features/friend_profile/friend_profile_view.dart';
 import 'package:palseapp/features/home/view/home_view.dart';
 import 'package:palseapp/features/messages/view/messages_view.dart';
@@ -20,6 +20,7 @@ import 'package:palseapp/features/profile/view/profile_view.dart';
 import 'package:palseapp/features/profile_setup_steps/view/profile_setup_view.dart';
 import 'package:palseapp/features/settings/view/settings_view.dart';
 import 'package:palseapp/features/splash/splash_view.dart';
+import 'package:palseapp/features/subscription/view/subscription_view.dart';
 
 // Router sınıfını oluştur
 class AppRouter {
@@ -82,6 +83,12 @@ class AppRouter {
               },
             ),
           ],
+        ),
+        GoRoute(
+          name: 'subscription',
+          path: subscription,
+          parentNavigatorKey: _rootNavigatorKey, // Ana navigator'ı kullan
+          builder: (context, state) => const SubscriptionView(),
         ),
         GoRoute(
           path: seeViewers,

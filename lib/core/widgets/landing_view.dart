@@ -31,7 +31,7 @@ class _LandingViewState extends State<LandingView> {
         context.go(myAdverts);
         break;
       case 2:
-        context.go(chats);
+        context.go(subscription);
         break;
       case 3:
         context.go(profile);

@@ -18,6 +18,6 @@ const String createAdvertStep2 = '/createAdvertStep2';
 const String createAdvertStep3 = '/createAdvertStep3';
 const String settings = '/settings';
 const String seeViewers = '/seeViewers';
-
+const String subscription = '/subscription';
 const String friendProfile = '/friendProfile';
 const String comment = 'comment';

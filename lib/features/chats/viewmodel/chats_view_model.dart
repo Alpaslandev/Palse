@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:palseapp/core/models/chat_model.dart';
+import 'package:palseapp/features/chats/model/chat_model.dart';
 import 'package:palseapp/core/models/customer.dart';
-import 'package:palseapp/core/services/firestore/chat_service.dart';
+import 'package:palseapp/features/chats/service/chat_service.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 
 class ChatsViewModel extends ChangeNotifier {
   final ChatService _chatService = ChatService();
   final AuthProvider _authProvider;
+  List<Chat> _chats = [];
+  List<Chat> get chats => _chats;
 
   ChatsViewModel(this._authProvider);
 
@@ -38,5 +40,12 @@ class ChatsViewModel extends ChangeNotifier {
       debugPrint('Sohbet başlatma hatası: $e');
       rethrow;
     }
+  }
+
+  void loadChats(String userId) {
+    _chatService.getChats(userId).listen((chats) {
+      _chats = chats;
+      notifyListeners();
+    });
   }
 }
