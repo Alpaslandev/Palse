@@ -76,7 +76,10 @@ class MyApp extends StatelessWidget {
       ),
       routerConfig: AppRouter.router,
       builder: (context, child) {
-        notificationService.setContext(context);
+        // Router hazır olduğunda context'i set et
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          notificationService.setContext(context);
+        });
         return child!;
       },
     );

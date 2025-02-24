@@ -23,6 +23,8 @@ export const sendNotification = onDocumentCreated(
           body: notification.body,
         },
         data: {
+          chatId: notification.chatId,
+          senderId: notification.senderId,
           type: notification.type,
           receiverId: notification.receiverId,
           click_action: "FLUTTER_NOTIFICATION_CLICK",

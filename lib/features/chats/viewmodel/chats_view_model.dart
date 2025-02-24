@@ -35,7 +35,7 @@ class ChatsViewModel extends ChangeNotifier {
       }
 
       // Yoksa yeni sohbet başlat
-      return await _chatService.startNewChat(userId1, userId2);
+      return await _chatService.startOrGetChat(userId1, userId2);
     } catch (e) {
       debugPrint('Sohbet başlatma hatası: $e');
       rethrow;

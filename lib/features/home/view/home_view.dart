@@ -130,9 +130,8 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                             );
 
                             if (context.mounted) {
-                              context.pushNamed(
-                                'messages',
-                                extra: {'chatId': chatId, 'otherUserId': customer.userID},
+                              context.push(
+                                '/chats/$chatId?otherId=${customer.userID}&currentId=$userId',
                               );
                             }
                           },

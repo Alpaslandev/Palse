@@ -6,22 +6,22 @@ import 'package:palseapp/core/services/notification_service.dart';
 
 class ChatService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
-  final NotificationService _notificationService;
+  final NotificationService notificationService;
 
-  ChatService({NotificationService? notificationService}) : _notificationService = notificationService ?? NotificationService();
+  ChatService({NotificationService? notificationService}) : notificationService = notificationService ?? NotificationService();
 
   // Var olan sohbeti bul
   Future<String?> findExistingChat(String userId1, String userId2) async {
     try {
-      final snapshot = await _db.collection('chats').where('participants', arrayContains: [userId1, userId2]).get();
+      // participants array'inde her iki kullanıcının da olduğu chat'i ara
+      final snapshot = await _db.collection('chats').where('participants', arrayContainsAny: [userId1]).get();
 
       for (var doc in snapshot.docs) {
         final participants = List<String>.from(doc.data()['participants'] ?? []);
-        if (participants.contains(userId2)) {
+        if (participants.contains(userId1) && participants.contains(userId2)) {
           return doc.id;
         }
       }
-
       return null;
     } catch (e) {
       _logError('findExistingChat', e, stackTrace: StackTrace.current);
@@ -37,11 +37,21 @@ class ChatService {
         .map((snapshot) => snapshot.data() != null ? Customer.fromJson(snapshot.data()!, userId) : null);
   }
 
-  // Yeni sohbet başlat ve chatId döndür
-  Future<String> startNewChat(String userId1, String userId2) async {
+  // Sohbet başlat veya var olanı getir
+  Future<String> startOrGetChat(String userId1, String userId2) async {
     try {
-      // Yeni chat belgesi oluştur
+      // Önce var olan chat'i kontrol et
+      final existingChatId = await findExistingChat(userId1, userId2);
+      if (existingChatId != null) {
+        return existingChatId;
+      }
+
+      // Yeni chat oluştur
       final chatRef = _db.collection('chats').doc();
+
+      // 5 dakika sonra silinecek bir flag ekle
+      final tempFlag = true;
+      final creationTime = FieldValue.serverTimestamp();
 
       final batch = _db.batch();
 
@@ -49,14 +59,16 @@ class ChatService {
       batch.set(chatRef, {
         'participants': [userId1, userId2],
         'lastMessage': '',
-        'lastMessageTime': FieldValue.serverTimestamp(),
-        'lastMessageSenderId': ''
+        'lastMessageTime': creationTime,
+        'lastMessageSenderId': '',
+        'isTemporary': tempFlag,
+        'createdAt': creationTime,
       });
 
       // Her iki kullanıcının chatInfos'unu güncelle
       final chatInfo = {
         'chatId': chatRef.id,
-        'lastMessageTime': FieldValue.serverTimestamp(),
+        'lastMessageTime': creationTime,
         'unreadCount': 0,
       };
 
@@ -88,9 +100,43 @@ class ChatService {
 
       await batch.commit();
 
+      // 5 dakika sonra mesaj yoksa chat'i sil
+      Future.delayed(const Duration(minutes: 5), () async {
+        final chatDoc = await chatRef.get();
+        if (chatDoc.exists) {
+          final data = chatDoc.data();
+          if (data != null && data['isTemporary'] == true && data['lastMessage'] == '') {
+            // Chat'i ve ilgili referansları sil
+            final batch = _db.batch();
+
+            // Chat'i sil
+            batch.delete(chatRef);
+
+            // Kullanıcıların chatInfos'undan sil
+            batch.set(
+              _db.collection('customers').doc(userId1),
+              {
+                'chatInfos': {userId2: FieldValue.delete()}
+              },
+              SetOptions(merge: true),
+            );
+
+            batch.set(
+              _db.collection('customers').doc(userId2),
+              {
+                'chatInfos': {userId1: FieldValue.delete()}
+              },
+              SetOptions(merge: true),
+            );
+
+            await batch.commit();
+          }
+        }
+      });
+
       return chatRef.id;
     } catch (e) {
-      _logError('startNewChat', e, stackTrace: StackTrace.current);
+      _logError('startOrGetChat', e, stackTrace: StackTrace.current);
       rethrow;
     }
   }
@@ -224,11 +270,17 @@ class ChatService {
           },
           SetOptions(merge: true),
         );
+
+        // isTemporary flag'ini kaldır
+        transaction.update(_db.collection('chats').doc(chatId), {
+          ...lastMessageData,
+          'isTemporary': false,
+        });
       });
 
       // Bildirimi gönder
       if (receiverId.isNotEmpty) {
-        await _notificationService.sendNotification(
+        await notificationService.sendNotification(
           receiverId: receiverId,
           senderName: senderName,
           message: message.type == 'image' ? '📷 Fotoğraf gönderdi' : message.content,

@@ -24,7 +24,8 @@ import 'package:palseapp/features/subscription/view/subscription_view.dart';
 
 // Router sınıfını oluştur
 class AppRouter {
-  static final _rootNavigatorKey = GlobalKey<NavigatorState>();
+  // NavigatorKey'i public yapalım
+  static final rootNavigatorKey = GlobalKey<NavigatorState>();
   static final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
   // Tek bir AuthProvider instance'ı tutacağız
@@ -38,7 +39,7 @@ class AppRouter {
     _authProvider = authProvider;
 
     router = GoRouter(
-      navigatorKey: _rootNavigatorKey,
+      navigatorKey: rootNavigatorKey,
       initialLocation: splash,
       debugLogDiagnostics: true,
       refreshListenable: _authProvider,
@@ -48,36 +49,38 @@ class AppRouter {
         // Splash screen'i ekleyelim
         GoRoute(
           path: splash,
-          parentNavigatorKey: _rootNavigatorKey, // Ana navigator'ı kullan
+          parentNavigatorKey: rootNavigatorKey, // Ana navigator'ı kullan
           builder: (context, state) => const SplashView(),
         ),
         GoRoute(
           path: login,
           name: 'login',
-          parentNavigatorKey: _rootNavigatorKey, // Ana navigator'ı kullan
+          parentNavigatorKey: rootNavigatorKey, // Ana navigator'ı kullan
           builder: (context, state) => const LoginView(),
         ),
         GoRoute(
           path: profileSetup,
           name: 'profileSetup',
-          parentNavigatorKey: _rootNavigatorKey, // Ana navigator'ı kullan
+          parentNavigatorKey: rootNavigatorKey, // Ana navigator'ı kullan
           builder: (context, state) => const ProfileSetupView(),
         ),
         GoRoute(
           path: chats,
           name: 'chats',
-          parentNavigatorKey: _rootNavigatorKey, // Ana navigator'ı kullan
+          parentNavigatorKey: rootNavigatorKey,
           builder: (context, state) => ChatsView(),
           routes: [
             GoRoute(
-              path: 'messages',
+              path: ':chatId', // URL parametresi olarak chatId
               name: 'messages',
-              parentNavigatorKey: _rootNavigatorKey,
+              parentNavigatorKey: rootNavigatorKey,
               builder: (context, state) {
-                final params = state.extra as Map<String, dynamic>;
+                final chatId = state.pathParameters['chatId']!;
+                final otherUserId = state.uri.queryParameters['otherId']!;
+
                 return MessagesView(
-                  chatId: params['chatId']!,
-                  otherUserId: params['otherUserId']!,
+                  chatId: chatId,
+                  otherUserId: otherUserId,
                   currentUserId: _authProvider.user?.userID ?? '',
                 );
               },
@@ -87,19 +90,19 @@ class AppRouter {
         GoRoute(
           name: 'subscription',
           path: subscription,
-          parentNavigatorKey: _rootNavigatorKey, // Ana navigator'ı kullan
+          parentNavigatorKey: rootNavigatorKey, // Ana navigator'ı kullan
           builder: (context, state) => const SubscriptionView(),
         ),
         GoRoute(
           path: seeViewers,
-          parentNavigatorKey: _rootNavigatorKey, // Ana navigator'ı kullan
+          parentNavigatorKey: rootNavigatorKey, // Ana navigator'ı kullan
           builder: (context, state) => SeeLikersView(
             viewers: state.extra as List<String>? ?? [],
           ),
         ),
         GoRoute(
           path: friendProfile,
-          parentNavigatorKey: _rootNavigatorKey, // Ana navigator'ı kullan
+          parentNavigatorKey: rootNavigatorKey, // Ana navigator'ı kullan
           builder: (context, state) {
             final customer = state.extra! as Customer; // Null check eklendi
             return FriendProfileView(customer: customer);
@@ -117,17 +120,17 @@ class AppRouter {
         ),
         GoRoute(
           path: notification,
-          parentNavigatorKey: _rootNavigatorKey, // Ana navigator'ı kullan
+          parentNavigatorKey: rootNavigatorKey, // Ana navigator'ı kullan
           builder: (context, state) => const NotificationView(),
         ),
         GoRoute(
           path: createAdvert,
-          parentNavigatorKey: _rootNavigatorKey, // Ana navigator'ı kullan
+          parentNavigatorKey: rootNavigatorKey, // Ana navigator'ı kullan
           builder: (context, state) => const CreateAdvertView(),
         ),
         GoRoute(
           path: settings,
-          parentNavigatorKey: _rootNavigatorKey, // Ana navigator'ı kullan
+          parentNavigatorKey: rootNavigatorKey, // Ana navigator'ı kullan
           builder: (context, state) => const SettingsView(),
         ),
         ShellRoute(

@@ -69,6 +69,7 @@ class _MyAdvertViewState extends State<MyAdvertView> with TickerProviderStateMix
                 ),
                 Expanded(
                   child: TabBarView(
+                    physics: const NeverScrollableScrollPhysics(),
                     controller: _tabController,
                     children: [
                       // İlanlarım sekmesi

@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
+import 'package:palseapp/features/chats/service/chat_service.dart';
 import 'package:palseapp/features/chats/widgets/chat_list_item.dart';
 import 'package:provider/provider.dart';
 import 'package:palseapp/features/chats/model/chat_model.dart';
@@ -73,13 +74,10 @@ class ChatsView extends StatelessWidget {
     );
   }
 
-  void _navigateToChat(BuildContext context, String chatId, String otherUserId) {
-    context.pushNamed(
-      'messages',
-      extra: {
-        'chatId': chatId,
-        'otherUserId': otherUserId,
-      },
-    );
+  void _navigateToChat(BuildContext context, String chatId, String? otherUserId) {
+    if (otherUserId != null) {
+      // URL parametreleri ile yönlendir
+      context.push('/chats/$chatId?otherId=$otherUserId');
+    }
   }
 }
