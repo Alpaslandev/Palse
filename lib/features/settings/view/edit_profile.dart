@@ -4,6 +4,7 @@ import 'package:palseapp/core/models/location_model.dart';
 import 'package:palseapp/core/services/firestore/customer_service.dart';
 import 'package:palseapp/core/widgets/circle_profile_picture.dart';
 import 'package:palseapp/core/widgets/location_sheet.dart';
+import 'package:palseapp/features/settings/view/widgets/phone_number_sheet.dart';
 import 'package:palseapp/features/settings/viewmodel/edit_profile_view_model.dart';
 import 'package:provider/provider.dart';
 
@@ -93,10 +94,23 @@ class _EditProfileViewState extends State<EditProfileView> {
                     ),
                     _buildTextField(
                       onTap: () async {
-                        // final result = await showModalBottomSheet<String>(
-                        //   context: context,
-                        //   builder: (context) => const PhoneNumberSheet(),
-                        // );
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                          ),
+                          builder: (context) => const PhoneNumberSheet(),
+                        ).then((result) {
+                          if (result == true) {
+                            // Telefon doğrulama başarılı
+                            viewModel.updatePhone(viewModel.phoneController.text, true);
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Telefon numarası başarıyla doğrulandı')),
+                            );
+                          }
+                        });
                       },
                       controller: viewModel.phoneController,
                       label: 'Telefon',

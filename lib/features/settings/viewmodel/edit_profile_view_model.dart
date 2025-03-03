@@ -29,7 +29,7 @@ class EditProfileViewModel extends ChangeNotifier {
     nicknameController.addListener(() => updateNickname(nicknameController.text.replaceAll('@', '')));
     nameController.addListener(() => updateName(nameController.text));
     lastNameController.addListener(() => updateLastName(lastNameController.text));
-    phoneController.addListener(() => updatePhoneNumber(phoneController.text));
+    phoneController.addListener(() => updatePhone(phoneController.text, user.verification!));
   }
 
   void _updateControllersFromUser() {
@@ -61,6 +61,10 @@ class EditProfileViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> updatePhone(String phone, bool verified) async {
+    await customerService.updateCustomerVerifiedAndPhone(user.userID!, verified, phone);
+  }
+
   void updateName(String name) {
     debugPrint('Updating name to: $name');
     debugPrint('Before update - firstName: ${user.firstName}');
@@ -74,12 +78,6 @@ class EditProfileViewModel extends ChangeNotifier {
     debugPrint('Before update - lastName: ${user.lastName}');
     user.lastName = lastName;
     debugPrint('After update - lastName: ${user.lastName}');
-    notifyListeners();
-  }
-
-  void updatePhoneNumber(String phoneNumber) {
-    debugPrint('Updating phoneNumber to: $phoneNumber');
-    user.phoneNumber = phoneNumber;
     notifyListeners();
   }
 

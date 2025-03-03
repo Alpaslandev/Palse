@@ -25,7 +25,21 @@ class CustomerService {
   }
 
   Future<void> updateCustomerCategories(String uuid, List<String> categories) async {
-    await _firestore.collection("customers").doc(uuid).update({'favoriteCategories': categories});
+    try {
+      await _firestore.collection("customers").doc(uuid).update({'favoriteCategories': categories});
+    } catch (e) {
+      debugPrint('Kullanıcı kategorileri güncellenirken hata: $e');
+      throw Exception('Kullanıcı kategorileri güncellenemedi: $e');
+    }
+  }
+
+  Future<void> updateCustomerVerifiedAndPhone(String uuid, bool verified, String phone) async {
+    try {
+      await _firestore.collection("customers").doc(uuid).update({'verification': verified, 'phoneNumber': phone});
+    } catch (e) {
+      debugPrint('Kullanıcı doğrulama güncellenirken hata: $e');
+      throw Exception('Kullanıcı doğrulama güncellenemedi: $e');
+    }
   }
 
   // Firestore'dan kullanıcı verisini çeker
