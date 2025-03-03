@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
+import 'package:palseapp/core/utils/app_theme.dart';
 import 'package:palseapp/features/chats/model/chat_model.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/features/messages/viewmodel/messages_view_model.dart';
@@ -57,7 +58,7 @@ class MessageBubble extends StatelessWidget {
                   maxWidth: MediaQuery.of(context).size.width * 0.65,
                 ),
                 decoration: BoxDecoration(
-                  color: isMe ? Colors.blue : Colors.grey[300],
+                  color: isMe ? AppTheme.primaryColor : Colors.grey[300],
                   borderRadius: BorderRadius.only(
                     topLeft: const Radius.circular(12),
                     topRight: const Radius.circular(12),
@@ -169,7 +170,7 @@ class MessageBubble extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.only(left: 16),
       alignment: Alignment.centerLeft,
-      color: Colors.blue.withOpacity(0.2),
+      color: Colors.blue.withValues(alpha: 0.2),
       child: const Icon(
         Icons.format_quote,
         color: Colors.blue,

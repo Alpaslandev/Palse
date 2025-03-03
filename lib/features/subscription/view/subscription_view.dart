@@ -1,7 +1,7 @@
-// Abonelik ekranı - Bottom sheet olarak açılıyor
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:palseapp/core/services/subscription_service.dart';
+import 'package:palseapp/core/utils/app_theme.dart';
+import 'package:palseapp/features/subscription/package_card.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:palseapp/core/provider/subscription_provider.dart';
 import 'package:provider/provider.dart';
@@ -17,7 +17,8 @@ class _SubscriptionViewState extends State<SubscriptionView> {
   final _subscriptionService = SubscriptionService();
   List<Package> _packages = [];
   bool _isLoading = true;
-
+  Package? _selectedPackage;
+  bool _isFreeTrial = false;
   @override
   void initState() {
     super.initState();
@@ -33,6 +34,9 @@ class _SubscriptionViewState extends State<SubscriptionView> {
         setState(() {
           _packages = packages;
           _isLoading = false;
+          if (packages.isNotEmpty) {
+            _selectedPackage = packages.first;
+          }
         });
       }
     } catch (e) {
@@ -43,6 +47,12 @@ class _SubscriptionViewState extends State<SubscriptionView> {
         );
       }
     }
+  }
+
+  void _selectPackage(Package package) {
+    setState(() {
+      _selectedPackage = package;
+    });
   }
 
   Future<void> _handlePurchase(Package package) async {
@@ -64,40 +74,17 @@ class _SubscriptionViewState extends State<SubscriptionView> {
   Widget build(BuildContext context) {
     final subscriptionProvider = context.watch<SubscriptionProvider>();
 
-    return Container(
-      height: MediaQuery.of(context).size.height,
-      decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Premium Özellikler'),
+        centerTitle: true,
       ),
-      child: Column(
+      body: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Üst kısım - Başlık ve kapatma butonu
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Premium Özellikler',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ],
-            ),
-          ),
           const Divider(),
-
-          // Premium özelliklerin listesi
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
             child: Column(
               spacing: 4,
               children: const [
@@ -110,11 +97,11 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                   title: 'İlanını Beğenenleri Gör',
                 ),
                 _PremiumFeatureItem(
-                  icon: Icons.favorite,
-                  title: 'Sınırsız Beğeni',
+                  icon: Icons.check_circle,
+                  title: 'İlanınızın Öne Çıkarılması',
                 ),
                 _PremiumFeatureItem(
-                  icon: Icons.photo,
+                  icon: Icons.check_circle,
                   title: 'Fotoğraf Gönderme Hakkı',
                 ),
                 _PremiumFeatureItem(
@@ -122,8 +109,9 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                   title: 'Reklamsız Deneyim',
                 ),
                 _PremiumFeatureItem(
-                  icon: Icons.verified,
+                  icon: Icons.check_circle,
                   title: 'Profilde Sarı Onay Tiki',
+                  isVerified: true,
                 ),
               ],
             ),
@@ -139,77 +127,110 @@ class _SubscriptionViewState extends State<SubscriptionView> {
                     shrinkWrap: true,
                     itemBuilder: (context, index) {
                       final package = _packages[index];
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 12.0),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.all(16.0),
-                          title: Text(
-                            package.storeProduct.title,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          subtitle: Text(package.storeProduct.description),
-                          trailing: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(
-                                package.storeProduct.priceString,
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).primaryColor,
-                                ),
-                              ),
-                            ],
-                          ),
-                          enabled: !subscriptionProvider.isPremium,
-                          onTap: () => _handlePurchase(package),
-                        ),
+                      final monthlyPrice = _packages.firstWhere((element) => element.packageType == PackageType.monthly).storeProduct.price;
+
+                      return PackageCard(
+                        package: package,
+                        context: context,
+                        subscriptionProvider: subscriptionProvider,
+                        onTap: _selectPackage,
+                        isSelected: _selectedPackage == package,
+                        packageType: package.packageType,
+                        monthlyPrice: monthlyPrice,
                       );
                     },
                   ),
           ),
 
-          // Terms & Conditions
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                const Text(
-                  'Aboneliğiniz otomatik olarak yenilenir. İstediğiniz zaman iptal edebilirsiniz.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 12,
+          // Satın alma butonu - Sadece bir paket seçiliyse göster
+          if (_selectedPackage != null && !subscriptionProvider.isPremium)
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('7 günlük ücretsiz deneme'),
+                        Switch(
+                            value: _selectedPackage!.packageType == PackageType.sixMonth ? true : false,
+                            onChanged: (value) {
+                              // TODO: 7 günlük ücretsiz deneme işlemi
+                              setState(() {
+                                _isFreeTrial = value;
+                                _selectedPackage = _packages.firstWhere((element) => element.packageType == PackageType.sixMonth);
+                              });
+                            }),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    TextButton(
-                      onPressed: () {
-                        // TODO: Kullanım koşulları sayfasına yönlendir
-                      },
-                      child: const Text('Kullanım Koşulları'),
+                  ElevatedButton(
+                    onPressed: () => _handlePurchase(_selectedPackage!),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 50),
                     ),
-                    const Text(' • '),
-                    TextButton(
-                      onPressed: () {
-                        // TODO: Gizlilik politikası sayfasına yönlendir
-                      },
-                      child: const Text('Gizlilik Politikası'),
+                    child: Text(
+                      '${_selectedPackage!.storeProduct.priceString} ile Abone Ol',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ],
+                  ),
+                  TextButton.icon(
+                    onPressed: () {
+                      // TODO: Satın alımları geri yükle
+                      _subscriptionService.restorePurchases();
+                    },
+                    icon: const Icon(Icons.restore),
+                    label: const Text('Geri Yükle'),
+                  ),
+                ],
+              ),
+            ),
+
+          _buildTerms(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTerms() {
+    return SafeArea(
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextButton(
+                onPressed: () {
+                  // TODO: Kullanım koşulları sayfasına yönlendir
+                },
+                child: const Text(
+                  'Kullanım Koşulları',
+                  style: TextStyle(decoration: TextDecoration.underline, color: Colors.black),
                 ),
-                const SizedBox(height: 16), // Bottom padding for safe area
-              ],
+              ),
+              const Text(' • '),
+              TextButton(
+                onPressed: () {
+                  // TODO: Gizlilik politikası sayfasına yönlendir
+                },
+                child: const Text(
+                  'Gizlilik Politikası',
+                  style: TextStyle(decoration: TextDecoration.underline, color: Colors.black),
+                ),
+              ),
+            ],
+          ),
+          const Text(
+            'Aboneliğiniz otomatik olarak yenilenir. İstediğiniz zaman iptal edebilirsiniz.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.grey,
+              fontSize: 12,
             ),
           ),
         ],
@@ -222,21 +243,23 @@ class _SubscriptionViewState extends State<SubscriptionView> {
 class _PremiumFeatureItem extends StatelessWidget {
   final IconData icon;
   final String title;
+  final bool isVerified;
 
   const _PremiumFeatureItem({
     required this.icon,
     required this.title,
+    this.isVerified = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, color: Colors.blue),
-        const SizedBox(width: 12),
+        Icon(icon, color: AppTheme.primaryColor, size: 20),
+        const SizedBox(width: 10),
         Text(
           title,
-          style: const TextStyle(fontSize: 16),
+          style: TextStyle(fontSize: 14, color: isVerified ? Colors.red : Colors.black),
         ),
       ],
     );

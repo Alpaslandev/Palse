@@ -1,9 +1,7 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/routes/app_router.dart';
-import 'package:palseapp/features/messages/view/messages_view.dart';
 
 class NotificationService {
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
@@ -147,6 +145,57 @@ class NotificationService {
       debugPrint('Bildirim gönderildi: ChatId: $chatId, SenderId: $senderId');
     } catch (e) {
       debugPrint('Bildirim gönderme hatası: $e');
+    }
+  }
+
+  /// Bir Firestore koleksiyonunu başka bir koleksiyona kopyalar
+  Future<void> copyFirestoreCollection({
+    required String sourceCollection,
+    required String targetCollection,
+    Function(String)? onProgress,
+  }) async {
+    final FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+    try {
+      // İlerleme bildirimi
+      onProgress?.call('Belgeler alınıyor...');
+
+      // Kaynak koleksiyondan tüm belgeleri al
+      final QuerySnapshot snapshot = await firestore.collection(sourceCollection).get();
+      final int totalDocs = snapshot.docs.length;
+
+      onProgress?.call('$totalDocs belge kopyalanacak');
+
+      // Belgeleri gruplar halinde işle (Firestore batch sınırı 500)
+      int processedDocs = 0;
+      List<List<QueryDocumentSnapshot>> batches = [];
+
+      for (int i = 0; i < totalDocs; i += 500) {
+        final end = (i + 500 < totalDocs) ? i + 500 : totalDocs;
+        batches.add(snapshot.docs.sublist(i, end));
+      }
+
+      // Her batch için işlem yap
+      for (var batchDocs in batches) {
+        final WriteBatch batch = firestore.batch();
+
+        for (var doc in batchDocs) {
+          // Belgeyi hedef koleksiyona aynı ID ile ekle
+          final targetDocRef = firestore.collection(targetCollection).doc(doc.id);
+          batch.set(targetDocRef, doc.data() as Map<String, dynamic>);
+        }
+
+        // Batch'i commit et
+        await batch.commit();
+
+        processedDocs += batchDocs.length;
+        onProgress?.call('$processedDocs / $totalDocs belge kopyalandı');
+      }
+
+      onProgress?.call('Kopyalama tamamlandı: $sourceCollection -> $targetCollection');
+    } catch (e) {
+      onProgress?.call('Hata: $e');
+      rethrow;
     }
   }
 }

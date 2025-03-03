@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -25,9 +24,7 @@ class MessagesViewModel extends ChangeNotifier {
 
   Message? get quotedMessage => _quotedMessage;
 
-  MessagesViewModel(String otherUserId) {
-    this.otherUserId = otherUserId;
-  }
+  MessagesViewModel(String this.otherUserId);
 
   void initialize(String chatId, String currentUserId) {
     this.chatId = chatId;

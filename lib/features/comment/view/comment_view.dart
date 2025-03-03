@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:palseapp/core/models/comment_model.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/features/comment/viewmodel/comment_view_model.dart';
@@ -14,25 +15,25 @@ class CommentView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final currentUser = context.read<AuthProvider>().user!;
+
     return ChangeNotifierProvider(
       create: (context) => CommentViewModel(customer),
       child: Consumer<CommentViewModel>(
-        builder: (context, viewModel, child) => _buildScaffold(context, viewModel),
+        builder: (context, viewModel, child) => _buildScaffold(context, viewModel, currentUser),
       ),
     );
   }
 
-  Widget _buildScaffold(BuildContext context, CommentViewModel viewModel) {
+  Widget _buildScaffold(BuildContext context, CommentViewModel viewModel, Customer currentUser) {
+    debugPrint('viewModel.comments: ${viewModel.comments}');
+    bool isMe = currentUser.userID == customer.userID;
     return Scaffold(
-      appBar: _buildAppBar(),
+      appBar: AppBar(
+        title: const Text('Yorumlar'),
+      ),
       body: _buildBody(viewModel),
-      bottomNavigationBar: _buildBottomBar(context, viewModel),
-    );
-  }
-
-  AppBar _buildAppBar() {
-    return AppBar(
-      title: const Text('Yorumlar'),
+      bottomNavigationBar: isMe ? null : _buildBottomBar(context, viewModel, currentUser),
     );
   }
 
@@ -46,23 +47,17 @@ class CommentView extends StatelessWidget {
       itemCount: viewModel.comments.length,
       itemBuilder: (context, index) => CommentCard(
         comment: viewModel.comments[index],
-        customer: customer,
-        viewModel: viewModel,
+        onDeleteTap: () => viewModel.deleteComment(viewModel.comments[index]),
+        onReportTap: () => viewModel.reportComment(viewModel.comments[index]),
       ),
     );
   }
 
-  Widget _buildBottomBar(BuildContext context, CommentViewModel viewModel) {
-    final currentUser = context.read<AuthProvider>().user!;
-
+  Widget _buildBottomBar(BuildContext context, CommentViewModel viewModel, Customer currentUser) {
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue,
-            foregroundColor: Colors.white,
-          ),
           onPressed: () => _showAddCommentSheet(context, viewModel, currentUser),
           child: const Text('Yorum Ekle'),
         ),
@@ -70,13 +65,27 @@ class CommentView extends StatelessWidget {
     );
   }
 
-  void _showAddCommentSheet(BuildContext context, CommentViewModel viewModel, Customer currentUser) {
-    AddCommentBottomSheet.show(
-      context,
-      viewModel: viewModel,
-      currentUserID: currentUser.userID ?? '',
-      currentUserName: currentUser.fullName(),
-      currentUserProfilePictureUrl: currentUser.profilePictureUrl ?? '',
+  void _showAddCommentSheet(BuildContext context, CommentViewModel viewModel, Customer currentUser) async {
+    final commentMap = await showModalBottomSheet<Map<String, dynamic>>(
+      context: context,
+      builder: (context) {
+        return AddCommentBottomSheet();
+      },
     );
+
+    if (commentMap != null) {
+      final Comment comment = Comment(
+        comment: commentMap['comment'],
+        rating: commentMap['rating'],
+        commenterID: currentUser.userID ?? '',
+        commenterName: currentUser.fullName(),
+        commenterProfilePictureUrl: currentUser.profilePictureUrl ?? '',
+        commentDate: DateTime.now(),
+      );
+      debugPrint('Alınan yorum: ${comment.toString()}');
+      viewModel.addComment(comment);
+    } else {
+      debugPrint('Yorum eklenmedi');
+    }
   }
 }

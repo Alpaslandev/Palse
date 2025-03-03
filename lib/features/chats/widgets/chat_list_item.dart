@@ -23,14 +23,14 @@ class ChatListItem extends StatelessWidget {
     final bool isLastMessageMine = chat.lastMessageSenderId == Provider.of<ChatsViewModel>(context, listen: false).currentUserId;
 
     // Kullanıcı bilgilerini önbelleğe al
-    final _userCache = <String, Customer>{};
+    final userCache = <String, Customer>{};
 
     return ListTile(
       leading: StreamBuilder<Customer?>(
         stream: context.read<ChatsViewModel>().getUserInfo(otherUserId),
         builder: (context, snapshot) {
-          if (snapshot.hasData) _userCache[otherUserId] = snapshot.data!;
-          return _buildAvatar(_userCache[otherUserId]);
+          if (snapshot.hasData) userCache[otherUserId] = snapshot.data!;
+          return _buildAvatar(userCache[otherUserId]);
         },
       ),
       title: Row(

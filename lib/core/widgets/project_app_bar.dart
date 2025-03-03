@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/features/chats/model/chat_model.dart';
-import 'package:palseapp/features/chats/service/chat_service.dart';
 import 'package:palseapp/features/chats/viewmodel/chats_view_model.dart';
 import 'package:provider/provider.dart';
 

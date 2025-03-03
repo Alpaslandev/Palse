@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/models/customer.dart';
+import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
-import 'package:palseapp/core/widgets/advert/advert_card.dart';
+import 'package:palseapp/core/widgets/advert_card.dart';
 import 'package:palseapp/features/friend_profile/friend_profile_view_model.dart';
 import 'package:provider/provider.dart';
 
@@ -13,47 +14,62 @@ class FriendProfileView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     debugPrint(customer.userID);
+    final authProvider = context.read<AuthProvider>();
     return ChangeNotifierProvider(
       create: (context) => FriendProfileViewModel(customer: customer),
       child: Consumer<FriendProfileViewModel>(
         builder: (context, viewModel, child) {
           return Scaffold(
             appBar: AppBar(),
-            body: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  _profileHeader(),
-                  _ratingCard(viewModel, context),
-                  const SizedBox(height: 16),
-                  Text('İlanlar (${viewModel.adverts.length})'),
-                  Expanded(
-                    child: viewModel.isLoading
-                        ? const Center(child: CircularProgressIndicator())
-                        : viewModel.adverts.isEmpty
-                            ? const Center(child: Text('Henüz ilan bulunmuyor'))
-                            : ListView.builder(
-                                padding: EdgeInsets.zero,
-                                itemCount: viewModel.adverts.length,
-                                shrinkWrap: true,
-                                itemBuilder: (context, index) {
-                                  debugPrint('İlan gösteriliyor: ${viewModel.adverts[index].toString()}');
-                                  return AdvertCard(
-                                    advert: viewModel.adverts[index],
-                                    customer: customer,
-                                    isFriendProfile: true,
-                                  );
-                                },
-                              ),
+            body: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Column(
+                    children: [
+                      _profileHeader(),
+                      Row(
+                        children: [
+                          Text('İlanlar (${viewModel.adverts.length})'),
+                          Text('|'),
+                          Text('Mesaj Gönder'),
+                        ],
+                      ),
+                      _ratingCard(viewModel, context),
+                      Divider(),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 16),
+                Text('İlanlar (${viewModel.adverts.length})'),
+                Expanded(
+                  child: viewModel.isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : viewModel.adverts.isEmpty
+                          ? const Center(child: Text('Henüz ilan bulunmuyor'))
+                          : ListView.builder(
+                              padding: EdgeInsets.zero,
+                              itemCount: viewModel.adverts.length,
+                              shrinkWrap: true,
+                              itemBuilder: (context, index) {
+                                debugPrint('İlan gösteriliyor: ${viewModel.adverts[index].toString()}');
+                                return AdvertCard(
+                                  advert: viewModel.adverts[index],
+                                  isFriendProfile: true,
+                                );
+                              },
+                            ),
+                ),
+              ],
             ),
             bottomNavigationBar: SafeArea(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: _messageButton(),
+                child: ElevatedButton(
+                  onPressed: () {},
+                  child: const Text('Mesaj Gönder'),
+                ),
               ),
             ),
           );
@@ -62,23 +78,12 @@ class FriendProfileView extends StatelessWidget {
     );
   }
 
-  ElevatedButton _messageButton() {
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-      ),
-      onPressed: () {},
-      child: const Text('Mesaj Gönder'),
-    );
-  }
-
   Widget _profileHeader() {
     return ListTile(
       contentPadding: EdgeInsets.zero,
       title: Row(
         children: [
-          Text('${customer.firstName!} (${customer.age.toString()})'),
+          Text('${customer.firstName!} (${customer.getAge()})'),
           if (customer.verification == true && customer.phoneNumber != null)
             const Padding(
               padding: EdgeInsets.only(left: 4),

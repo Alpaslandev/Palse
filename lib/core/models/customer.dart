@@ -1,14 +1,19 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:palseapp/core/models/comment_model.dart';
+import 'package:palseapp/core/models/location_model.dart';
+import 'package:palseapp/core/helper/calculate_distance.dart';
 import 'package:palseapp/features/chats/model/chat_model.dart';
 
 enum Gender {
-  male(icon: 'assets/images/male.png'),
-  female(icon: 'assets/images/female.png'),
-  others(icon: 'assets/images/others.png');
+  male(icon: 'assets/images/male.png', trName: 'Erkek', enName: 'Male'),
+  female(icon: 'assets/images/female.png', trName: 'Kadın', enName: 'Female'),
+  others(icon: 'assets/images/others.png', trName: 'Diğer', enName: 'Others');
 
-  const Gender({required this.icon});
+  const Gender({required this.icon, required this.trName, required this.enName});
   final String icon;
+  final String trName;
+  final String enName;
 }
 
 class Customer {
@@ -20,22 +25,20 @@ class Customer {
   String? nickname;
   String? userID;
   String? appIdentifier;
-  List<String>? events;
+  List<String>? adverts;
   bool? verification;
   bool? isPremium;
-  String? country;
-  String? city;
-  String? district;
   Gender? gender;
   DateTime? birthday;
-  int? age;
-  GeoPoint? geoPoint;
   List<String>? favoriteCategories;
   List<String>? blockUsers;
   List<String>? favoriteAdverts;
   List<String>? profileViewers;
   Map<String, Chat>? chatInfos;
   List<Comment>? comments;
+  LocationModel? location;
+  int xp;
+  bool isWelcomeReward;
 
   Customer({
     this.profilePictureUrl,
@@ -44,23 +47,21 @@ class Customer {
     this.firstName,
     this.lastName,
     this.nickname,
-    this.favoriteCategories,
-    this.events,
-    this.blockUsers,
+    this.favoriteCategories = const [],
+    this.adverts = const [],
+    this.blockUsers = const [],
     this.verification,
     this.isPremium,
-    this.city,
-    this.country,
-    this.district,
     this.gender,
     this.birthday,
-    this.age,
     this.userID,
-    this.geoPoint,
-    this.favoriteAdverts,
-    this.chatInfos,
-    this.profileViewers,
-    this.comments,
+    this.favoriteAdverts = const [],
+    this.chatInfos = const {},
+    this.profileViewers = const [],
+    this.comments = const [],
+    this.location,
+    this.xp = 0,
+    this.isWelcomeReward = false,
   }) : appIdentifier = 'Customer App';
 
   String fullName() => '$firstName $lastName';
@@ -68,6 +69,7 @@ class Customer {
   // Yorumların ortalamasını hesaplar
   double getAverage() {
     if (comments == null || comments!.isEmpty) return 0.0; // 0.0 döndür
+    // ignore: avoid_types_as_parameter_names
     return comments!.map((comment) => comment.rating ?? 0).fold(0.0, (sum, rating) => sum + rating) /
         comments!.length; // null değerleri 0 olarak değerlendir
   }
@@ -77,6 +79,10 @@ class Customer {
     final now = DateTime.now();
     final age = now.year - birthday!.year;
     return age;
+  }
+
+  String getDistanceFromCurrentLocation(double latitude, double longitude) {
+    return calculateDistance(latitude1: latitude, longitude1: longitude, latitude2: location!.lat, longitude2: location!.lon);
   }
 
   factory Customer.fromJson(Map<String, dynamic> parsedJson, String userID) {
@@ -124,20 +130,67 @@ class Customer {
       return null;
     }
 
-    List<Comment> parseComments(dynamic commentsData) {
-      if (commentsData == null) return [];
-      if (commentsData is! List) return [];
+    LocationModel parseLocation(dynamic locationData, Map<String, dynamic> parsedJson) {
+      // Önce yeni yapıyı kontrol et
+      if (locationData != null && locationData is Map<String, dynamic>) {
+        return LocationModel.fromFirestore(locationData);
+      }
 
-      return commentsData.map((commentData) {
-        try {
-          if (commentData is Map<String, dynamic>) {
-            return Comment.fromJson(commentData);
-          }
-        } catch (e) {
-          debugPrint('Yorum parse hatası: $e');
+      // Eski yapıyı kontrol et - doğrudan Customer içindeki alanlar
+      String city = parsedJson['city'] ?? '';
+      String district = parsedJson['district'] ?? '';
+      String country = parsedJson['country'] ?? 'TR';
+      GeoPoint? geoPoint = parsedJson['geoPoint'];
+
+      double lat = 0;
+      double lon = 0;
+
+      // Eğer geoPoint varsa, koordinatları al
+      if (geoPoint != null) {
+        lat = geoPoint.latitude;
+        lon = geoPoint.longitude;
+      }
+
+      // Eski yapıdaki bilgilerle LocationModel oluştur
+      if (city.isNotEmpty || district.isNotEmpty || geoPoint != null) {
+        return LocationModel(
+          city: city,
+          district: district,
+          country: country,
+          lat: lat,
+          lon: lon,
+        );
+      }
+
+      // Hiçbir konum bilgisi yoksa boş model döndür
+      return LocationModel(lat: 0, lon: 0, city: '', district: '', country: '');
+    }
+
+    Gender parseGender(dynamic genderData) {
+      if (genderData == null) return Gender.others;
+
+      // String ise
+      if (genderData is String) {
+        // Küçük harfe çevir ve boşlukları temizle
+        String normalizedGender = genderData.toLowerCase().trim();
+
+        // Farklı yazım şekillerini kontrol et
+        if (normalizedGender == 'male' || normalizedGender == 'erkek' || normalizedGender == 'm') {
+          return Gender.male;
+        } else if (normalizedGender == 'female' || normalizedGender == 'kadın' || normalizedGender == 'kadin' || normalizedGender == 'f') {
+          return Gender.female;
         }
-        return Comment(); // Boş bir Comment döndür
-      }).toList();
+
+        // Enum adını doğrudan kontrol et (try-catch ile güvenli hale getir)
+        try {
+          return Gender.values.byName(normalizedGender);
+        } catch (e) {
+          // Hata durumunda varsayılan değer
+          return Gender.others;
+        }
+      }
+
+      return Gender.others;
     }
 
     return Customer(
@@ -151,19 +204,17 @@ class Customer {
       blockUsers: List<String>.from(parsedJson['blockUsers'] ?? []),
       favoriteCategories: List<String>.from(parsedJson['favoriteCategories'] ?? []),
       favoriteAdverts: List<String>.from(parsedJson['favoriteAdverts'] ?? []),
-      events: List<String>.from(parsedJson['events'] ?? List<String>.from(parsedJson['adverts'] ?? [])),
+      adverts: List<String>.from(parsedJson['adverts'] ?? []),
       verification: parsedJson['verification'] ?? false,
       isPremium: parsedJson['isPremium'] ?? false,
-      country: parsedJson['country'] ?? '',
-      city: parsedJson['city'] ?? '',
-      district: parsedJson['district'] ?? '',
       gender: parseGender(parsedJson['gender']),
       birthday: parseDateTime(parsedJson['birthday']),
-      age: parsedJson['age'] ?? 0,
-      geoPoint: parsedJson['geoPoint'],
       chatInfos: chatInfos,
       profileViewers: List<String>.from(parsedJson['profileViewers'] ?? []),
-      comments: parseComments(parsedJson['comments']),
+      comments: List<Comment>.from(parsedJson['comments']?.map((comment) => Comment.fromJson(comment)) ?? []),
+      location: parseLocation(parsedJson['location'], parsedJson),
+      xp: parsedJson['xp'] ?? 0,
+      isWelcomeReward: parsedJson['isWelcomeReward'] ?? false,
     );
   }
 
@@ -175,22 +226,17 @@ class Customer {
       'firstName': firstName,
       'lastName': lastName,
       'nickname': nickname,
-      'userID': userID,
       'appIdentifier': appIdentifier,
-      'average': average,
-      'events': events,
+      'events': adverts,
       'verification': verification,
       'isPremium': isPremium,
-      'country': country,
-      'city': city,
-      'district': district,
       'blockUsers': blockUsers,
       'profileViewers': profileViewers,
       'gender': gender?.name,
       'birthday': birthday != null ? Timestamp.fromDate(birthday!) : null,
       'favoriteCategories': favoriteCategories,
       'favoriteAdverts': favoriteAdverts,
-      'geoPoint': geoPoint,
+      'location': location?.toJson(),
       'chatInfos': chatInfos?.map((key, chat) => MapEntry(
             key,
             {
@@ -200,6 +246,8 @@ class Customer {
             },
           )),
       'comments': comments?.map((comment) => comment.toJson()).toList(),
+      'xp': xp,
+      'isWelcomeReward': isWelcomeReward,
     };
   }
 
@@ -212,7 +260,7 @@ class Customer {
     String? nickname,
     List<String>? favoriteCategories,
     List<String>? favoriteAdverts,
-    List<String>? events,
+    List<String>? adverts,
     bool? verification,
     bool? isPremium,
     String? country,
@@ -226,6 +274,8 @@ class Customer {
     Map<String, Chat>? chatInfos,
     List<String>? profileViewers,
     List<Comment>? comments,
+    int? xp,
+    bool? isWelcomeReward,
   }) {
     return Customer(
       profilePictureUrl: profilePictureUrl ?? this.profilePictureUrl,
@@ -234,83 +284,17 @@ class Customer {
       nickname: nickname ?? this.nickname,
       favoriteCategories: favoriteCategories ?? this.favoriteCategories,
       favoriteAdverts: favoriteAdverts ?? this.favoriteAdverts,
-      events: events ?? this.events,
+      adverts: adverts ?? this.adverts,
       verification: verification ?? this.verification,
       isPremium: isPremium ?? this.isPremium,
-      country: country ?? this.country,
-      city: city ?? this.city,
-      district: district ?? this.district,
       gender: gender ?? this.gender,
       birthday: birthday ?? this.birthday,
-      age: age ?? this.age,
       userID: userID ?? this.userID,
-      geoPoint: geoPoint ?? this.geoPoint,
       chatInfos: chatInfos ?? this.chatInfos,
       profileViewers: profileViewers ?? this.profileViewers,
       comments: comments ?? this.comments,
+      xp: xp ?? this.xp,
+      isWelcomeReward: isWelcomeReward ?? this.isWelcomeReward,
     );
-  }
-
-  static Gender parseGender(String value) {
-    switch (value.toLowerCase()) {
-      case 'male':
-        return Gender.male;
-      case 'female':
-        return Gender.female;
-      default:
-        return Gender.others;
-    }
-  }
-}
-
-class Comment {
-  String? comment;
-  double? rating;
-  String? commenterID;
-  String? commenterName;
-  String? commenterProfilePictureUrl;
-  DateTime? commentDate;
-
-  Comment({
-    this.comment = '',
-    this.rating = 0.0,
-    this.commenterID = '',
-    this.commenterName = '',
-    this.commenterProfilePictureUrl = '',
-    this.commentDate,
-  });
-
-  factory Comment.fromJson(Map<String, dynamic> parsedJson) {
-    try {
-      DateTime? parseDateTime(dynamic dateData) {
-        if (dateData == null) return null;
-        if (dateData is DateTime) return dateData;
-        if (dateData is Timestamp) return dateData.toDate();
-        return null;
-      }
-
-      return Comment(
-        comment: parsedJson['comment'] as String? ?? '',
-        rating: (parsedJson['rating'] ?? 0.0).toDouble(),
-        commenterID: parsedJson['commenterID'] as String? ?? '',
-        commenterName: parsedJson['commenterName'] as String? ?? '',
-        commenterProfilePictureUrl: parsedJson['commenterProfilePictureUrl'] as String? ?? '',
-        commentDate: parseDateTime(parsedJson['commentDate']),
-      );
-    } catch (e) {
-      debugPrint('Comment.fromJson hatası: $e');
-      return Comment(); // Hata durumunda boş bir Comment döndür
-    }
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'comment': comment,
-      'rating': rating,
-      'commenterID': commenterID,
-      'commenterName': commenterName,
-      'commenterProfilePictureUrl': commenterProfilePictureUrl,
-      'commentDate': commentDate != null ? Timestamp.fromDate(commentDate!) : null,
-    };
   }
 }

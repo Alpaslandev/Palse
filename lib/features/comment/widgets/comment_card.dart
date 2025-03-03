@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:palseapp/core/models/customer.dart';
-import 'package:palseapp/core/services/firestore/customer_service.dart';
-import 'package:palseapp/features/comment/viewmodel/comment_view_model.dart';
+import 'package:palseapp/core/models/comment_model.dart';
+import 'package:palseapp/core/widgets/circle_profile_picture.dart';
 
 // Yorum kartı widget'ı
 class CommentCard extends StatelessWidget {
   final Comment comment;
-  final Customer customer;
-  final CommentViewModel viewModel;
+  final VoidCallback onDeleteTap;
+  final VoidCallback onReportTap;
+
   const CommentCard({
     super.key,
     required this.comment,
-    required this.customer,
-    required this.viewModel,
+    required this.onDeleteTap,
+    required this.onReportTap,
   });
 
   @override
@@ -26,10 +26,7 @@ class CommentCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                CircleAvatar(
-                  backgroundImage: comment.commenterProfilePictureUrl?.isNotEmpty == true ? NetworkImage(comment.commenterProfilePictureUrl!) : null,
-                  child: comment.commenterProfilePictureUrl?.isEmpty ?? true ? const Icon(Icons.person) : null,
-                ),
+                CircleProfilePicture(imageUrl: comment.commenterProfilePictureUrl),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -58,10 +55,10 @@ class CommentCard extends StatelessWidget {
                   onSelected: (value) async {
                     if (value == 'delete') {
                       debugPrint('Yorum silme işlemi');
-                      await viewModel.deleteComment(comment);
+                      onDeleteTap();
                     } else if (value == 'report') {
                       debugPrint('Yorum şikayet etme işlemi');
-                      await viewModel.reportComment(comment);
+                      onReportTap();
                     }
                   },
                   itemBuilder: (BuildContext context) => [

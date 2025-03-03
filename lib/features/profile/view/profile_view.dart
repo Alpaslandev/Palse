@@ -3,6 +3,10 @@ import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
+import 'package:palseapp/core/utils/app_theme.dart';
+import 'package:palseapp/features/profile/widgets/leader_board.dart';
+import 'package:palseapp/features/profile/widgets/xp_events_view.dart';
+import 'package:palseapp/features/profile/widgets/xp_progress_card.dart';
 import 'package:provider/provider.dart';
 
 class ProfileView extends StatelessWidget {
@@ -10,39 +14,45 @@ class ProfileView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
-
     return Scaffold(
       body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            spacing: 10,
-            children: [
-              // Profil başlığı
-              profileHeader(context, authProvider),
+        child: Consumer<AuthProvider>(
+          builder: (context, authProvider, child) => Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              spacing: 10,
+              children: [
+                // Profil başlığı
+                profileHeader(context, authProvider),
 
-              // Yorumlar kartı
-              _ratingCard(authProvider.user!, context),
+                // Yorumlar kartı
+                _ratingCard(authProvider.user!, context),
 
-              // XP İlerleme kartı
-              const XPProgressCard(),
+                // XP İlerleme kartı
+                XPProgressCard(
+                  xp: 200,
+                  onLeaderboardPressed: () {
+                    showModalBottomSheet(
+                      isScrollControlled: true,
+                      context: context,
+                      builder: (context) => const LeaderBoard(),
+                    );
+                    //  context.push(leaderBoard);
+                  },
+                ),
+                // Günlük görev kartı
+                const DailyTaskCard(),
 
-              // Liderlik tablosu butonu
-              const LeaderboardButton(),
+                // Profil doğrulama butonu
+                const VerifyProfileButton(),
 
-              // Günlük görev kartı
-              const DailyTaskCard(),
+                // Premium buton
+                if (authProvider.user?.isPremium == false) const PremiumButton(),
 
-              // Profil doğrulama butonu
-              const VerifyProfileButton(),
-
-              // Premium buton
-              const PremiumButton(),
-
-              // XP Sistemi butonu
-              const XPSystemButton(),
-            ],
+                // XP Sistemi butonu
+                const XPSystemButton(),
+              ],
+            ),
           ),
         ),
       ),
@@ -89,98 +99,32 @@ Widget profileHeader(BuildContext context, AuthProvider authProvider) {
 // Yorumlar kartı
 Widget _ratingCard(Customer customer, BuildContext context) {
   return Card(
-      elevation: 4,
       child: ListTile(
-        onTap: () => context.pushNamed(comment, extra: customer),
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    onTap: () => context.pushNamed(comment, extra: customer),
+    title: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
           children: [
-            Row(
-              children: [
-                Icon(Icons.star, color: Colors.amber),
-                Text('Yorumlar (${customer.comments?.length ?? 0})'),
-              ],
-            ),
+            Icon(Icons.star, color: Colors.amber),
+            Text('Yorumlar (${customer.comments?.length ?? 0})'),
           ],
         ),
-        trailing: Container(
-          decoration: BoxDecoration(
-            border: Border(left: BorderSide(color: Colors.grey, width: 1)), // Sol kenara gri çizgi ekleniyor
-          ),
-          child: Padding(
-            padding: const EdgeInsets.only(left: 8.0),
-            child: Text(
-              customer.getAverage().toStringAsFixed(1),
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.orange),
-            ),
-          ),
-        ),
-      ));
-}
-
-// XP İlerleme kartı
-class XPProgressCard extends StatelessWidget {
-  const XPProgressCard({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
+      ],
+    ),
+    trailing: Container(
+      decoration: BoxDecoration(
+        border: Border(left: BorderSide(color: Colors.grey, width: 1)), // Sol kenara gri çizgi ekleniyor
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text('Sedo Champ'),
-                Icon(Icons.emoji_events, color: Colors.amber),
-                Text('Sosyal Usta'),
-              ],
-            ),
-            Text('Bir sonraki premium için 2800 XP kaldı!'),
-            LinearProgressIndicator(
-              value: 3200 / 6000,
-              backgroundColor: Colors.grey[300],
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('0 XP'),
-                Text('3200/6000'),
-              ],
-            ),
-          ],
+        padding: const EdgeInsets.only(left: 8.0),
+        child: Text(
+          customer.getAverage().toStringAsFixed(1),
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.orange),
         ),
       ),
-    );
-  }
-}
-
-// Liderlik tablosu butonu
-class LeaderboardButton extends StatelessWidget {
-  const LeaderboardButton({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.blue,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-        ),
-        onPressed: () {},
-        child: const Text(
-          'Liderlik Tablosu',
-          style: TextStyle(color: Colors.white),
-        ),
-      ),
-    );
-  }
+    ),
+  ));
 }
 
 // Günlük görev kartı
@@ -191,7 +135,7 @@ class DailyTaskCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.blue,
+        color: AppTheme.primaryColor,
         borderRadius: BorderRadius.circular(8),
       ),
       padding: const EdgeInsets.all(16),
@@ -214,7 +158,7 @@ class DailyTaskCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Text(
@@ -236,11 +180,7 @@ class DailyTaskCard extends StatelessWidget {
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.blue,
-              ),
+            child: OutlinedButton(
               onPressed: () {},
               child: const Text('Görevi Tamamla'),
             ),
@@ -290,13 +230,14 @@ class PremiumButton extends StatelessWidget {
       child: ElevatedButton.icon(
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.black,
-          padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
           ),
         ),
-        onPressed: () {},
-        icon: const Icon(Icons.diamond, color: Colors.amber),
+        onPressed: () {
+          context.push(subscription);
+        },
+        icon: const Icon(Icons.diamond, color: Colors.amber, size: 30),
         label: const Text(
           'Premium Ol',
           style: TextStyle(color: Colors.white),
@@ -321,7 +262,9 @@ class XPSystemButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(8),
           ),
         ),
-        onPressed: () {},
+        onPressed: () {
+          context.push(xpEvents);
+        },
         icon: const Icon(Icons.settings),
         label: const Text('XP Sistemi ve Ünvanlar'),
       ),

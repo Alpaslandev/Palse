@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:palseapp/core/routes/app_router.dart';
 import 'package:palseapp/core/services/notification_service.dart';
+import 'package:palseapp/core/utils/app_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
-import 'package:palseapp/firebase_options.dart';
 import 'package:palseapp/features/chats/viewmodel/chats_view_model.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:palseapp/core/provider/subscription_provider.dart';
@@ -15,7 +15,18 @@ import 'package:palseapp/core/provider/subscription_provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // Firebase'i güvenli şekilde başlat
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    if (e.toString().contains('duplicate-app')) {
+      // Zaten başlatılmış, görmezden gel
+      debugPrint('Firebase already initialized');
+    } else {
+      // Başka bir hata varsa fırlat
+      rethrow;
+    }
+  }
 
   // RevenueCat'i başlat
   if (Platform.isIOS) {
@@ -58,22 +69,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       title: 'Palse App',
-      theme: ThemeData(
-        scaffoldBackgroundColor: Colors.white,
-        primarySwatch: Colors.blue,
-        useMaterial3: true,
-        appBarTheme: AppBarTheme(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-        ),
-        tabBarTheme: TabBarTheme(
-          indicatorColor: Colors.blue,
-          labelColor: Colors.blue,
-          unselectedLabelColor: Colors.grey,
-          dividerHeight: 0.2,
-        ),
-      ),
+      theme: AppTheme.theme,
       routerConfig: AppRouter.router,
       builder: (context, child) {
         // Router hazır olduğunda context'i set et

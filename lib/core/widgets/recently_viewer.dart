@@ -1,22 +1,17 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:palseapp/core/models/customer.dart';
-import 'package:palseapp/core/widgets/advert/helper/calculate_distance.dart';
+import 'package:palseapp/core/provider/auth_provider.dart';
+import 'package:provider/provider.dart';
 
 class RecentlyViewer extends StatelessWidget {
   final Customer customer;
-  final GeoPoint currentLocation;
   final VoidCallback onProfileTap;
-  const RecentlyViewer({super.key, required this.customer, required this.currentLocation, required this.onProfileTap});
+  const RecentlyViewer({super.key, required this.customer, required this.onProfileTap});
 
   @override
   Widget build(BuildContext context) {
-    final distance = calculateDistance(
-      currentLocation,
-      customer.geoPoint ?? GeoPoint(0, 0),
-    );
-
+    final Customer currentCustomer = context.read<AuthProvider>().user!;
     return GestureDetector(
       onTap: onProfileTap,
       child: Padding(
@@ -48,9 +43,10 @@ class RecentlyViewer extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildInfoRow(Icons.location_city, customer.city ?? 'Şehir Yok'),
+                  _buildInfoRow(Icons.location_city, customer.location?.city ?? 'Şehir Yok'),
                   _buildInfoRow(Icons.cake, '${customer.getAge()}'),
-                  _buildInfoRow(Icons.directions_walk, distance),
+                  _buildInfoRow(
+                      Icons.directions_walk, customer.getDistanceFromCurrentLocation(currentCustomer.location!.lat, currentCustomer.location!.lon)),
                 ],
               ),
             ),

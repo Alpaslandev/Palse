@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
-import 'package:palseapp/features/chats/service/chat_service.dart';
 import 'package:palseapp/features/chats/widgets/chat_list_item.dart';
 import 'package:provider/provider.dart';
 import 'package:palseapp/features/chats/model/chat_model.dart';

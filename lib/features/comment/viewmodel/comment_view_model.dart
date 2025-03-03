@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:palseapp/core/models/comment_model.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/services/firestore/customer_service.dart';
 
@@ -9,9 +10,9 @@ class CommentViewModel extends ChangeNotifier {
 
   bool get isLoading => _isLoading;
 
-  CommentViewModel(friendCustomer)
-      : _friendCustomer = friendCustomer,
-        _comments = friendCustomer.comments ?? [];
+  CommentViewModel(friendCustomer) : _friendCustomer = friendCustomer {
+    _comments = _friendCustomer.comments ?? [];
+  }
 
   List<Comment> _comments = [];
   List<Comment> get comments => _comments;
@@ -22,6 +23,7 @@ class CommentViewModel extends ChangeNotifier {
     try {
       await _customerService.addComment(_friendCustomer.userID!, comment);
       _comments.add(comment);
+      debugPrint('Yorum eklendi: ${comment.toString()}');
     } catch (e) {
       debugPrint('Yorum ekleme hatası: $e');
     } finally {

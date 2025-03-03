@@ -34,12 +34,6 @@ class AuthService {
 
   Future<User?> signInWithGoogle() async {
     try {
-      // Önce Google Play Services kontrolü
-      if (!await _googleSignIn.isSignedIn()) {
-        debugPrint('Checking Google Play Services...');
-        await _googleSignIn.signInSilently();
-      }
-
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
 
       if (googleUser == null) {
@@ -60,8 +54,26 @@ class AuthService {
 
       final userCredential = await _auth.signInWithCredential(credential);
       return userCredential.user;
-    } catch (e) {
-      debugPrint('Google Sign In Detailed Error: $e');
+    } on FirebaseAuthException catch (e, s) {
+      debugPrint('Google Sign In FirebaseAuthException: $e\nStackTrace: $s');
+
+      if (e.code == 'account-exists-with-different-credential') {
+        throw Exception('Bu email adresi farklı bir giriş yöntemi ile zaten kullanılıyor.');
+      } else if (e.code == 'invalid-credential') {
+        throw Exception('Geçersiz kimlik bilgileri. Lütfen tekrar deneyin.');
+      } else if (e.code == 'operation-not-allowed') {
+        throw Exception('Bu işlem şu anda kullanılamıyor.');
+      } else if (e.code == 'user-disabled') {
+        throw Exception('Bu kullanıcı hesabı devre dışı bırakılmış.');
+      } else if (e.code == 'user-not-found') {
+        throw Exception('Bu email adresi ile kayıtlı kullanıcı bulunamadı.');
+      } else if (e.code == 'wrong-password') {
+        throw Exception('Yanlış şifre girdiniz.');
+      } else {
+        throw Exception('Firebase kimlik doğrulama hatası: ${e.message}');
+      }
+    } on Exception catch (e, s) {
+      debugPrint('Google Sign In Detailed Error: $e\nStackTrace: $s');
 
       if (e.toString().contains('network_error')) {
         throw Exception('İnternet bağlantınızı kontrol edin');
@@ -75,6 +87,9 @@ emin olun.''');
       }
 
       throw Exception('Google ile giriş yapılırken bir hata oluştu: ${e.toString()}');
+    } catch (e, s) {
+      debugPrint('Google Sign In Unexpected Error: $e\nStackTrace: $s');
+      throw Exception('Google ile giriş yapılırken beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.');
     }
   }
 

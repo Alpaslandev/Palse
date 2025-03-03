@@ -19,12 +19,12 @@ class FriendProfileViewModel extends ChangeNotifier {
     try {
       adverts.clear();
 
-      if (customer.events == null || customer.events!.isEmpty) {
+      if (customer.adverts == null || customer.adverts!.isEmpty) {
         debugPrint('Kullanıcının ilanı bulunmuyor');
         return;
       }
 
-      for (var eventId in customer.events ?? []) {
+      for (var eventId in customer.adverts ?? []) {
         debugPrint('İlan yükleniyor: $eventId');
         final advert = await advertService.fetchAdvertById(eventId);
         if (advert != null) {

@@ -35,7 +35,7 @@ class FavoriteCategoryStep extends StatelessWidget {
   }
 
   List<Widget> _buildCategoryChips(BuildContext context, ProfileSetupViewModel viewModel) {
-    return categories.map((category) {
+    return Categories.getAllCategoryTexts().map((category) {
       final isSelected = viewModel.customer.favoriteCategories?.contains(category) ?? false;
       return ChoiceChip(
         label: Text(category),

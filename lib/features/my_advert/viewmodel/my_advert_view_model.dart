@@ -76,8 +76,8 @@ class MyAdvertViewModel extends ChangeNotifier {
   }
 
   Future<void> fetchMyAdverts() async {
-    if (_authProvider.user?.events != null) {
-      final List<Future<Advert?>> futures = _authProvider.user!.events!.map((advertId) => _advertService.fetchAdvertById(advertId)).toList();
+    if (_authProvider.user?.adverts != null) {
+      final List<Future<Advert?>> futures = _authProvider.user!.adverts!.map((advertId) => _advertService.fetchAdvertById(advertId)).toList();
 
       final List<Advert?> adverts = await Future.wait(futures);
       _myAdverts.addAll(adverts.where((advert) => advert != null));

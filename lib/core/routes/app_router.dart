@@ -9,15 +9,19 @@ import 'package:palseapp/core/widgets/landing_view.dart';
 import 'package:palseapp/core/widgets/notification_view.dart';
 import 'package:palseapp/core/widgets/see_likers.dart';
 import 'package:palseapp/features/auth/views/login_view.dart';
+import 'package:palseapp/features/categories/view/categories_view.dart';
 import 'package:palseapp/features/chats/view/chats_view.dart';
 import 'package:palseapp/features/create_advert/view/create_advert_view.dart';
 import 'package:palseapp/features/comment/view/comment_view.dart';
 import 'package:palseapp/features/friend_profile/friend_profile_view.dart';
 import 'package:palseapp/features/home/view/home_view.dart';
+import 'package:palseapp/features/home/widgets/filter_view.dart';
 import 'package:palseapp/features/messages/view/messages_view.dart';
 import 'package:palseapp/features/my_advert/view/my_advert_view.dart';
 import 'package:palseapp/features/profile/view/profile_view.dart';
+import 'package:palseapp/features/profile/widgets/xp_events_view.dart';
 import 'package:palseapp/features/profile_setup_steps/view/profile_setup_view.dart';
+import 'package:palseapp/features/settings/view/edit_profile.dart';
 import 'package:palseapp/features/settings/view/settings_view.dart';
 import 'package:palseapp/features/splash/splash_view.dart';
 import 'package:palseapp/features/subscription/view/subscription_view.dart';
@@ -46,9 +50,9 @@ class AppRouter {
       redirect: _handleRedirect,
       extraCodec: CustomGoRouterCodec(),
       routes: [
-        // Splash screen'i ekleyelim
         GoRoute(
           path: splash,
+          name: 'splash',
           parentNavigatorKey: rootNavigatorKey, // Ana navigator'ı kullan
           builder: (context, state) => const SplashView(),
         ),
@@ -94,11 +98,16 @@ class AppRouter {
           builder: (context, state) => const SubscriptionView(),
         ),
         GoRoute(
-          path: seeViewers,
+          name: 'xpEvents',
+          path: xpEvents,
           parentNavigatorKey: rootNavigatorKey, // Ana navigator'ı kullan
-          builder: (context, state) => SeeLikersView(
-            viewers: state.extra as List<String>? ?? [],
-          ),
+          builder: (context, state) => const XpEventsView(),
+        ),
+        GoRoute(
+          name: 'filter',
+          path: filter,
+          parentNavigatorKey: rootNavigatorKey, // Ana navigator'ı kullan
+          builder: (context, state) => const FilterView(),
         ),
         GoRoute(
           path: friendProfile,
@@ -130,8 +139,17 @@ class AppRouter {
         ),
         GoRoute(
           path: settings,
-          parentNavigatorKey: rootNavigatorKey, // Ana navigator'ı kullan
           builder: (context, state) => const SettingsView(),
+          routes: [
+            GoRoute(
+              path: editProfile,
+              name: editProfile,
+              builder: (context, state) {
+                final user = state.extra! as Customer;
+                return EditProfileView(user: user);
+              },
+            ),
+          ],
         ),
         ShellRoute(
           navigatorKey: _shellNavigatorKey,
@@ -162,6 +180,24 @@ class AppRouter {
                     opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
                     child: child,
                   );
+                },
+              ),
+              routes: [
+                GoRoute(
+                  path: seeViewers,
+                  name: seeViewers,
+                  builder: (context, state) => SeeLikersView(viewers: state.extra as List<String>? ?? []),
+                ),
+              ],
+            ),
+            GoRoute(
+              path: categories,
+              name: 'categories',
+              pageBuilder: (context, state) => CustomTransitionPage(
+                key: state.pageKey,
+                child: const CategoriesView(),
+                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                  return FadeTransition(opacity: CurveTween(curve: Curves.easeInOut).animate(animation), child: child);
                 },
               ),
             ),

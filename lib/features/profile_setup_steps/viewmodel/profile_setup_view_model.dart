@@ -1,10 +1,10 @@
 // Profil kurulum sürecini yöneten ViewModel
 import 'dart:io';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:palseapp/core/models/customer.dart';
+import 'package:palseapp/core/models/location_model.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/services/cloud_storage.dart';
 import 'package:palseapp/core/services/firestore/customer_service.dart';
@@ -63,8 +63,8 @@ class ProfileSetupViewModel extends ChangeNotifier {
     debugPrint(_authProvider.firebaseUser?.uid ?? 'User ID not found');
 
     debugPrint(_customer.toJson().toString());
-    debugPrint(_customer.geoPoint!.latitude.toString());
-    debugPrint(_customer.geoPoint!.longitude.toString());
+    debugPrint(_customer.location?.geoPoint?.latitude.toString() ?? 'GeoPoint not found');
+    debugPrint(_customer.location?.geoPoint?.longitude.toString() ?? 'GeoPoint not found');
 
     String? storageUrl;
 
@@ -114,8 +114,7 @@ class ProfileSetupViewModel extends ChangeNotifier {
   }
 
   void updateCoordinates(double lat, double lon) {
-    GeoPoint location = GeoPoint(lat, lon);
-    _customer.geoPoint = location;
+    _customer.location = LocationModel(lat: lat, lon: lon, city: '', district: '', country: '');
     notifyListeners();
   }
 
@@ -131,16 +130,6 @@ class ProfileSetupViewModel extends ChangeNotifier {
 
   void updateNickname(String nickname) {
     _customer.nickname = nickname;
-    notifyListeners();
-  }
-
-  void updateCity(String city) {
-    _customer.city = city;
-    notifyListeners();
-  }
-
-  void updateDistrict(String district) {
-    _customer.district = district;
     notifyListeners();
   }
 

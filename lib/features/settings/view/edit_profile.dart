@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:palseapp/core/models/customer.dart';
+import 'package:palseapp/core/models/location_model.dart';
 import 'package:palseapp/core/services/firestore/customer_service.dart';
-import 'package:palseapp/features/settings/view/widgets/location_sheet.dart';
+import 'package:palseapp/core/widgets/circle_profile_picture.dart';
+import 'package:palseapp/core/widgets/location_sheet.dart';
 import 'package:palseapp/features/settings/viewmodel/edit_profile_view_model.dart';
 import 'package:provider/provider.dart';
 
@@ -56,12 +58,7 @@ class _EditProfileViewState extends State<EditProfileView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                CircleAvatar(
-                  radius: 50,
-                  backgroundImage: viewModel.user.profilePictureUrl != null
-                      ? NetworkImage(viewModel.user.profilePictureUrl!)
-                      : const AssetImage('assets/images/dostum_olsana.png'),
-                ),
+                CircleProfilePicture(imageUrl: viewModel.user.profilePictureUrl),
                 TextButton(
                   onPressed: () {
                     // TODO: Profil fotoğrafı değiştirme
@@ -78,25 +75,35 @@ class _EditProfileViewState extends State<EditProfileView> {
                       label: 'Kullanıcı Adı',
                       keyboardType: TextInputType.name,
                       readOnly: viewModel.user.nickname!.length > 4,
+                      suffixIcon: viewModel.user.nickname!.length > 4 ? Icons.check : Icons.edit,
                     ),
                     _buildTextField(
                       controller: viewModel.nameController,
                       label: 'Ad',
                       keyboardType: TextInputType.name,
                       prefixIcon: Icons.person,
+                      suffixIcon: Icons.edit,
                     ),
                     _buildTextField(
                       controller: viewModel.lastNameController,
                       label: 'Soyad',
                       keyboardType: TextInputType.name,
                       prefixIcon: Icons.person,
+                      suffixIcon: Icons.edit,
                     ),
                     _buildTextField(
+                      onTap: () async {
+                        // final result = await showModalBottomSheet<String>(
+                        //   context: context,
+                        //   builder: (context) => const PhoneNumberSheet(),
+                        // );
+                      },
                       controller: viewModel.phoneController,
                       label: 'Telefon',
                       keyboardType: TextInputType.phone,
                       readOnly: viewModel.user.verification == true,
                       prefixIcon: Icons.phone,
+                      suffixIcon: viewModel.user.verification == false ? Icons.edit : Icons.check,
                     ),
                     if (viewModel.user.verification == false) const Text('Telefon Doğrulanmamıştır.', style: TextStyle(color: Colors.red)),
                     if (viewModel.user.verification == true) const Text('Telefon Doğrulanmıştır.', style: TextStyle(color: Colors.green)),
@@ -104,19 +111,15 @@ class _EditProfileViewState extends State<EditProfileView> {
                       controller: viewModel.addressController,
                       label: 'Konum',
                       prefixIcon: Icons.location_on,
+                      suffixIcon: Icons.edit,
                       onTap: () async {
-                        final result = await showModalBottomSheet<Map<String, dynamic>>(
+                        final result = await showModalBottomSheet<LocationModel>(
                           context: context,
                           builder: (context) => const LocationSheet(),
                         );
 
                         if (result != null) {
-                          viewModel.updateLocation(
-                            city: result['city'],
-                            district: result['district'],
-                            latitude: result['lat'],
-                            longitude: result['lon'],
-                          );
+                          viewModel.updateLocation(result);
                         }
                       },
                       readOnly: true,
@@ -133,7 +136,7 @@ class _EditProfileViewState extends State<EditProfileView> {
                       label: 'Cinsiyet',
                       keyboardType: TextInputType.name,
                       readOnly: true,
-                      prefixIcon: viewModel.user.gender?.name == 'Male' ? Icons.male : Icons.female,
+                      prefixIcon: Icons.female,
                     ),
                   ],
                 ),
@@ -152,6 +155,7 @@ class _EditProfileViewState extends State<EditProfileView> {
     bool readOnly = false,
     IconData? prefixIcon,
     VoidCallback? onTap,
+    IconData? suffixIcon,
   }) {
     return TextField(
       controller: controller,
@@ -160,6 +164,7 @@ class _EditProfileViewState extends State<EditProfileView> {
         border: const OutlineInputBorder(),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,
+        suffixIcon: suffixIcon != null ? Icon(suffixIcon) : null,
       ),
       keyboardType: keyboardType,
       readOnly: readOnly,

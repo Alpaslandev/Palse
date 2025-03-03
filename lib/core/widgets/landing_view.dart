@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/routes/routes.dart';
+import 'package:palseapp/core/utils/app_theme.dart';
 import 'package:palseapp/core/widgets/project_app_bar.dart';
 
 class LandingView extends StatefulWidget {
@@ -16,8 +17,8 @@ class _LandingViewState extends State<LandingView> {
   int _getSelectedIndex(BuildContext context) {
     final String location = GoRouterState.of(context).matchedLocation;
     if (location.startsWith(home)) return 0;
-    if (location.startsWith(myAdverts)) return 1;
-    if (location.startsWith(messages)) return 2;
+    if (location.startsWith(categories)) return 1;
+    if (location.startsWith(myAdverts)) return 2;
     if (location.startsWith(profile)) return 3;
     return 0;
   }
@@ -28,10 +29,10 @@ class _LandingViewState extends State<LandingView> {
         context.go(home);
         break;
       case 1:
-        context.go(myAdverts);
+        context.go(categories);
         break;
       case 2:
-        context.go(subscription);
+        context.go(myAdverts);
         break;
       case 3:
         context.go(profile);
@@ -67,10 +68,10 @@ class _LandingViewState extends State<LandingView> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildNavItem(context, 0, 'assets/vectors/home_1_x2.svg', 'assets/vectors/vector1bar.svg', iconSize, selectedIndex),
-              _buildNavItem(context, 1, 'assets/vectors/ad_1_x2.svg', 'assets/vectors/vector3bar.svg', iconSize, selectedIndex),
-              _buildNavItem(context, 2, 'assets/vectors/vector_5_x2.svg', 'assets/vectors/vector4bar.svg', iconSize, selectedIndex),
-              _buildNavItem(context, 3, 'assets/vectors/vector_5_x2.svg', 'assets/vectors/vector4bar.svg', iconSize, selectedIndex),
+              _buildNavItem(context, 0, 'assets/vectors/home_1_x2.svg', iconSize, selectedIndex),
+              _buildNavItem(context, 1, 'assets/vectors/category_1_x2.svg', iconSize, selectedIndex),
+              _buildNavItem(context, 2, 'assets/vectors/ad_1_x2.svg', iconSize, selectedIndex),
+              _buildNavItem(context, 3, 'assets/vectors/vector_5_x2.svg', iconSize, selectedIndex),
             ],
           ),
         ),
@@ -78,8 +79,10 @@ class _LandingViewState extends State<LandingView> {
     );
   }
 
-  Widget _buildNavItem(BuildContext context, int index, String iconPath, String selectedIconPath, double iconSize, int selectedIndex) {
+  Widget _buildNavItem(BuildContext context, int index, String iconPath, double iconSize, int selectedIndex) {
     final isSelected = selectedIndex == index;
+    final Color svgColor = isSelected ? Colors.white : Colors.grey;
+    final double currentIconSize = isSelected ? iconSize * 1.4 : iconSize;
 
     return GestureDetector(
       onTap: () => _onItemTapped(context, index),
@@ -88,17 +91,18 @@ class _LandingViewState extends State<LandingView> {
         height: 50,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: isSelected ? Colors.blue : Colors.transparent,
+          color: isSelected ? AppTheme.primaryColor : Colors.transparent,
           border: Border.all(
-            color: isSelected ? Colors.blue : Colors.grey.shade300,
+            color: isSelected ? AppTheme.primaryColor : Colors.grey.shade300,
             width: 1.5,
           ),
         ),
         child: Center(
           child: SvgPicture.asset(
-            isSelected ? selectedIconPath : iconPath,
-            width: iconSize,
-            height: iconSize,
+            iconPath,
+            width: currentIconSize,
+            height: currentIconSize,
+            colorFilter: ColorFilter.mode(svgColor, BlendMode.srcIn),
           ),
         ),
       ),

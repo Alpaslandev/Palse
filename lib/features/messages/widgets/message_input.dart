@@ -1,5 +1,7 @@
 // Mesaj yazma alanı widget'ı - Alıntı gösterimi ile birlikte
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/features/messages/viewmodel/messages_view_model.dart';
 import 'package:provider/provider.dart';
 
@@ -8,12 +10,14 @@ class MessageInput extends StatelessWidget {
   final String chatId;
   final String currentUserId;
   final String otherUserId;
+  final bool isPremium;
 
   MessageInput({
     super.key,
     required this.chatId,
     required this.currentUserId,
     required this.otherUserId,
+    required this.isPremium,
   });
 
   @override
@@ -78,7 +82,7 @@ class MessageInput extends StatelessWidget {
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
+                    color: Colors.grey.withValues(alpha: 0.1),
                     spreadRadius: 1,
                     blurRadius: 1,
                   ),
@@ -105,7 +109,11 @@ class MessageInput extends StatelessWidget {
                                 ),
                               )
                             : const Icon(Icons.attach_file),
-                        onPressed: viewModel.isUploadingImage ? null : () => viewModel.handleAttachment(context),
+                        onPressed: isPremium
+                            ? viewModel.isUploadingImage
+                                ? null
+                                : () => viewModel.handleAttachment(context)
+                            : () => _showPremiumDialog(context),
                       ),
                       Expanded(
                         child: TextField(
@@ -139,6 +147,25 @@ class MessageInput extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+
+  void _showPremiumDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Premium Üyelik Gerekiyor'),
+        content: const Text('Premium üyelik alarak fotoğraf gönderebilirsiniz.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              context.push(subscription);
+            },
+            child: const Text('Tamam'),
+          ),
+        ],
+      ),
     );
   }
 }

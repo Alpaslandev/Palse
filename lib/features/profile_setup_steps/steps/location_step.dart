@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:palseapp/core/models/location_model.dart';
 import 'package:palseapp/features/profile_setup_steps/viewmodel/profile_setup_view_model.dart';
 import 'package:provider/provider.dart';
 import 'package:palseapp/core/services/location_service.dart';
@@ -15,7 +16,7 @@ class LocationStep extends StatefulWidget {
 
 class _LocationStepState extends State<LocationStep> {
   final Debouncer _debouncer = Debouncer(milliseconds: 300);
-  List<LocationSuggestion> _suggestions = [];
+  List<LocationModel> _suggestions = [];
   bool _isLoading = false;
   Position? _currentPosition;
 
@@ -92,7 +93,7 @@ class _LocationStepState extends State<LocationStep> {
             contentPadding: const EdgeInsets.symmetric(horizontal: 8),
             leading: const Icon(Icons.location_pin, size: 28),
             title: Text(
-              suggestion.displayName,
+              suggestion.toString(),
               overflow: TextOverflow.ellipsis,
               maxLines: 2,
             ),
@@ -122,6 +123,7 @@ class _LocationStepState extends State<LocationStep> {
       widget.viewModel.cityController.text = '${places.isoCountryCode}, ${places.administrativeArea}, ${places.locality}';
       setState(() => _suggestions.clear());
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Konum alınamadı: ${e.toString()}')),
       );
@@ -132,8 +134,6 @@ class _LocationStepState extends State<LocationStep> {
 
   void _updateViewModel(Placemark place, Position position) {
     final viewModel = context.read<ProfileSetupViewModel>();
-    viewModel.updateCity(place.administrativeArea ?? '');
-    viewModel.updateDistrict(place.subAdministrativeArea ?? place.locality ?? '');
     viewModel.updateCoordinates(position.latitude, position.longitude);
   }
 
@@ -145,6 +145,8 @@ class _LocationStepState extends State<LocationStep> {
       final results = await LocationService().searchLocation(query);
       setState(() => _suggestions = results);
     } catch (e) {
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Hata: ${e.toString()}')),
       );
@@ -153,13 +155,11 @@ class _LocationStepState extends State<LocationStep> {
     }
   }
 
-  void _selectLocation(LocationSuggestion suggestion) {
+  void _selectLocation(LocationModel suggestion) {
     final viewModel = context.read<ProfileSetupViewModel>();
-    viewModel.updateCity(suggestion.city);
-    viewModel.updateDistrict(suggestion.district);
-    viewModel.updateCoordinates(suggestion.lat, suggestion.lon);
+    // viewModel.updateLocation(suggestion);
 
-    widget.viewModel.cityController.text = suggestion.displayName;
+    widget.viewModel.cityController.text = suggestion.toString();
     _suggestions.clear();
     FocusManager.instance.primaryFocus?.unfocus();
   }

@@ -1,17 +1,17 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
 import 'package:palseapp/core/models/advert.dart';
-import 'package:palseapp/core/models/customer.dart';
-import 'package:palseapp/core/widgets/advert/helper/calculate_distance.dart';
+import 'package:palseapp/core/provider/auth_provider.dart';
+import 'package:palseapp/core/widgets/circle_profile_picture.dart';
+import 'package:provider/provider.dart';
 
 // Kullanıcı ilanlarını gösteren kart tasarımı
 class AdvertCard extends StatelessWidget {
   const AdvertCard({
     super.key,
     required this.advert,
-    required this.customer,
     this.isUserAdvert = false,
     this.onProfileTap,
     this.onLikeTap,
@@ -24,13 +24,11 @@ class AdvertCard extends StatelessWidget {
   });
 
   final Advert advert;
-  final Customer customer;
   final bool isUserAdvert;
   final bool isMyLikes;
   final bool isFriendProfile;
 
   final VoidCallback? onProfileTap;
-
   final VoidCallback? onLikeTap;
   final VoidCallback? onMessageTap;
   final VoidCallback? onDeleteTap;
@@ -39,31 +37,53 @@ class AdvertCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final currentCustomer = context.read<AuthProvider>().user!;
     return Card(
         color: Colors.white,
         elevation: 0,
-        margin: const EdgeInsets.all(0),
+        margin: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, spacing: 10, children: [
           // Üst kısım - Kullanıcı bilgileri
           _profileHeader(),
 
           Row(
             children: [
-              const Icon(Icons.location_on_outlined, size: 12, color: Colors.blue),
-              const SizedBox(width: 4),
-              Text('${advert.city}, ${advert.district}', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+              RichText(
+                text: TextSpan(
+                  children: [
+                    WidgetSpan(
+                      child: Icon(Icons.location_on_outlined, size: 12, color: Colors.blue),
+                    ),
+                    TextSpan(
+                      text:
+                          ' ${advert.location?.city}, ${advert.location?.district} (${advert.getDistanceFromCurrentLocation(currentCustomer.location!.lat, currentCustomer.location!.lon)})',
+                      style: TextStyle(fontSize: 9, color: Colors.grey),
+                    ),
+                  ],
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
               const Spacer(),
-              const Icon(Icons.calendar_month_outlined, size: 12, color: Colors.blue),
-              const SizedBox(width: 4),
-              if (advert.startEventDate != null)
-                Text('${DateFormat('dd/MM/yyyy').format(advert.startEventDate!)} - ${DateFormat('HH:mm').format(advert.startEventDate!)}',
-                    style: const TextStyle(fontSize: 11, color: Colors.grey)),
+              RichText(
+                text: TextSpan(
+                  children: [
+                    WidgetSpan(
+                      child: Icon(Icons.calendar_month_outlined, size: 12, color: Colors.blue),
+                    ),
+                    TextSpan(
+                      text: ' ${DateFormat('dd/MM/yyyy').format(advert.startEventDate!)} - ${DateFormat('HH:mm').format(advert.startEventDate!)}',
+                      style: TextStyle(fontSize: 9, color: Colors.grey),
+                    ),
+                  ],
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
             ],
           ),
 
           // İlan Başlığı
           Text(
-            "${advert.advertName} ${calculateDistance(advert.geoPoint ?? GeoPoint(0, 0), customer.geoPoint ?? GeoPoint(0, 0))}",
+            advert.advertName,
             style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
             maxLines: 3,
             overflow: TextOverflow.ellipsis,
@@ -75,18 +95,27 @@ class AdvertCard extends StatelessWidget {
             style: const TextStyle(color: Colors.grey),
           ),
 
-          // Ana görsel
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.network(
-              advert.advertImage,
-              width: double.infinity,
-              height: 200,
-              fit: BoxFit.cover,
+          if (!advert.advertImage.contains('assets/images/'))
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: CachedNetworkImage(
+                imageUrl: advert.advertImage,
+                width: double.infinity,
+                height: 250,
+                fit: BoxFit.cover,
+              ),
+            )
+          else
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.asset(
+                advert.advertImage,
+                width: double.infinity,
+                height: 250,
+                fit: BoxFit.cover,
+              ),
             ),
-          ),
 
-          const SizedBox(height: 10),
           if (!isFriendProfile) ...[
             if (isUserAdvert)
               Row(
@@ -104,7 +133,7 @@ class AdvertCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   if (!isMyLikes) _buildButton('Beğen', isLiked ? Icons.favorite : Icons.favorite_border, onLikeTap ?? () {}, showCount: true),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 20),
                   _buildButton('Mesaj', Icons.message_outlined, onMessageTap ?? () {}),
                 ],
               ),
@@ -116,33 +145,36 @@ class AdvertCard extends StatelessWidget {
     return ListTile(
       contentPadding: EdgeInsets.zero,
       onTap: onProfileTap,
-      leading: CircleAvatar(
-        backgroundImage: NetworkImage(customer.profilePictureUrl ?? ""),
-      ),
+      leading: CircleProfilePicture(imageUrl: advert.creatorProfilePicture),
       title: Row(
         spacing: 4,
         children: [
           Text(
-            customer.firstName ?? "advert",
+            advert.creatorName,
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
-          if (customer.verification == true && customer.phoneNumber != null)
+          if (advert.creatorIsVerified == true)
             const Padding(
               padding: EdgeInsets.only(left: 4),
               child: Icon(Icons.verified, color: Colors.blue, size: 16),
             ),
+          if (advert.creatorIsPremium == true)
+            const Padding(
+              padding: EdgeInsets.only(left: 4),
+              child: Icon(Icons.verified, color: Colors.yellow, size: 16),
+            ),
           SvgPicture.asset(
             'assets/vectors/vector_7_x2.svg',
-            width: 16.7,
-            height: 15.8,
+            width: 14,
+            height: 14,
           ),
           Text(
-            '1',
-            style: const TextStyle(fontSize: 11),
+            '${advert.creatorAverageRating}',
+            style: const TextStyle(fontSize: 12),
           ),
         ],
       ),
-      subtitle: Text(' ${advert.advertType}'),
+      subtitle: Text(advert.advertType),
       trailing: Text(DateFormat('dd/MM/yyyy').format(advert.createdAt!)),
     );
   }
@@ -156,10 +188,11 @@ class AdvertCard extends StatelessWidget {
     bool isDelete = false,
   }) {
     return Container(
+      height: 40,
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border.all(color: Colors.grey),
-        borderRadius: BorderRadius.circular(50),
+        borderRadius: BorderRadius.all(Radius.circular(50)),
       ),
       child: TextButton.icon(
         onPressed: onPressed,
@@ -170,7 +203,7 @@ class AdvertCard extends StatelessWidget {
               const SizedBox(width: 3),
             if (showCount)
               Text(
-                advert.countUUIDs.length.toString(),
+                advert.likers.length.toString(),
                 style: const TextStyle(color: Colors.black),
               ),
           ],
@@ -190,26 +223,4 @@ class AdvertCard extends StatelessWidget {
       ),
     );
   }
-
-  // // İki konum arasındaki mesafeyi kilometre cinsinden hesaplar
-  // String calculateDistance(GeoPoint customerLocation, GeoPoint advertLocation) {
-  //   const int earthRadius = 6371000; // Dünya yarıçapı (metre)
-
-  //   double lat1 = customerLocation.latitude * (pi / 180);
-  //   double lon1 = customerLocation.longitude * (pi / 180);
-  //   double lat2 = advertLocation.latitude * (pi / 180);
-  //   double lon2 = advertLocation.longitude * (pi / 180);
-
-  //   double dLat = lat2 - lat1;
-  //   double dLon = lon2 - lon1;
-
-  //   double a = sin(dLat / 2) * sin(dLat / 2) + cos(lat1) * cos(lat2) * sin(dLon / 2) * sin(dLon / 2);
-  //   double c = 2 * atan2(sqrt(a), sqrt(1 - a));
-
-  //   final distance = (earthRadius * c / 1000).ceil();
-
-  //   final distanceString = "$distance km";
-
-  //   return distanceString; // Direkt olarak km cinsinden sonuç
-  // }
 }

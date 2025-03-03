@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:palseapp/core/models/comment_model.dart';
 import 'package:palseapp/core/models/customer.dart';
 
 class CustomerService {
@@ -21,6 +22,10 @@ class CustomerService {
       debugPrint('Beklenmeyen hata: $e');
       throw Exception('Kullanıcı güncelleme başarısız: $e');
     }
+  }
+
+  Future<void> updateCustomerCategories(String uuid, List<String> categories) async {
+    await _firestore.collection("customers").doc(uuid).update({'favoriteCategories': categories});
   }
 
   // Firestore'dan kullanıcı verisini çeker
@@ -50,7 +55,7 @@ class CustomerService {
   Future<void> cleanupDeletedAdvertReferences() async {
     try {
       // Mevcut tüm ilan ID'lerini al
-      final advertsSnapshot = await _firestore.collection('adverts').get();
+      final advertsSnapshot = await _firestore.collection('events').get();
       final existingAdvertIds = advertsSnapshot.docs.map((doc) => doc.id).toSet();
 
       // Tüm kullanıcıları çek

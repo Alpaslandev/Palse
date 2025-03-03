@@ -1,40 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:palseapp/core/models/customer.dart';
-import 'package:palseapp/features/comment/viewmodel/comment_view_model.dart';
 
 // Yorum ekleme bottom sheet widget'ı
 class AddCommentBottomSheet extends StatefulWidget {
-  final CommentViewModel viewModel;
-  final String currentUserID;
-  final String currentUserName;
-  final String? currentUserProfilePictureUrl;
-
   const AddCommentBottomSheet({
     super.key,
-    required this.viewModel,
-    required this.currentUserID,
-    required this.currentUserName,
-    this.currentUserProfilePictureUrl,
   });
-
-  static void show(
-    BuildContext context, {
-    required CommentViewModel viewModel,
-    required String currentUserID,
-    required String currentUserName,
-    String? currentUserProfilePictureUrl,
-  }) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => AddCommentBottomSheet(
-        viewModel: viewModel,
-        currentUserID: currentUserID,
-        currentUserName: currentUserName,
-        currentUserProfilePictureUrl: currentUserProfilePictureUrl,
-      ),
-    );
-  }
 
   @override
   State<AddCommentBottomSheet> createState() => _AddCommentBottomSheetState();
@@ -61,28 +31,12 @@ class _AddCommentBottomSheetState extends State<AddCommentBottomSheet> {
       );
       return;
     }
+    final commentMap = {
+      'comment': commentController.text,
+      'rating': selectedRating,
+    };
 
-    try {
-      final comment = Comment(
-        comment: commentController.text,
-        rating: selectedRating.toDouble(),
-        commenterID: widget.currentUserID,
-        commenterName: widget.currentUserName,
-        commenterProfilePictureUrl: widget.currentUserProfilePictureUrl,
-        commentDate: DateTime.now(),
-      );
-
-      await widget.viewModel.addComment(comment);
-
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Yorumunuz başarıyla eklendi')),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Hata oluştu: $e')),
-      );
-    }
+    Navigator.pop(context, commentMap);
   }
 
   @override

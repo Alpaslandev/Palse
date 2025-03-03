@@ -24,6 +24,16 @@ class SubscriptionService {
     }
   }
 
+  // Satın alımları geri yükle
+  Future<void> restorePurchases() async {
+    try {
+      await Purchases.restorePurchases();
+      debugPrint('Satın alımları geri yüklendi');
+    } catch (e) {
+      debugPrint('Satın alımları geri yükleme sırasında hata: $e');
+    }
+  }
+
   // Satın alma işlemi
   Future<bool> purchasePackage(Package package) async {
     try {

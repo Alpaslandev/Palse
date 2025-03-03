@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dio/dio.dart';
+import 'package:palseapp/core/models/location_model.dart';
 
 // Basit ve anlaşılır konum servisi
 class LocationService {
@@ -12,8 +12,8 @@ class LocationService {
     headers: {'User-Agent': 'YourAppName/1.0'}, // Özel kullanıcı ajanı zorunlu
   ));
 
-  // Mevcut konumu al
-  Future<LatLng?> getCurrentPosition() async {
+  // Mevcut konumu al ve LocationModel'e dönüştür
+  Future<LocationModel?> getCurrentLocationModel() async {
     try {
       // Konum servisini kontrol et
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -28,7 +28,23 @@ class LocationService {
 
       // Konumu al
       final position = await Geolocator.getCurrentPosition();
-      return LatLng(position.latitude, position.longitude);
+
+      // Adres bilgilerini al
+      final placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
+
+      if (placemarks.isNotEmpty) {
+        // LocationModel oluştur
+        return LocationModel.fromPlacemark(placemarks.first, lat: position.latitude, lon: position.longitude);
+      } else {
+        // Sadece koordinatları içeren model
+        return LocationModel(
+          city: '',
+          district: '',
+          country: '',
+          lat: position.latitude,
+          lon: position.longitude,
+        );
+      }
     } catch (e) {
       debugPrint('Konum alınamadı: $e');
       return null;
@@ -48,63 +64,25 @@ class LocationService {
     }
   }
 
-  // Seçilen il ve ilçeden GeoPoint oluştur
-  Future<GeoPoint?> getGeoPoint(String city, String district, String country) async {
-    try {
-      final List<Location> locations = await locationFromAddress('$district, $city, $country');
-
-      if (locations.isNotEmpty) {
-        return GeoPoint(
-          locations.first.latitude,
-          locations.first.longitude,
-        );
-      }
-      return null;
-    } catch (e) {
-      debugPrint('GeoPoint oluşturulamadı: $e');
-      return null;
-    }
-  }
-
-  Future<List<LocationSuggestion>> searchLocation(String query) async {
+  // Konum arama - OpenStreetMap API
+  Future<List<LocationModel>> searchLocation(String query) async {
     try {
       final response = await _dio.get('/search', queryParameters: {
         'q': query,
         'format': 'json',
         'addressdetails': 1,
         'limit': 5,
-        'countrycodes': 'tr', // Sadece Türkiye için
+        'countrycodes': 'tr',
       });
 
-      return (response.data as List).map((json) => LocationSuggestion.fromJson(json)).toList();
+      return (response.data as List).map((json) => LocationModel.fromOpenStreetMap(json)).toList();
     } catch (e) {
       throw Exception('Konum bulunamadı: ${e.toString()}');
     }
   }
-}
 
-class LocationSuggestion {
-  final String displayName;
-  final double lat;
-  final double lon;
-  final Map<String, dynamic> address;
-
-  LocationSuggestion({
-    required this.displayName,
-    required this.lat,
-    required this.lon,
-    required this.address,
-  });
-
-  factory LocationSuggestion.fromJson(Map<String, dynamic> json) {
-    return LocationSuggestion(
-      displayName: json['display_name'],
-      lat: double.parse(json['lat']),
-      lon: double.parse(json['lon']),
-      address: json['address'],
-    );
+  // GeoPoint oluştur
+  Future<GeoPoint?> getGeoPoint(LocationModel location) async {
+    return GeoPoint(location.lat, location.lon);
   }
-
-  String get city => address['city'] ?? address['state'] ?? '';
-  String get district => address['town'] ?? address['village'] ?? '';
 }

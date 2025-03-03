@@ -1,21 +1,28 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:palseapp/core/models/customer.dart';
+import 'package:palseapp/core/models/location_model.dart';
+import 'package:palseapp/core/helper/calculate_distance.dart';
 
 class Advert {
   String? advertID;
   String advertName;
   String description;
-  String creatorUserID;
   DateTime? startEventDate;
-  //  DateTime? endEventDate;
   String advertType;
   String advertImage;
-  List<String> countUUIDs;
-  GeoPoint? geoPoint;
+  List<String> likers;
 
-  final String? country; // Yeni alan
-  final String? city; // Yeni alan
-  final String? district; // Yeni alan
+  LocationModel? location;
+
+  String creatorUserID;
+  String creatorName;
+  String creatorLastName;
+  String creatorProfilePicture;
+  Gender creatorGender;
+  bool creatorIsVerified;
+  bool creatorIsPremium;
+  int creatorAverageRating;
 
   DateTime? createdAt;
 
@@ -23,43 +30,27 @@ class Advert {
     this.advertID,
     required this.advertName,
     required this.description,
-    required this.creatorUserID,
     required this.startEventDate,
-    //  required this.endEventDate,
     required this.advertType,
     required this.advertImage,
-    required this.countUUIDs,
-    this.geoPoint,
-    this.country,
-    this.city,
-    this.district,
+    required this.likers,
+    required this.location,
     this.createdAt,
+    this.creatorUserID = '',
+    this.creatorName = '',
+    this.creatorLastName = '',
+    this.creatorProfilePicture = '',
+    this.creatorGender = Gender.others,
+    this.creatorIsVerified = false,
+    this.creatorIsPremium = false,
+    this.creatorAverageRating = 0,
   });
 
+  String getDistanceFromCurrentLocation(double latitude, double longitude) {
+    return calculateDistance(latitude1: latitude, longitude1: longitude, latitude2: location!.lat, longitude2: location!.lon);
+  }
+
   factory Advert.fromJson(Map<String, dynamic> json, String advertID) {
-    // GeoPoint dönüşümü için yardımcı fonksiyon
-    GeoPoint? parseGeoPoint(dynamic geoData) {
-      if (geoData == null) return null;
-
-      // Eğer direkt GeoPoint objesi ise
-      if (geoData is GeoPoint) return geoData;
-
-      // Eğer Map formatında ise
-      if (geoData is Map<String, dynamic>) {
-        try {
-          return GeoPoint(
-            (geoData['latitude'] as num).toDouble(),
-            (geoData['longitude'] as num).toDouble(),
-          );
-        } catch (e) {
-          debugPrint('GeoPoint parse hatası: $e');
-          return null;
-        }
-      }
-
-      return null;
-    }
-
     // Tarih ve saat parse etme fonksiyonu güncellendi
     DateTime? parseDateTime(dynamic dateData, dynamic timeData) {
       if (dateData == null) return null;
@@ -108,6 +99,42 @@ class Advert {
       return null;
     }
 
+    // Konum bilgisini parse etme fonksiyonu
+    LocationModel? parseLocation(Map<String, dynamic> json) {
+      // Önce yeni yapıyı kontrol et
+      if (json['location'] != null && json['location'] is Map<String, dynamic>) {
+        return LocationModel.fromFirestore(json['location']);
+      }
+
+      // Eski yapıyı kontrol et - doğrudan Advert içindeki alanlar
+      String city = json['city'] ?? '';
+      String district = json['district'] ?? '';
+      String country = json['country'] ?? 'tr';
+
+      double lat = 0;
+      double lon = 0;
+
+      // Eski yapıda geoPoint bir map olarak saklanmış
+      if (json['geoPoint'] != null && json['geoPoint'] is Map<String, dynamic>) {
+        var geoPointMap = json['geoPoint'] as Map<String, dynamic>;
+        lat = (geoPointMap['latitude'] as num?)?.toDouble() ?? 0;
+        lon = (geoPointMap['longitude'] as num?)?.toDouble() ?? 0;
+      }
+
+      // Eski yapıdaki bilgilerle LocationModel oluştur
+      if (city.isNotEmpty || district.isNotEmpty || lat != 0 || lon != 0) {
+        return LocationModel(
+          city: city,
+          district: district,
+          country: country,
+          lat: lat,
+          lon: lon,
+        );
+      }
+
+      return null;
+    }
+
     return Advert(
       advertID: advertID,
       advertName: json['advertName'] ?? '',
@@ -116,12 +143,22 @@ class Advert {
       startEventDate: parseDateTime(json['startEventDate'] ?? json['advertDate'], json['advertTime']),
       advertType: json['advertType'] ?? '',
       advertImage: json['advertImage'] ?? '',
-      countUUIDs: List<String>.from(json['countUUIDs'] ?? []),
-      geoPoint: parseGeoPoint(json['geoPoint']),
-      country: json['country'] ?? '',
-      city: json['city'] ?? '',
-      district: json['district'] ?? '',
+      likers: List<String>.from(json['likers'] ?? List<String>.from(json['countUUIDs'] ?? [])),
+      location: parseLocation(json),
       createdAt: (json['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+
+      // Yeni alanlar için null kontrolü
+      creatorLastName: json['creatorLastName'] ?? '',
+      creatorName: json['creatorName'] ?? '',
+      creatorProfilePicture: json['creatorProfilePicture'] ?? '',
+      creatorGender: json['creatorGender']?.toLowerCase() == 'male'
+          ? Gender.male
+          : json['creatorGender']?.toLowerCase() == 'female'
+              ? Gender.female
+              : Gender.others,
+      creatorIsVerified: json['creatorIsVerified'] ?? false,
+      creatorIsPremium: json['creatorIsPremium'] ?? false,
+      creatorAverageRating: json['creatorAverageRating'] ?? 0,
     );
   }
 
@@ -131,15 +168,18 @@ class Advert {
       'description': description,
       'creatorUserID': creatorUserID,
       'startEventDate': startEventDate != null ? Timestamp.fromDate(startEventDate!) : null,
-      //   'endEventDate': endEventDate != null ? Timestamp.fromDate(endEventDate!) : null,
       'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : null,
       'advertType': advertType,
       'advertImage': advertImage,
-      'countUUIDs': countUUIDs,
-      'geoPoint': geoPoint,
-      'country': country,
-      'city': city,
-      'district': district,
+      'likers': likers,
+      'location': location?.toJson(),
+      'creatorLastName': creatorLastName,
+      'creatorName': creatorName,
+      'creatorProfilePicture': creatorProfilePicture,
+      'creatorGender': creatorGender.name,
+      'creatorIsVerified': creatorIsVerified,
+      'creatorIsPremium': creatorIsPremium,
+      'creatorAverageRating': creatorAverageRating,
     };
   }
 }

@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:palseapp/core/models/advert.dart';
+import 'package:palseapp/core/models/customer.dart';
+import 'package:palseapp/core/models/location_model.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/services/location_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -10,12 +13,11 @@ class CreateAdvertViewModel extends ChangeNotifier {
   final LocationService locationService;
   final AuthProvider authProvider;
   final formKey = GlobalKey<FormState>();
-
+  final locationController = TextEditingController();
   // Form değerleri
   String advertName = '';
   String advertDescription = '';
-  XFile? advertImage;
-  LatLng? selectedLocation;
+  File? advertImage;
   String address = '';
   String country = '';
   String city = '';
@@ -24,7 +26,7 @@ class CreateAdvertViewModel extends ChangeNotifier {
   DateTime? endDate;
   String? eventType;
   bool _isLoading = false;
-  GeoPoint? geoPoint;
+  LocationModel? locationModel;
 
   bool get isLoading => _isLoading;
   int currentStep = 0;
@@ -33,52 +35,6 @@ class CreateAdvertViewModel extends ChangeNotifier {
     required this.authProvider,
     required this.locationService,
   });
-
-  // Konum işlemleri
-  Future<void> getCurrentLocation() async {
-    try {
-      _setLoading(true);
-      selectedLocation = await locationService.getCurrentPosition();
-      final GeoPoint geoPoint = GeoPoint(selectedLocation!.latitude, selectedLocation!.longitude);
-
-      if (selectedLocation != null) {
-        final addressInfo = await locationService.getAddressFromCoordinates(
-          geoPoint,
-        );
-
-        address = addressInfo?.thoroughfare ?? '';
-        city = addressInfo?.administrativeArea ?? '';
-        district = addressInfo?.subAdministrativeArea ?? '';
-        country = addressInfo?.country ?? '';
-      }
-    } finally {
-      _setLoading(false);
-      notifyListeners();
-    }
-  }
-
-  Future<void> updateSelectedLocation(LatLng location) async {
-    try {
-      _setLoading(true);
-      selectedLocation = location;
-      await _updateLocationDetails();
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  Future<void> _updateLocationDetails() async {
-    if (selectedLocation == null) return;
-
-    final addressInfo = await locationService.getAddressFromCoordinates(
-      geoPoint!,
-    );
-
-    city = addressInfo?.administrativeArea ?? '';
-    district = addressInfo?.subAdministrativeArea ?? '';
-    country = addressInfo?.country ?? '';
-    notifyListeners();
-  }
 
   // Stepper kontrolleri
   void onStepContinue() {
@@ -103,35 +59,45 @@ class CreateAdvertViewModel extends ChangeNotifier {
     final ImagePicker picker = ImagePicker();
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
     if (image != null) {
-      advertImage = image;
+      advertImage = File(image.path);
       notifyListeners();
     }
   }
 
+  void setAdvertImage(File image) {
+    advertImage = image;
+    notifyListeners();
+  }
+
+  void updateLocation(LocationModel location) {
+    locationModel = location;
+    locationController.text = location.displayString();
+    notifyListeners();
+  }
+
   // İlan oluşturma
   Future<void> createAdvert() async {
-    //  if (!validateAllFields()) return;
+    if (!validateAllFields()) return;
 
     _setLoading(true);
     try {
-      // Konum bilgisini GeoPoint'e çevir
-      geoPoint = await locationService.getGeoPoint(city, district, country);
-      debugPrint('GeoPoint: ${geoPoint?.latitude} ${geoPoint?.longitude}');
-
       final advert = Advert(
         advertName: advertName,
         description: advertDescription,
         creatorUserID: authProvider.user!.userID!,
         advertType: eventType ?? '',
-        geoPoint: geoPoint,
-        country: country,
-        city: city,
-        district: district,
+        location: locationModel,
         advertImage: advertImage?.path ?? '',
         startEventDate: startDate ?? DateTime.now(),
-        //  endEventDate: endDate ?? DateTime.now(),
         createdAt: DateTime.now(),
-        countUUIDs: [],
+        likers: [],
+        creatorAverageRating: authProvider.user!.getAverage().toInt(),
+        creatorIsVerified: authProvider.user!.verification ?? false,
+        creatorIsPremium: authProvider.user!.isPremium ?? false,
+        creatorLastName: authProvider.user!.lastName ?? '',
+        creatorName: authProvider.user!.firstName ?? '',
+        creatorProfilePicture: authProvider.user!.profilePictureUrl ?? '',
+        creatorGender: authProvider.user!.gender ?? Gender.male,
       );
 
       debugPrint('Advert: ${advert.toJson()}');
@@ -152,8 +118,8 @@ class CreateAdvertViewModel extends ChangeNotifier {
   bool validateAllFields() {
     if (advertName.isEmpty || advertDescription.isEmpty) return false;
     if (advertImage == null) return false;
-    if (geoPoint == null) return false;
-    if (startDate == null || endDate == null) return false;
+    if (locationModel == null) return false;
+    if (startDate == null) return false;
     if (eventType == null) return false;
     return true;
   }
@@ -165,11 +131,6 @@ class CreateAdvertViewModel extends ChangeNotifier {
 
   void setStartDate(DateTime date) {
     startDate = date;
-    notifyListeners();
-  }
-
-  void setEndDate(DateTime date) {
-    endDate = date;
     notifyListeners();
   }
 
