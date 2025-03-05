@@ -72,7 +72,8 @@ class ChatListItem extends StatelessWidget {
           ),
           subtitle: Row(
             children: [
-              if (chatSummary.isMe(currentUserId ?? '')) ...[
+              // UI içinde:
+              if (isLastMessageMine) ...[
                 Icon(
                   chatSummary.isLastMessageRead ? Icons.done_all : Icons.done,
                   size: 16,

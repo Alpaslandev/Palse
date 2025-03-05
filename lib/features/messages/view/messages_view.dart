@@ -34,8 +34,6 @@ class _MessagesViewState extends State<MessagesView> {
   void initState() {
     super.initState();
     _viewModel = MessagesViewModel(widget.chatId, widget.currentUserId, widget.otherUserId);
-
-    // _viewModel.initialize(widget.chatId, widget.currentUserId);
   }
 
   @override
@@ -49,7 +47,7 @@ class _MessagesViewState extends State<MessagesView> {
     final isPremium = Provider.of<SubscriptionProvider>(context, listen: false).isPremium;
 
     return ChangeNotifierProvider.value(
-      value: _viewModel..markMessagesAsRead(),
+      value: _viewModel,
       child: Consumer<MessagesViewModel>(
         builder: (context, vm, _) => Scaffold(
           appBar: MessageAppBar(

@@ -74,6 +74,7 @@ class MessagesViewModel extends ChangeNotifier {
         chatId,
         messageToSend,
         senderId,
+        receiverId,
       );
 
       // Mesaj gönderildikten sonra alıntıyı temizle
@@ -87,8 +88,9 @@ class MessagesViewModel extends ChangeNotifier {
   // Mesajları okundu olarak işaretle
   Future<void> markMessagesAsRead() async {
     try {
-      // Mesaj bazında işaretleme yapıyoruz
-      await _chatService.markMessagesAsRead(chatId, currentUserId, otherUserId);
+      // Tüm sohbeti okundu olarak işaretle
+      await _chatService.markChatAsRead(chatId, currentUserId, otherUserId);
+
       notifyListeners();
     } catch (e) {
       debugPrint('Mesajları okundu işaretleme hatası: $e');
@@ -192,6 +194,7 @@ class MessagesViewModel extends ChangeNotifier {
         chatId,
         messageToSend,
         currentUserId,
+        otherUserId,
       );
 
       debugPrint('Görsel mesaj başarıyla gönderildi!'); // Debug için başarı mesajı

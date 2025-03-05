@@ -16,30 +16,6 @@ class ChatsViewModel extends ChangeNotifier {
   String? get currentUserId => _customer.userID;
   Customer? get currentUser => _customer;
 
-  // Mesajları okundu olarak işaretle
-  Future<void> markMessagesAsRead(String chatId, String otherUserId) async {
-    if (chatId is! String) {
-      debugPrint("HATA: markMessagesAsRead - chatId String değil: $chatId");
-      if (chatId is Chat) {
-        // Eğer yanlışlıkla Chat nesnesi verilmişse ID'sini alalım
-        chatId = (chatId as Chat).id;
-      } else {
-        return; // Düzeltilemezse işlemi iptal et
-      }
-    }
-
-    if (chatId.isEmpty) {
-      debugPrint("HATA: markMessagesAsRead - chatId boş string!");
-      return;
-    }
-
-    try {
-      await _chatService.markMessagesAsRead(chatId, currentUserId ?? '', otherUserId);
-    } catch (e) {
-      debugPrint('Mesajları işaretleme hatası: $e');
-    }
-  }
-
   // Sohbet başlat veya var olan sohbeti bul (String chatId döndürür)
   Future<String> startOrGetChat(String otherUserId) async {
     final currentUserId = _customer.userID;
