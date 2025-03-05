@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:palseapp/features/chats/model/chat_model.dart';
+import 'package:palseapp/core/models/chat_model.dart';
 import 'package:flutter/foundation.dart';
 import 'package:palseapp/core/services/notification_service.dart';
 
@@ -157,7 +157,7 @@ class ChatService {
         lastMessage: message.content,
         lastMessageTime: message.timestamp,
         lastMessageSenderId: message.senderId,
-        lastMessageType: message.type,
+        lastMessageType: message.type.value,
         lastMessageQuoted: message.quotedMessage != null,
         isTemporary: false,
         // Chat koleksiyonunda unreadCount tutmuyoruz - her kullanıcı kendi belgelerinde tutar
@@ -186,7 +186,7 @@ class ChatService {
                 : 1);
 
         // Gönderen için ChatMap güncellemesi (unreadCount = 0)
-        final senderChat = updatedChat.copyWith(unreadCount: senderUnreadCount, isLastMessageRead: true);
+        final senderChat = updatedChat.copyWith(unreadCount: senderUnreadCount, isLastMessageRead: false);
 
         // Alıcı için ChatMap güncellemesi (unreadCount artar)
         final receiverChat = updatedChat.copyWith(unreadCount: receiverUnreadCount, isLastMessageRead: false);

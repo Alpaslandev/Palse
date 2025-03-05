@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 class Chat {
   final String id;
@@ -171,12 +172,24 @@ class Chat {
   }
 }
 
+enum MessageType {
+  text('text', Icons.text_fields, '💬'),
+  image('image', Icons.image, '📷'),
+  url('url', Icons.link, '🔗');
+
+  const MessageType(this.value, this.icon, this.emoji);
+
+  final IconData icon;
+  final String emoji;
+  final String value;
+}
+
 // Mesaj modeli (sadeleştirilmiş)
 class Message {
   final String senderId;
   final String content;
   final DateTime timestamp;
-  final String type;
+  final MessageType type;
   final String? quotedMessage;
   final String? quotedMessageId;
   final bool isRead; // Mesajın okunup okunmadığı bilgisi
@@ -198,7 +211,7 @@ class Message {
       senderId: map['senderId'] as String? ?? '',
       content: map['content'] as String? ?? '',
       timestamp: (map['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      type: map['type'] as String? ?? 'text',
+      type: map['type'] != null ? MessageType.values.byName(map['type']) : MessageType.text,
       quotedMessage: map['quotedMessage'] as String?,
       quotedMessageId: map['quotedMessageId'] as String?,
       isRead: map['isRead'] as bool? ?? false, // Firestore'dan isRead değerini al
@@ -212,7 +225,7 @@ class Message {
       'senderId': senderId,
       'content': content,
       'timestamp': Timestamp.fromDate(timestamp),
-      'type': type,
+      'type': type.value,
       'quotedMessage': quotedMessage,
       'quotedMessageId': quotedMessageId,
       'isRead': isRead, // isRead bilgisini ekle
@@ -224,7 +237,7 @@ class Message {
     String? senderId,
     String? content,
     DateTime? timestamp,
-    String? type,
+    MessageType? type,
     String? quotedMessage,
     String? quotedMessageId,
     bool? isRead,

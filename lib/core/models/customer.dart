@@ -6,7 +6,7 @@ import 'package:palseapp/core/helper/date_parse.dart';
 import 'package:palseapp/core/helper/location_parse.dart';
 import 'package:palseapp/core/models/comment_model.dart';
 import 'package:palseapp/core/models/location_model.dart';
-import 'package:palseapp/features/chats/model/chat_model.dart';
+import 'package:palseapp/core/models/chat_model.dart';
 
 enum Gender {
   male(icon: 'assets/images/male.png', trName: 'Erkek', enName: 'Male'),

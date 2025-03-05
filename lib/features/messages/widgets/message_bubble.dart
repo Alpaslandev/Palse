@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
-import 'package:palseapp/features/chats/model/chat_model.dart';
+import 'package:palseapp/core/models/chat_model.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/features/messages/viewmodel/messages_view_model.dart';
 import 'package:provider/provider.dart';

@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:palseapp/features/chats/model/chat_model.dart';
+import 'package:palseapp/core/models/chat_model.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/features/chats/service/chat_service.dart';
 import 'package:palseapp/core/services/firestore/customer_service.dart';
@@ -65,7 +65,7 @@ class MessagesViewModel extends ChangeNotifier {
         senderId: senderId,
         content: content,
         timestamp: DateTime.now(),
-        type: 'text',
+        type: MessageType.text,
         quotedMessage: _quotedMessage?.content,
         quotedMessageId: _quotedMessage?.messageId,
       );
@@ -181,7 +181,7 @@ class MessagesViewModel extends ChangeNotifier {
         senderId: currentUserId,
         content: imageUrl,
         timestamp: DateTime.now(),
-        type: 'image',
+        type: MessageType.image,
         quotedMessage: _quotedMessage?.content,
         quotedMessageId: _quotedMessage?.senderId,
       );

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:palseapp/core/services/firestore/customer_service.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/widgets/circle_profile_picture.dart';
-import 'package:palseapp/features/chats/model/chat_model.dart';
+import 'package:palseapp/core/models/chat_model.dart';
 import 'package:palseapp/features/chats/viewmodel/chats_view_model.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';

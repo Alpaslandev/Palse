@@ -15,48 +15,39 @@ class ChatsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final user = context.read<AuthProvider>().user;
-
-    if (user == null) {
-      return const Scaffold(
-        body: Center(
-          child: Text('Kullanıcı bilgisi bulunamadı'),
-        ),
-      );
-    }
-
-    return ChangeNotifierProvider(
-      create: (context) => ChatsViewModel(user),
-      child: Consumer<ChatsViewModel>(
-        builder: (context, viewModel, child) {
-          // Kullanıcının chatMap'ini al
-          final chatMap = viewModel.currentUser?.chatMap ?? {};
-
-          // Map'i son mesaj zamanına göre sıralanmış bir listeye dönüştür
-          final sortedChats = chatMap.entries.toList()..sort((a, b) => b.value.lastMessageTime.compareTo(a.value.lastMessageTime));
-
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('Sohbetler'),
-            ),
-            body: sortedChats.isEmpty
-                ? const Center(child: Text('Henüz sohbet bulunmuyor'))
-                : ListView.builder(
-                    itemCount: sortedChats.length,
-                    itemBuilder: (context, index) {
-                      final otherUserId = sortedChats[index].key;
-                      final chatSummary = sortedChats[index].value;
-
-                      return ChatListItem(
-                        customerService: CustomerService(),
-                        chatSummary: chatSummary,
-                        onTap: () => _navigateToChat(context, chatSummary.id, otherUserId),
-                      );
-                    },
-                  ),
+    return Selector<AuthProvider, Customer?>(
+      selector: (_, authProvider) => authProvider.user,
+      builder: (context, user, child) {
+        if (user == null) {
+          return const Scaffold(
+            body: Center(child: Text('Kullanıcı bilgisi bulunamadı')),
           );
-        },
-      ),
+        }
+
+        // chatMap doğrudan user'dan alınır
+        final chatMap = user.chatMap ?? {};
+        final sortedChats = chatMap.entries.toList()..sort((a, b) => b.value.lastMessageTime.compareTo(a.value.lastMessageTime));
+
+        return Scaffold(
+          appBar: child as PreferredSizeWidget, // AppBar'ı child olarak vermek rebuild'i engeller
+          body: sortedChats.isEmpty
+              ? const Center(child: Text('Henüz sohbet bulunmuyor'))
+              : ListView.builder(
+                  itemCount: sortedChats.length,
+                  itemBuilder: (context, index) {
+                    final otherUserId = sortedChats[index].key;
+                    final chatSummary = sortedChats[index].value;
+
+                    return ChatListItem(
+                      customerService: CustomerService(),
+                      chatSummary: chatSummary,
+                      onTap: () => _navigateToChat(context, chatSummary.id, otherUserId),
+                    );
+                  },
+                ),
+        );
+      },
+      child: AppBar(title: const Text('Sohbetler')), // değişmeyen widget'lar child olarak verilebilir
     );
   }
 
