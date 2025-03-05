@@ -3,8 +3,6 @@ import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
-import 'package:palseapp/features/chats/model/chat_model.dart';
-import 'package:palseapp/features/chats/viewmodel/chats_view_model.dart';
 import 'package:provider/provider.dart';
 
 class ProjectAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -84,44 +82,31 @@ class ProjectAppBar extends StatelessWidget implements PreferredSizeWidget {
               ),
             ),
             // Okunmamış mesaj sayısı badge'i
-            StreamBuilder<List<Chat>>(
-              stream: Provider.of<ChatsViewModel>(context, listen: false).getChats(authProvider.firebaseUser!.uid),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) return const SizedBox.shrink();
-
-                final totalUnreadCount = snapshot.data!.fold<int>(
-                  0,
-                  (sum, chat) => sum + chat.unreadCount,
-                );
-
-                if (totalUnreadCount == 0) return const SizedBox.shrink();
-
-                return Positioned(
-                  top: 0,
-                  right: 10,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: Colors.blue,
-                      shape: BoxShape.circle,
-                    ),
-                    constraints: const BoxConstraints(
-                      minWidth: 16,
-                      minHeight: 16,
-                    ),
-                    child: Text(
-                      totalUnreadCount > 99 ? '99+' : totalUnreadCount.toString(),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
+            if (authProvider.user?.hasUnreadChats ?? false)
+              Positioned(
+                top: 0,
+                right: 10,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: const BoxDecoration(
+                    color: Colors.blue,
+                    shape: BoxShape.circle,
                   ),
-                );
-              },
-            ),
+                  constraints: const BoxConstraints(
+                    minWidth: 16,
+                    minHeight: 16,
+                  ),
+                  child: Text(
+                    authProvider.user?.getTotalUnreadCount().toString() ?? '0',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
           ],
         ),
       ],

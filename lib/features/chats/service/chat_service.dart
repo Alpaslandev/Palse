@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:palseapp/features/chats/model/chat_model.dart';
-import 'package:palseapp/core/models/customer.dart';
 import 'package:flutter/foundation.dart';
 import 'package:palseapp/core/services/notification_service.dart';
 
@@ -29,152 +28,62 @@ class ChatService {
     }
   }
 
-  Stream<Customer?> getUserInfo(String userId) {
-    return _db
-        .collection('customers')
-        .doc(userId)
-        .snapshots()
-        .map((snapshot) => snapshot.data() != null ? Customer.fromJson(snapshot.data()!, userId) : null);
-  }
-
-  // Sohbet başlat veya var olanı getir
-  Future<String> startOrGetChat(String userId1, String userId2) async {
+  // Sohbet başlat veya var olanı getir - String ID döndürür
+  Future<String> startOrGetChat(String otherUserId, String currentUserId) async {
     try {
-      // Önce var olan chat'i kontrol et
-      final existingChatId = await findExistingChat(userId1, userId2);
+      // 1. İki kullanıcı arasında mevcut bir sohbet var mı kontrol et
+      final existingChatId = await findExistingChat(currentUserId, otherUserId);
+
       if (existingChatId != null) {
+        // Var olan sohbetin ID'sini döndür
         return existingChatId;
       }
 
-      // Yeni chat oluştur
-      final chatRef = _db.collection('chats').doc();
+      // 2. Yeni sohbet oluştur
+      final chatId = _db.collection('chats').doc().id;
 
-      // 5 dakika sonra silinecek bir flag ekle
-      final tempFlag = true;
-      final creationTime = FieldValue.serverTimestamp();
-
-      final batch = _db.batch();
-
-      // Chat belgesini oluştur
-      batch.set(chatRef, {
-        'participants': [userId1, userId2],
-        'lastMessage': '',
-        'lastMessageTime': creationTime,
-        'lastMessageSenderId': '',
-        'isTemporary': tempFlag,
-        'createdAt': creationTime,
-      });
-
-      // Her iki kullanıcının chatInfos'unu güncelle
-      final chatInfo = {
-        'chatId': chatRef.id,
-        'lastMessageTime': creationTime,
-        'unreadCount': 0,
-      };
-
-      batch.set(
-        _db.collection('customers').doc(userId1),
-        {
-          'chatInfos': {
-            userId2: {
-              ...chatInfo,
-              'otherUserId': userId2,
-            }
-          }
-        },
-        SetOptions(merge: true),
+      final newChat = Chat.create(
+        chatId: chatId,
+        participants: [currentUserId, otherUserId],
       );
 
-      batch.set(
-        _db.collection('customers').doc(userId2),
-        {
-          'chatInfos': {
-            userId1: {
-              ...chatInfo,
-              'otherUserId': userId1,
-            }
-          }
-        },
-        SetOptions(merge: true),
-      );
+      // 3. Sadece Firestore'daki "chats" koleksiyonuna kaydet
+      await _db.collection('chats').doc(chatId).set(newChat.toFirestoreJson());
 
-      await batch.commit();
-
-      // 5 dakika sonra mesaj yoksa chat'i sil
-      Future.delayed(const Duration(minutes: 5), () async {
-        final chatDoc = await chatRef.get();
-        if (chatDoc.exists) {
-          final data = chatDoc.data();
-          if (data != null && data['isTemporary'] == true && data['lastMessage'] == '') {
-            // Chat'i ve ilgili referansları sil
-            final batch = _db.batch();
-
-            // Chat'i sil
-            batch.delete(chatRef);
-
-            // Kullanıcıların chatInfos'undan sil
-            batch.set(
-              _db.collection('customers').doc(userId1),
-              {
-                'chatInfos': {userId2: FieldValue.delete()}
-              },
-              SetOptions(merge: true),
-            );
-
-            batch.set(
-              _db.collection('customers').doc(userId2),
-              {
-                'chatInfos': {userId1: FieldValue.delete()}
-              },
-              SetOptions(merge: true),
-            );
-
-            await batch.commit();
-          }
-        }
-      });
-
-      return chatRef.id;
+      // Chat ID'sini döndür
+      return chatId;
     } catch (e) {
       _logError('startOrGetChat', e, stackTrace: StackTrace.current);
       rethrow;
     }
   }
 
-  // Transaction ile unreadCount güncelleme
-  Future<void> incrementUnreadCount(String chatId, String senderId, String receiverId) async {
-    final db = FirebaseFirestore.instance;
-
-    await db.runTransaction((transaction) async {
-      // Alıcının dökümanını al
-      final receiverDoc = await transaction.get(db.collection('customers').doc(receiverId));
-
-      // Mevcut chatInfos map'ini al
-      final chatInfos = receiverDoc.data()?['chatInfos'] as Map<String, dynamic>? ?? {};
-
-      // Mevcut unreadCount'u al ve 1 artır
-      final currentUnreadCount = (chatInfos[senderId]?['unreadCount'] ?? 0) + 1;
-
-      // Transaction ile güncelle
-      transaction.set(
-          db.collection('customers').doc(receiverId),
-          {
-            'chatInfos': {
-              senderId: {'unreadCount': currentUnreadCount}
-            }
-          },
-          SetOptions(merge: true));
-    });
-  }
-
   // Mesajları okundu olarak işaretle
   Future<void> markMessagesAsRead(String chatId, String currentUserId, String otherUserId) async {
-    final db = FirebaseFirestore.instance;
+    try {
+      // Parametreleri kontrol et
+      if (chatId.isEmpty) {
+        debugPrint("HATA: markMessagesAsRead - chatId boş string!");
+        return;
+      }
+      if (currentUserId.isEmpty || otherUserId.isEmpty) {
+        debugPrint("HATA: markMessagesAsRead - userID'lerden biri boş: currentUserId=$currentUserId, otherUserId=$otherUserId");
+        return;
+      }
 
-    // Transaction başlat
-    await db.runTransaction((transaction) async {
-      // 1. Önce tüm okumaları yapalım
-      final messagesQuery = await db
+      // 1. Son sohbet durumunu al
+      final chatDoc = await _db.collection('chats').doc(chatId).get();
+      final chatData = chatDoc.data();
+
+      if (chatData == null) {
+        debugPrint("HATA: markMessagesAsRead - Chat belgesi bulunamadı: $chatId");
+        return;
+      }
+
+      final chat = Chat.fromFirestore(chatData, chatId);
+
+      // 2. Karşı taraftan gelen ve okunmamış mesajları işaretle
+      final messagesQuery = await _db
           .collection('chats')
           .doc(chatId)
           .collection('messages')
@@ -182,107 +91,178 @@ class ChatService {
           .where('isRead', isEqualTo: false)
           .get();
 
-      final chatDoc = await transaction.get(db.collection('chats').doc(chatId));
-      final lastMessageSenderId = chatDoc.data()?['lastMessageSenderId'];
+      // 3. Mesajları işaretle (batch işlemi)
+      if (messagesQuery.docs.isNotEmpty) {
+        final batch = _db.batch();
 
-      // 2. Şimdi yazma işlemlerini yapalım
-      // Mesajları okundu olarak işaretle
-      for (var doc in messagesQuery.docs) {
-        transaction.update(doc.reference, {'isRead': true});
+        for (var doc in messagesQuery.docs) {
+          batch.update(doc.reference, {'isRead': true});
+        }
+
+        // 4. Kullanıcı belgesindeki chatMap'i güncelle
+        // NOT: Chat koleksiyonunda unreadCount tutmuyoruz, sadece kullanıcı belgesini güncelliyoruz
+        if (chat.lastMessageSenderId == otherUserId) {
+          batch.update(_db.collection('customers').doc(currentUserId),
+              {'chatMap.$otherUserId.unreadCount': 0, 'chatMap.$otherUserId.isLastMessageRead': true});
+        }
+
+        await batch.commit();
       }
-
-      // Son mesajın göndereni karşı tarafsa, son mesajı okundu olarak işaretle
-      if (lastMessageSenderId == otherUserId) {
-        transaction.update(db.collection('chats').doc(chatId), {'lastMessageIsRead': true});
-      }
-
-      // unreadCount'u sıfırla
-      transaction.set(
-          db.collection('customers').doc(currentUserId),
-          {
-            'chatInfos': {
-              otherUserId: {'unreadCount': 0}
-            }
-          },
-          SetOptions(merge: true));
-    });
+    } catch (e) {
+      _logError('markMessagesAsRead', e, stackTrace: StackTrace.current);
+      rethrow;
+    }
   }
 
   // Mesaj gönderme
-  Future<void> sendMessage(String chatId, Message message, String senderName) async {
+  Future<void> sendMessage(String chatId, Message message, String currentUserId) async {
     try {
-      String receiverId = '';
+      // chatId kontrolü
+      if (chatId.isEmpty) {
+        debugPrint("HATA: chatId boş string!");
+        return;
+      }
 
-      await _db.runTransaction((transaction) async {
-        // Chat dokümanını oku
-        final chatDoc = await transaction.get(_db.collection('chats').doc(chatId));
-        final participants = List<String>.from(chatDoc.data()?['participants'] ?? []);
-        receiverId = participants.firstWhere((id) => id != message.senderId);
+      // 1. Chat belgesini kontrol et
+      final chatDoc = await _db.collection('chats').doc(chatId).get();
 
-        // Alıcının dokümanını oku
-        final receiverDoc = await transaction.get(_db.collection('customers').doc(receiverId));
-        final chatInfos = receiverDoc.data()?['chatInfos'] as Map<String, dynamic>? ?? {};
-        final currentUnreadCount = (chatInfos[message.senderId]?['unreadCount'] ?? 0) + 1;
+      if (!chatDoc.exists) {
+        debugPrint("HATA: Chat belgesi bulunamadı: $chatId");
+        return;
+      }
 
-        // Mesajı ekle
-        final messageRef = _db.collection('chats').doc(chatId).collection('messages').doc();
+      final chatData = chatDoc.data();
+      if (chatData == null) {
+        debugPrint("HATA: Chat belgesi bulunamadı: $chatId");
+        return;
+      }
 
-        // ServerTimestamp kullan
-        final messageData = message.toMap();
-        messageData['timestamp'] = FieldValue.serverTimestamp();
-        transaction.set(messageRef, messageData);
+      // 2. Chat nesnesini oluştur
+      final chat = Chat.fromFirestore(chatData, chatId);
+      final otherUserId = chat.getOtherUserId(currentUserId);
 
-        // Son mesaj bilgisini güncelle
-        final lastMessageData = {
-          'lastMessage': message.type == 'image' ? '📷 Fotoğraf' : message.content,
-          'lastMessageTime': FieldValue.serverTimestamp(),
-          'lastMessageSenderId': message.senderId,
-          'lastMessageIsRead': false,
-          'lastMessageType': message.type,
-          'lastMessageQuoted': message.quotedMessage != null,
+      if (otherUserId.isEmpty) {
+        debugPrint("HATA: Diğer kullanıcı ID'si bulunamadı");
+        return;
+      }
+
+      // 3. Mesajı Firestore'a ekle
+      await _db.collection('chats').doc(chatId).collection('messages').add(message.toMap());
+
+      // 4. İlk mesaj olup olmadığını kontrol et (lastMessage boşsa ilk mesaj)
+      bool isFirstMessage = chat.lastMessage.isEmpty;
+
+      // 5. Son mesaj bilgilerini güncelle
+      final updatedChat = chat.copyWith(
+        lastMessage: message.content,
+        lastMessageTime: message.timestamp,
+        lastMessageSenderId: message.senderId,
+        lastMessageType: message.type,
+        lastMessageQuoted: message.quotedMessage != null,
+        isTemporary: false,
+        // Chat koleksiyonunda unreadCount tutmuyoruz - her kullanıcı kendi belgelerinde tutar
+      );
+
+      // 6. Batch işlemi başlat
+      final batch = _db.batch();
+
+      // 7. Chat belgesini güncelle
+      batch.update(_db.collection('chats').doc(chatId), updatedChat.toFirestoreJson());
+
+      // 8. Kullanıcı belgesini güncelle (her iki kullanıcı için)
+      try {
+        // Kullanıcı belgelerini al
+        final currentUserDoc = await _db.collection('customers').doc(currentUserId).get();
+        final otherUserDoc = await _db.collection('customers').doc(otherUserId).get();
+
+        // Mesajı gönderen ve alan için farklı unreadCount değerleri
+        // Mesajı gönderen: unreadCount = 0 (kendi mesajını okumuş sayılır)
+        // Mesajı alan: unreadCount + 1 veya isFirstMessage ise 1
+        final senderUnreadCount = 0;
+        final receiverUnreadCount = isFirstMessage
+            ? 1
+            : (otherUserDoc.exists && otherUserDoc.data()?['chatMap']?[currentUserId]?['unreadCount'] != null
+                ? otherUserDoc.data()!['chatMap'][currentUserId]['unreadCount'] + 1
+                : 1);
+
+        // Gönderen için ChatMap güncellemesi (unreadCount = 0)
+        final senderChat = updatedChat.copyWith(unreadCount: senderUnreadCount, isLastMessageRead: true);
+
+        // Alıcı için ChatMap güncellemesi (unreadCount artar)
+        final receiverChat = updatedChat.copyWith(unreadCount: receiverUnreadCount, isLastMessageRead: false);
+
+        // Gönderen için chatMap - kendi mesajını okumuş sayılır
+        final senderChatMap = {'chatMap.$otherUserId': senderChat.toUserDocumentJson(currentUserId)};
+
+        // Alıcı için chatMap - okunmamış mesajı var
+        final receiverChatMap = {'chatMap.$currentUserId': receiverChat.toUserDocumentJson(otherUserId)};
+
+        // İlk mesaj ise veya chatMap güncellenecekse
+        if (isFirstMessage || currentUserDoc.exists) {
+          // Gönderenin belgesini güncelle
+          if (currentUserDoc.exists) {
+            batch.update(_db.collection('customers').doc(currentUserId), senderChatMap);
+          } else {
+            batch.set(
+                _db.collection('customers').doc(currentUserId),
+                {
+                  'chatMap': {otherUserId: senderChatMap['chatMap.$otherUserId']}
+                },
+                SetOptions(merge: true));
+          }
+        }
+
+        // İlk mesaj ise veya diğer kullanıcının belgesi varsa
+        if (isFirstMessage || otherUserDoc.exists) {
+          // Alıcının belgesini güncelle
+          if (otherUserDoc.exists) {
+            batch.update(_db.collection('customers').doc(otherUserId), receiverChatMap);
+          } else {
+            batch.set(
+                _db.collection('customers').doc(otherUserId),
+                {
+                  'chatMap': {currentUserId: receiverChatMap['chatMap.$currentUserId']}
+                },
+                SetOptions(merge: true));
+          }
+        }
+      } catch (e) {
+        debugPrint("HATA: chatMap güncelleme hatası: $e. Belge oluşturuluyor...");
+
+        // Gönderen ve alıcı için farklı unreadCount değerleri hazırla
+        int senderUnreadCount = 0;
+        int receiverUnreadCount = 0;
+
+        if (message.senderId == currentUserId) {
+          // Ben gönderdim
+          receiverUnreadCount = chat.unreadCount + 1;
+        } else {
+          // Karşı taraf gönderdi
+          senderUnreadCount = chat.unreadCount + 1;
+        }
+
+        // Kullanıcı belgeleri için chatMap oluştur
+        final userChatMap = {
+          'chatMap': {otherUserId: updatedChat.copyWith(unreadCount: senderUnreadCount).toUserDocumentJson(currentUserId)}
         };
 
-        // Chat dokümanını güncelle - öncelikli olarak bunu yap
-        transaction.update(_db.collection('chats').doc(chatId), lastMessageData);
+        final otherUserChatMap = {
+          'chatMap': {currentUserId: updatedChat.copyWith(unreadCount: receiverUnreadCount).toUserDocumentJson(otherUserId)}
+        };
 
-        // Her iki kullanıcının chatInfos'unu güncelle
-        transaction.set(
-          _db.collection('customers').doc(receiverId),
-          {
-            'chatInfos': {
-              message.senderId: {
-                'chatId': chatId,
-                'lastMessageTime': FieldValue.serverTimestamp(),
-                'unreadCount': currentUnreadCount,
-                'otherUserId': message.senderId
-              }
-            }
-          },
-          SetOptions(merge: true),
-        );
+        // Verileri set et (merge: true ile mevcut verileri korur)
+        batch.set(_db.collection('customers').doc(currentUserId), userChatMap, SetOptions(merge: true));
+        batch.set(_db.collection('customers').doc(otherUserId), otherUserChatMap, SetOptions(merge: true));
+      }
 
-        transaction.set(
-          _db.collection('customers').doc(message.senderId),
-          {
-            'chatInfos': {
-              receiverId: {'chatId': chatId, 'lastMessageTime': FieldValue.serverTimestamp(), 'otherUserId': receiverId}
-            }
-          },
-          SetOptions(merge: true),
-        );
+      // 9. Değişiklikleri kaydet
+      await batch.commit();
 
-        // isTemporary flag'ini kaldır
-        transaction.update(_db.collection('chats').doc(chatId), {
-          ...lastMessageData,
-          'isTemporary': false,
-        });
-      });
-
-      // Bildirimi gönder
-      if (receiverId.isNotEmpty) {
+      // 10. Bildirimi gönder
+      if (otherUserId.isNotEmpty) {
         await notificationService.sendNotification(
-          receiverId: receiverId,
-          senderName: senderName,
+          receiverId: otherUserId,
+          senderName: '',
           message: message.type == 'image' ? '📷 Fotoğraf gönderdi' : message.content,
           chatId: chatId,
           senderId: message.senderId,
@@ -300,38 +280,68 @@ class ChatService {
 
     if (startAfter != null) query = query.startAfterDocument(startAfter);
 
-    return query.snapshots().map((snapshot) => snapshot.docs.map((doc) => Message.fromMap(doc.data())).toList());
+    return query.snapshots().map((snapshot) => snapshot.docs.map((doc) => Message.fromMap(doc.data(), doc.id)).toList());
   }
 
-  // Sohbetleri dinle
-  Stream<List<Chat>> getChats(String userId) {
-    debugPrint('Getting chats for user: $userId');
+  // Sohbeti okundu olarak işaretle (tüm mesajlar)
+  Future<void> markChatAsRead(String chatId, String currentUserId) async {
+    try {
+      // Parametreleri kontrol et
+      if (chatId.isEmpty) {
+        debugPrint("HATA: markChatAsRead - chatId boş string!");
+        return;
+      }
+      if (currentUserId.isEmpty) {
+        debugPrint("HATA: markChatAsRead - currentUserId boş!");
+        return;
+      }
 
-    // Direkt chats koleksiyonunu dinleyelim
-    return _db.collection('chats').where('participants', arrayContains: userId).snapshots().asyncMap((chatsSnapshot) async {
-      // Kullanıcının dokümanını bir kez alalım (unreadCount için)
-      final userDoc = await _db.collection('customers').doc(userId).get();
-      final chatInfos = (userDoc.data()?['chatInfos'] as Map<String, dynamic>?) ?? {};
+      // 1. Chat belgesini al
+      final chatDoc = await _db.collection('chats').doc(chatId).get();
+      final chatData = chatDoc.data();
 
-      final chats = chatsSnapshot.docs.map((doc) {
-        final data = doc.data();
-        data['id'] = doc.id;
+      if (chatData == null) {
+        debugPrint("HATA: markChatAsRead - Chat belgesi bulunamadı: $chatId");
+        return;
+      }
 
-        // Diğer kullanıcının ID'sini bul
-        final otherUserId = (data['participants'] as List<dynamic>).firstWhere((id) => id != userId, orElse: () => '');
+      final chat = Chat.fromFirestore(chatData, chatId);
+      final otherUserId = chat.getOtherUserId(currentUserId);
 
-        // Sadece unreadCount için chatInfos'u kullanalım
-        final unreadCount = (chatInfos[otherUserId]?['unreadCount'] as int?) ?? 0;
-        data['unreadCount'] = unreadCount;
+      if (otherUserId.isEmpty) {
+        debugPrint("HATA: markChatAsRead - Diğer kullanıcı ID'si bulunamadı");
+        return;
+      }
 
-        return Chat.fromMap(data);
-      }).toList();
+      // Son mesaj benden ise işlem yapmaya gerek yok
+      if (chat.lastMessageSenderId == currentUserId) return;
 
-      // Son mesaj zamanına göre sırala
-      chats.sort((a, b) => b.lastMessageTime.compareTo(a.lastMessageTime));
+      // 2. Tüm okunmamış mesajları bul
+      final messagesRef = _db.collection('chats').doc(chatId).collection('messages');
+      final unreadMessages = await messagesRef.where('senderId', isEqualTo: otherUserId).where('isRead', isEqualTo: false).get();
 
-      return chats;
-    });
+      if (unreadMessages.docs.isEmpty) return;
+
+      // 3. Batch işlemi başlat
+      final batch = _db.batch();
+
+      // Tüm mesajları okundu olarak işaretle
+      for (var doc in unreadMessages.docs) {
+        batch.update(doc.reference, {'isRead': true});
+      }
+
+      // Chat belgesini güncelle
+      batch.update(_db.collection('chats').doc(chatId), {'unreadCount': 0, 'isLastMessageRead': true});
+
+      // Kullanıcı belgesini güncelle
+      batch.update(
+          _db.collection('customers').doc(currentUserId), {'chatMap.$otherUserId.unreadCount': 0, 'chatMap.$otherUserId.isLastMessageRead': true});
+
+      await batch.commit();
+    } catch (e) {
+      _logError('markChatAsRead', e, stackTrace: StackTrace.current);
+      rethrow;
+    }
   }
 
   void _logError(String method, Object error, {StackTrace? stackTrace}) {

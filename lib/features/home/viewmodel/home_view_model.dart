@@ -91,9 +91,6 @@ class HomeViewModel extends ChangeNotifier {
 
         // Yeni ilanları ekle
         _adverts.addAll(newAdverts);
-
-        // Kullanıcı bilgilerini getir
-        //    await _fetchCustomersForAdverts();
       }
 
       // Sayfa kontrolü
@@ -107,34 +104,6 @@ class HomeViewModel extends ChangeNotifier {
       _setLoading(false);
     }
   }
-
-  // İlanların kullanıcı bilgilerini getir
-  Future<void> _fetchCustomersForAdverts() async {
-    try {
-      final userIds = _adverts.map((a) => a.creatorUserID).toSet();
-      debugPrint('Toplam ${userIds.length} kullanıcı bilgisi çekilecek');
-
-      for (final userId in userIds) {
-        try {
-          if (!_customers.containsKey(userId)) {
-            final customer = await _customerService.fetchUserFromFirestore(userId);
-            if (customer != null) {
-              _customers[userId] = customer;
-            } else {
-              debugPrint('Kullanıcı bulunamadı: $userId');
-            }
-          }
-        } catch (e) {
-          debugPrint('Kullanıcı bilgisi çekilirken hata ($userId): $e');
-        }
-      }
-    } catch (e) {
-      debugPrint('Kullanıcı bilgileri toplu çekilirken hata: $e');
-    }
-  }
-
-  // Kullanıcı bilgisini al (null dönebilir)
-  // Customer? getCustomerForAdvert(String userId) => _customers[userId];
 
   Future<void> likeAdvert(String advertId, String userId) async {
     try {

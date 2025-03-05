@@ -4,6 +4,7 @@ import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
+import 'package:palseapp/core/widgets/circle_profile_picture.dart';
 import 'package:palseapp/features/profile/widgets/leader_board.dart';
 import 'package:palseapp/features/profile/widgets/xp_events_view.dart';
 import 'package:palseapp/features/profile/widgets/xp_progress_card.dart';
@@ -64,9 +65,9 @@ class ProfileView extends StatelessWidget {
 Widget profileHeader(BuildContext context, AuthProvider authProvider) {
   return Row(
     children: [
-      CircleAvatar(
+      CircleProfilePicture(
         radius: 30,
-        backgroundImage: NetworkImage(authProvider.user?.profilePictureUrl ?? ''),
+        imageUrl: authProvider.user?.profilePictureUrl ?? '',
       ),
       const SizedBox(width: 12),
       Column(

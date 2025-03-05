@@ -47,7 +47,7 @@ class _FilterViewState extends State<FilterView> {
         // Kullanıcının konumu ile ilanın konumu arasındaki mesafeyi hesapla
         if (advert.location == null || _currentUser?.location == null) return false;
 
-        double distance = _currentUser!.location!.distanceTo(advert.location!);
+        int distance = _currentUser!.location!.distanceTo(advert.location!);
         return distance <= _distance!;
       }).toList();
     }

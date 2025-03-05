@@ -102,7 +102,7 @@ class EditProfileViewModel extends ChangeNotifier {
       adverts: user.adverts,
       blockUsers: user.blockUsers,
       favoriteAdverts: user.favoriteAdverts,
-      chatInfos: user.chatInfos,
+      chatMap: user.chatMap,
       location: location,
     );
 

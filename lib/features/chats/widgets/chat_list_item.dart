@@ -1,131 +1,138 @@
 import 'package:flutter/material.dart';
-import 'package:palseapp/features/chats/model/chat_model.dart';
+import 'package:palseapp/core/services/firestore/customer_service.dart';
 import 'package:palseapp/core/models/customer.dart';
+import 'package:palseapp/core/widgets/circle_profile_picture.dart';
+import 'package:palseapp/features/chats/model/chat_model.dart';
 import 'package:palseapp/features/chats/viewmodel/chats_view_model.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 
 class ChatListItem extends StatelessWidget {
-  final Chat chat;
-  final String otherUserId;
+  final Chat chatSummary;
   final VoidCallback onTap;
+  final CustomerService customerService;
 
   const ChatListItem({
     super.key,
-    required this.chat,
-    required this.otherUserId,
+    required this.chatSummary,
     required this.onTap,
+    required this.customerService,
   });
 
   @override
   Widget build(BuildContext context) {
-    final bool isLastMessageMine = chat.lastMessageSenderId == Provider.of<ChatsViewModel>(context, listen: false).currentUserId;
+    final currentUserId = Provider.of<ChatsViewModel>(context, listen: false).currentUser?.userID;
+    final bool isLastMessageMine = chatSummary.isMe(currentUserId ?? '');
 
     // Kullanıcı bilgilerini önbelleğe al
     final userCache = <String, Customer>{};
 
-    return ListTile(
-      leading: StreamBuilder<Customer?>(
-        stream: context.read<ChatsViewModel>().getUserInfo(otherUserId),
-        builder: (context, snapshot) {
-          if (snapshot.hasData) userCache[otherUserId] = snapshot.data!;
-          return _buildAvatar(userCache[otherUserId]);
-        },
-      ),
-      title: Row(
-        children: [
-          Expanded(
-            child: StreamBuilder<Customer?>(
-              stream: context.read<ChatsViewModel>().getUserInfo(otherUserId),
-              builder: (context, snapshot) {
-                final user = snapshot.data;
-                return Text(
-                  user?.fullName() ?? 'Kullanıcı',
+    return FutureBuilder<Customer?>(
+      future: customerService.fetchUserFromFirestore(chatSummary.getOtherUserId(currentUserId ?? '')),
+      builder: (context, snapshot) {
+        // Yükleme durumu
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return ListTile(
+            leading: const CircleAvatar(
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            title: const Text('Yükleniyor...'),
+            subtitle: Text(chatSummary.lastMessage),
+            onTap: onTap,
+          );
+        }
+
+        // Kullanıcı bilgisi
+        final otherUser = snapshot.data;
+        final userName = otherUser?.firstName ?? 'Bilinmeyen Kullanıcı';
+        final userPhoto = otherUser?.profilePictureUrl;
+
+        return ListTile(
+          leading: CircleProfilePicture(
+            imageUrl: userPhoto,
+          ),
+          title: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  userName,
                   style: TextStyle(
-                    fontWeight: chat.unreadCount > 0 ? FontWeight.bold : FontWeight.normal,
+                    fontWeight: chatSummary.unreadCount > 0 ? FontWeight.bold : FontWeight.normal,
                   ),
-                );
-              },
-            ),
-          ),
-          Text(
-            _formatLastMessageTime(chat.lastMessageTime),
-            style: TextStyle(
-              fontSize: 12,
-              color: chat.unreadCount > 0 ? Colors.black87 : Colors.grey,
-            ),
-          ),
-        ],
-      ),
-      subtitle: Row(
-        children: [
-          if (isLastMessageMine) ...[
-            Icon(
-              chat.lastMessageIsRead ? Icons.done_all : Icons.done,
-              size: 16,
-              color: chat.lastMessageIsRead ? Colors.blue : Colors.grey,
-            ),
-            const SizedBox(width: 4),
-          ],
-          Expanded(
-            child: Text(
-              chat.lastMessage.isNotEmpty ? chat.lastMessage : 'Henüz mesaj yok',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: chat.unreadCount > 0 ? Colors.black87 : Colors.grey,
-                fontWeight: chat.unreadCount > 0 ? FontWeight.w500 : FontWeight.normal,
-              ),
-            ),
-          ),
-          if (chat.unreadCount > 0)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                chat.unreadCount.toString(),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
                 ),
               ),
-            ),
-        ],
-      ),
-      onTap: onTap,
+              Text(
+                _formatLastMessageTime(chatSummary.lastMessageTime),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: chatSummary.unreadCount > 0 ? Colors.black87 : Colors.grey,
+                ),
+              ),
+            ],
+          ),
+          subtitle: Row(
+            children: [
+              if (chatSummary.isMe(currentUserId ?? '')) ...[
+                Icon(
+                  chatSummary.isLastMessageRead ? Icons.done_all : Icons.done,
+                  size: 16,
+                  color: chatSummary.isLastMessageRead ? Colors.blue : Colors.grey,
+                ),
+                const SizedBox(width: 4),
+              ],
+              Expanded(
+                child: Text(
+                  chatSummary.lastMessage,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontWeight: chatSummary.unreadCount > 0 ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
+              ),
+              if (chatSummary.hasUnreadMessages) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).primaryColor,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    chatSummary.unreadCount.toString(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          onTap: onTap,
+        );
+      },
     );
   }
 
-  Widget _buildAvatar(Customer? user) {
-    return CircleAvatar(
-      backgroundImage: user?.profilePictureUrl != null && user!.profilePictureUrl!.isNotEmpty
-          ? CachedNetworkImageProvider(user.profilePictureUrl!) as ImageProvider
-          : null,
-      child: user?.profilePictureUrl == null || user!.profilePictureUrl!.isEmpty ? const Icon(Icons.person) : null,
-    );
-  }
+  // return old(userCache, isLastMessageMine, context);
+}
 
-  String _formatLastMessageTime(DateTime time) {
-    final now = DateTime.now();
-    final difference = now.difference(time);
+String _formatLastMessageTime(DateTime time) {
+  final now = DateTime.now();
+  final difference = now.difference(time);
 
-    if (difference.inDays == 0) {
-      // Bugün ise saat
-      return DateFormat('HH:mm').format(time);
-    } else if (difference.inDays == 1) {
-      // Dün ise
-      return 'Dün';
-    } else if (difference.inDays < 7) {
-      // Son 7 gün içinde ise gün adı
-      return DateFormat('EEEE', 'tr_TR').format(time);
-    } else {
-      // Daha eski ise tarih
-      return DateFormat('dd.MM.yyyy').format(time);
-    }
+  if (difference.inDays == 0) {
+    // Bugün ise saat
+    return DateFormat('HH:mm').format(time);
+  } else if (difference.inDays == 1) {
+    // Dün ise
+    return 'Dün';
+  } else if (difference.inDays < 7) {
+    // Son 7 gün içinde ise gün adı
+    return DateFormat('EEEE', 'tr_TR').format(time);
+  } else {
+    // Daha eski ise tarih
+    return DateFormat('dd.MM.yyyy').format(time);
   }
 }

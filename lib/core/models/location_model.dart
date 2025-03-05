@@ -1,7 +1,7 @@
-import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:palseapp/core/helper/calculate_distance.dart';
 
 class LocationModel {
   final String city;
@@ -79,9 +79,9 @@ class LocationModel {
   // Firestore için JSON formatına dönüştür
   Map<String, dynamic> toJson() {
     return {
-      'city': city,
-      'district': district,
-      'country': country,
+      'city': city.toUpperCase(),
+      'district': district.toUpperCase(),
+      'country': country.toUpperCase(),
       'geoPoint': geoPoint,
     };
   }
@@ -95,27 +95,12 @@ class LocationModel {
     return '$city, $district, $country';
   }
 
+  String displayStringWithDistance(LocationModel other) {
+    return '$city, $district (${distanceTo(other)} km)';
+  }
+
   // Km bazlı mesafe hesaplama
-  double distanceTo(LocationModel other) {
-    return _calculateDistance(lat, lon, other.lat, other.lon);
-  }
-
-  // Haversine formülü ile mesafe hesaplama (km)
-  static double _calculateDistance(double lat1, double lon1, double lat2, double lon2) {
-    const double earthRadius = 6371; // Dünya yarıçapı (km)
-
-    double dLat = _degreesToRadians(lat2 - lat1);
-    double dLon = _degreesToRadians(lon2 - lon1);
-
-    double a = sin(dLat / 2) * sin(dLat / 2) + cos(_degreesToRadians(lat1)) * cos(_degreesToRadians(lat2)) * sin(dLon / 2) * sin(dLon / 2);
-
-    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
-    double distance = earthRadius * c;
-
-    return distance;
-  }
-
-  static double _degreesToRadians(double degrees) {
-    return degrees * (pi / 180);
+  int distanceTo(LocationModel other) {
+    return calculateDistance(latitude1: lat, longitude1: lon, latitude2: other.lat, longitude2: other.lon);
   }
 }

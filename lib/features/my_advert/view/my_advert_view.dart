@@ -137,7 +137,7 @@ class _MyAdvertViewState extends State<MyAdvertView> with TickerProviderStateMix
     final isPremium = context.watch<SubscriptionProvider>().isPremium;
 
     return PremiumOverlay(
-      isPremium: isPremium,
+      isPremium: true,
       child: viewModel.recentlyViewed.isEmpty
           ? _buildEmptyAdvert()
           : GridView.builder(
@@ -153,7 +153,7 @@ class _MyAdvertViewState extends State<MyAdvertView> with TickerProviderStateMix
                 if (customer == null) return const SizedBox();
                 return RecentlyViewer(
                   customer: customer,
-                  onProfileTap: () => context.push(friendProfile, extra: customer),
+                  onProfileTap: () => context.push(friendProfile, extra: customer.userID),
                 );
               },
             ),

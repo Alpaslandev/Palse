@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:palseapp/core/constant/categories.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/models/location_model.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
@@ -102,8 +103,8 @@ class ProfileSetupViewModel extends ChangeNotifier {
     }
   }
 
-  void handleCategorySelection(String category, bool selected) {
-    final categories = List<String>.from(_customer.favoriteCategories ?? []);
+  void handleCategorySelection(Categories category, bool selected) {
+    final categories = List<Categories>.from(_customer.favoriteCategories ?? []);
     if (selected) {
       categories.add(category);
     } else {
@@ -160,6 +161,11 @@ class ProfileSetupViewModel extends ChangeNotifier {
 
   void updateGender(Gender gender) {
     _customer.gender = gender;
+    notifyListeners();
+  }
+
+  void updateLocation(LocationModel location) {
+    _customer.location = location;
     notifyListeners();
   }
 }

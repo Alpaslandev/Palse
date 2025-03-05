@@ -1,8 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:palseapp/core/constant/categories.dart';
+import 'package:palseapp/core/helper/categorie_parse.dart';
+import 'package:palseapp/core/helper/date_parse.dart';
+import 'package:palseapp/core/helper/location_parse.dart';
 import 'package:palseapp/core/models/comment_model.dart';
 import 'package:palseapp/core/models/location_model.dart';
-import 'package:palseapp/core/helper/calculate_distance.dart';
 import 'package:palseapp/features/chats/model/chat_model.dart';
 
 enum Gender {
@@ -30,11 +33,12 @@ class Customer {
   bool? isPremium;
   Gender? gender;
   DateTime? birthday;
-  List<String>? favoriteCategories;
+  List<Categories>? favoriteCategories;
   List<String>? blockUsers;
   List<String>? favoriteAdverts;
   List<String>? profileViewers;
-  Map<String, Chat>? chatInfos;
+  Map<String, Chat>? chatMap;
+
   List<Comment>? comments;
   LocationModel? location;
   int xp;
@@ -56,7 +60,7 @@ class Customer {
     this.birthday,
     this.userID,
     this.favoriteAdverts = const [],
-    this.chatInfos = const {},
+    this.chatMap = const {},
     this.profileViewers = const [],
     this.comments = const [],
     this.location,
@@ -74,6 +78,25 @@ class Customer {
         comments!.length; // null değerleri 0 olarak değerlendir
   }
 
+  // Yardımcı metotlar
+  List<Chat>? getSortedChats() {
+    final chats = chatMap?.values.toList();
+    chats?.sort((a, b) => b.lastMessageTime.compareTo(a.lastMessageTime));
+    return chats;
+  }
+
+  Chat? getChatWithUser(String otherUserId) {
+    return chatMap?[otherUserId];
+  }
+
+  bool get hasUnreadChats {
+    return chatMap?.values.any((chat) => chat.unreadCount > 0) ?? false;
+  }
+
+  int getTotalUnreadCount() {
+    return chatMap?.values.fold(0, (sum, chat) => sum! + chat.unreadCount) ?? 0;
+  }
+
   int getAge() {
     if (birthday == null) return 0;
     final now = DateTime.now();
@@ -81,90 +104,13 @@ class Customer {
     return age;
   }
 
-  String getDistanceFromCurrentLocation(double latitude, double longitude) {
-    return calculateDistance(latitude1: latitude, longitude1: longitude, latitude2: location!.lat, longitude2: location!.lon);
-  }
-
   factory Customer.fromJson(Map<String, dynamic> parsedJson, String userID) {
-    Map<String, Chat> chatInfos = {};
-    if (parsedJson['chatInfos'] != null) {
-      final chatInfosMap = parsedJson['chatInfos'] as Map<String, dynamic>;
-      chatInfosMap.forEach((key, value) {
-        chatInfos[key] = Chat.fromChatInfo(
-          value as Map<String, dynamic>,
-          value['chatId'] as String? ?? '',
-          key,
-        );
-      });
-    }
-    // Tarih ve saat parse etme fonksiyonu güncellendi
-    DateTime? parseDateTime(dynamic dateData) {
-      if (dateData == null) return null;
+    final chatMapJson = parsedJson['chatMap'] as Map<String, dynamic>? ?? {};
+    final chatMap = <String, Chat>{};
 
-      // Eğer zaten DateTime ise
-      if (dateData is DateTime) return dateData;
-
-      // Eğer Timestamp ise
-      if (dateData is Timestamp) return dateData.toDate();
-
-      // Eğer String ise
-      if (dateData is String) {
-        try {
-          // Önce "dd/MM/yyyy" formatını dene (eski format)
-          if (dateData.contains('/')) {
-            final dateParts = dateData.split('/');
-            // tarih oluştur
-            return DateTime(
-              int.parse(dateParts[2]), // yıl
-              int.parse(dateParts[1]), // ay
-              int.parse(dateParts[0]), // gün
-            );
-          }
-          // Eğer başarısız olursa ISO formatını dene
-          return DateTime.parse(dateData);
-        } catch (e) {
-          debugPrint('Tarih parse hatası: $e');
-          return null;
-        }
-      }
-      return null;
-    }
-
-    LocationModel parseLocation(dynamic locationData, Map<String, dynamic> parsedJson) {
-      // Önce yeni yapıyı kontrol et
-      if (locationData != null && locationData is Map<String, dynamic>) {
-        return LocationModel.fromFirestore(locationData);
-      }
-
-      // Eski yapıyı kontrol et - doğrudan Customer içindeki alanlar
-      String city = parsedJson['city'] ?? '';
-      String district = parsedJson['district'] ?? '';
-      String country = parsedJson['country'] ?? 'TR';
-      GeoPoint? geoPoint = parsedJson['geoPoint'];
-
-      double lat = 0;
-      double lon = 0;
-
-      // Eğer geoPoint varsa, koordinatları al
-      if (geoPoint != null) {
-        lat = geoPoint.latitude;
-        lon = geoPoint.longitude;
-      }
-
-      // Eski yapıdaki bilgilerle LocationModel oluştur
-      if (city.isNotEmpty || district.isNotEmpty || geoPoint != null) {
-        return LocationModel(
-          city: city,
-          district: district,
-          country: country,
-          lat: lat,
-          lon: lon,
-        );
-      }
-
-      // Hiçbir konum bilgisi yoksa boş model döndür
-      return LocationModel(lat: 0, lon: 0, city: '', district: '', country: '');
-    }
+    chatMapJson.forEach((otherUserId, summaryJson) {
+      chatMap[otherUserId] = Chat.fromUserDocument(summaryJson);
+    });
 
     Gender parseGender(dynamic genderData) {
       if (genderData == null) return Gender.others;
@@ -193,59 +139,68 @@ class Customer {
       return Gender.others;
     }
 
-    return Customer(
-      profilePictureUrl: parsedJson['profilePictureUrl'] ?? '',
-      email: parsedJson['email'] ?? '',
-      phoneNumber: parsedJson['phoneNumber'] ?? '',
-      nickname: parsedJson['nickname'] ?? '',
-      firstName: parsedJson['firstName'] ?? '',
-      lastName: parsedJson['lastName'] ?? '',
-      userID: userID,
-      blockUsers: List<String>.from(parsedJson['blockUsers'] ?? []),
-      favoriteCategories: List<String>.from(parsedJson['favoriteCategories'] ?? []),
-      favoriteAdverts: List<String>.from(parsedJson['favoriteAdverts'] ?? []),
-      adverts: List<String>.from(parsedJson['adverts'] ?? []),
-      verification: parsedJson['verification'] ?? false,
-      isPremium: parsedJson['isPremium'] ?? false,
-      gender: parseGender(parsedJson['gender']),
-      birthday: parseDateTime(parsedJson['birthday']),
-      chatInfos: chatInfos,
-      profileViewers: List<String>.from(parsedJson['profileViewers'] ?? []),
-      comments: List<Comment>.from(parsedJson['comments']?.map((comment) => Comment.fromJson(comment)) ?? []),
-      location: parseLocation(parsedJson['location'], parsedJson),
-      xp: parsedJson['xp'] ?? 0,
-      isWelcomeReward: parsedJson['isWelcomeReward'] ?? false,
-    );
+    try {
+      return Customer(
+        profilePictureUrl: parsedJson['profilePictureUrl'] ?? '',
+        email: parsedJson['email'] ?? '',
+        phoneNumber: parsedJson['phoneNumber'] ?? '',
+        nickname: parsedJson['nickname'] ?? '',
+        firstName: parsedJson['firstName'] ?? '',
+        lastName: parsedJson['lastName'] ?? '',
+        userID: userID,
+        blockUsers: parsedJson['blockUsers'] != null ? List<String>.from(parsedJson['blockUsers']) : [],
+        favoriteCategories: parsedJson['favoriteCategories'] != null
+            ? (parsedJson['favoriteCategories'] as List<dynamic>?)
+                    ?.map((item) => parseCategoryType(item))
+                    .whereType<Categories>() // null değerleri filtrele
+                    .toList() ??
+                []
+            : [],
+        favoriteAdverts: parsedJson['favoriteAdverts'] != null ? List<String>.from(parsedJson['favoriteAdverts']) : [],
+        adverts: parsedJson['adverts'] != null ? List<String>.from(parsedJson['adverts']) : [],
+        verification: parsedJson['verification'] ?? false,
+        isPremium: parsedJson['isPremium'] ?? false,
+        gender: parsedJson['gender'] != null ? parseGender(parsedJson['gender']) : Gender.others,
+        birthday: parsedJson['birthday'] != null ? parseDateTime(parsedJson['birthday'], parsedJson['birthdayTime']) : null,
+        chatMap: chatMap,
+        profileViewers: parsedJson['profileViewers'] != null ? List<String>.from(parsedJson['profileViewers']) : [],
+        comments: parsedJson['comments'] != null ? List<Comment>.from(parsedJson['comments'].map((comment) => Comment.fromJson(comment))) : [],
+        location: parsedJson['location'] != null ? parseCustomerLocation(parsedJson) : parseCustomerLocation(parsedJson),
+        xp: parsedJson['xp'] ?? 0,
+        isWelcomeReward: parsedJson['isWelcomeReward'] ?? false,
+      );
+    } catch (e) {
+      debugPrint('Customer.fromJson error: $e');
+      return throw Exception(e);
+    }
   }
 
   Map<String, dynamic> toJson() {
+    final chatMapJson = <String, dynamic>{};
+    chatMap?.forEach((otherUserId, summary) {
+      chatMapJson[otherUserId] = summary.toUserDocumentJson(userID!);
+    });
+
     return {
-      'profilePictureUrl': profilePictureUrl,
-      'email': email,
-      'phoneNumber': phoneNumber,
-      'firstName': firstName,
-      'lastName': lastName,
-      'nickname': nickname,
-      'appIdentifier': appIdentifier,
-      'events': adverts,
-      'verification': verification,
-      'isPremium': isPremium,
-      'blockUsers': blockUsers,
-      'profileViewers': profileViewers,
-      'gender': gender?.name,
+      'profilePictureUrl': profilePictureUrl ?? '',
+      'email': email ?? '',
+      'phoneNumber': phoneNumber ?? '',
+      'firstName': firstName ?? '',
+      'lastName': lastName ?? '',
+      'nickname': nickname ?? '',
+      'appIdentifier': appIdentifier ?? '',
+      'adverts': adverts ?? [],
+      'verification': verification ?? false,
+      'isPremium': isPremium ?? false,
+      'blockUsers': blockUsers ?? [],
+      'profileViewers': profileViewers ?? [],
+      'gender': gender?.name ?? Gender.others.name,
       'birthday': birthday != null ? Timestamp.fromDate(birthday!) : null,
-      'favoriteCategories': favoriteCategories,
-      'favoriteAdverts': favoriteAdverts,
-      'location': location?.toJson(),
-      'chatInfos': chatInfos?.map((key, chat) => MapEntry(
-            key,
-            {
-              'chatId': chat.id,
-              'lastMessageTime': chat.lastMessageTime,
-              'unreadCount': chat.unreadCount,
-            },
-          )),
-      'comments': comments?.map((comment) => comment.toJson()).toList(),
+      'favoriteCategories': favoriteCategories?.map((category) => category.name).toList() ?? [],
+      'favoriteAdverts': favoriteAdverts ?? [],
+      'location': location?.toJson() ?? {},
+      'chatMap': chatMapJson,
+      'comments': comments?.map((comment) => comment.toJson()).toList() ?? [],
       'xp': xp,
       'isWelcomeReward': isWelcomeReward,
     };
@@ -265,11 +220,10 @@ class Customer {
     bool? isPremium,
     Gender? gender,
     DateTime? birthday,
-    List<String>? favoriteCategories,
+    List<Categories>? favoriteCategories,
     List<String>? blockUsers,
     List<String>? favoriteAdverts,
     List<String>? profileViewers,
-    Map<String, Chat>? chatInfos,
     List<Comment>? comments,
     LocationModel? location,
     int? xp,
@@ -288,7 +242,7 @@ class Customer {
       gender: gender ?? this.gender,
       birthday: birthday ?? this.birthday,
       userID: userID ?? this.userID,
-      chatInfos: chatInfos ?? this.chatInfos,
+      chatMap: chatMap,
       profileViewers: profileViewers ?? this.profileViewers,
       comments: comments ?? this.comments,
       xp: xp ?? this.xp,

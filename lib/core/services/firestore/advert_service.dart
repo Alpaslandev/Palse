@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:palseapp/core/constant/categories.dart';
 import 'package:palseapp/core/models/advert.dart';
 
 class AdvertService {
@@ -16,7 +17,7 @@ class AdvertService {
         return await fetchAdverts(lastDocument: lastDocument, limit: limit);
       }
 
-      final upperCity = city.toUpperCase().trim();
+      final upperCity = city;
       debugPrint('Aranan şehir: $upperCity, limit: $limit');
 
       var query = _firestore.collection('events').where('city', isEqualTo: upperCity).limit(limit);
@@ -39,43 +40,65 @@ class AdvertService {
 
   // İlgi alanlarına göre ilanları getir
   Future<List<Advert>> fetchAdvertsByInterests(
-    List<String>? interests, {
+    List<Categories>? interests, {
     DocumentSnapshot? lastDocument,
     int limit = 25,
   }) async {
     try {
+      // İlgi alanı yoksa boş liste döndür
       if (interests == null || interests.isEmpty) {
-        debugPrint('İlgi alanları boş, tüm ilanlar getiriliyor');
-        return await fetchAdverts(lastDocument: lastDocument, limit: limit);
+        return [];
       }
 
-      // İlgi alanlarını doğru formata çevir (ilk harf büyük, diğerleri küçük)
-      final formattedInterests = interests.map((e) {
-        return e.split(' ').map((word) {
-          if (word.isEmpty) return '';
-          return word[0].toUpperCase() + word.substring(1).toLowerCase();
-        }).join(' ');
-      }).toList();
+      // Eski format değerler (enum.text)
+      final oldFormatValues = interests.map((interest) => interest.text).toList();
+      debugPrint('Eski format değerler: $oldFormatValues');
 
-      debugPrint('Aranan ilgi alanları: $formattedInterests');
+      // Yeni format değerler (enum.name)
+      final newFormatValues = interests.map((interest) => interest.name).toList();
+      debugPrint('Yeni format değerler: $newFormatValues');
 
-      var query = _firestore.collection('events').where('advertType', whereIn: formattedInterests).limit(limit);
+      // Events koleksiyonuna referans
+      final eventsRef = FirebaseFirestore.instance.collection('events');
 
-      if (lastDocument != null) {
-        query = query.startAfterDocument(lastDocument);
+      // Sorgular listesi
+      List<Future<QuerySnapshot>> queries = [];
+
+      // Eski format için sorgular (advertType alanı için)
+      for (var value in oldFormatValues) {
+        queries.add(eventsRef.where('advertType', isEqualTo: value).limit(limit).get());
       }
 
-      final querySnapshot = await query.get();
-
-      // Ham verileri kontrol et
-      debugPrint('Sorgu sonuçları:');
-      for (var doc in querySnapshot.docs) {
-        debugPrint('ID: ${doc.id}, advertType: ${doc.data()['advertType']}');
+      // Yeni format için sorgular (advertType alanı için)
+      for (var value in newFormatValues) {
+        queries.add(eventsRef.where('advertType', isEqualTo: value).limit(limit).get());
       }
 
-      final adverts = querySnapshot.docs.map((doc) => Advert.fromJson(doc.data(), doc.id)).toList();
+      // Tüm sorguları paralel çalıştır
+      final queryResults = await Future.wait(queries);
 
+      // Sonuçları birleştir (tekrarları önlemek için Map kullan)
+      final Map<String, Advert> uniqueAdverts = {};
+
+      for (var querySnapshot in queryResults) {
+        for (var doc in querySnapshot.docs) {
+          final data = doc.data() as Map<String, dynamic>;
+          data['id'] = doc.id;
+
+          final advert = Advert.fromJson(data, doc.id);
+          uniqueAdverts[doc.id] = advert;
+        }
+      }
+
+      // Map'ten liste oluştur
+      final adverts = uniqueAdverts.values.toList();
       debugPrint('Bulunan ilan sayısı: ${adverts.length}');
+
+      // Tarihe göre sırala (yeniden eskiye)
+      if (adverts.isNotEmpty) {
+        adverts.sort((a, b) => b.createdAt!.compareTo(a.createdAt!));
+      }
+
       return adverts;
     } catch (e) {
       debugPrint('İlgi alanlarına göre ilanlar çekilirken hata: $e');
@@ -125,13 +148,13 @@ class AdvertService {
 
   Future<void> likeAdvert(String advertId, String userId) async {
     await _firestore.collection('events').doc(advertId).update({
-      'countUUIDs': FieldValue.arrayUnion([userId])
+      'likers': FieldValue.arrayUnion([userId])
     });
   }
 
   Future<void> unlikeAdvert(String advertId, String userId) async {
     await _firestore.collection('events').doc(advertId).update({
-      'countUUIDs': FieldValue.arrayRemove([userId])
+      'likers': FieldValue.arrayRemove([userId])
     });
   }
 }

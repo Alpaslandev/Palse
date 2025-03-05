@@ -13,9 +13,9 @@ class MessagesViewModel extends ChangeNotifier {
   final ImagePicker _imagePicker = ImagePicker();
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
-  String? chatId;
-  String? currentUserId;
-  String? otherUserId;
+  final String chatId;
+  final String currentUserId;
+  final String otherUserId;
   List<Message> messages = [];
   bool isLoading = false;
   bool isUploadingImage = false;
@@ -24,16 +24,15 @@ class MessagesViewModel extends ChangeNotifier {
 
   Message? get quotedMessage => _quotedMessage;
 
-  MessagesViewModel(String this.otherUserId);
-
-  void initialize(String chatId, String currentUserId) {
-    this.chatId = chatId;
-    this.currentUserId = currentUserId;
-  }
+  MessagesViewModel(this.chatId, this.currentUserId, this.otherUserId);
 
   // Mesajları dinle
   Stream<List<Message>> getMessages(String chatId) {
-    return _chatService.getMessages(chatId);
+    return _chatService.getMessages(chatId).map((msgs) {
+      // messages listesini güncelle
+      messages = msgs;
+      return msgs;
+    });
   }
 
   // Müşteri bilgilerini al
@@ -66,10 +65,9 @@ class MessagesViewModel extends ChangeNotifier {
         senderId: senderId,
         content: content,
         timestamp: DateTime.now(),
-        isRead: false,
         type: 'text',
         quotedMessage: _quotedMessage?.content,
-        quotedMessageId: _quotedMessage?.senderId,
+        quotedMessageId: _quotedMessage?.messageId,
       );
 
       await _chatService.sendMessage(
@@ -87,8 +85,9 @@ class MessagesViewModel extends ChangeNotifier {
   }
 
   // Mesajları okundu olarak işaretle
-  Future<void> markMessagesAsRead(String chatId, String currentUserId, String otherUserId) async {
+  Future<void> markMessagesAsRead() async {
     try {
+      // Mesaj bazında işaretleme yapıyoruz
       await _chatService.markMessagesAsRead(chatId, currentUserId, otherUserId);
       notifyListeners();
     } catch (e) {
@@ -176,18 +175,12 @@ class MessagesViewModel extends ChangeNotifier {
 
   // Görsel mesajı gönder
   Future<void> sendImageMessage(String imageUrl) async {
-    if (chatId == null || currentUserId == null) {
-      debugPrint('chatId veya currentUserId null!'); // Debug için kontrol
-      return;
-    }
-
     try {
       debugPrint('Görsel mesaj gönderiliyor... URL: $imageUrl'); // Debug için URL'i yazdır
       final messageToSend = Message(
-        senderId: currentUserId!,
+        senderId: currentUserId,
         content: imageUrl,
         timestamp: DateTime.now(),
-        isRead: false,
         type: 'image',
         quotedMessage: _quotedMessage?.content,
         quotedMessageId: _quotedMessage?.senderId,
@@ -196,9 +189,9 @@ class MessagesViewModel extends ChangeNotifier {
       debugPrint('Message objesi oluşturuldu: ${messageToSend.toMap()}'); // Debug için mesaj objesini yazdır
 
       await _chatService.sendMessage(
-        chatId!,
+        chatId,
         messageToSend,
-        currentUserId!,
+        currentUserId,
       );
 
       debugPrint('Görsel mesaj başarıyla gönderildi!'); // Debug için başarı mesajı

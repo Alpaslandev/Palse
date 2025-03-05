@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/services/subscription_service.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
 import 'package:palseapp/features/subscription/package_card.dart';
@@ -56,8 +57,11 @@ class _SubscriptionViewState extends State<SubscriptionView> {
   }
 
   Future<void> _handlePurchase(Package package) async {
+    final subscriptionProvider = context.read<SubscriptionProvider>();
+    final authProvider = context.read<AuthProvider>();
     try {
       await _subscriptionService.purchasePackage(package);
+      await subscriptionProvider.updatePremiumStatus(true, authProvider.user!.userID!);
       if (mounted) {
         Navigator.of(context).pop(); // Başarılı satın alma sonrası kapat
       }

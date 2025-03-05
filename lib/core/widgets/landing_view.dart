@@ -26,7 +26,7 @@ class _LandingViewState extends State<LandingView> {
   void _onItemTapped(BuildContext context, int index) {
     switch (index) {
       case 0:
-        context.go(home);
+        context.goNamed(home);
         break;
       case 1:
         context.go(categories);

@@ -36,7 +36,7 @@ class MessageAppBar extends StatelessWidget implements PreferredSizeWidget {
         builder: (context, snapshot) {
           final user = snapshot.data;
           return GestureDetector(
-            onTap: () => context.push(friendProfile, extra: user),
+            onTap: () => context.push(friendProfile, extra: otherUserId),
             child: Row(
               children: [
                 CircleAvatar(

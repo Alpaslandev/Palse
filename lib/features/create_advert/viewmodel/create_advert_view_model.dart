@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:palseapp/core/constant/categories.dart';
 import 'package:palseapp/core/models/advert.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/models/location_model.dart';
@@ -24,7 +25,7 @@ class CreateAdvertViewModel extends ChangeNotifier {
   String district = '';
   DateTime? startDate;
   DateTime? endDate;
-  String? eventType;
+  Categories? eventType;
   bool _isLoading = false;
   LocationModel? locationModel;
 
@@ -42,8 +43,6 @@ class CreateAdvertViewModel extends ChangeNotifier {
       if (currentStep == 0 && !formKey.currentState!.validate()) return;
       currentStep++;
       notifyListeners();
-    } else {
-      createAdvert();
     }
   }
 
@@ -77,15 +76,13 @@ class CreateAdvertViewModel extends ChangeNotifier {
 
   // İlan oluşturma
   Future<void> createAdvert() async {
-    if (!validateAllFields()) return;
-
     _setLoading(true);
     try {
       final advert = Advert(
         advertName: advertName,
         description: advertDescription,
         creatorUserID: authProvider.user!.userID!,
-        advertType: eventType ?? '',
+        advertType: eventType ?? Categories.diger,
         location: locationModel,
         advertImage: advertImage?.path ?? '',
         startEventDate: startDate ?? DateTime.now(),
@@ -120,7 +117,6 @@ class CreateAdvertViewModel extends ChangeNotifier {
     if (advertImage == null) return false;
     if (locationModel == null) return false;
     if (startDate == null) return false;
-    if (eventType == null) return false;
     return true;
   }
 
@@ -134,7 +130,7 @@ class CreateAdvertViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setEventType(String? value) {
+  void setEventType(Categories? value) {
     eventType = value;
     notifyListeners();
   }

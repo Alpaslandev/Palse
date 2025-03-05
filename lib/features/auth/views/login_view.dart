@@ -70,6 +70,7 @@ class _LoginViewState extends State<LoginView> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
+                  authProvider.loginWithEmail(_emailController.text, _passwordController.text);
                   //    Navigator.push(context, MaterialPageRoute(builder: (context) => NicknameStep(controller: _emailController)));
                 },
                 child: const Padding(

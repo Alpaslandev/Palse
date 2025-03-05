@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:palseapp/core/models/customer.dart';
@@ -14,14 +17,15 @@ class AuthProvider extends ChangeNotifier {
   bool _isLoading = true;
   User? _firebaseUser;
   Customer? _user;
-  bool _isProfileSetupCompleted = false;
 
   // Getterlar
   bool get isLoading => _isLoading;
   bool get isAuthenticated => _firebaseUser != null;
   Customer? get user => _user;
   User? get firebaseUser => _firebaseUser;
-  bool get isProfileSetupCompleted => _isProfileSetupCompleted;
+  bool get isProfileSetupCompleted => _user != null;
+
+  StreamSubscription<DocumentSnapshot<Object?>>? _userStreamSubscription;
 
   // Constructor'da sadece log
   AuthProvider() {
@@ -40,14 +44,17 @@ class AuthProvider extends ChangeNotifier {
         debugPrint('Auth State Changed: ${user?.email}');
         _firebaseUser = user;
 
+        await _userStreamSubscription?.cancel();
+        _userStreamSubscription = null;
+
         if (user != null) {
           debugPrint('User logged in');
-          await _loadUserData();
-          await _notificationService.saveUserToken(user.uid);
+          _startFirestoreStream(user.uid);
+          //   await _loadUserData();
+          //   await _notificationService.saveUserToken(user.uid);
         } else {
           debugPrint('User logged out');
           _user = null;
-          _isProfileSetupCompleted = false;
         }
 
         notifyListeners();
@@ -60,6 +67,27 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  // Kullanıcı verilerini stream olarak dinlemeye başla
+  void _startFirestoreStream(String userId) {
+    debugPrint('Starting user stream for user: $userId');
+
+    _userStreamSubscription = _userService.streamFirestore(userId).listen((userData) {
+      if (userData.exists && userData.data() != null) {
+        _user = Customer.fromJson(userData.data() as Map<String, dynamic>, userId);
+        debugPrint('User data: ${_user?.toJson()}');
+      } else {
+        debugPrint('User data not found');
+        _user = null;
+      }
+      notifyListeners();
+      debugPrint('User data updated: ${_user?.userID}');
+    }, onError: (error) {
+      debugPrint('User stream error: $error');
+      _isLoading = false;
+      notifyListeners();
+    });
+  }
+
   // Email ile giriş
   Future<void> loginWithEmail(String email, String password) async {
     try {
@@ -67,7 +95,16 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
 
       // Login işlemi
-      await _authService.loginWithEmail(email, password);
+      final user = await _authService.loginWithEmail(email, password);
+      // Sonra user data ve profile durumu
+      if (user != null) {
+        _firebaseUser = user;
+        await _loadUserData(); // Profile setup durumu burada güncelleniyor
+
+        // En son tek bir state update
+        _isLoading = false;
+        notifyListeners(); // Router bu notify ile tüm güncel durumu alacak
+      }
       // Auth state listener otomatik olarak değişiklikleri yakalayacak
     } catch (e) {
       debugPrint('Login error: $e');
@@ -143,11 +180,9 @@ class AuthProvider extends ChangeNotifier {
       debugPrint('Firebase user: ${_firebaseUser?.uid}');
       _user = await _userService.fetchUserFromFirestore(_firebaseUser!.uid);
       debugPrint('User data: ${_user?.toJson()}');
-      _isProfileSetupCompleted = _user != null;
       debugPrint('User data loaded');
     } catch (e) {
       debugPrint('Error loading user data: $e');
-      _isProfileSetupCompleted = false;
       _user = null;
     } finally {
       _isLoading = false;

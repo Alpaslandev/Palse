@@ -1,10 +1,19 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:palseapp/core/constant/categories.dart';
 import 'package:palseapp/core/models/comment_model.dart';
 import 'package:palseapp/core/models/customer.dart';
 
 class CustomerService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  Future<void> updateCustomerSubscription(String uuid, bool isPremium) async {
+    try {
+      await _firestore.collection("customers").doc(uuid).update({'isPremium': isPremium});
+    } catch (e) {
+      debugPrint('Kullanıcı abonelik güncellenirken hata: $e');
+    }
+  }
 
 // Kullanıcıyı günceller veya yeni bir kullanıcı oluşturur
   Future<void> updateCustomer(String uuid, Customer customer) async {
@@ -24,9 +33,9 @@ class CustomerService {
     }
   }
 
-  Future<void> updateCustomerCategories(String uuid, List<String> categories) async {
+  Future<void> updateCustomerCategories(String uuid, List<Categories> categories) async {
     try {
-      await _firestore.collection("customers").doc(uuid).update({'favoriteCategories': categories});
+      await _firestore.collection("customers").doc(uuid).update({'favoriteCategories': categories.map((category) => category.name).toList()});
     } catch (e) {
       debugPrint('Kullanıcı kategorileri güncellenirken hata: $e');
       throw Exception('Kullanıcı kategorileri güncellenemedi: $e');
@@ -116,6 +125,11 @@ class CustomerService {
         .doc(userId)
         .snapshots()
         .map((snapshot) => snapshot.data() != null ? Customer.fromJson(snapshot.data()!, userId) : null);
+  }
+
+  // Firestore verilerini stream olarak dinleme
+  Stream<DocumentSnapshot<Object?>> streamFirestore(String userId) {
+    return _firestore.collection('customers').doc(userId).snapshots();
   }
 
   Future<void> addComment(String userId, Comment comment) async {

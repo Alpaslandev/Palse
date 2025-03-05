@@ -44,27 +44,27 @@ class AppRouter {
 
     router = GoRouter(
       navigatorKey: rootNavigatorKey,
-      initialLocation: splash,
+      initialLocation: "/$splash",
       debugLogDiagnostics: true,
       refreshListenable: _authProvider,
       redirect: _handleRedirect,
       extraCodec: CustomGoRouterCodec(),
       routes: [
         GoRoute(
-          path: splash,
-          name: 'splash',
+          path: "/$splash",
+          name: splash,
           parentNavigatorKey: rootNavigatorKey, // Ana navigator'ı kullan
           builder: (context, state) => const SplashView(),
         ),
         GoRoute(
-          path: login,
-          name: 'login',
+          path: "/$login",
+          name: login,
           parentNavigatorKey: rootNavigatorKey, // Ana navigator'ı kullan
           builder: (context, state) => const LoginView(),
         ),
         GoRoute(
-          path: profileSetup,
-          name: 'profileSetup',
+          path: "/$profileSetup",
+          name: profileSetup,
           parentNavigatorKey: rootNavigatorKey, // Ana navigator'ı kullan
           builder: (context, state) => const ProfileSetupView(),
         ),
@@ -113,8 +113,8 @@ class AppRouter {
           path: friendProfile,
           parentNavigatorKey: rootNavigatorKey, // Ana navigator'ı kullan
           builder: (context, state) {
-            final customer = state.extra! as Customer; // Null check eklendi
-            return FriendProfileView(customer: customer);
+            final customerID = state.extra! as String; // Null check eklendi
+            return FriendProfileView(customerID: customerID);
           },
           routes: [
             GoRoute(
@@ -156,8 +156,8 @@ class AppRouter {
           builder: (context, state, child) => LandingView(child: child),
           routes: [
             GoRoute(
-              path: home,
-              name: 'home',
+              path: "/$home",
+              name: home,
               pageBuilder: (context, state) => CustomTransitionPage(
                 key: state.pageKey,
                 child: const HomeView(),
@@ -228,41 +228,46 @@ class AppRouter {
     debugPrint('Is Authenticated: ${_authProvider.isAuthenticated}');
     debugPrint('Is Profile Setup Completed: ${_authProvider.isProfileSetupCompleted}');
 
+    final isSplashScreen = state.matchedLocation == '/$splash';
+    final isAuthRoute = state.matchedLocation.startsWith('/$login');
+    final isUserSetupRoute = state.matchedLocation.startsWith('/$profileSetup');
+
     // Loading durumunda redirect yok
-    if (_authProvider.isLoading) {
-      return null;
+    if (_authProvider.isLoading) return null;
+
+    final isAuthenticated = _authProvider.isAuthenticated;
+    final isProfileSetup = _authProvider.isProfileSetupCompleted;
+
+    // Splash screen özel durumu
+    if (isSplashScreen) {
+      if (!isAuthenticated) return '/$login';
+      if (isAuthenticated && !isProfileSetup) return '/$profileSetup';
+      return '/$home';
     }
 
-    // Eğer zaten navigationBar'daysa ve koşullar doğruysa redirect yapma
-    if (state.matchedLocation == landing && _authProvider.isAuthenticated && _authProvider.isProfileSetupCompleted) {
-      return null;
+    // 1. Kullanıcı giriş yapmamışsa
+    if (!isAuthenticated) {
+      // Eğer zaten auth route'daysa, orada kal
+      if (isAuthRoute) return null;
+      // Değilse login'e yönlendir
+      return '/$login';
     }
 
-    // Auth olan kullanıcı için
-    if (_authProvider.isAuthenticated) {
-      // Profile setup tamamsa ve root veya restricted route'daysa
-      if (_authProvider.isProfileSetupCompleted &&
-          (state.matchedLocation == splash ||
-              state.matchedLocation == login ||
-              state.matchedLocation == profileSetup ||
-              state.matchedLocation == '/')) {
-        return home;
-      }
-
-      // Profile setup tamamlanmışsa
-      if (!_authProvider.isProfileSetupCompleted && state.matchedLocation != profileSetup) {
-        return profileSetup;
-      }
-
-      return null;
+    // 2. Kullanıcı giriş yapmış ama profil kurulumu tamamlanmamışsa
+    if (isAuthenticated && !isProfileSetup) {
+      // Eğer zaten profil kurulum sayfasındaysa, orada kal
+      if (isUserSetupRoute) return null;
+      // Değilse profil kurulum sayfasına yönlendir
+      return '/$profileSetup';
     }
 
-    // Auth olmayan kullanıcı için
-    if (state.matchedLocation == splash || state.matchedLocation == '/') {
-      return login;
+    // 3. Kullanıcı giriş yapmış ve profil kurulumu tamamlanmışsa
+    if (isAuthenticated && isProfileSetup) {
+      // Eğer auth route veya profil kurulum sayfasındaysa, ana sayfaya yönlendir
+      if (isAuthRoute || isUserSetupRoute || isSplashScreen) return '/$home';
     }
 
-    return (state.matchedLocation == login) ? null : login;
+    return null;
   }
 
   // Private constructor ile instance oluşturmayı engelle

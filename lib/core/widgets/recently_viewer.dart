@@ -45,8 +45,7 @@ class RecentlyViewer extends StatelessWidget {
                 children: [
                   _buildInfoRow(Icons.location_city, customer.location?.city ?? 'Şehir Yok'),
                   _buildInfoRow(Icons.cake, '${customer.getAge()}'),
-                  _buildInfoRow(
-                      Icons.directions_walk, customer.getDistanceFromCurrentLocation(currentCustomer.location!.lat, currentCustomer.location!.lon)),
+                  _buildInfoRow(Icons.directions_walk, '${customer.location?.distanceTo(currentCustomer.location!)} km'),
                 ],
               ),
             ),

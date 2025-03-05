@@ -46,14 +46,17 @@ void main() async {
   AppRouter.initialize(authProvider);
   // Cihazın diline uygun tarih formatlamasını başlat
   final locale = WidgetsBinding.instance.platformDispatcher.locale;
+  debugPrint('Locale: $locale');
   await initializeDateFormatting(locale.toString(), null);
+
+  final subscriptionProvider = SubscriptionProvider();
 
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: authProvider),
-        ChangeNotifierProvider(create: (_) => SubscriptionProvider()),
-        ChangeNotifierProvider(create: (_) => ChatsViewModel(authProvider)),
+        ChangeNotifierProvider.value(value: subscriptionProvider),
+        ChangeNotifierProvider(create: (_) => ChatsViewModel(authProvider.user!)),
       ],
       child: MyApp(notificationService: notificationService),
     ),

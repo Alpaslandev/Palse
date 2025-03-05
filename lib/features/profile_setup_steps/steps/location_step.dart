@@ -93,7 +93,7 @@ class _LocationStepState extends State<LocationStep> {
             contentPadding: const EdgeInsets.symmetric(horizontal: 8),
             leading: const Icon(Icons.location_pin, size: 28),
             title: Text(
-              suggestion.toString(),
+              suggestion.displayName ?? '',
               overflow: TextOverflow.ellipsis,
               maxLines: 2,
             ),
@@ -157,9 +157,9 @@ class _LocationStepState extends State<LocationStep> {
 
   void _selectLocation(LocationModel suggestion) {
     final viewModel = context.read<ProfileSetupViewModel>();
-    // viewModel.updateLocation(suggestion);
+    viewModel.updateLocation(suggestion);
 
-    widget.viewModel.cityController.text = suggestion.toString();
+    widget.viewModel.cityController.text = suggestion.displayName ?? '';
     _suggestions.clear();
     FocusManager.instance.primaryFocus?.unfocus();
   }

@@ -71,10 +71,10 @@ class CreateAdvertView extends StatelessWidget {
                 validator: (value) => value?.isEmpty ?? true ? 'İlan açıklaması gerekli' : null,
               ),
               const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
+              DropdownButtonFormField<Categories>(
                 decoration: const InputDecoration(labelText: 'Etkinlik Tipi'),
                 value: viewModel.eventType,
-                items: Categories.getAllCategoryTexts().map((String category) => DropdownMenuItem(value: category, child: Text(category))).toList(),
+                items: Categories.values.map((Categories category) => DropdownMenuItem(value: category, child: Text(category.text))).toList(),
                 onChanged: (value) => viewModel.setEventType(value),
                 validator: (value) => value == null ? 'Etkinlik tipi seçiniz' : null,
               ),
@@ -302,7 +302,19 @@ class CreateAdvertView extends StatelessWidget {
                     else
                       const SizedBox.shrink(),
                     ElevatedButton(
-                      onPressed: viewModel.onStepContinue,
+                      onPressed: () async {
+                        if (viewModel.currentStep == 2) {
+                          try {
+                            await viewModel.createAdvert();
+                            if (!context.mounted) return;
+                            context.go(myAdverts);
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+                          }
+                        } else {
+                          viewModel.onStepContinue();
+                        }
+                      },
                       child: Text(viewModel.currentStep == 2 ? 'Tamamla' : 'Devam Et'),
                     ),
                   ],

@@ -9,14 +9,14 @@ import 'package:palseapp/features/messages/widgets/message_input.dart';
 
 class MessagesView extends StatefulWidget {
   final String chatId;
-  final String currentUserId;
   final String otherUserId;
+  final String currentUserId;
 
   const MessagesView({
     super.key,
     required this.chatId,
-    required this.currentUserId,
     required this.otherUserId,
+    required this.currentUserId,
   });
 
   @override
@@ -27,20 +27,15 @@ class _MessagesViewState extends State<MessagesView> {
   final ScrollController _scrollController = ScrollController();
   late final MessagesViewModel _viewModel;
 
+  late final String currentUserId;
+  late final String otherUserId;
+
   @override
   void initState() {
     super.initState();
-    _viewModel = MessagesViewModel(widget.otherUserId);
-    _viewModel.initialize(widget.chatId, widget.currentUserId);
+    _viewModel = MessagesViewModel(widget.chatId, widget.currentUserId, widget.otherUserId);
 
-    // Mesajları okundu olarak işaretle
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _viewModel.markMessagesAsRead(
-        widget.chatId,
-        widget.currentUserId,
-        widget.otherUserId,
-      );
-    });
+    // _viewModel.initialize(widget.chatId, widget.currentUserId);
   }
 
   @override
@@ -54,7 +49,7 @@ class _MessagesViewState extends State<MessagesView> {
     final isPremium = Provider.of<SubscriptionProvider>(context, listen: false).isPremium;
 
     return ChangeNotifierProvider.value(
-      value: _viewModel,
+      value: _viewModel..markMessagesAsRead(),
       child: Consumer<MessagesViewModel>(
         builder: (context, vm, _) => Scaffold(
           appBar: MessageAppBar(
@@ -80,14 +75,11 @@ class _MessagesViewState extends State<MessagesView> {
 
                     // Yeni mesaj geldiğinde otomatik olarak okundu olarak işaretle
                     WidgetsBinding.instance.addPostFrameCallback((_) {
+                      // Karşı taraftan gelen ve okunmamış mesajlar varsa işaretle
                       final unreadMessages = messages.where((msg) => msg.senderId == widget.otherUserId && !msg.isRead).toList();
 
                       if (unreadMessages.isNotEmpty) {
-                        vm.markMessagesAsRead(
-                          widget.chatId,
-                          widget.currentUserId,
-                          widget.otherUserId,
-                        );
+                        vm.markMessagesAsRead();
                       }
                     });
 

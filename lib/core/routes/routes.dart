@@ -1,10 +1,11 @@
 // Route isimleri için sabitler
-const String splash = '/';
+const String splash = 'splash';
 
 const String landing = '/landing';
 
-const String home = '/home';
-const String login = '/login';
+const String home = 'home';
+const String login = 'login';
+const String profileSetup = 'profileSetup';
 
 const String profile = '/profile';
 const String settings = '/settings';
@@ -21,7 +22,6 @@ const String terms = 'terms';
 const String privacy = 'privacy';
 const String help = 'help';
 
-const String profileSetup = '/profileSetup';
 const String chats = '/chats';
 const String messages = '/messages';
 

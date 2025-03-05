@@ -15,20 +15,22 @@ class CategoriesView extends StatefulWidget {
 
 class _CategoriesViewState extends State<CategoriesView> {
   final CustomerService customerService = CustomerService();
-  List<String> selectedCategories = [];
-  List<String> categories = [];
+  List<Categories> selectedCategories = [];
+  List<Categories> categories = [];
   bool changed = false;
   @override
   void initState() {
     super.initState();
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    selectedCategories = List<String>.from(authProvider.user?.favoriteCategories ?? []);
-    categories = Categories.getAllCategoryTexts();
+    selectedCategories = authProvider.user?.favoriteCategories ?? [];
+    categories = Categories.values;
   }
 
   @override
   Widget build(BuildContext context) {
-    final allCategories = Categories.getAllCategoryTexts();
+    debugPrint(selectedCategories.toString());
+
+    final allCategories = Categories.values;
     // Seçili olmayan kategorileri filtrele
     final unselectedCategories = allCategories.where((category) => !selectedCategories.contains(category)).toList();
 
@@ -65,11 +67,11 @@ class _CategoriesViewState extends State<CategoriesView> {
                 children: selectedCategories
                     .map((category) => Chip(
                           avatar: Icon(
-                            Categories.fromText(category).icon,
+                            category.icon,
                           ),
                           backgroundColor: AppTheme.primaryColor,
                           label: Text(
-                            category,
+                            category.text,
                           ),
                           onDeleted: () {
                             setState(() {
@@ -92,8 +94,8 @@ class _CategoriesViewState extends State<CategoriesView> {
               runSpacing: 8,
               children: unselectedCategories // Sadece seçili olmayan kategorileri göster
                   .map((category) => FilterChip(
-                        avatar: Icon(Categories.fromText(category).icon, color: Colors.black),
-                        label: Text(category, style: const TextStyle(color: Colors.black)),
+                        avatar: Icon(category.icon, color: Colors.black),
+                        label: Text(category.text, style: const TextStyle(color: Colors.black)),
                         selected: false,
                         backgroundColor: Colors.white,
                         onSelected: (selected) {

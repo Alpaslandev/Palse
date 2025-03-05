@@ -1,10 +1,13 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:palseapp/core/models/advert.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
+import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/widgets/circle_profile_picture.dart';
+import 'package:palseapp/features/chats/viewmodel/chats_view_model.dart';
 import 'package:provider/provider.dart';
 
 // Kullanıcı ilanlarını gösteren kart tasarımı
@@ -38,13 +41,14 @@ class AdvertCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currentCustomer = context.read<AuthProvider>().user!;
+    final chatsViewModel = context.read<ChatsViewModel>();
     return Card(
         color: Colors.white,
         elevation: 0,
         margin: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, spacing: 10, children: [
           // Üst kısım - Kullanıcı bilgileri
-          _profileHeader(),
+          _profileHeader(context),
 
           Row(
             children: [
@@ -55,8 +59,7 @@ class AdvertCard extends StatelessWidget {
                       child: Icon(Icons.location_on_outlined, size: 12, color: Colors.blue),
                     ),
                     TextSpan(
-                      text:
-                          ' ${advert.location?.city}, ${advert.location?.district} (${advert.getDistanceFromCurrentLocation(currentCustomer.location!.lat, currentCustomer.location!.lon)})',
+                      text: '${advert.location?.displayStringWithDistance(currentCustomer.location!)}',
                       style: TextStyle(fontSize: 9, color: Colors.grey),
                     ),
                   ],
@@ -134,17 +137,30 @@ class AdvertCard extends StatelessWidget {
                 children: [
                   if (!isMyLikes) _buildButton('Beğen', isLiked ? Icons.favorite : Icons.favorite_border, onLikeTap ?? () {}, showCount: true),
                   const SizedBox(width: 20),
-                  _buildButton('Mesaj', Icons.message_outlined, onMessageTap ?? () {}),
+                  _buildButton('Mesaj', Icons.message_outlined, () async {
+                    final userId = currentCustomer.userID;
+                    if (userId == null) return;
+
+                    final chatId = await chatsViewModel.startOrGetChat(
+                      advert.creatorUserID,
+                    );
+
+                    if (context.mounted) {
+                      context.push('/chats/$chatId?otherId=${advert.creatorUserID}&currentId=$userId');
+                    }
+                  }),
                 ],
               ),
           ],
         ]));
   }
 
-  Widget _profileHeader() {
+  Widget _profileHeader(BuildContext context) {
     return ListTile(
       contentPadding: EdgeInsets.zero,
-      onTap: onProfileTap,
+      onTap: () {
+        context.push(friendProfile, extra: advert.creatorUserID);
+      },
       leading: CircleProfilePicture(imageUrl: advert.creatorProfilePicture),
       title: Row(
         spacing: 4,
@@ -174,7 +190,7 @@ class AdvertCard extends StatelessWidget {
           ),
         ],
       ),
-      subtitle: Text(advert.advertType),
+      subtitle: Text(advert.advertType.text),
       trailing: Text(DateFormat('dd/MM/yyyy').format(advert.createdAt!)),
     );
   }
