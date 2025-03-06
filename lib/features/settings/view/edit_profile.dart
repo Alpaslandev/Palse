@@ -1,11 +1,11 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/models/location_model.dart';
 import 'package:palseapp/core/services/cloud_storage.dart';
 import 'package:palseapp/core/services/firestore/customer_service.dart';
-import 'package:palseapp/core/utils/app_theme.dart';
 import 'package:palseapp/core/widgets/circle_profile_picture.dart';
 import 'package:palseapp/core/widgets/location_sheet.dart';
 import 'package:palseapp/features/settings/view/widgets/phone_number_sheet.dart';
@@ -31,7 +31,7 @@ class _EditProfileViewState extends State<EditProfileView> {
       child: Consumer<EditProfileViewModel>(
         builder: (context, viewModel, child) => Scaffold(
           appBar: AppBar(
-            title: const Text('Profili Düzenle'),
+            title: Text(context.tr('edit_profile')),
             actions: [
               TextButton(
                 onPressed: viewModel.isLoading
@@ -60,7 +60,7 @@ class _EditProfileViewState extends State<EditProfileView> {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('Fotoğraf yükleme hatası: $e'),
+                                  content: Text('${context.tr('photo_upload_error')}: $e'),
                                   backgroundColor: Colors.red,
                                 ),
                               );
@@ -74,8 +74,8 @@ class _EditProfileViewState extends State<EditProfileView> {
                         await viewModel.updateProfil();
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Profil başarıyla güncellendi'),
+                            SnackBar(
+                              content: Text(context.tr('profile_updated_successfully')),
                               backgroundColor: Colors.green,
                             ),
                           );
@@ -90,7 +90,7 @@ class _EditProfileViewState extends State<EditProfileView> {
                           valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
                         ),
                       )
-                    : Text('Kaydet'),
+                    : Text(context.tr('save')),
               ),
             ],
           ),
@@ -112,7 +112,7 @@ class _EditProfileViewState extends State<EditProfileView> {
                     // Fotoğrafı seçtikten sonra direkt yüklemiyoruz, sadece ui'da gösteriyoruz.
                     // Yükleme işlemi Kaydet butonuna basıldığında gerçekleşecek
                   },
-                  child: const Text('Fotoğrafı Değiştir'),
+                  child: Text(context.tr('change_photo')),
                 ),
                 const SizedBox(height: 16),
                 Column(
@@ -121,21 +121,21 @@ class _EditProfileViewState extends State<EditProfileView> {
                   children: [
                     _buildTextField(
                       controller: viewModel.nicknameController,
-                      label: 'Kullanıcı Adı',
+                      label: context.tr('username'),
                       keyboardType: TextInputType.name,
                       readOnly: viewModel.user.nickname!.length > 4,
                       suffixIcon: viewModel.user.nickname!.length > 4 ? Icons.check : Icons.edit,
                     ),
                     _buildTextField(
                       controller: viewModel.nameController,
-                      label: 'Ad',
+                      label: context.tr('first_name'),
                       keyboardType: TextInputType.name,
                       prefixIcon: Icons.person,
                       suffixIcon: Icons.edit,
                     ),
                     _buildTextField(
                       controller: viewModel.lastNameController,
-                      label: 'Soyad',
+                      label: context.tr('last_name'),
                       keyboardType: TextInputType.name,
                       prefixIcon: Icons.person,
                       suffixIcon: Icons.edit,
@@ -155,23 +155,23 @@ class _EditProfileViewState extends State<EditProfileView> {
                             viewModel.updatePhone(viewModel.phoneController.text, true);
                             if (!context.mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Telefon numarası başarıyla doğrulandı')),
+                              SnackBar(content: Text(context.tr('phone_verification_success'))),
                             );
                           }
                         });
                       },
                       controller: viewModel.phoneController,
-                      label: 'Telefon',
+                      label: context.tr('phone'),
                       keyboardType: TextInputType.phone,
                       readOnly: viewModel.user.verification == true,
                       prefixIcon: Icons.phone,
                       suffixIcon: viewModel.user.verification == false ? Icons.edit : Icons.check,
                     ),
-                    if (viewModel.user.verification == false) const Text('Telefon Doğrulanmamıştır.', style: TextStyle(color: Colors.red)),
-                    if (viewModel.user.verification == true) const Text('Telefon Doğrulanmıştır.', style: TextStyle(color: Colors.green)),
+                    if (viewModel.user.verification == false) Text(context.tr('phone_not_verified'), style: const TextStyle(color: Colors.red)),
+                    if (viewModel.user.verification == true) Text(context.tr('phone_verified'), style: const TextStyle(color: Colors.green)),
                     _buildTextField(
                       controller: viewModel.addressController,
-                      label: 'Konum',
+                      label: context.tr('location'),
                       prefixIcon: Icons.location_on,
                       suffixIcon: Icons.edit,
                       onTap: () async {
@@ -188,14 +188,14 @@ class _EditProfileViewState extends State<EditProfileView> {
                     ),
                     _buildTextField(
                       controller: viewModel.birthDateController,
-                      label: 'Doğum Tarihi',
+                      label: context.tr('birth_date'),
                       keyboardType: TextInputType.datetime,
                       readOnly: true,
                       prefixIcon: Icons.calendar_month,
                     ),
                     _buildTextField(
                       controller: viewModel.genderController,
-                      label: 'Cinsiyet',
+                      label: context.tr('gender'),
                       keyboardType: TextInputType.name,
                       readOnly: true,
                       prefixIcon: Icons.female,

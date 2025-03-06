@@ -130,4 +130,82 @@ const Map<String, String> tr = {
   'my_interests': 'İlgi Alanlarım',
   'all_categories': 'Tüm Kategoriler',
   'interests_saved': 'İlgi alanlarınız kaydedildi',
+
+  // Premium Overlay
+  'premium_feature_only': 'Bu özellik sadece premium aboneler için',
+
+  // Profil Düzenleme
+  'change_photo': 'Fotoğrafı Değiştir',
+  'username': 'Kullanıcı Adı',
+  'first_name': 'Ad',
+  'last_name': 'Soyad',
+  'phone': 'Telefon',
+  'location': 'Konum',
+  'birth_date': 'Doğum Tarihi',
+  'gender': 'Cinsiyet',
+  'phone_verified': 'Telefon Doğrulanmıştır.',
+  'phone_not_verified': 'Telefon Doğrulanmamıştır.',
+  'phone_verification_success': 'Telefon numarası başarıyla doğrulandı',
+  'photo_upload_error': 'Fotoğraf yükleme hatası',
+  'profile_updated_successfully': 'Profil başarıyla güncellendi',
+
+  // Liderlik Tablosu
+  'leaderboard': 'Liderlik Tablosu',
+  'your_rank': 'Sizin Sıralamanız',
+
+  // XP İlerleme
+  'to_next_level_part1': 'Bir sonraki seviyeye ',
+  'to_next_level_part2': ' kaldı!',
+  'to_next_premium_part1': 'Bir sonraki premium ödülüne ',
+  'to_next_premium_part2': ' kaldı!',
+
+  // Filtreleme
+  'filtering': 'Filtreleme',
+  'distance': 'Mesafe',
+  'male': 'Erkek',
+  'female': 'Kadın',
+  'all': 'Hepsi',
+  'category': 'Kategori',
+  'apply': 'Uygula',
+
+  // Kategoriler - Enum çevirileri
+  'category_coffee_chat': 'Kahve ve Sohbet',
+  'category_book_meetings': 'Kitap Buluşmaları',
+  'category_language_culture': 'Dil ve Kültür Değişimi',
+  'category_sports': 'Spor Faaliyetleri',
+  'category_football': 'Halısaha Aktiviteleri',
+  'category_nature': 'Doğa Faaliyetleri',
+  'category_fitness': 'Fitness ve Egzersiz',
+  'category_art_history': 'Sanat ve Tarihi Geziler',
+  'category_movies_series': 'Film ve Dizi Buluşmaları',
+  'category_dance': 'Dans Buluşmaları',
+  'category_music': 'Müzik Faaliyetleri',
+  'category_concerts': 'Konser Buluşmaları',
+  'category_party': 'Parti ve Eğlence',
+  'category_culinary': 'Mutfak Sanatları',
+  'category_education': 'Eğitim Faaliyetleri',
+  'category_research': 'Araştırma Grupları',
+  'category_video_games': 'Video Oyunu Buluşmaları',
+  'category_crafts': 'El Sanatları',
+  'category_coding': 'Yazılımcı Buluşmaları',
+  'category_yoga': 'Yoga ve Meditasyon',
+  'category_photography': 'Fotoğrafçılık Faaliyetleri',
+  'category_pets': 'Evcil Hayvan Buluşmaları',
+  'category_motorcycle': 'Motosiklet Grupları',
+  'category_cars': 'Araba Grupları',
+  'category_fashion': 'Moda ve Giyim',
+  'category_online': 'Çevrimiçi Etkinlikler',
+  'category_game_tournaments': 'Çevrimiçi Oyun Turnuvaları',
+  'category_travel': 'Seyahat Etkinlikleri',
+  'category_room_sharing': 'Oda Paylaşımı ve Emlak',
+  'category_car_rental': 'Araba Kiralama, Alım/Satım',
+  'category_items_trade': 'Eşya Alım/Satım',
+  'category_other': 'Diğer',
+
+  // Rütbe/Ünvan çevirileri
+  'rank_beginner': '🌟 Keşfe Başlayan',
+  'rank_explorer': '🔍 Sosyal Keşifçi',
+  'rank_connector': '🧩 Bağlantı Ustası',
+  'rank_leader': '🎯 Etkinlik Lideri',
+  'rank_master': '👑 Sosyal Usta',
 };

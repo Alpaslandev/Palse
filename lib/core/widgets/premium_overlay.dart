@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/routes/routes.dart';
 
 class PremiumOverlay extends StatelessWidget {
@@ -44,9 +45,9 @@ class PremiumOverlay extends StatelessWidget {
                         color: Colors.blue,
                       ),
                       const SizedBox(height: 16),
-                      const Text(
-                        'Bu özellik sadece premium aboneler için',
-                        style: TextStyle(
+                      Text(
+                        context.tr('premium_feature_only'),
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
@@ -62,7 +63,7 @@ class PremiumOverlay extends StatelessWidget {
                             vertical: 12,
                           ),
                         ),
-                        child: const Text('Premium Ol'),
+                        child: Text(context.tr('get_premium')),
                       ),
                     ],
                   ),

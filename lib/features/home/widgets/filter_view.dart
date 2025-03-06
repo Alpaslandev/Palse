@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/constant/categories.dart';
+import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/models/advert.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
@@ -58,9 +59,9 @@ class _FilterViewState extends State<FilterView> {
     if (_selectedGender != null) {
       allAdverts = allAdverts.where((advert) {
         // Seçilen cinsiyete göre filtrele
-        if (_selectedGender == 'Erkek') {
+        if (_selectedGender == context.tr('male')) {
           return advert.creatorGender == Gender.male;
-        } else if (_selectedGender == 'Kadın') {
+        } else if (_selectedGender == context.tr('female')) {
           return advert.creatorGender == Gender.female;
         }
 
@@ -87,7 +88,7 @@ class _FilterViewState extends State<FilterView> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Filtreleme'),
+        title: Text(context.tr('filtering')),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -107,7 +108,7 @@ class _FilterViewState extends State<FilterView> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Mesafe: ${_distance ?? 0} km'),
+              Text('${context.tr('distance')}: ${_distance ?? 0} km'),
               Slider(
                 activeColor: AppTheme.primaryColor,
                 value: (_distance ?? 0).toDouble(),
@@ -126,14 +127,14 @@ class _FilterViewState extends State<FilterView> {
           // Cinsiyet seçici
           DropdownButtonFormField<String>(
             value: _selectedGender,
-            decoration: const InputDecoration(
-              labelText: 'Cinsiyet',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: context.tr('gender'),
+              border: const OutlineInputBorder(),
             ),
-            items: const [
-              DropdownMenuItem(value: null, child: Text('Hepsi')),
-              DropdownMenuItem(value: 'Erkek', child: Text('Erkek')),
-              DropdownMenuItem(value: 'Kadın', child: Text('Kadın')),
+            items: [
+              DropdownMenuItem(value: null, child: Text(context.tr('all'))),
+              DropdownMenuItem(value: context.tr('male'), child: Text(context.tr('male'))),
+              DropdownMenuItem(value: context.tr('female'), child: Text(context.tr('female'))),
               // Diğer seçeneğini de ekleyebilirsiniz
               // DropdownMenuItem(value: 'Diğer', child: Text('Diğer')),
             ],
@@ -147,8 +148,8 @@ class _FilterViewState extends State<FilterView> {
           // Kategori seçici
           DropdownButtonFormField<Categories>(
             value: _selectedCategories?.first,
-            decoration: const InputDecoration(
-              labelText: 'Kategori',
+            decoration: InputDecoration(
+              labelText: context.tr('category'),
             ),
             items: [
               ...Categories.values.map((category) {
@@ -157,7 +158,7 @@ class _FilterViewState extends State<FilterView> {
                   child: Text(category.text),
                 );
               }),
-              const DropdownMenuItem<Categories>(value: null, child: Text('Hepsi')),
+              DropdownMenuItem<Categories>(value: null, child: Text(context.tr('all'))),
             ],
             onChanged: (value) {
               setState(() {
@@ -170,7 +171,7 @@ class _FilterViewState extends State<FilterView> {
             onPressed: () {
               _applyFilters(); // Filtreleri uygula butonuna basıldığında _applyFilters metodunu çağır
             },
-            child: const Text('Uygula'),
+            child: Text(context.tr('apply')),
           ),
         ],
       ),

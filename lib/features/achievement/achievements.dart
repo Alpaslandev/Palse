@@ -1,10 +1,13 @@
+import 'package:flutter/widgets.dart';
+import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/features/achievement/premium_rewards.dart';
 
 /// XP seviyelerine göre kullanıcı unvanlarını tanımlayan enum
 enum UserRank {
   /// 0-99 XP: Keşfe Başlayan
   beginner(
-    title: '🌟 Keşfe Başlayan',
+    titleKey: 'rank_beginner',
+    defaultTitle: '🌟 Keşfe Başlayan',
     minXp: 0,
     maxXp: 99,
     icon: '🌟',
@@ -12,7 +15,8 @@ enum UserRank {
 
   /// 100-499 XP: Sosyal Keşifçi
   explorer(
-    title: '🔍 Sosyal Keşifçi',
+    titleKey: 'rank_explorer',
+    defaultTitle: '🔍 Sosyal Keşifçi',
     minXp: 100,
     maxXp: 499,
     icon: '🔍',
@@ -20,7 +24,8 @@ enum UserRank {
 
   /// 500-999 XP: Bağlantı Ustası
   connector(
-    title: '🧩 Bağlantı Ustası',
+    titleKey: 'rank_connector',
+    defaultTitle: '🧩 Bağlantı Ustası',
     minXp: 500,
     maxXp: 999,
     icon: '🧩',
@@ -28,7 +33,8 @@ enum UserRank {
 
   /// 1000-2999 XP: Etkinlik Lideri
   leader(
-    title: '🎯 Etkinlik Lideri',
+    titleKey: 'rank_leader',
+    defaultTitle: '🎯 Etkinlik Lideri',
     minXp: 1000,
     maxXp: 2999,
     icon: '🎯',
@@ -36,7 +42,8 @@ enum UserRank {
 
   /// 3000+ XP: Sosyal Usta
   master(
-    title: '👑 Sosyal Usta',
+    titleKey: 'rank_master',
+    defaultTitle: '👑 Sosyal Usta',
     minXp: 3000,
     maxXp: double.infinity,
     icon: '👑',
@@ -44,14 +51,18 @@ enum UserRank {
 
   /// Constructor
   const UserRank({
-    required this.title,
+    required this.titleKey,
+    required this.defaultTitle,
     required this.minXp,
     required this.maxXp,
     required this.icon,
   });
 
-  /// Unvan başlığı
-  final String title;
+  /// Unvan başlığının anahtar değeri
+  final String titleKey;
+
+  /// Varsayılan unvan başlığı (eski kullanım ve geçiş dönemi için)
+  final String defaultTitle;
 
   /// Minimum XP değeri
   final int minXp;
@@ -61,6 +72,14 @@ enum UserRank {
 
   /// Unvan ikonu
   final String icon;
+
+  /// Unvan başlığı - geriye dönük uyumluluk için
+  String get title => defaultTitle;
+
+  /// Yerelleştirilmiş unvan başlığını al
+  String getLocalizedTitle(BuildContext context) {
+    return context.tr(titleKey);
+  }
 
   /// XP değerine göre uygun unvanı döndüren yardımcı metod
   static UserRank fromXp(int xp) {
@@ -134,6 +153,11 @@ enum XpEvent {
   /// Olay açıklaması için çeviri anahtarı
   final String descriptionKey;
 
+  /// Yerelleştirilmiş açıklama metni
+  String getLocalizedDescription(BuildContext context) {
+    return context.tr(descriptionKey);
+  }
+
   /// Event'in ait olduğu grubu bulan yardımcı metod
   XpEventGroup get group {
     for (final group in XpEventGroup.values) {
@@ -181,6 +205,11 @@ enum XpEventGroup {
 
   /// Bu gruba ait eventler
   final List<XpEvent> events;
+
+  /// Yerelleştirilmiş başlık
+  String getLocalizedTitle(BuildContext context) {
+    return context.tr(titleKey);
+  }
 }
 
 // /// XP eventlerine erişim için yardımcı sınıf (isteğe bağlı)

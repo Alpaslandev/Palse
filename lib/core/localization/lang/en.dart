@@ -130,4 +130,82 @@ const Map<String, String> en = {
   'privacy_policy': 'Privacy Policy',
   'about_us': 'About Us',
   'app_version': 'App Version',
+
+  // Premium Overlay
+  'premium_feature_only': 'This feature is only for premium subscribers',
+
+  // Profile Editing
+  'change_photo': 'Change Photo',
+  'username': 'Username',
+  'first_name': 'First Name',
+  'last_name': 'Last Name',
+  'phone': 'Phone',
+  'location': 'Location',
+  'birth_date': 'Birth Date',
+  'gender': 'Gender',
+  'phone_verified': 'Phone Verified.',
+  'phone_not_verified': 'Phone Not Verified.',
+  'phone_verification_success': 'Phone number successfully verified',
+  'photo_upload_error': 'Photo upload error',
+  'profile_updated_successfully': 'Profile updated successfully',
+
+  // Leaderboard
+  'leaderboard': 'Leaderboard',
+  'your_rank': 'Your Rank',
+
+  // XP Progress
+  'to_next_level_part1': 'To next level: ',
+  'to_next_level_part2': ' remaining!',
+  'to_next_premium_part1': 'To next premium reward: ',
+  'to_next_premium_part2': ' remaining!',
+
+  // Filtering
+  'filtering': 'Filtering',
+  'distance': 'Distance',
+  'male': 'Male',
+  'female': 'Female',
+  'all': 'All',
+  'category': 'Category',
+  'apply': 'Apply',
+
+  // Categories - Enum translations
+  'category_coffee_chat': 'Coffee & Chat',
+  'category_book_meetings': 'Book Meetups',
+  'category_language_culture': 'Language & Culture Exchange',
+  'category_sports': 'Sports Activities',
+  'category_football': 'Football Activities',
+  'category_nature': 'Nature Activities',
+  'category_fitness': 'Fitness & Exercise',
+  'category_art_history': 'Art & Historical Tours',
+  'category_movies_series': 'Movie & Series Meetups',
+  'category_dance': 'Dance Meetups',
+  'category_music': 'Music Activities',
+  'category_concerts': 'Concert Meetups',
+  'category_party': 'Parties & Entertainment',
+  'category_culinary': 'Culinary Arts',
+  'category_education': 'Educational Activities',
+  'category_research': 'Research Groups',
+  'category_video_games': 'Video Game Meetups',
+  'category_crafts': 'Crafts & Handmade',
+  'category_coding': 'Coding Meetups',
+  'category_yoga': 'Yoga & Meditation',
+  'category_photography': 'Photography Activities',
+  'category_pets': 'Pet Meetups',
+  'category_motorcycle': 'Motorcycle Groups',
+  'category_cars': 'Car Groups',
+  'category_fashion': 'Fashion & Clothing',
+  'category_online': 'Online Events',
+  'category_game_tournaments': 'Online Game Tournaments',
+  'category_travel': 'Travel Activities',
+  'category_room_sharing': 'Room Sharing & Real Estate',
+  'category_car_rental': 'Car Rental & Trading',
+  'category_items_trade': 'Item Trading',
+  'category_other': 'Other',
+
+  // Rank translations
+  'rank_beginner': '🌟 Discovery Beginner',
+  'rank_explorer': '🔍 Social Explorer',
+  'rank_connector': '🧩 Connection Master',
+  'rank_leader': '🎯 Event Leader',
+  'rank_master': '👑 Social Master',
 };
