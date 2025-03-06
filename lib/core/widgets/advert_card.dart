@@ -71,44 +71,35 @@ class AdvertCard extends StatelessWidget {
   Widget _profileHeader(BuildContext context, Customer currentCustomer) {
     Customer? customer;
     // Eğer creator bilgileri tam değilse FutureBuilder kullan
-    if (!advert.creatorProfilePicture.isEmpty || !advert.creatorName.isEmpty) {
-      return FutureBuilder(
-          future: FirebaseFirestore.instance.collection('customers').doc(advert.creatorUserID).get(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: CircleAvatar(child: CircularProgressIndicator()),
-                title: Text('...'),
-              );
-            }
-
-            if (!snapshot.hasData || !snapshot.data!.exists) {
-              return ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: CircleAvatar(child: Icon(Icons.error)),
-                title: Text('Kullanıcı bulunamadı'),
-              );
-            }
-
-            final userData = snapshot.data!.data() as Map<String, dynamic>;
-
-            customer = Customer.fromJson(userData, snapshot.data!.id);
-
-            return _buildProfileHeader(
-              context: context,
-              customer: customer!,
-              currentCustomer: currentCustomer,
+    return FutureBuilder(
+        future: FirebaseFirestore.instance.collection('customers').doc(advert.creatorUserID).get(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: CircleAvatar(child: CircularProgressIndicator()),
+              title: Text('...'),
             );
-          });
-    } else {
-      // Normal durumda cached verileri kullan
-      return _buildProfileHeader(
-        context: context,
-        customer: customer!,
-        currentCustomer: currentCustomer,
-      );
-    }
+          }
+
+          if (!snapshot.hasData || !snapshot.data!.exists) {
+            return ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: CircleAvatar(child: Icon(Icons.error)),
+              title: Text('Kullanıcı bulunamadı'),
+            );
+          }
+
+          final userData = snapshot.data!.data() as Map<String, dynamic>;
+
+          customer = Customer.fromJson(userData, snapshot.data!.id);
+
+          return _buildProfileHeader(
+            context: context,
+            customer: customer!,
+            currentCustomer: currentCustomer,
+          );
+        });
   }
 
   // Profil header'ını oluşturan yardımcı metod

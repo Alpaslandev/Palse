@@ -38,7 +38,6 @@ class _LocationSheetState extends State<LocationSheet> {
             ),
           ),
 
-          const SizedBox(height: 16),
           const Divider(),
           const SizedBox(height: 8),
 

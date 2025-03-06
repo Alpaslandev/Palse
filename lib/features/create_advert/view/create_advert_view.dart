@@ -36,24 +36,26 @@ class _CreateAdvertViewState extends State<CreateAdvertView> {
     super.dispose();
   }
 
-  // Tarih ve saat seçimi için yardımcı metod
+  // Tarih ve saat seçimi için basitleştirilmiş yardımcı metod
   Future<void> _selectDateTime(BuildContext context, bool isStartDate, CreateAdvertViewModel viewModel) async {
+    // Önce tarih seçimi
     final DateTime? pickedDate = await showDatePicker(
       context: context,
-      initialDate: isStartDate ? DateTime.now() : (viewModel.startDate ?? DateTime.now()),
-      firstDate: isStartDate ? DateTime.now() : (viewModel.startDate ?? DateTime.now()),
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
 
     if (pickedDate != null && context.mounted) {
-      // ignore: use_build_context_synchronously
+      // Sonra saat seçimi
       final TimeOfDay? pickedTime = await showTimePicker(
         context: context,
         initialTime: TimeOfDay.now(),
       );
 
       if (pickedTime != null) {
-        final DateTime combinedDateTime = DateTime(
+        // Seçilen tarih ve saati birleştir ve viewModel'e aktar
+        final DateTime selectedDateTime = DateTime(
           pickedDate.year,
           pickedDate.month,
           pickedDate.day,
@@ -61,9 +63,7 @@ class _CreateAdvertViewState extends State<CreateAdvertView> {
           pickedTime.minute,
         );
 
-        if (isStartDate) {
-          viewModel.setStartDate(combinedDateTime);
-        }
+        viewModel.setStartDate(selectedDateTime);
       }
     }
   }
@@ -82,7 +82,15 @@ class _CreateAdvertViewState extends State<CreateAdvertView> {
                 decoration: const InputDecoration(labelText: 'İlan Başlığı'),
                 maxLength: 40,
                 onChanged: (value) => viewModel.advertName = value,
-                validator: (value) => value?.isEmpty ?? true ? 'İlan başlığı gerekli' : null,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'İlan başlığı gerekli';
+                  }
+                  if (value.length < 15) {
+                    return 'İlan başlığı en az 15 karakter olmalı';
+                  }
+                  return null;
+                },
                 textInputAction: TextInputAction.next,
                 onFieldSubmitted: (_) {
                   FocusScope.of(context).requestFocus(_descriptionFocusNode);
@@ -95,7 +103,15 @@ class _CreateAdvertViewState extends State<CreateAdvertView> {
                 maxLines: 5,
                 maxLength: 300,
                 onChanged: (value) => viewModel.advertDescription = value,
-                validator: (value) => value?.isEmpty ?? true ? 'İlan açıklaması gerekli' : null,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'İlan açıklaması gerekli';
+                  }
+                  if (value.length < 15) {
+                    return 'İlan açıklaması en az 15 karakter olmalı';
+                  }
+                  return null;
+                },
                 textInputAction: TextInputAction.next,
                 onFieldSubmitted: (_) {
                   FocusScope.of(context).requestFocus(_eventTypeFocusNode);
@@ -341,16 +357,39 @@ class _CreateAdvertViewState extends State<CreateAdvertView> {
                         const SizedBox.shrink(),
                       ElevatedButton(
                         onPressed: () async {
-                          if (viewModel.currentStep == 2) {
-                            try {
-                              await viewModel.createAdvert();
-                              if (!context.mounted) return;
-                              context.go(myAdverts);
-                            } catch (e) {
-                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+                          if (viewModel.currentStep == 0) {
+                            // İlk adımda form validasyonu yap
+                            if (viewModel.formKey.currentState?.validate() ?? false) {
+                              viewModel.onStepContinue();
                             }
-                          } else {
-                            viewModel.onStepContinue();
+                          } else if (viewModel.currentStep == 1) {
+                            // İkinci adımda fotoğraf seçilmiş mi kontrol et
+                            if (viewModel.advertImage == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Lütfen bir fotoğraf seçin')),
+                              );
+                            } else {
+                              viewModel.onStepContinue();
+                            }
+                          } else if (viewModel.currentStep == 2) {
+                            // Son adımda tarih ve konum seçilmiş mi kontrol et
+                            if (viewModel.startDate == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Lütfen etkinlik zamanını seçin')),
+                              );
+                            } else if (viewModel.city.isEmpty || viewModel.district.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Lütfen etkinlik konumunu seçin')),
+                              );
+                            } else {
+                              try {
+                                await viewModel.createAdvert();
+                                if (!context.mounted) return;
+                                context.go(myAdverts);
+                              } catch (e) {
+                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+                              }
+                            }
                           }
                         },
                         child: Text(viewModel.currentStep == 2 ? 'Tamamla' : 'Devam Et'),
