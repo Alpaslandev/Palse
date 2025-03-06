@@ -29,7 +29,7 @@ class PremiumOverlay extends StatelessWidget {
         // Üstte blur overlay
         Positioned.fill(
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 0, sigmaY: 0), // 3 3
+            filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3), // 3 3
             child: GestureDetector(
               onTap: () => context.push(subscription),
               child: Container(

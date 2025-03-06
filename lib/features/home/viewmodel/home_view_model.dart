@@ -4,11 +4,13 @@ import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/services/firestore/advert_service.dart';
 import 'package:palseapp/core/services/firestore/customer_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:palseapp/core/services/notification_service.dart';
 
 class HomeViewModel extends ChangeNotifier {
   final AdvertService _advertService = AdvertService();
   final CustomerService _customerService = CustomerService();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final NotificationService _notificationService = NotificationService();
 
   List<Advert> _adverts = [];
   bool _isLoading = false;
@@ -109,6 +111,7 @@ class HomeViewModel extends ChangeNotifier {
     try {
       // Önce yerel olarak güncelle
       final index = adverts.indexWhere((advert) => advert.advertID == advertId);
+      final advert = adverts[index];
       if (index != -1) {
         // Yerel listeyi güncelle
         final updatedLikers = [...adverts[index].likers, userId];
@@ -120,6 +123,18 @@ class HomeViewModel extends ChangeNotifier {
 
         // Kullanıcının belgesini de güncelle
         await _customerService.likeAdvert(advertId, userId);
+
+        String message = advert.creatorIsPremium
+            ? '💖 İlanınız beğenildi! Beğenenleri görmek için tıklayın.'
+            : '💖 İlanınız beğenildi! Kimin beğendiğini görmek için ✨ premium üye olun.';
+
+        _notificationService.sendMessageNotification(
+          receiverId: advert.creatorUserID,
+          senderName: 'Harika!',
+          message: message,
+          chatId: '',
+          senderId: '',
+        );
       }
     } catch (e) {
       debugPrint('İlan beğenme hatası: $e');

@@ -64,11 +64,23 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                 children: [
                   Expanded(
                     child: TabBar(
+                      isScrollable: false,
+                      padding: EdgeInsets.zero,
+                      labelPadding: const EdgeInsets.symmetric(horizontal: 10),
+                      indicatorWeight: 2,
+                      labelStyle: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      unselectedLabelStyle: const TextStyle(
+                        fontSize: 12,
+                      ),
+                      unselectedLabelColor: Colors.grey,
                       controller: _tabController,
                       tabs: const [
-                        Tab(text: 'Şehrine Göre'),
-                        Tab(text: 'İlgine Göre'),
-                        Tab(text: 'Diğer'),
+                        Tab(text: 'Şehrine Göre', iconMargin: EdgeInsets.zero),
+                        Tab(text: 'İlgine Göre', iconMargin: EdgeInsets.zero),
+                        Tab(text: 'Diğer', iconMargin: EdgeInsets.zero),
                       ],
                     ),
                   ),

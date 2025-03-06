@@ -41,6 +41,8 @@ class ProfileSetupViewModel extends ChangeNotifier {
   LocationModel? _location;
   LocationModel? get location => _location;
 
+  bool get isLoading => _authProvider.isLoading;
+
   TextEditingController get firstNameController => _firstNameController;
   TextEditingController get lastNameController => _lastNameController;
   TextEditingController get nicknameController => _nicknameController;
@@ -119,6 +121,7 @@ class ProfileSetupViewModel extends ChangeNotifier {
 
   void updateCoordinates(LocationModel location) {
     _location = location;
+    _customer.location = location;
     notifyListeners();
   }
 

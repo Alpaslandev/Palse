@@ -2,6 +2,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:palseapp/core/routes/app_router.dart';
+import 'package:palseapp/core/routes/routes.dart';
 
 class NotificationService {
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
@@ -109,12 +110,14 @@ class NotificationService {
 
       if (chatId != null && senderId != null && receiverId != null) {
         AppRouter.router.push('/chats/$chatId?otherId=$senderId&currentId=$receiverId');
+      } else {
+        AppRouter.router.push(notification);
       }
     });
   }
 
   // Bildirim gönder
-  Future<void> sendNotification({
+  Future<void> sendMessageNotification({
     required String receiverId,
     required String senderName,
     required String message,

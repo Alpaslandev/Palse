@@ -137,7 +137,7 @@ class _MyAdvertViewState extends State<MyAdvertView> with TickerProviderStateMix
     final isPremium = context.watch<SubscriptionProvider>().isPremium;
 
     return PremiumOverlay(
-      isPremium: true,
+      isPremium: isPremium,
       child: viewModel.recentlyViewed.isEmpty
           ? _buildEmptyAdvert()
           : GridView.builder(

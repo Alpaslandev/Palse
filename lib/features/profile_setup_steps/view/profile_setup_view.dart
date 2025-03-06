@@ -14,8 +14,9 @@ class ProfileSetupView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context, listen: true);
     return ChangeNotifierProvider(
-      create: (_) => ProfileSetupViewModel(authProvider: Provider.of<AuthProvider>(context, listen: false)),
+      create: (_) => ProfileSetupViewModel(authProvider: authProvider),
       child: Consumer<ProfileSetupViewModel>(
         builder: (context, viewModel, child) {
           return Scaffold(
@@ -76,30 +77,32 @@ class ProfileSetupView extends StatelessWidget {
                 ),
               ),
             ),
-            body: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.white,
-                    Colors.grey.shade50,
-                  ],
-                ),
-              ),
-              child: PageView(
-                controller: viewModel.pageController,
-                physics: const NeverScrollableScrollPhysics(),
-                children: [
-                  UserInfoStep(viewModel: viewModel),
-                  BirthdayGenderStep(viewModel: viewModel),
-                  LocationStep(viewModel: viewModel),
-                  NicknameStep(viewModel: viewModel),
-                  ProfilePictureStep(viewModel: viewModel),
-                  FavoriteCategoryStep(viewModel: viewModel),
-                ],
-              ),
-            ),
+            body: authProvider.isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.white,
+                          Colors.grey.shade50,
+                        ],
+                      ),
+                    ),
+                    child: PageView(
+                      controller: viewModel.pageController,
+                      physics: const NeverScrollableScrollPhysics(),
+                      children: [
+                        UserInfoStep(viewModel: viewModel),
+                        BirthdayGenderStep(viewModel: viewModel),
+                        LocationStep(viewModel: viewModel),
+                        NicknameStep(viewModel: viewModel),
+                        ProfilePictureStep(viewModel: viewModel),
+                        FavoriteCategoryStep(viewModel: viewModel),
+                      ],
+                    ),
+                  ),
             bottomNavigationBar: _buildNavigationBar(context, viewModel),
           );
         },

@@ -17,6 +17,7 @@ class AuthProvider extends ChangeNotifier {
   bool _isLoading = true;
   User? _firebaseUser;
   Customer? _user;
+  bool _isFirstTime = true;
 
   // Getterlar
   bool get isLoading => _isLoading;
@@ -72,6 +73,12 @@ class AuthProvider extends ChangeNotifier {
     _userStreamSubscription = _userService.streamFirestore(userId).listen((userData) {
       if (userData.exists && userData.data() != null) {
         _user = Customer.fromJson(userData.data() as Map<String, dynamic>, userId);
+        if (_isFirstTime) {
+          _isFirstTime = false;
+          _notificationService.saveUserToken(userId);
+          debugPrint('User token saved');
+        }
+
         debugPrint('User data: ${_user?.toJson()}');
         //   await _notificationService.saveUserToken(user.uid);
       } else {

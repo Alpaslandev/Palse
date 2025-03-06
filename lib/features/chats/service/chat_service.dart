@@ -86,6 +86,8 @@ class ChatService {
           {
             'chatMap': {
               otherUserId: {
+                'otherUserId': otherUserId,
+                'chatId': chatId,
                 'lastMessage': message.content,
                 'lastMessageTime': message.timestamp,
                 'lastMessageSenderId': message.senderId,
@@ -104,6 +106,9 @@ class ChatService {
           {
             'chatMap': {
               currentUserId: {
+                'otherUserId': currentUserId,
+                'chatId': chatId,
+                'senderName': senderName,
                 'lastMessage': message.content,
                 'lastMessageTime': message.timestamp,
                 'lastMessageSenderId': message.senderId,
@@ -119,7 +124,7 @@ class ChatService {
       await batch.commit();
 
       // 6. Bildirimi gönder
-      await notificationService.sendNotification(
+      await notificationService.sendMessageNotification(
         receiverId: otherUserId,
         senderName: senderName,
         message: message.type.value == 'image' ? '📷 Fotoğraf gönderdi' : message.content,
