@@ -129,6 +129,21 @@ class ProfileSetupViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Ad için validasyon metodu
+  bool isFirstNameValid() {
+    return _customer.firstName != null && _customer.firstName!.isNotEmpty && _customer.firstName!.length >= 3;
+  }
+
+  // Soyad için validasyon metodu
+  bool isLastNameValid() {
+    return _customer.lastName != null && _customer.lastName!.isNotEmpty && _customer.lastName!.length >= 3;
+  }
+
+  // Kullanıcı bilgileri adımının validasyonu
+  bool isUserInfoStepValid() {
+    return isFirstNameValid() && isLastNameValid();
+  }
+
   void updateNickname(String nickname) {
     _customer.nickname = nickname;
     notifyListeners();
@@ -164,8 +179,53 @@ class ProfileSetupViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Doğum tarihi için validasyon metodu
+  bool isBirthdayValid() {
+    return _customer.birthday != null;
+  }
+
+  // Cinsiyet için validasyon metodu
+  bool isGenderValid() {
+    return _customer.gender != null;
+  }
+
+  // Doğum tarihi ve cinsiyet adımının validasyonu
+  bool isBirthdayGenderStepValid() {
+    return isBirthdayValid() && isGenderValid();
+  }
+
   void updateLocation(LocationModel location) {
     _customer.location = location;
     notifyListeners();
+  }
+
+  // Konum için validasyon metodu
+  bool isLocationValid() {
+    return _customer.location != null && _customer.location!.geoPoint != null;
+  }
+
+  // Konum adımının validasyonu
+  bool isLocationStepValid() {
+    return isLocationValid();
+  }
+
+  // Takma ad için validasyon metodu
+  bool isNicknameValid() {
+    return _customer.nickname != null && _customer.nickname!.isNotEmpty && _customer.nickname!.length >= 3;
+  }
+
+  // Takma ad adımının validasyonu
+  bool isNicknameStepValid() {
+    return isNicknameValid();
+  }
+
+  // Favori kategoriler için validasyon metodu
+  bool areFavoriteCategoriesValid() {
+    return _customer.favoriteCategories != null && _customer.favoriteCategories!.length >= 3;
+  }
+
+  // Favori kategoriler adımının validasyonu
+  bool isFavoriteCategoryStepValid() {
+    return areFavoriteCategoriesValid();
   }
 }

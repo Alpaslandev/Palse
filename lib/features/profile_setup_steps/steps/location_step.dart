@@ -22,6 +22,9 @@ class _LocationStepState extends State<LocationStep> {
 
   @override
   Widget build(BuildContext context) {
+    // Konum seçilip seçilmediğini kontrol et
+    final bool isLocationSelected = widget.viewModel.isLocationValid();
+
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -33,28 +36,87 @@ class _LocationStepState extends State<LocationStep> {
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 16),
-            Text(
-              'Şehir, ilçe adı yazın veya mevcut konumunuzu kullanın',
-              style: Theme.of(context).textTheme.bodyLarge,
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Şehir, ilçe adı yazın veya mevcut konumunuzu kullanın',
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                ),
+                if (!isLocationSelected)
+                  const Text(
+                    '(Zorunlu)',
+                    style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                  ),
+              ],
             ),
             const SizedBox(height: 32),
-            _buildSearchField(),
+            _buildSearchField(isLocationSelected),
             const SizedBox(height: 16),
-            _buildCurrentLocationButton(),
+            _buildCurrentLocationButton(isLocationSelected),
+
+            // Konum seçilmediğinde uyarı mesajı göster
+            if (!isLocationSelected)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8.0),
+                child: Text(
+                  'Lütfen bir konum seçin veya mevcut konumunuzu kullanın',
+                  style: TextStyle(color: Colors.red, fontSize: 12),
+                ),
+              ),
+
             const SizedBox(height: 16),
             _buildSuggestionsList(),
+
+            // Seçilen konum bilgisi
+            if (isLocationSelected)
+              Card(
+                margin: const EdgeInsets.only(top: 16),
+                color: Colors.green.shade50,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Seçilen Konum:',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(widget.viewModel.cityController.text),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Koordinatlar: ${widget.viewModel.customer.location?.geoPoint?.latitude.toStringAsFixed(4) ?? ''}, ${widget.viewModel.customer.location?.geoPoint?.longitude.toStringAsFixed(4) ?? ''}',
+                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSearchField() {
+  Widget _buildSearchField(bool isLocationSelected) {
     return TextFormField(
       controller: widget.viewModel.cityController,
       decoration: InputDecoration(
         labelText: 'Konum Ara',
-        border: const OutlineInputBorder(),
+        border: OutlineInputBorder(
+          borderSide: BorderSide(
+            color: !isLocationSelected ? Colors.red : Colors.grey.shade300,
+            width: 1.0,
+          ),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(
+            color: !isLocationSelected ? Colors.red : Colors.grey.shade300,
+            width: 1.0,
+          ),
+        ),
         prefixIcon: const Icon(Icons.location_on),
         suffixIcon: _isLoading
             ? const CircularProgressIndicator()
@@ -71,10 +133,16 @@ class _LocationStepState extends State<LocationStep> {
     );
   }
 
-  Widget _buildCurrentLocationButton() {
+  Widget _buildCurrentLocationButton(bool isLocationSelected) {
     return OutlinedButton.icon(
       icon: const Icon(Icons.my_location),
       label: const Text('Mevcut Konumu Kullan'),
+      style: OutlinedButton.styleFrom(
+        side: BorderSide(
+          color: !isLocationSelected ? Colors.red : Colors.grey.shade300,
+          width: 1.0,
+        ),
+      ),
       onPressed: _getCurrentLocation,
     );
   }

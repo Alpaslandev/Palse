@@ -64,7 +64,65 @@ class ProfileSetupView extends StatelessWidget {
               backgroundColor: Theme.of(context).primaryColor,
             ),
           FloatingActionButton.extended(
-            onPressed: () => viewModel.isLastStep ? viewModel.completeProfileSetup() : viewModel.nextStep(),
+            onPressed: () {
+              // İlk adımda ad ve soyad validasyonu yap
+              if (viewModel.currentStep == 0 && !viewModel.isUserInfoStepValid()) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Lütfen ad ve soyadınızı doğru şekilde girin (en az 3 karakter)'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+                return;
+              }
+
+              // İkinci adımda doğum tarihi ve cinsiyet validasyonu yap
+              if (viewModel.currentStep == 1 && !viewModel.isBirthdayGenderStepValid()) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Lütfen doğum tarihinizi ve cinsiyetinizi seçin'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+                return;
+              }
+
+              // Üçüncü adımda konum validasyonu yap
+              if (viewModel.currentStep == 2 && !viewModel.isLocationStepValid()) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Lütfen bir konum seçin veya mevcut konumunuzu kullanın'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+                return;
+              }
+
+              // Dördüncü adımda takma ad validasyonu yap
+              if (viewModel.currentStep == 3 && !viewModel.isNicknameStepValid()) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Lütfen geçerli bir takma ad girin (en az 3 karakter)'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+                return;
+              }
+
+              // Son adımda favori kategoriler validasyonu yap
+              if (viewModel.currentStep == 5 && !viewModel.isFavoriteCategoryStepValid()) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Lütfen en az 3 kategori seçin'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+                return;
+              }
+
+              // Validasyon başarılıysa veya başka bir adımdaysa devam et
+              viewModel.isLastStep ? viewModel.completeProfileSetup() : viewModel.nextStep();
+            },
             icon: const Icon(Icons.arrow_forward),
             label: Text(viewModel.isLastStep ? 'Tamamla' : 'İleri'),
             backgroundColor: Theme.of(context).primaryColor,

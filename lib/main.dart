@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:palseapp/core/routes/app_router.dart';
@@ -76,6 +77,15 @@ class MyApp extends StatelessWidget {
       title: 'Palse App',
       theme: AppTheme.theme,
       routerConfig: AppRouter.router,
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('tr', 'TR'),
+        Locale('en', 'US'),
+      ],
       builder: (context, child) {
         // Router hazır olduğunda context'i set et
         WidgetsBinding.instance.addPostFrameCallback((_) {

@@ -23,8 +23,19 @@ class UserInfoStep extends StatelessWidget {
               labelText: 'Adınız',
               border: OutlineInputBorder(),
               prefixIcon: Icon(Icons.person_outline),
+              helperText: '',
             ),
             onChanged: viewModel.updateFirstName,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Lütfen adınızı girin';
+              }
+              if (value.length < 3) {
+                return 'Ad en az 3 karakter olmalıdır';
+              }
+              return null;
+            },
+            autovalidateMode: AutovalidateMode.onUserInteraction,
           ),
           const SizedBox(height: 16),
           TextFormField(
@@ -33,8 +44,19 @@ class UserInfoStep extends StatelessWidget {
               labelText: 'Soyadınız',
               border: OutlineInputBorder(),
               prefixIcon: Icon(Icons.people_outline),
+              helperText: '',
             ),
             onChanged: viewModel.updateLastName,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Lütfen soyadınızı girin';
+              }
+              if (value.length < 3) {
+                return 'Soyad en az 3 karakter olmalıdır';
+              }
+              return null;
+            },
+            autovalidateMode: AutovalidateMode.onUserInteraction,
           ),
         ],
       ),
