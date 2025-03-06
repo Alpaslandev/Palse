@@ -38,6 +38,9 @@ class ProfileSetupViewModel extends ChangeNotifier {
   PageController get pageController => _pageController; // Sayfa kontrolcüsünü döndürür
   bool get isLastStep => _currentStep == 5;
 
+  LocationModel? _location;
+  LocationModel? get location => _location;
+
   TextEditingController get firstNameController => _firstNameController;
   TextEditingController get lastNameController => _lastNameController;
   TextEditingController get nicknameController => _nicknameController;
@@ -114,8 +117,8 @@ class ProfileSetupViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void updateCoordinates(double lat, double lon) {
-    _customer.location = LocationModel(lat: lat, lon: lon, city: '', district: '', country: '');
+  void updateCoordinates(LocationModel location) {
+    _location = location;
     notifyListeners();
   }
 

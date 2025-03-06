@@ -5,106 +5,172 @@ import 'package:palseapp/features/profile_setup_steps/viewmodel/profile_setup_vi
 class FavoriteCategoryStep extends StatelessWidget {
   const FavoriteCategoryStep({super.key, required this.viewModel});
   final ProfileSetupViewModel viewModel;
+
   @override
   Widget build(BuildContext context) {
     // Favori kategoriler geçerli mi kontrol et
     final bool areCategoriesValid = viewModel.areFavoriteCategoriesValid();
     final int selectedCount = viewModel.customer.favoriteCategories?.length ?? 0;
 
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Son olarak,\nilgi alanlarınızı seçiniz',
-              style: Theme.of(context).textTheme.headlineSmall,
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Başlık kısmı
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  color: Colors.grey.shade200,
+                  width: 1.0,
+                ),
+              ),
             ),
-            const SizedBox(height: 16),
-            Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text(
+                  'Son olarak',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).primaryColor,
+                      ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'ilgi alanlarınızı seçiniz',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // Kategori sayacı ve bilgi
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: areCategoriesValid ? Colors.green.shade50 : Colors.orange.shade50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: areCategoriesValid ? Colors.green.shade200 : Colors.orange.shade200,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  areCategoriesValid ? Icons.check_circle : Icons.info_outline,
+                  color: areCategoriesValid ? Colors.green : Colors.orange,
+                ),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'En az 3 kategori seçiniz',
-                    style: Theme.of(context).textTheme.bodyLarge,
+                    areCategoriesValid ? 'Harika! Yeterli kategori seçtiniz' : 'En az 3 kategori seçmeniz gerekiyor',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w500,
+                      color: areCategoriesValid ? Colors.green.shade700 : Colors.orange.shade800,
+                    ),
                   ),
                 ),
-                Text(
-                  '$selectedCount/3',
-                  style: TextStyle(
-                    color: !areCategoriesValid ? Colors.red : Colors.green,
-                    fontWeight: FontWeight.bold,
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: areCategoriesValid ? Colors.green.shade100 : Colors.orange.shade100,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Text(
+                    '$selectedCount/3',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: areCategoriesValid ? Colors.green.shade800 : Colors.orange.shade900,
+                    ),
                   ),
                 ),
               ],
             ),
+          ),
 
-            // Kategoriler yeterli değilse uyarı mesajı göster
-            if (!areCategoriesValid)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 8.0),
-                child: Text(
-                  'Lütfen en az 3 kategori seçin',
-                  style: TextStyle(color: Colors.red, fontSize: 12),
+          const SizedBox(height: 24),
+
+          // Kategoriler başlığı
+          Text(
+            'Kategoriler',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
                 ),
-              ),
+          ),
 
-            const SizedBox(height: 16),
+          const SizedBox(height: 8),
 
-            // Kategorileri kırmızı kenarlıkla çevrele
-            Container(
+          // Kategoriler listesi - Scroll View içine alındı
+          Expanded(
+            child: Container(
               decoration: BoxDecoration(
-                border: Border.all(
-                  color: !areCategoriesValid ? Colors.red : Colors.transparent,
-                  width: 1.0,
-                ),
-                borderRadius: BorderRadius.circular(8.0),
+                border: !areCategoriesValid ? Border.all(color: Colors.orange.shade300, width: 1.0) : null,
+                borderRadius: BorderRadius.circular(12),
               ),
-              padding: const EdgeInsets.all(8.0),
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: _buildCategoryChips(context, viewModel),
+              child: GridView.builder(
+                padding: const EdgeInsets.all(8),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  childAspectRatio: 2.5,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
+                ),
+                itemCount: Categories.values.length,
+                itemBuilder: (context, index) {
+                  final category = Categories.values[index];
+                  final isSelected = viewModel.customer.favoriteCategories?.contains(category) ?? false;
+
+                  return Material(
+                    color: isSelected ? Theme.of(context).primaryColor.withOpacity(0.1) : Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(10),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(10),
+                      onTap: () => viewModel.handleCategorySelection(category, !isSelected),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: isSelected ? Theme.of(context).primaryColor : Colors.grey.shade300,
+                            width: 1.5,
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              isSelected ? Icons.check_circle : Icons.circle_outlined,
+                              color: isSelected ? Theme.of(context).primaryColor : Colors.grey.shade400,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                category.text,
+                                style: TextStyle(
+                                  color: isSelected ? Theme.of(context).primaryColor : Colors.black87,
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
-
-            // Kategoriler yeterliyse onay mesajı göster
-            if (areCategoriesValid)
-              Padding(
-                padding: const EdgeInsets.only(top: 16.0),
-                child: Card(
-                  color: Colors.green.shade50,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.check_circle, color: Colors.green),
-                        const SizedBox(width: 8),
-                        const Text(
-                          'Harika! Yeterli sayıda kategori seçtiniz.',
-                          style: TextStyle(color: Colors.green),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
-  }
-
-  List<Widget> _buildCategoryChips(BuildContext context, ProfileSetupViewModel viewModel) {
-    return Categories.values.map((category) {
-      final isSelected = viewModel.customer.favoriteCategories?.contains(category) ?? false;
-      return ChoiceChip(
-        label: Text(category.text),
-        selected: isSelected,
-        onSelected: (selected) => viewModel.handleCategorySelection(category, selected),
-        selectedColor: Theme.of(context).colorScheme.primary,
-      );
-    }).toList();
   }
 }
