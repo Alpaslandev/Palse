@@ -137,6 +137,13 @@ class AppTheme {
         ),
       ),
 
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          backgroundColor: backgroundColor,
+          foregroundColor: textColor,
+        ),
+      ),
+
       // SwitchList'ler için tema
       switchTheme: SwitchThemeData(
         trackColor: MaterialStateProperty.resolveWith((states) {

@@ -42,6 +42,11 @@ class _MessagesViewState extends State<MessagesView> {
     super.dispose();
   }
 
+  // Klavyeyi kapatmak için kullanılacak fonksiyon
+  void _dismissKeyboard() {
+    FocusScope.of(context).unfocus();
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<AuthProvider>(context, listen: false).user;
@@ -51,70 +56,78 @@ class _MessagesViewState extends State<MessagesView> {
     return ChangeNotifierProvider.value(
       value: _viewModel,
       child: Consumer<MessagesViewModel>(
-        builder: (context, vm, _) => Scaffold(
-          resizeToAvoidBottomInset: true,
-          appBar: MessageAppBar(
-            vm: vm,
-            otherUserId: widget.otherUserId,
-          ),
-          body: Column(
-            children: [
-              Expanded(
-                child: StreamBuilder<List<Message>>(
-                  stream: vm.getMessages(widget.chatId),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasError) {
-                      return const Center(child: Text('Bir hata oluştu'));
-                    }
+        builder: (context, vm, _) => GestureDetector(
+          // Ekranın herhangi bir yerine dokunulduğunda klavyeyi kapat
+          onTap: _dismissKeyboard,
+          child: Scaffold(
+            resizeToAvoidBottomInset: true,
+            appBar: MessageAppBar(
+              vm: vm,
+              otherUserId: widget.otherUserId,
+            ),
+            body: Column(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    // Mesaj listesine dokunulduğunda da klavyeyi kapat
+                    onTap: _dismissKeyboard,
+                    child: StreamBuilder<List<Message>>(
+                      stream: vm.getMessages(widget.chatId),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasError) {
+                          return const Center(child: Text('Bir hata oluştu'));
+                        }
 
-                    // İlk yüklemede loading göster
-                    if (!snapshot.hasData && snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
+                        // İlk yüklemede loading göster
+                        if (!snapshot.hasData && snapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(child: CircularProgressIndicator());
+                        }
 
-                    final messages = snapshot.data ?? [];
+                        final messages = snapshot.data ?? [];
 
-                    // Yeni mesaj geldiğinde otomatik olarak okundu olarak işaretle
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      // Karşı taraftan gelen ve okunmamış mesajlar varsa işaretle
-                      final unreadMessages = messages.where((msg) => msg.senderId == widget.otherUserId && !msg.isRead).toList();
+                        // Yeni mesaj geldiğinde otomatik olarak okundu olarak işaretle
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          // Karşı taraftan gelen ve okunmamış mesajlar varsa işaretle
+                          final unreadMessages = messages.where((msg) => msg.senderId == widget.otherUserId && !msg.isRead).toList();
 
-                      if (unreadMessages.isNotEmpty) {
-                        vm.markMessagesAsRead();
-                      }
-                    });
+                          if (unreadMessages.isNotEmpty) {
+                            vm.markMessagesAsRead();
+                          }
+                        });
 
-                    if (messages.isEmpty) {
-                      return const Center(
-                        child: Text('Henüz mesaj yok'),
-                      );
-                    }
+                        if (messages.isEmpty) {
+                          return const Center(
+                            child: Text('Henüz mesaj yok'),
+                          );
+                        }
 
-                    return ListView.builder(
-                      controller: _scrollController,
-                      reverse: true,
-                      itemCount: messages.length,
-                      itemBuilder: (context, index) {
-                        final message = messages[index];
-                        final isMe = message.senderId == widget.currentUserId;
+                        return ListView.builder(
+                          controller: _scrollController,
+                          reverse: true,
+                          itemCount: messages.length,
+                          itemBuilder: (context, index) {
+                            final message = messages[index];
+                            final isMe = message.senderId == widget.currentUserId;
 
-                        return MessageBubble(
-                          message: message,
-                          isMe: isMe,
+                            return MessageBubble(
+                              message: message,
+                              isMe: isMe,
+                            );
+                          },
                         );
                       },
-                    );
-                  },
+                    ),
+                  ),
                 ),
-              ),
-              MessageInput(
-                chatId: widget.chatId,
-                currentUserId: widget.currentUserId,
-                otherUserId: widget.otherUserId,
-                isPremium: isPremium,
-                senderName: senderName,
-              ),
-            ],
+                MessageInput(
+                  chatId: widget.chatId,
+                  currentUserId: widget.currentUserId,
+                  otherUserId: widget.otherUserId,
+                  isPremium: isPremium,
+                  senderName: senderName,
+                ),
+              ],
+            ),
           ),
         ),
       ),

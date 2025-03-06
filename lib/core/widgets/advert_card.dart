@@ -141,16 +141,16 @@ class AdvertCard extends StatelessWidget {
                             customer.firstName ?? '',
                             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                           ),
-                          //if (customer.verification ?? false)
-                          const Padding(
-                            padding: EdgeInsets.only(left: 2),
-                            child: Icon(Icons.verified, color: Colors.blue, size: 14),
-                          ),
-                          //if (customer.isPremium ?? false)
-                          const Padding(
-                            padding: EdgeInsets.only(left: 2),
-                            child: Icon(Icons.verified, color: Colors.yellow, size: 14),
-                          ),
+                          if (customer.verification ?? false)
+                            const Padding(
+                              padding: EdgeInsets.only(left: 2),
+                              child: Icon(Icons.verified, color: Colors.blue, size: 14),
+                            ),
+                          if (customer.isPremium ?? false)
+                            const Padding(
+                              padding: EdgeInsets.only(left: 2),
+                              child: Icon(Icons.verified, color: Colors.yellow, size: 14),
+                            ),
                           const Spacer(),
                           Row(
                             children: [
@@ -173,7 +173,7 @@ class AdvertCard extends StatelessWidget {
 
                       // 2. Satır: Kullanıcı rütbesi
                       Text(
-                        userAchievements.rank.title,
+                        "${userAchievements.rank.icon} ${userAchievements.rank.title}",
                         style: const TextStyle(
                           fontWeight: FontWeight.w400,
                           fontSize: 11,

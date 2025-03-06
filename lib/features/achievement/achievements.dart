@@ -4,7 +4,7 @@ import 'package:palseapp/features/achievement/premium_rewards.dart';
 enum UserRank {
   /// 0-99 XP: Keşfe Başlayan
   beginner(
-    title: '🌟 Keşfe Başlayan',
+    title: 'Keşfe Başlayan',
     minXp: 0,
     maxXp: 99,
     icon: '🌟',
@@ -12,7 +12,7 @@ enum UserRank {
 
   /// 100-499 XP: Sosyal Keşifçi
   explorer(
-    title: '🔍 Sosyal Keşifçi',
+    title: 'Sosyal Keşifçi',
     minXp: 100,
     maxXp: 499,
     icon: '🔍',
@@ -20,7 +20,7 @@ enum UserRank {
 
   /// 500-999 XP: Bağlantı Ustası
   connector(
-    title: '🧩 Bağlantı Ustası',
+    title: 'Bağlantı Ustası',
     minXp: 500,
     maxXp: 999,
     icon: '🧩',
@@ -28,7 +28,7 @@ enum UserRank {
 
   /// 1000-2999 XP: Etkinlik Lideri
   leader(
-    title: '🎯 Etkinlik Lideri',
+    title: 'Etkinlik Lideri',
     minXp: 1000,
     maxXp: 2999,
     icon: '🎯',
@@ -36,7 +36,7 @@ enum UserRank {
 
   /// 3000+ XP: Sosyal Usta
   master(
-    title: '👑 Sosyal Usta',
+    title: 'Sosyal Usta',
     minXp: 3000,
     maxXp: double.infinity,
     icon: '👑',
