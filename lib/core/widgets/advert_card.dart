@@ -7,6 +7,7 @@ import 'package:palseapp/core/models/advert.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/widgets/circle_profile_picture.dart';
+import 'package:palseapp/features/chats/service/chat_service.dart';
 import 'package:palseapp/features/chats/viewmodel/chats_view_model.dart';
 import 'package:provider/provider.dart';
 
@@ -41,7 +42,7 @@ class AdvertCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currentCustomer = context.read<AuthProvider>().user!;
-    final chatsViewModel = context.read<ChatsViewModel>();
+    final chatsService = ChatService();
     return Card(
         color: Colors.white,
         elevation: 0,
@@ -95,7 +96,6 @@ class AdvertCard extends StatelessWidget {
           // Açıklama metni
           Text(
             advert.description,
-            style: const TextStyle(color: Colors.grey),
           ),
 
           if (!advert.advertImage.contains('assets/images/'))
@@ -141,8 +141,9 @@ class AdvertCard extends StatelessWidget {
                     final userId = currentCustomer.userID;
                     if (userId == null) return;
 
-                    final chatId = await chatsViewModel.startOrGetChat(
+                    final chatId = await chatsService.startOrGetChat(
                       advert.creatorUserID,
+                      userId,
                     );
 
                     if (context.mounted) {

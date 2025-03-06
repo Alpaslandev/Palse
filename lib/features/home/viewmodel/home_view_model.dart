@@ -107,25 +107,152 @@ class HomeViewModel extends ChangeNotifier {
 
   Future<void> likeAdvert(String advertId, String userId) async {
     try {
-      await _advertService.likeAdvert(advertId, userId);
-      notifyListeners();
+      // Önce yerel olarak güncelle
+      final index = adverts.indexWhere((advert) => advert.advertID == advertId);
+      if (index != -1) {
+        // Yerel listeyi güncelle
+        final updatedLikers = [...adverts[index].likers, userId];
+        adverts[index] = adverts[index].copyWith(likers: updatedLikers);
+
+        // Sadece UI'ı bilgilendir
+
+        await _advertService.likeAdvert(advertId, userId);
+
+        // Kullanıcının belgesini de güncelle
+        await _customerService.likeAdvert(advertId, userId);
+      }
     } catch (e) {
-      debugPrint('İlan beğenilirken hata: $e');
+      debugPrint('İlan beğenme hatası: $e');
+      // Hata durumunda yerel değişikliği geri al
+      final index = adverts.indexWhere((advert) => advert.advertID == advertId);
+      if (index != -1) {
+        final updatedLikers = [...adverts[index].likers];
+        updatedLikers.remove(userId);
+        adverts[index] = adverts[index].copyWith(likers: updatedLikers);
+        notifyListeners();
+      }
+    } finally {
+      _setLoading(false);
     }
   }
 
   Future<void> unlikeAdvert(String advertId, String userId) async {
     try {
-      await _advertService.unlikeAdvert(advertId, userId);
-      notifyListeners();
+      // Önce yerel olarak güncelle
+      final index = adverts.indexWhere((advert) => advert.advertID == advertId);
+      if (index != -1) {
+        // Yerel listeyi güncelle
+        final updatedLikers = [...adverts[index].likers];
+        updatedLikers.remove(userId);
+        adverts[index] = adverts[index].copyWith(likers: updatedLikers);
+
+        // Ardından Firestore'u güncelle (arka planda)
+        await _advertService.unlikeAdvert(advertId, userId);
+
+        // Kullanıcının belgesini de güncelle
+        await _customerService.unlikeAdvert(advertId, userId);
+      }
     } catch (e) {
-      debugPrint('İlan beğenilirken hata: $e');
+      debugPrint('İlan beğenmeme hatası: $e');
+      // Hata durumunda yerel değişikliği geri al
+      final index = adverts.indexWhere((advert) => advert.advertID == advertId);
+      if (index != -1) {
+        final updatedLikers = [...adverts[index].likers, userId];
+        adverts[index] = adverts[index].copyWith(likers: updatedLikers);
+        notifyListeners();
+      }
+    } finally {
+      _setLoading(false);
     }
   }
 
   void _setLoading(bool value) {
     _isLoading = value;
     notifyListeners();
+  }
+
+  /// Events koleksiyonundaki tüm belgelerin creatorUserID'lerini kullanarak
+  /// customer koleksiyonundan profil resimlerini alıp events belgelerini günceller
+  Future<void> updateEventsWithCreatorProfilePictures() async {
+    // Firestore instance'ını al
+    final FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+    try {
+      // Tüm events belgelerini al
+      final QuerySnapshot eventsSnapshot = await firestore.collection('events').get();
+
+      // Batch işlemi başlat
+      WriteBatch batch = firestore.batch();
+      int operationCount = 0;
+      const int BATCH_LIMIT = 500; // Firestore batch işlemi limiti
+
+      // Her bir event belgesi için işlem yap
+      for (final DocumentSnapshot eventDoc in eventsSnapshot.docs) {
+        // Event belgesinden creatorUserID'yi al
+        final Map<String, dynamic>? eventData = eventDoc.data() as Map<String, dynamic>?;
+
+        if (eventData == null || !eventData.containsKey('creatorUserID')) {
+          print('Event ${eventDoc.id} için creatorUserID bulunamadı, atlanıyor.');
+          continue;
+        }
+
+        final String? creatorUserID = eventData['creatorUserID'] as String?;
+
+        // Eğer creatorUserID null ise, bu belgeyi atla
+        if (creatorUserID == null || creatorUserID.isEmpty) {
+          print('Event ${eventDoc.id} için geçerli bir creatorUserID bulunamadı, atlanıyor.');
+          continue;
+        }
+
+        // Customer koleksiyonundan ilgili kullanıcıyı bul
+        final DocumentSnapshot customerDoc = await firestore.collection('customers').doc(creatorUserID).get();
+
+        // Eğer customer belgesi yoksa veya profilePictureUrl yoksa, atla
+        if (!customerDoc.exists) {
+          print('Customer $creatorUserID bulunamadı, atlanıyor.');
+          continue;
+        }
+
+        final Map<String, dynamic>? customerData = customerDoc.data() as Map<String, dynamic>?;
+
+        if (customerData == null || !customerData.containsKey('profilePictureUrl')) {
+          print('Customer $creatorUserID için profilePictureUrl bulunamadı, atlanıyor.');
+          continue;
+        }
+
+        final String? profilePictureUrl = customerData['profilePictureUrl'] as String?;
+
+        if (profilePictureUrl == null || profilePictureUrl.isEmpty) {
+          print('Customer $creatorUserID için geçerli bir profilePictureUrl bulunamadı, atlanıyor.');
+          continue;
+        }
+
+        // Event belgesini güncelle
+        batch.update(eventDoc.reference, {'creatorProfilePicture': profilePictureUrl});
+
+        // İşlem sayacını artır
+        operationCount++;
+
+        // Eğer batch limiti doluysa, commit yap ve yeni batch başlat
+        if (operationCount >= BATCH_LIMIT) {
+          await batch.commit();
+          print('$operationCount belge güncellendi, yeni batch başlatılıyor...');
+          batch = firestore.batch();
+          operationCount = 0;
+        }
+      }
+
+      // Kalan işlemleri commit et
+      if (operationCount > 0) {
+        await batch.commit();
+        print('Son $operationCount belge güncellendi.');
+      }
+
+      print('Tüm events belgeleri başarıyla güncellendi! 🎉');
+    } catch (error) {
+      print('Güncelleme işlemi sırasında hata oluştu: $error');
+      rethrow; // Hatayı yukarı ilet
+    }
   }
 
   @override

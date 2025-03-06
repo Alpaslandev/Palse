@@ -147,14 +147,32 @@ class AdvertService {
   }
 
   Future<void> likeAdvert(String advertId, String userId) async {
-    await _firestore.collection('events').doc(advertId).update({
-      'likers': FieldValue.arrayUnion([userId])
-    });
+    try {
+      final docSnapshot = await _firestore.collection('events').doc(advertId).get();
+      if (docSnapshot.exists) {
+        final data = docSnapshot.data();
+        if (data != null && data.containsKey('likers')) {
+          await _firestore.collection('events').doc(advertId).update({
+            'likers': FieldValue.arrayUnion([userId])
+          });
+        } else {
+          await _firestore.collection('events').doc(advertId).update({
+            'likers': [userId]
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('İlan beğenme hatası: $e');
+    }
   }
 
   Future<void> unlikeAdvert(String advertId, String userId) async {
-    await _firestore.collection('events').doc(advertId).update({
-      'likers': FieldValue.arrayRemove([userId])
-    });
+    try {
+      await _firestore.collection('events').doc(advertId).update({
+        'likers': FieldValue.arrayRemove([userId])
+      });
+    } catch (e) {
+      debugPrint('İlan beğenme hatası: $e');
+    }
   }
 }

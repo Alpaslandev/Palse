@@ -53,7 +53,7 @@ class MessagesViewModel extends ChangeNotifier {
   }
 
   // Mesaj gönder
-  Future<void> sendMessage(String chatId, String senderId, String receiverId, String content) async {
+  Future<void> sendMessage(String chatId, String senderId, String receiverId, String content, String senderName) async {
     if (content.trim().isEmpty) return;
 
     try {
@@ -75,6 +75,7 @@ class MessagesViewModel extends ChangeNotifier {
         messageToSend,
         senderId,
         receiverId,
+        senderName,
       );
 
       // Mesaj gönderildikten sonra alıntıyı temizle
@@ -98,7 +99,7 @@ class MessagesViewModel extends ChangeNotifier {
   }
 
   // Dosya ekleme işlemini yönet
-  Future<void> handleAttachment(BuildContext context) async {
+  Future<void> handleAttachment(BuildContext context, String senderName) async {
     showModalBottomSheet(
       context: context,
       builder: (context) => Column(
@@ -109,7 +110,7 @@ class MessagesViewModel extends ChangeNotifier {
             title: const Text('Kamera'),
             onTap: () {
               Navigator.pop(context);
-              _pickImage(ImageSource.camera);
+              _pickImage(ImageSource.camera, senderName);
             },
           ),
           ListTile(
@@ -117,7 +118,7 @@ class MessagesViewModel extends ChangeNotifier {
             title: const Text('Galeri'),
             onTap: () {
               Navigator.pop(context);
-              _pickImage(ImageSource.gallery);
+              _pickImage(ImageSource.gallery, senderName);
             },
           ),
         ],
@@ -126,7 +127,7 @@ class MessagesViewModel extends ChangeNotifier {
   }
 
   // Görsel seç
-  Future<void> _pickImage(ImageSource source) async {
+  Future<void> _pickImage(ImageSource source, String senderName) async {
     try {
       final XFile? image = await _imagePicker.pickImage(
         source: source,
@@ -140,7 +141,7 @@ class MessagesViewModel extends ChangeNotifier {
 
         final String imageUrl = await _uploadImage(File(image.path));
         debugPrint('Yüklenen görsel URL: $imageUrl'); // Debug için URL'i yazdır
-        await sendImageMessage(imageUrl);
+        await sendImageMessage(imageUrl, senderName);
       }
     } catch (e) {
       debugPrint('Görsel seçme hatası: $e');
@@ -176,7 +177,7 @@ class MessagesViewModel extends ChangeNotifier {
   }
 
   // Görsel mesajı gönder
-  Future<void> sendImageMessage(String imageUrl) async {
+  Future<void> sendImageMessage(String imageUrl, String senderName) async {
     try {
       debugPrint('Görsel mesaj gönderiliyor... URL: $imageUrl'); // Debug için URL'i yazdır
       final messageToSend = Message(
@@ -195,6 +196,7 @@ class MessagesViewModel extends ChangeNotifier {
         messageToSend,
         currentUserId,
         otherUserId,
+        senderName,
       );
 
       debugPrint('Görsel mesaj başarıyla gönderildi!'); // Debug için başarı mesajı

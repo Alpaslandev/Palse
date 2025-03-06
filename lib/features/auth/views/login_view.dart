@@ -13,8 +13,10 @@ class LoginView extends StatefulWidget {
 class _LoginViewState extends State<LoginView> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  bool _isPasswordVisible = false;
+  final TextEditingController _confirmPasswordController = TextEditingController();
 
+  bool _isPasswordVisible = false;
+  bool _isSignUp = false;
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
@@ -26,43 +28,93 @@ class _LoginViewState extends State<LoginView> {
           children: [
             // Header
             const Text(
-              "Tekrar, Hoş geldin 👋",
+              "Hoş geldin 👋",
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 32),
-
-            // Email TextField
-            TextField(
-              controller: _emailController,
-              decoration: const InputDecoration(
-                hintText: 'E-posta',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Password TextField
-            TextField(
-              controller: _passwordController,
-              obscureText: !_isPasswordVisible,
-              decoration: InputDecoration(
-                hintText: 'Şifre',
-                border: const OutlineInputBorder(),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _isPasswordVisible = !_isPasswordVisible;
-                    });
-                  },
+            if (!_isSignUp) ...[
+              // Email TextField
+              TextField(
+                controller: _emailController,
+                decoration: const InputDecoration(
+                  hintText: 'E-posta',
+                  border: OutlineInputBorder(),
                 ),
               ),
-            ),
+              const SizedBox(height: 16),
+
+              // Password TextField
+              TextField(
+                controller: _passwordController,
+                obscureText: !_isPasswordVisible,
+                decoration: InputDecoration(
+                  hintText: 'Şifre',
+                  border: const OutlineInputBorder(),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isPasswordVisible = !_isPasswordVisible;
+                      });
+                    },
+                  ),
+                ),
+              ),
+            ] else ...[
+              // Email TextField
+              TextField(
+                controller: _emailController,
+                decoration: const InputDecoration(
+                  hintText: 'E-posta',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Password TextField
+              TextField(
+                controller: _passwordController,
+                obscureText: !_isPasswordVisible,
+                decoration: InputDecoration(
+                  hintText: 'Şifre',
+                  border: const OutlineInputBorder(),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isPasswordVisible = !_isPasswordVisible;
+                      });
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _confirmPasswordController,
+                obscureText: !_isPasswordVisible,
+                decoration: InputDecoration(
+                  hintText: 'Şifre Tekrar',
+                  border: const OutlineInputBorder(),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isPasswordVisible = !_isPasswordVisible;
+                      });
+                    },
+                  ),
+                ),
+              ),
+            ],
             const SizedBox(height: 24),
 
             // Login Button
@@ -70,7 +122,11 @@ class _LoginViewState extends State<LoginView> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  authProvider.loginWithEmail(_emailController.text, _passwordController.text);
+                  if (_isSignUp) {
+                    authProvider.signUpWithEmailAndPassword(_emailController.text, _passwordController.text);
+                  } else {
+                    authProvider.loginWithEmail(_emailController.text, _passwordController.text);
+                  }
                   //    Navigator.push(context, MaterialPageRoute(builder: (context) => NicknameStep(controller: _emailController)));
                 },
                 child: const Padding(
@@ -105,6 +161,10 @@ class _LoginViewState extends State<LoginView> {
                           try {
                             await authProvider.loginWithGoogle();
                             // Router otomatik olarak yönlendirecek
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Giriş başarılı')),
+                            );
                           } catch (e) {
                             // Hata yönetimi
                             debugPrint('Giriş hatası: $e');

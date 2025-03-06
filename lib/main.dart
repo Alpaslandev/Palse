@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 import 'package:palseapp/core/routes/app_router.dart';
 import 'package:palseapp/core/services/notification_service.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
@@ -48,7 +49,8 @@ void main() async {
   final locale = WidgetsBinding.instance.platformDispatcher.locale;
   debugPrint('Locale: $locale');
   await initializeDateFormatting(locale.toString(), null);
-
+  Intl.defaultLocale = locale.toString();
+  debugPrint('Intl.defaultLocale: ${Intl.defaultLocale}');
   final subscriptionProvider = SubscriptionProvider();
 
   runApp(

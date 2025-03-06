@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:palseapp/core/provider/subscription_provider.dart';
+import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/models/chat_model.dart';
 import 'package:palseapp/features/messages/widgets/message_app_bar.dart';
 import 'package:provider/provider.dart';
@@ -44,7 +44,9 @@ class _MessagesViewState extends State<MessagesView> {
 
   @override
   Widget build(BuildContext context) {
-    final isPremium = Provider.of<SubscriptionProvider>(context, listen: false).isPremium;
+    final user = Provider.of<AuthProvider>(context, listen: false).user;
+    final senderName = user?.firstName ?? '';
+    final isPremium = user?.isPremium ?? false;
 
     return ChangeNotifierProvider.value(
       value: _viewModel,
@@ -112,6 +114,7 @@ class _MessagesViewState extends State<MessagesView> {
               currentUserId: widget.currentUserId,
               otherUserId: widget.otherUserId,
               isPremium: isPremium,
+              senderName: senderName,
             ),
           ),
         ),

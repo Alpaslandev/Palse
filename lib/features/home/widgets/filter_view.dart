@@ -1,6 +1,7 @@
 // İlan filtreleme görünümü
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:palseapp/core/constant/categories.dart';
 import 'package:palseapp/core/models/advert.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
@@ -22,6 +23,7 @@ class FilterView extends StatefulWidget {
 class _FilterViewState extends State<FilterView> {
   int? _distance;
   String? _selectedGender;
+  List<Categories>? _selectedCategories;
   bool _isFiltered = false;
   List<Advert> _filteredAdverts = [];
   Customer? _currentUser;
@@ -63,6 +65,12 @@ class _FilterViewState extends State<FilterView> {
         }
 
         return true; // Eğer 'Hepsi' seçilmişse tüm ilanları göster
+      }).toList();
+    }
+
+    if (_selectedCategories != null) {
+      allAdverts = allAdverts.where((advert) {
+        return _selectedCategories!.contains(advert.advertType);
       }).toList();
     }
 
@@ -132,6 +140,28 @@ class _FilterViewState extends State<FilterView> {
             onChanged: (value) {
               setState(() {
                 _selectedGender = value;
+              });
+            },
+          ),
+          const SizedBox(height: 16),
+          // Kategori seçici
+          DropdownButtonFormField<Categories>(
+            value: _selectedCategories?.first,
+            decoration: const InputDecoration(
+              labelText: 'Kategori',
+            ),
+            items: [
+              ...Categories.values.map((category) {
+                return DropdownMenuItem<Categories>(
+                  value: category,
+                  child: Text(category.text),
+                );
+              }),
+              const DropdownMenuItem<Categories>(value: null, child: Text('Hepsi')),
+            ],
+            onChanged: (value) {
+              setState(() {
+                _selectedCategories = [value!];
               });
             },
           ),

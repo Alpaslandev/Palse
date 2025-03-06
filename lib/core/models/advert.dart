@@ -92,4 +92,40 @@ class Advert {
       'creatorAverageRating': creatorAverageRating,
     };
   }
+
+  Advert copyWith({
+    String? advertID,
+    String? advertName,
+    String? description,
+    String? advertImage,
+    String? creatorUserID,
+    String? creatorName,
+    String? creatorProfilePicture,
+    bool? creatorIsVerified,
+    bool? creatorIsPremium,
+    double? creatorAverageRating,
+    Categories? advertType,
+    DateTime? createdAt,
+    DateTime? startEventDate,
+    LocationModel? location,
+    List<String>? likers,
+  }) {
+    return Advert(
+      advertID: advertID ?? this.advertID,
+      advertName: advertName ?? this.advertName,
+      description: description ?? this.description,
+      advertImage: advertImage ?? this.advertImage,
+      creatorUserID: creatorUserID ?? this.creatorUserID,
+      creatorName: creatorName ?? this.creatorName,
+      creatorProfilePicture: creatorProfilePicture ?? this.creatorProfilePicture,
+      creatorIsVerified: creatorIsVerified ?? this.creatorIsVerified,
+      creatorIsPremium: creatorIsPremium ?? this.creatorIsPremium,
+      creatorAverageRating: creatorAverageRating?.toInt() ?? this.creatorAverageRating,
+      advertType: advertType ?? this.advertType,
+      createdAt: createdAt ?? this.createdAt,
+      startEventDate: startEventDate ?? this.startEventDate,
+      location: location ?? this.location,
+      likers: likers ?? this.likers,
+    );
+  }
 }

@@ -57,8 +57,10 @@ class BirthdayGenderStep extends StatelessWidget {
   }
 
   void _selectDate(BuildContext context) async {
+    debugPrint('Locale: ${Intl.getCurrentLocale()}');
     final DateTime? picked = await showDatePicker(
       context: context,
+      locale: Locale(Intl.getCurrentLocale()),
       initialDate: DateTime.now().subtract(const Duration(days: 365 * 18)),
       firstDate: DateTime(1950),
       lastDate: DateTime.now().subtract(const Duration(days: 365 * 18)), // 18 yıl öncesine kadar

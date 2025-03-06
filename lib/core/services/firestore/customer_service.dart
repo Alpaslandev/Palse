@@ -63,15 +63,23 @@ class CustomerService {
   }
 
   Future<void> likeAdvert(String advertId, String userId) async {
-    await _firestore.collection('customers').doc(userId).update({
-      'favoriteAdverts': FieldValue.arrayUnion([advertId])
-    });
+    try {
+      await _firestore.collection('customers').doc(userId).update({
+        'favoriteAdverts': FieldValue.arrayUnion([advertId])
+      });
+    } catch (e) {
+      debugPrint('İlan beğenme hatası: $e');
+    }
   }
 
   Future<void> unlikeAdvert(String advertId, String userId) async {
-    await _firestore.collection('customers').doc(userId).update({
-      'favoriteAdverts': FieldValue.arrayRemove([advertId])
-    });
+    try {
+      await _firestore.collection('customers').doc(userId).update({
+        'favoriteAdverts': FieldValue.arrayRemove([advertId])
+      });
+    } catch (e) {
+      debugPrint('İlan beğenme hatası: $e');
+    }
   }
 
   // Silinen ilanlara ait referansları kullanıcılardan temizle

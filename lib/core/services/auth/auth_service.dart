@@ -6,6 +6,16 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
 
+  Future<User?> signUpWithEmailAndPassword(String email, String password) async {
+    try {
+      final credential = await _auth.createUserWithEmailAndPassword(email: email, password: password);
+      return credential.user;
+    } on FirebaseAuthException catch (e) {
+      debugPrint('Email ve şifre ile kayıt hatası: $e');
+      throw Exception('Email ve şifre ile kayıt yapılırken bir hata oluştu.');
+    }
+  }
+
   Future<User?> loginWithEmail(String email, String password) async {
     try {
       final credential = await _auth.signInWithEmailAndPassword(email: email, password: password);

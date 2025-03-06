@@ -59,7 +59,7 @@ class ChatService {
   }
 
   // Mesaj gönderme
-  Future<void> sendMessage(String chatId, Message message, String currentUserId, String otherUserId) async {
+  Future<void> sendMessage(String chatId, Message message, String currentUserId, String otherUserId, String senderName) async {
     try {
       // 1. Batch işlemi başlat
       final batch = _db.batch();
@@ -121,7 +121,7 @@ class ChatService {
       // 6. Bildirimi gönder
       await notificationService.sendNotification(
         receiverId: otherUserId,
-        senderName: '',
+        senderName: senderName,
         message: message.type.value == 'image' ? '📷 Fotoğraf gönderdi' : message.content,
         chatId: chatId,
         senderId: message.senderId,

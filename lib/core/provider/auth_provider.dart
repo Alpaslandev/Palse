@@ -50,8 +50,6 @@ class AuthProvider extends ChangeNotifier {
         if (user != null) {
           debugPrint('User logged in');
           _startFirestoreStream(user.uid);
-          //   await _loadUserData();
-          //   await _notificationService.saveUserToken(user.uid);
         } else {
           debugPrint('User logged out');
           _user = null;
@@ -75,6 +73,7 @@ class AuthProvider extends ChangeNotifier {
       if (userData.exists && userData.data() != null) {
         _user = Customer.fromJson(userData.data() as Map<String, dynamic>, userId);
         debugPrint('User data: ${_user?.toJson()}');
+        //   await _notificationService.saveUserToken(user.uid);
       } else {
         debugPrint('User data not found');
         _user = null;
@@ -99,18 +98,32 @@ class AuthProvider extends ChangeNotifier {
       // Sonra user data ve profile durumu
       if (user != null) {
         _firebaseUser = user;
-        await _loadUserData(); // Profile setup durumu burada güncelleniyor
-
-        // En son tek bir state update
-        _isLoading = false;
-        notifyListeners(); // Router bu notify ile tüm güncel durumu alacak
       }
       // Auth state listener otomatik olarak değişiklikleri yakalayacak
     } catch (e) {
       debugPrint('Login error: $e');
+      rethrow;
+    } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  // Email ile kayıt
+  Future<void> signUpWithEmailAndPassword(String email, String password) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      final user = await _authService.signUpWithEmailAndPassword(email, password);
+      if (user != null) {
+        _firebaseUser = user;
+      }
+    } catch (e) {
       rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 
@@ -125,11 +138,6 @@ class AuthProvider extends ChangeNotifier {
       // Sonra user data ve profile durumu
       if (user != null) {
         _firebaseUser = user;
-        await _loadUserData(); // Profile setup durumu burada güncelleniyor
-
-        // En son tek bir state update
-        _isLoading = false;
-        notifyListeners(); // Router bu notify ile tüm güncel durumu alacak
       }
     } catch (e) {
       rethrow;
@@ -147,7 +155,6 @@ class AuthProvider extends ChangeNotifier {
 
       final user = await _authService.signInWithApple();
       _firebaseUser = user;
-      await _loadUserData();
     } catch (e) {
       rethrow;
     } finally {
@@ -166,24 +173,6 @@ class AuthProvider extends ChangeNotifier {
     } catch (e) {
       debugPrint('Logout error: $e');
       rethrow;
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  Future<void> _loadUserData() async {
-    if (_firebaseUser == null) return;
-    try {
-      _isLoading = true;
-      notifyListeners();
-      debugPrint('Firebase user: ${_firebaseUser?.uid}');
-      _user = await _userService.fetchUserFromFirestore(_firebaseUser!.uid);
-      debugPrint('User data: ${_user?.toJson()}');
-      debugPrint('User data loaded');
-    } catch (e) {
-      debugPrint('Error loading user data: $e');
-      _user = null;
     } finally {
       _isLoading = false;
       notifyListeners();

@@ -11,6 +11,7 @@ class MessageInput extends StatelessWidget {
   final String currentUserId;
   final String otherUserId;
   final bool isPremium;
+  final String senderName;
 
   MessageInput({
     super.key,
@@ -18,6 +19,7 @@ class MessageInput extends StatelessWidget {
     required this.currentUserId,
     required this.otherUserId,
     required this.isPremium,
+    required this.senderName,
   });
 
   @override
@@ -112,7 +114,7 @@ class MessageInput extends StatelessWidget {
                         onPressed: isPremium
                             ? viewModel.isUploadingImage
                                 ? null
-                                : () => viewModel.handleAttachment(context)
+                                : () => viewModel.handleAttachment(context, senderName)
                             : () => _showPremiumDialog(context),
                       ),
                       Expanded(
@@ -134,6 +136,7 @@ class MessageInput extends StatelessWidget {
                               currentUserId,
                               otherUserId,
                               _messageController.text,
+                              senderName,
                             );
                             _messageController.clear();
                           }
