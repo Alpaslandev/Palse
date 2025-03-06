@@ -6,21 +6,11 @@ class FAQPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('S.S.S'),
+      ),
       body: Column(
         children: [
-          SizedBox(
-            height: 100,
-          ),
-          Stack(
-            children: [
-              Align(
-                alignment: Alignment.center,
-                child: Text(
-                  'S.S.S',
-                ),
-              ),
-            ],
-          ),
           Expanded(
             child: ListView(
               padding: EdgeInsets.all(16),

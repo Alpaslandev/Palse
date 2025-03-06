@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
+import 'package:palseapp/core/widgets/faq_page.dart';
 import 'package:palseapp/core/widgets/landing_view.dart';
 import 'package:palseapp/core/widgets/notification_view.dart';
 import 'package:palseapp/core/widgets/see_likers.dart';
@@ -148,6 +149,11 @@ class AppRouter {
                 final user = state.extra! as Customer;
                 return EditProfileView(user: user);
               },
+            ),
+            GoRoute(
+              path: faq,
+              name: faq,
+              builder: (context, state) => const FAQPage(),
             ),
           ],
         ),

@@ -31,7 +31,7 @@ class EditProfileViewModel extends ChangeNotifier {
 
   // Profil fotoğrafı URL'ini güncelleyen fonksiyon
   void updateProfilePictureUrl(String url) {
-    user.profilePictureUrl = url;
+    user = user.copyWith(profilePictureUrl: url);
     notifyListeners();
   }
 
@@ -70,9 +70,22 @@ class EditProfileViewModel extends ChangeNotifier {
     nameController.text = user.firstName ?? '';
     lastNameController.text = user.lastName ?? '';
     phoneController.text = user.phoneNumber ?? '';
-    addressController.text = user.location?.displayString() ?? '';
-    '${user.location?.district ?? ''}, ${user.location?.city ?? ''}'.replaceAll(', ,', ',').trim().replaceAll(RegExp(r'^,|,$'), '');
-    birthDateController.text = user.birthday != null ? DateFormat('dd/MM/yyyy').format(user.birthday!) : '';
+
+    // Konum alanını daha güvenli şekilde güncelle
+    if (user.location != null) {
+      addressController.text = user.location!.displayString();
+    } else {
+      addressController.text = '';
+    }
+
+    // Doğum tarihi alanını daha güvenli şekilde güncelle
+    if (user.birthday != null) {
+      birthDateController.text = DateFormat('dd/MM/yyyy').format(user.birthday!);
+    } else {
+      birthDateController.text = '';
+    }
+
+    // Cinsiyet alanını daha güvenli şekilde güncelle
     genderController.text = user.gender?.trName ?? '';
   }
 
@@ -90,18 +103,20 @@ class EditProfileViewModel extends ChangeNotifier {
 
   void updateNickname(String nickname) {
     debugPrint('Updating nickname to: $nickname');
-    user.nickname = nickname;
+    user = user.copyWith(nickname: nickname);
     notifyListeners();
   }
 
   Future<void> updatePhone(String phone, bool verified) async {
     await customerService.updateCustomerVerifiedAndPhone(user.userID!, verified, phone);
+    user = user.copyWith(phoneNumber: phone, verification: verified);
+    notifyListeners();
   }
 
   void updateName(String name) {
     debugPrint('Updating name to: $name');
     debugPrint('Before update - firstName: ${user.firstName}');
-    user.firstName = name;
+    user = user.copyWith(firstName: name);
     debugPrint('After update - firstName: ${user.firstName}');
     notifyListeners();
   }
@@ -109,7 +124,7 @@ class EditProfileViewModel extends ChangeNotifier {
   void updateLastName(String lastName) {
     debugPrint('Updating lastName to: $lastName');
     debugPrint('Before update - lastName: ${user.lastName}');
-    user.lastName = lastName;
+    user = user.copyWith(lastName: lastName);
     debugPrint('After update - lastName: ${user.lastName}');
     notifyListeners();
   }
@@ -118,29 +133,12 @@ class EditProfileViewModel extends ChangeNotifier {
     debugPrint(
         'Updating location - country: ${location.country}, city: ${location.city}, district: ${location.district}, lat: ${location.lat}, lon: ${location.lon}');
 
-    // Mevcut değerleri koru
-    final updatedUser = Customer(
-      userID: user.userID,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      nickname: user.nickname,
-      phoneNumber: user.phoneNumber,
-      email: user.email,
-      birthday: user.birthday,
-      gender: user.gender,
-      verification: user.verification,
-      isPremium: user.isPremium,
-      profilePictureUrl: user.profilePictureUrl,
-      favoriteCategories: user.favoriteCategories,
-      adverts: user.adverts,
-      blockUsers: user.blockUsers,
-      favoriteAdverts: user.favoriteAdverts,
-      chatMap: user.chatMap,
-      location: location,
-    );
+    // copyWith metodunu kullanarak mevcut değerleri koruyan daha güvenli bir güncelleme yapalım
+    user = user.copyWith(location: location);
 
-    user = updatedUser;
+    // Controller'ları güncelle
     _updateControllersFromUser();
+
     notifyListeners();
   }
 
@@ -153,29 +151,26 @@ class EditProfileViewModel extends ChangeNotifier {
       final currentUser = await customerService.getCustomer(user.userID!);
 
       if (currentUser != null) {
-        // Mevcut kullanıcı verilerini koruyalım
-        final updatedUser = Customer(
-          userID: user.userID,
+        // copyWith metodunu kullanarak tüm değerleri daha güvenli bir şekilde güncelleyelim
+        // Mevcut kullanıcıdan gelen değerler kullanıcının değiştirmediği alanlar için kullanılır
+        final updatedUser = currentUser.copyWith(
           firstName: user.firstName,
           lastName: user.lastName,
           nickname: user.nickname,
           phoneNumber: user.phoneNumber,
-          email: user.email ?? currentUser.email,
-          birthday: user.birthday ?? currentUser.birthday,
-          gender: user.gender ?? currentUser.gender,
           verification: user.verification,
-          isPremium: user.isPremium ?? currentUser.isPremium,
           profilePictureUrl: user.profilePictureUrl,
-          favoriteCategories: user.favoriteCategories ?? currentUser.favoriteCategories,
-          adverts: user.adverts ?? currentUser.adverts,
-          blockUsers: user.blockUsers ?? currentUser.blockUsers,
-          favoriteAdverts: user.favoriteAdverts ?? currentUser.favoriteAdverts,
-          chatMap: user.chatMap ?? currentUser.chatMap,
-          location: user.location ?? currentUser.location,
+          location: user.location,
         );
 
         debugPrint('Güncellenen profil verileri: ${updatedUser.toJson()}');
         await customerService.updateCustomer(user.userID!, updatedUser);
+
+        // Güncellenmiş kullanıcıyı mevcut kullanıcı olarak atayalım
+        user = updatedUser;
+
+        // Controller'ları güncelle
+        _updateControllersFromUser();
       } else {
         // Eğer mevcut kullanıcı yoksa, şu anki verileri kullan
         debugPrint('Mevcut kullanıcı bulunamadı. Şu anki veriler kullanılıyor.');
