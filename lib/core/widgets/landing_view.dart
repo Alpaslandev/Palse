@@ -64,7 +64,6 @@ class _LandingViewState extends State<LandingView> {
       bottomNavigationBar: SafeArea(
         child: Container(
           height: navBarHeight,
-          color: Colors.white,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [

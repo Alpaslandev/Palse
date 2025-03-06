@@ -12,7 +12,6 @@ class ProjectAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     return AppBar(
-      backgroundColor: Colors.white,
       scrolledUnderElevation: 0,
       title: Row(
         children: [

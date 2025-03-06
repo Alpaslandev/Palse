@@ -46,7 +46,6 @@ class AdvertCard extends StatelessWidget {
     final currentCustomer = context.read<AuthProvider>().user!;
     final chatsService = ChatService();
     return Card(
-      color: Colors.white,
       elevation: 0,
       margin: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(

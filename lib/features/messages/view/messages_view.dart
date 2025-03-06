@@ -52,6 +52,7 @@ class _MessagesViewState extends State<MessagesView> {
       value: _viewModel,
       child: Consumer<MessagesViewModel>(
         builder: (context, vm, _) => Scaffold(
+          resizeToAvoidBottomInset: true,
           appBar: MessageAppBar(
             vm: vm,
             otherUserId: widget.otherUserId,
@@ -106,16 +107,14 @@ class _MessagesViewState extends State<MessagesView> {
                   },
                 ),
               ),
+              MessageInput(
+                chatId: widget.chatId,
+                currentUserId: widget.currentUserId,
+                otherUserId: widget.otherUserId,
+                isPremium: isPremium,
+                senderName: senderName,
+              ),
             ],
-          ),
-          bottomNavigationBar: SafeArea(
-            child: MessageInput(
-              chatId: widget.chatId,
-              currentUserId: widget.currentUserId,
-              otherUserId: widget.otherUserId,
-              isPremium: isPremium,
-              senderName: senderName,
-            ),
           ),
         ),
       ),

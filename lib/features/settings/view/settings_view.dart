@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/constant/app_constant.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
+import 'package:palseapp/core/provider/theme_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
 import 'package:provider/provider.dart';
 
@@ -11,6 +12,8 @@ class SettingsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Ayarlar'),
@@ -37,6 +40,18 @@ class SettingsView extends StatelessWidget {
             icon: Icons.notifications_outlined,
             title: 'Bildirimler',
             onTap: () => context.pushNamed(editNotification),
+          ),
+          // Tema seçim seçeneği
+          SwitchListTile(
+            title: const Text('Koyu Tema'),
+            secondary: Icon(
+              themeProvider.isDarkMode ? Icons.dark_mode : Icons.light_mode,
+              color: Colors.blue,
+            ),
+            value: themeProvider.isDarkMode,
+            onChanged: (value) {
+              themeProvider.toggleTheme();
+            },
           ),
           const _SectionTitle(title: 'Genel'),
           _SettingsTile(

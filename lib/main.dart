@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
+import 'package:palseapp/core/provider/theme_provider.dart';
 import 'package:palseapp/core/routes/app_router.dart';
 import 'package:palseapp/core/services/notification_service.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
@@ -53,12 +54,14 @@ void main() async {
   Intl.defaultLocale = locale.toString();
   debugPrint('Intl.defaultLocale: ${Intl.defaultLocale}');
   final subscriptionProvider = SubscriptionProvider();
+  final themeProvider = ThemeProvider();
 
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: authProvider),
         ChangeNotifierProvider.value(value: subscriptionProvider),
+        ChangeNotifierProvider.value(value: themeProvider),
         ChangeNotifierProvider(create: (_) => ChatsViewModel(authProvider.user!)),
       ],
       child: MyApp(notificationService: notificationService),
@@ -73,9 +76,13 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return MaterialApp.router(
       title: 'Palse App',
-      theme: AppTheme.theme,
+      theme: AppTheme.theme, // Aydınlık tema
+      darkTheme: AppTheme.darkTheme, // Koyu tema
+      themeMode: themeProvider.themeMode, // Tema modunu provider'dan al
       routerConfig: AppRouter.router,
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
