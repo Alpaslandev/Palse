@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class NotificationView extends StatelessWidget {
@@ -22,7 +23,7 @@ class NotificationView extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Bildirimler'),
+        title: Text(context.tr('notifications')),
       ),
       body: Column(
         children: [
@@ -36,12 +37,12 @@ class NotificationView extends StatelessWidget {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Center(child: CircularProgressIndicator());
                 } else if (snapshot.hasError) {
-                  return Center(child: Text('Hata: ${snapshot.error}'));
+                  return Center(child: Text(context.tr('error_occurred') + ': ${snapshot.error}'));
                 } else {
                   final notifications = snapshot.data ?? [];
 
                   if (notifications.isEmpty) {
-                    return Center(child: Text('Bildirim bulunamadı'));
+                    return Center(child: Text(context.tr('no_notifications')));
                   }
 
                   return ListView.builder(

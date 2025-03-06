@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
@@ -51,7 +52,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
-    final chatsViewModel = Provider.of<ChatsViewModel>(context);
 
     return ChangeNotifierProvider.value(
       value: _viewModel,
@@ -77,10 +77,10 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                       ),
                       unselectedLabelColor: Colors.grey,
                       controller: _tabController,
-                      tabs: const [
-                        Tab(text: 'Şehrine Göre', iconMargin: EdgeInsets.zero),
-                        Tab(text: 'İlgine Göre', iconMargin: EdgeInsets.zero),
-                        Tab(text: 'Diğer', iconMargin: EdgeInsets.zero),
+                      tabs: [
+                        Tab(text: context.tr('city_based'), iconMargin: EdgeInsets.zero),
+                        Tab(text: context.tr('interest_based'), iconMargin: EdgeInsets.zero),
+                        Tab(text: context.tr('other'), iconMargin: EdgeInsets.zero),
                       ],
                     ),
                   ),
@@ -101,7 +101,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
             body: viewModel.isLoading && viewModel.adverts.isEmpty
                 ? const Center(child: CircularProgressIndicator())
                 : viewModel.adverts.isEmpty
-                    ? const Center(child: Text('Henüz ilan bulunmuyor'))
+                    ? Center(child: Text(context.tr('no_listings_yet')))
                     : NotificationListener<ScrollNotification>(
                         onNotification: (ScrollNotification scrollInfo) {
                           if (scrollInfo.metrics.pixels == scrollInfo.metrics.maxScrollExtent) {
@@ -131,19 +131,19 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                                       padding: const EdgeInsets.all(16.0),
                                       child: Column(
                                         children: [
-                                          const Text(
-                                            'Bu kategoride başka ilan bulunmamaktadır.',
+                                          Text(
+                                            context.tr('no_more_listings_in_category'),
                                             textAlign: TextAlign.center,
-                                            style: TextStyle(fontSize: 16),
+                                            style: const TextStyle(fontSize: 16),
                                           ),
                                           const SizedBox(height: 8),
                                           TextButton(
                                             onPressed: () {
                                               _tabController.animateTo(2);
                                             },
-                                            child: const Text(
-                                              'Diğer ilanları görmek için tıklayın',
-                                              style: TextStyle(
+                                            child: Text(
+                                              context.tr('click_to_see_other_listings'),
+                                              style: const TextStyle(
                                                 color: Colors.blue,
                                                 fontWeight: FontWeight.bold,
                                               ),
@@ -174,20 +174,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                                   await viewModel.likeAdvert(advert.advertID ?? '', userId);
                                 }
                               },
-                              // onProfileTap: () => context.push(friendProfile, extra: customer),
-                              // onMessageTap: () async {
-                              //   final userId = authProvider.user?.userID;
-                              //   if (userId == null) return;
-
-                              //   final chatId = await chatsViewModel.startOrGetChat(
-                              //     userId,
-                              //     customer.userID ?? '',
-                              //   );
-
-                              //   if (context.mounted) {
-                              //     context.push('/chats/$chatId?otherId=${customer.userID}&currentId=$userId');
-                              //   }
-                              // },
                             );
                           },
                         ),
@@ -196,7 +182,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
               backgroundColor: AppTheme.primaryColor,
               shape: const StadiumBorder(),
               onPressed: () => context.push(createAdvert),
-              label: const Text('İlan Ver', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              label: Text(context.tr('create_listing'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           );
         },

@@ -8,14 +8,28 @@ const Map<String, String> tr = {
   'register': 'Kayıt Ol',
   'email': 'E-posta',
   'password': 'Şifre',
+  'confirm_password': 'Şifre Tekrar',
   'forgot_password': 'Şifremi Unuttum',
   'continue': 'Devam Et',
+  'welcome_message': 'Hoş geldin 👋',
+  'or': 'Veya',
+  'login_successful': 'Giriş başarılı',
+  'login_failed': 'Giriş başarısız',
+  'privacy_terms_agreement': 'Giriş yaparak Gizlilik Politikasını ve Kullanım Koşullarını kabul etmiş sayılırsınız.',
 
   // Ana Sayfa
   'home': 'Ana Sayfa',
   'explore': 'Keşfet',
   'messages': 'Mesajlar',
   'profile': 'Profil',
+  'city_based': 'Şehrine Göre',
+  'interest_based': 'İlgine Göre',
+  'other': 'Diğer',
+  'favorites': 'Favoriler',
+  'no_listings_yet': 'Henüz ilan bulunmuyor',
+  'no_more_listings_in_category': 'Bu kategoride başka ilan bulunmamaktadır.',
+  'click_to_see_other_listings': 'Diğer ilanları görmek için tıklayın',
+  'create_listing': 'İlan Ver',
 
   // Mesajlar
   'no_messages': 'Henüz mesaj yok',
@@ -23,6 +37,9 @@ const Map<String, String> tr = {
   'send': 'Gönder',
   'quote': 'Alıntı',
   'error_occurred': 'Bir hata oluştu',
+  'no_notifications': 'Bildirim bulunamadı',
+  'camera': 'Kamera',
+  'gallery': 'Galeri',
 
   // Profil
   'edit_profile': 'Profili Düzenle',

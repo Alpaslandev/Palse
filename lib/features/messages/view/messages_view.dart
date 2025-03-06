@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/models/chat_model.dart';
 import 'package:palseapp/features/messages/widgets/message_app_bar.dart';
@@ -75,7 +76,7 @@ class _MessagesViewState extends State<MessagesView> {
                       stream: vm.getMessages(widget.chatId),
                       builder: (context, snapshot) {
                         if (snapshot.hasError) {
-                          return const Center(child: Text('Bir hata oluştu'));
+                          return Center(child: Text(context.tr('error_occurred')));
                         }
 
                         // İlk yüklemede loading göster
@@ -96,8 +97,8 @@ class _MessagesViewState extends State<MessagesView> {
                         });
 
                         if (messages.isEmpty) {
-                          return const Center(
-                            child: Text('Henüz mesaj yok'),
+                          return Center(
+                            child: Text(context.tr('no_messages')),
                           );
                         }
 

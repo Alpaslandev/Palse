@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -27,9 +28,9 @@ class _LoginViewState extends State<LoginView> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Header
-            const Text(
-              "Hoş geldin 👋",
-              style: TextStyle(
+            Text(
+              context.tr('welcome_message'),
+              style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
@@ -39,9 +40,9 @@ class _LoginViewState extends State<LoginView> {
               // Email TextField
               TextField(
                 controller: _emailController,
-                decoration: const InputDecoration(
-                  hintText: 'E-posta',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  hintText: context.tr('email'),
+                  border: const OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 16),
@@ -51,7 +52,7 @@ class _LoginViewState extends State<LoginView> {
                 controller: _passwordController,
                 obscureText: !_isPasswordVisible,
                 decoration: InputDecoration(
-                  hintText: 'Şifre',
+                  hintText: context.tr('password'),
                   border: const OutlineInputBorder(),
                   suffixIcon: IconButton(
                     icon: Icon(
@@ -69,9 +70,9 @@ class _LoginViewState extends State<LoginView> {
               // Email TextField
               TextField(
                 controller: _emailController,
-                decoration: const InputDecoration(
-                  hintText: 'E-posta',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  hintText: context.tr('email'),
+                  border: const OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 16),
@@ -81,7 +82,7 @@ class _LoginViewState extends State<LoginView> {
                 controller: _passwordController,
                 obscureText: !_isPasswordVisible,
                 decoration: InputDecoration(
-                  hintText: 'Şifre',
+                  hintText: context.tr('password'),
                   border: const OutlineInputBorder(),
                   suffixIcon: IconButton(
                     icon: Icon(
@@ -100,7 +101,7 @@ class _LoginViewState extends State<LoginView> {
                 controller: _confirmPasswordController,
                 obscureText: !_isPasswordVisible,
                 decoration: InputDecoration(
-                  hintText: 'Şifre Tekrar',
+                  hintText: context.tr('confirm_password'),
                   border: const OutlineInputBorder(),
                   suffixIcon: IconButton(
                     icon: Icon(
@@ -129,15 +130,15 @@ class _LoginViewState extends State<LoginView> {
                   }
                   //    Navigator.push(context, MaterialPageRoute(builder: (context) => NicknameStep(controller: _emailController)));
                 },
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  child: Text('Giriş Yap'),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Text(_isSignUp ? context.tr('register') : context.tr('login')),
                 ),
               ),
             ),
 
             const SizedBox(height: 16),
-            const Text('Veya'),
+            Text(context.tr('or')),
             const SizedBox(height: 16),
 
             // Social Login Buttons
@@ -163,14 +164,14 @@ class _LoginViewState extends State<LoginView> {
                             // Router otomatik olarak yönlendirecek
                             if (!context.mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Giriş başarılı')),
+                              SnackBar(content: Text(context.tr('login_successful'))),
                             );
                           } catch (e) {
                             // Hata yönetimi
                             debugPrint('Giriş hatası: $e');
                             if (!context.mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Giriş başarısız: $e')),
+                              SnackBar(content: Text(context.tr('login_failed') + ': $e')),
                             );
                           }
                         },
@@ -178,7 +179,7 @@ class _LoginViewState extends State<LoginView> {
               ],
             ),
 
-            Text("Giriş yaparak Gizlilik Politikasını ve Kullanım Koşullarını kabul etmiş sayılırsınız.")
+            Text(context.tr('privacy_terms_agreement'))
           ],
         ),
       ),

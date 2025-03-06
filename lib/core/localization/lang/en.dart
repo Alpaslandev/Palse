@@ -8,14 +8,28 @@ const Map<String, String> en = {
   'register': 'Register',
   'email': 'Email',
   'password': 'Password',
+  'confirm_password': 'Confirm Password',
   'forgot_password': 'Forgot Password',
   'continue': 'Continue',
+  'welcome_message': 'Welcome 👋',
+  'or': 'Or',
+  'login_successful': 'Login successful',
+  'login_failed': 'Login failed',
+  'privacy_terms_agreement': 'By logging in, you agree to the Privacy Policy and Terms of Use.',
 
   // Home
   'home': 'Home',
   'explore': 'Explore',
   'messages': 'Messages',
   'profile': 'Profile',
+  'city_based': 'By City',
+  'interest_based': 'By Interest',
+  'other': 'Other',
+  'favorites': 'Favorites',
+  'no_listings_yet': 'No listings yet',
+  'no_more_listings_in_category': 'No more listings in this category.',
+  'click_to_see_other_listings': 'Click to see other listings',
+  'create_listing': 'Create Listing',
 
   // Messages
   'no_messages': 'No messages yet',
@@ -23,6 +37,9 @@ const Map<String, String> en = {
   'send': 'Send',
   'quote': 'Quote',
   'error_occurred': 'An error occurred',
+  'no_notifications': 'No notifications found',
+  'camera': 'Camera',
+  'gallery': 'Gallery',
 
   // Profile
   'edit_profile': 'Edit Profile',

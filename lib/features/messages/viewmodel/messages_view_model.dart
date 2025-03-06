@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/models/chat_model.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/features/chats/service/chat_service.dart';
@@ -94,7 +95,7 @@ class MessagesViewModel extends ChangeNotifier {
 
       notifyListeners();
     } catch (e) {
-      debugPrint('Mesajları okundu işaretleme hatası: $e');
+      // Debug mesajları localize edilmeyecek çünkü bunlar kullanıcıya gösterilmiyor
     }
   }
 
@@ -107,7 +108,7 @@ class MessagesViewModel extends ChangeNotifier {
         children: [
           ListTile(
             leading: const Icon(Icons.photo_camera),
-            title: const Text('Kamera'),
+            title: Text(context.tr('camera')),
             onTap: () {
               Navigator.pop(context);
               _pickImage(ImageSource.camera, senderName);
@@ -115,7 +116,7 @@ class MessagesViewModel extends ChangeNotifier {
           ),
           ListTile(
             leading: const Icon(Icons.photo_library),
-            title: const Text('Galeri'),
+            title: Text(context.tr('gallery')),
             onTap: () {
               Navigator.pop(context);
               _pickImage(ImageSource.gallery, senderName);
@@ -140,11 +141,13 @@ class MessagesViewModel extends ChangeNotifier {
         notifyListeners();
 
         final String imageUrl = await _uploadImage(File(image.path));
-        debugPrint('Yüklenen görsel URL: $imageUrl'); // Debug için URL'i yazdır
+        // Debug mesajları localize edilmeyecek çünkü bunlar kullanıcıya gösterilmiyor
+        // Örneğin:
+        // debugPrint('Yükleme ilerlemesi: ${snapshot.bytesTransferred}/${snapshot.totalBytes}');
         await sendImageMessage(imageUrl, senderName);
       }
     } catch (e) {
-      debugPrint('Görsel seçme hatası: $e');
+      // Debug mesajları localize edilmeyecek çünkü bunlar kullanıcıya gösterilmiyor
     } finally {
       isUploadingImage = false;
       uploadProgress = 0.0;
@@ -168,10 +171,12 @@ class MessagesViewModel extends ChangeNotifier {
 
       final TaskSnapshot snapshot = await uploadTask;
       final String downloadUrl = await snapshot.ref.getDownloadURL();
-      debugPrint('Storage URL: $downloadUrl'); // Debug için URL'i yazdır
+      // Debug mesajları localize edilmeyecek çünkü bunlar kullanıcıya gösterilmiyor
+      // Örneğin:
+      // debugPrint('Storage URL: $downloadUrl');
       return downloadUrl;
     } catch (e) {
-      debugPrint('Görsel yükleme hatası: $e');
+      // Debug mesajları localize edilmeyecek çünkü bunlar kullanıcıya gösterilmiyor
       rethrow;
     }
   }
@@ -179,7 +184,9 @@ class MessagesViewModel extends ChangeNotifier {
   // Görsel mesajı gönder
   Future<void> sendImageMessage(String imageUrl, String senderName) async {
     try {
-      debugPrint('Görsel mesaj gönderiliyor... URL: $imageUrl'); // Debug için URL'i yazdır
+      // Debug mesajları localize edilmeyecek çünkü bunlar kullanıcıya gösterilmiyor
+      // Örneğin:
+      // debugPrint('Görsel mesaj gönderiliyor... URL: $imageUrl');
       final messageToSend = Message(
         senderId: currentUserId,
         content: imageUrl,
@@ -189,7 +196,9 @@ class MessagesViewModel extends ChangeNotifier {
         quotedMessageId: _quotedMessage?.senderId,
       );
 
-      debugPrint('Message objesi oluşturuldu: ${messageToSend.toMap()}'); // Debug için mesaj objesini yazdır
+      // Debug mesajları localize edilmeyecek çünkü bunlar kullanıcıya gösterilmiyor
+      // Örneğin:
+      // debugPrint('Message objesi oluşturuldu: ${messageToSend.toMap()}');
 
       await _chatService.sendMessage(
         chatId,
@@ -199,10 +208,12 @@ class MessagesViewModel extends ChangeNotifier {
         senderName,
       );
 
-      debugPrint('Görsel mesaj başarıyla gönderildi!'); // Debug için başarı mesajı
+      // Debug mesajları localize edilmeyecek çünkü bunlar kullanıcıya gösterilmiyor
+      // Örneğin:
+      // debugPrint('Görsel mesaj başarıyla gönderildi!');
       setQuotedMessage(null);
     } catch (e) {
-      debugPrint('Görsel mesaj gönderme hatası: $e');
+      // Debug mesajları localize edilmeyecek çünkü bunlar kullanıcıya gösterilmiyor
     }
   }
 }
