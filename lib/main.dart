@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
+import 'package:palseapp/core/localization/app_localizations.dart';
+import 'package:palseapp/core/provider/locale_provider.dart';
 import 'package:palseapp/core/provider/theme_provider.dart';
 import 'package:palseapp/core/routes/app_router.dart';
 import 'package:palseapp/core/services/notification_service.dart';
@@ -47,12 +49,18 @@ void main() async {
   await notificationService.initialize();
 
   AppRouter.initialize(authProvider);
+
+  // Locale provider'ı başlat
+  final localeProvider = LocaleProvider();
+  await localeProvider.initialize();
+
   // Cihazın diline uygun tarih formatlamasını başlat
-  final locale = WidgetsBinding.instance.platformDispatcher.locale;
+  final locale = localeProvider.locale;
   debugPrint('Locale: $locale');
   await initializeDateFormatting(locale.toString(), null);
   Intl.defaultLocale = locale.toString();
   debugPrint('Intl.defaultLocale: ${Intl.defaultLocale}');
+
   final subscriptionProvider = SubscriptionProvider();
   final themeProvider = ThemeProvider();
 
@@ -62,6 +70,7 @@ void main() async {
         ChangeNotifierProvider.value(value: authProvider),
         ChangeNotifierProvider.value(value: subscriptionProvider),
         ChangeNotifierProvider.value(value: themeProvider),
+        ChangeNotifierProvider.value(value: localeProvider),
         ChangeNotifierProvider(create: (_) => ChatsViewModel(authProvider.user!)),
       ],
       child: MyApp(notificationService: notificationService),
@@ -77,6 +86,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final localeProvider = Provider.of<LocaleProvider>(context);
 
     return MaterialApp.router(
       title: 'Palse App',
@@ -84,15 +94,14 @@ class MyApp extends StatelessWidget {
       darkTheme: AppTheme.darkTheme, // Koyu tema
       themeMode: themeProvider.themeMode, // Tema modunu provider'dan al
       routerConfig: AppRouter.router,
+      locale: localeProvider.locale, // Dil ayarını provider'dan al
       localizationsDelegates: const [
+        AppLocalizations.delegate, // Kendi localization delegemiz
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [
-        Locale('tr', 'TR'),
-        Locale('en', 'US'),
-      ],
+      supportedLocales: AppLocalizations.supportedLocales,
       builder: (context, child) {
         // Router hazır olduğunda context'i set et
         WidgetsBinding.instance.addPostFrameCallback((_) {

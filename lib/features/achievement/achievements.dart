@@ -4,7 +4,7 @@ import 'package:palseapp/features/achievement/premium_rewards.dart';
 enum UserRank {
   /// 0-99 XP: Keşfe Başlayan
   beginner(
-    title: 'Keşfe Başlayan',
+    title: '🌟 Keşfe Başlayan',
     minXp: 0,
     maxXp: 99,
     icon: '🌟',
@@ -12,7 +12,7 @@ enum UserRank {
 
   /// 100-499 XP: Sosyal Keşifçi
   explorer(
-    title: 'Sosyal Keşifçi',
+    title: '🔍 Sosyal Keşifçi',
     minXp: 100,
     maxXp: 499,
     icon: '🔍',
@@ -20,7 +20,7 @@ enum UserRank {
 
   /// 500-999 XP: Bağlantı Ustası
   connector(
-    title: 'Bağlantı Ustası',
+    title: '🧩 Bağlantı Ustası',
     minXp: 500,
     maxXp: 999,
     icon: '🧩',
@@ -28,7 +28,7 @@ enum UserRank {
 
   /// 1000-2999 XP: Etkinlik Lideri
   leader(
-    title: 'Etkinlik Lideri',
+    title: '🎯 Etkinlik Lideri',
     minXp: 1000,
     maxXp: 2999,
     icon: '🎯',
@@ -36,7 +36,7 @@ enum UserRank {
 
   /// 3000+ XP: Sosyal Usta
   master(
-    title: 'Sosyal Usta',
+    title: '👑 Sosyal Usta',
     minXp: 3000,
     maxXp: double.infinity,
     icon: '👑',
@@ -104,32 +104,35 @@ enum UserRank {
 /// XP kazandıran olay türlerini tanımlayan enum
 enum XpEvent {
   /// Hoş Geldin Ödülleri (Tek Seferlik)
-  firstListing(500, 'İlk ilanını oluşturma'),
-  firstMessage(500, 'İlk mesajını gönderme'),
+  firstListing(500, 'İlk ilanını oluşturma', 'first_listing_description'),
+  firstMessage(500, 'İlk mesajını gönderme', 'first_message_description'),
 
   /// İlan Verme
-  createListing(100, 'Yeni ilan oluştur'),
-  receiveFirstMessage(10, 'İlanınıza gelen her ilk mesaj'),
+  createListing(100, 'Yeni ilan oluştur', 'create_listing_description'),
+  receiveFirstMessage(10, 'İlanınıza gelen her ilk mesaj', 'receive_first_message_description'),
 
   /// Mesajlaşma
-  sendFirstMessage(35, 'İlk defa mesaj gönderilen kullanıcı başına'),
+  sendFirstMessage(35, 'İlk defa mesaj gönderilen kullanıcı başına', 'send_first_message_description'),
 
   /// Yorumlama ve Yorum Almak
-  writeComment(15, 'Birine yorum yazma'),
-  receiveComment(10, 'Profiline yorum alma'),
+  writeComment(15, 'Birine yorum yazma', 'write_comment_description'),
+  receiveComment(10, 'Profiline yorum alma', 'receive_comment_description'),
 
   /// Günlük Görev
-  dailyTaskListingAndMessage(100, 'Bir ilan oluştur ve bir mesaj gönder'),
-  dailyLogin(10, 'Uygulamaya günlük giriş');
+  dailyTaskListingAndMessage(100, 'Bir ilan oluştur ve bir mesaj gönder', 'daily_task_listing_and_message_description'),
+  dailyLogin(10, 'Uygulamaya günlük giriş', 'daily_login_description');
 
   /// Constructor
-  const XpEvent(this.xpAmount, this.description);
+  const XpEvent(this.xpAmount, this.description, this.descriptionKey);
 
   /// Kazanılan XP miktarı
   final int xpAmount;
 
-  /// Olay açıklaması
+  /// Olay açıklaması (Türkçe)
   final String description;
+
+  /// Olay açıklaması için çeviri anahtarı
+  final String descriptionKey;
 
   /// Event'in ait olduğu grubu bulan yardımcı metod
   XpEventGroup get group {
@@ -144,34 +147,37 @@ enum XpEvent {
 
 /// XP event gruplarını tanımlayan enum
 enum XpEventGroup {
-  welcomeRewards('Hoş Geldin Ödülleri (Tek Seferlik)', [
+  welcomeRewards('Hoş Geldin Ödülleri (Tek Seferlik)', 'welcome_rewards', [
     XpEvent.firstListing,
     XpEvent.firstMessage,
   ]),
 
-  listing('İlan Verme', [
+  listing('İlan Verme', 'listing', [
     XpEvent.createListing,
     XpEvent.receiveFirstMessage,
   ]),
 
-  messaging('Mesajlaşma', [
+  messaging('Mesajlaşma', 'messaging', [
     XpEvent.sendFirstMessage,
   ]),
 
-  commenting('Yorumlama ve Yorum Almak', [
+  commenting('Yorumlama ve Yorum Almak', 'commenting', [
     XpEvent.writeComment,
     XpEvent.receiveComment,
   ]),
 
-  dailyTasks('Günlük Görev', [
+  dailyTasks('Günlük Görev', 'daily_tasks', [
     XpEvent.dailyTaskListingAndMessage,
     XpEvent.dailyLogin,
   ]);
 
-  const XpEventGroup(this.title, this.events);
+  const XpEventGroup(this.title, this.titleKey, this.events);
 
-  /// Grup başlığı
+  /// Grup başlığı (Türkçe)
   final String title;
+
+  /// Grup başlığı için çeviri anahtarı
+  final String titleKey;
 
   /// Bu gruba ait eventler
   final List<XpEvent> events;

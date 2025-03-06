@@ -50,4 +50,34 @@ const Map<String, String> tr = {
   'messaging': 'Mesajlaşma',
   'commenting': 'Yorumlama ve Yorum Almak',
   'daily_tasks': 'Günlük Görev',
+
+  // XP Event Açıklamaları
+  'first_listing_description': 'İlk ilanını oluşturma',
+  'first_message_description': 'İlk mesajını gönderme',
+  'create_listing_description': 'Yeni ilan oluştur',
+  'receive_first_message_description': 'İlanınıza gelen her ilk mesaj',
+  'send_first_message_description': 'İlk defa mesaj gönderilen kullanıcı başına',
+  'write_comment_description': 'Birine yorum yazma',
+  'receive_comment_description': 'Profiline yorum alma',
+  'daily_task_listing_and_message_description': 'Bir ilan oluştur ve bir mesaj gönder',
+  'daily_login_description': 'Uygulamaya günlük giriş',
+
+  // Dil Ayarları
+  'language_settings': 'Dil Ayarları',
+  'language_change_info': 'Dil değişikliği anında uygulanır ve otomatik olarak kaydedilir.',
+  'app_language': 'Uygulama Dili',
+
+  // Ayarlar Sayfası
+  'user': 'Kullanıcı',
+  'application': 'Uygulama',
+  'general': 'Genel',
+  'dark_theme': 'Koyu Tema',
+  'notifications': 'Bildirimler',
+  'account_verified': 'Hesabın Onaylı',
+  'account_not_verified': 'Hesabın Onaylı Değil',
+  'faq': 'Sıkça Sorulan Sorular',
+  'terms_of_use': 'Kullanım Şartları',
+  'privacy_policy': 'Gizlilik Politikası',
+  'about_us': 'Hakkımızda',
+  'app_version': 'Uygulama Versiyonu',
 };

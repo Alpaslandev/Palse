@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
 import 'package:palseapp/features/achievement/achievements.dart';
 
@@ -9,18 +10,18 @@ class XpEventsView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('XP Sistemi ve Ödüller'),
+        title: Text(context.tr('xp_system')),
       ),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
         children: [
           // Unvanlar kartı
-          _buildRanksCard(),
+          _buildRanksCard(context),
           const SizedBox(height: 16),
           // XP kazanma yolları
           ...XpEventGroup.values.map((group) => Column(
                 children: [
-                  _buildEventCard(group, group.events),
+                  _buildEventCard(context, group, group.events),
                   const SizedBox(height: 16),
                 ],
               )),
@@ -30,25 +31,25 @@ class XpEventsView extends StatelessWidget {
   }
 
   // Unvanlar kartı
-  Widget _buildRanksCard() {
+  Widget _buildRanksCard(BuildContext context) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Unvanlar',
-              style: TextStyle(
+            Text(
+              context.tr('ranks'),
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: AppTheme.primaryColor,
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Kazandığınız XP puanlarına göre unvanınız yükselir:',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
+            Text(
+              context.tr('ranks_description'),
+              style: const TextStyle(fontSize: 14, color: Colors.grey),
             ),
             const SizedBox(height: 12),
             ...UserRank.values.map((rank) => Padding(
@@ -100,7 +101,7 @@ class XpEventsView extends StatelessWidget {
     );
   }
 
-  Widget _buildEventCard(XpEventGroup group, List<XpEvent> events) {
+  Widget _buildEventCard(BuildContext context, XpEventGroup group, List<XpEvent> events) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -108,16 +109,21 @@ class XpEventsView extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 16),
-            Text(group.title,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.primaryColor,
-                )),
+            Text(
+              context.tr(group.titleKey),
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.primaryColor,
+              ),
+            ),
             const SizedBox(height: 8),
             ...group.events.map((event) => ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: Text('• ${event.description}', style: const TextStyle(fontSize: 14, color: Colors.grey)),
+                  title: Text(
+                    '• ${context.tr(event.descriptionKey)}',
+                    style: const TextStyle(fontSize: 14, color: Colors.grey),
+                  ),
                   trailing: Container(
                     width: 70,
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

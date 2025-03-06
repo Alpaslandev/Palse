@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/constant/app_constant.dart';
+import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
+import 'package:palseapp/core/provider/locale_provider.dart';
 import 'package:palseapp/core/provider/theme_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
 import 'package:provider/provider.dart';
@@ -13,37 +15,38 @@ class SettingsView extends StatelessWidget {
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final localeProvider = Provider.of<LocaleProvider>(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Ayarlar'),
+        title: Text(context.tr('settings')),
       ),
       body: ListView(
         children: [
-          const _SectionTitle(title: 'Kullanıcı'),
+          _SectionTitle(title: context.tr('user')),
           _SettingsTile(
             icon: Icons.person_outline,
-            title: 'Profil',
+            title: context.tr('profile'),
             trailing: authProvider.user?.verification == false
-                ? const Text(
-                    'Hesabın Onaylı Değil',
-                    style: TextStyle(color: Colors.red),
+                ? Text(
+                    context.tr('account_not_verified'),
+                    style: const TextStyle(color: Colors.red),
                   )
-                : const Text(
-                    'Hesabın Onaylı',
-                    style: TextStyle(color: Colors.green),
+                : Text(
+                    context.tr('account_verified'),
+                    style: const TextStyle(color: Colors.green),
                   ),
             onTap: () => context.pushNamed(editProfile, extra: authProvider.user),
           ),
-          const _SectionTitle(title: 'Uygulama'),
+          _SectionTitle(title: context.tr('application')),
           _SettingsTile(
             icon: Icons.notifications_outlined,
-            title: 'Bildirimler',
+            title: context.tr('notifications'),
             onTap: () => context.pushNamed(editNotification),
           ),
           // Tema seçim seçeneği
           SwitchListTile(
-            title: const Text('Koyu Tema'),
+            title: Text(context.tr('dark_theme')),
             secondary: Icon(
               themeProvider.isDarkMode ? Icons.dark_mode : Icons.light_mode,
               color: Colors.blue,
@@ -53,39 +56,49 @@ class SettingsView extends StatelessWidget {
               themeProvider.toggleTheme();
             },
           ),
-          const _SectionTitle(title: 'Genel'),
+          // Dil ayarları seçeneği
+          _SettingsTile(
+            icon: Icons.language,
+            title: context.tr('app_language'),
+            trailing: Text(
+              localeProvider.locale.languageCode == 'tr' ? 'Türkçe' : 'English',
+              style: const TextStyle(color: Colors.grey),
+            ),
+            onTap: () => context.pushNamed(languageSettings),
+          ),
+          _SectionTitle(title: context.tr('general')),
           _SettingsTile(
             icon: Icons.question_mark_outlined,
-            title: 'Sıkça Sorulan Sorular',
+            title: context.tr('faq'),
             onTap: () => context.pushNamed(faq),
           ),
           _SettingsTile(
             icon: Icons.description_outlined,
-            title: 'Kullanım Şartları',
+            title: context.tr('terms_of_use'),
             onTap: () => context.pushNamed(terms),
           ),
           _SettingsTile(
             icon: Icons.shield_outlined,
-            title: 'Gizlilik Politikası',
+            title: context.tr('privacy_policy'),
             onTap: () => context.pushNamed(privacy),
           ),
           _SettingsTile(
             icon: Icons.info_outline,
-            title: 'Hakkımızda',
+            title: context.tr('about_us'),
             onTap: () => context.pushNamed(about),
           ),
           _SettingsTile(
             icon: Icons.logout_outlined,
-            title: 'Çıkış Yap',
+            title: context.tr('logout'),
             titleColor: Colors.red,
             onTap: () async => await authProvider.logout(),
           ),
-          const Padding(
-            padding: EdgeInsets.all(16.0),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
             child: Center(
               child: Text(
-                'Uygulama Versiyonu $appVersion',
-                style: TextStyle(
+                '${context.tr('app_version')} $appVersion',
+                style: const TextStyle(
                   color: Colors.grey,
                   fontSize: 12,
                 ),

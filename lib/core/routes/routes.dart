@@ -11,6 +11,7 @@ const String profile = '/profile';
 const String settings = '/settings';
 const String editProfile = 'editProfile';
 const String editNotification = 'editNotification';
+const String languageSettings = 'languageSettings';
 const String leaderBoard = 'leaderBoard';
 const String xpEvents = '/xpEvents';
 

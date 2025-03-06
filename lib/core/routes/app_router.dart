@@ -23,6 +23,7 @@ import 'package:palseapp/features/profile/view/profile_view.dart';
 import 'package:palseapp/features/profile/widgets/xp_events_view.dart';
 import 'package:palseapp/features/profile_setup_steps/view/profile_setup_view.dart';
 import 'package:palseapp/features/settings/view/edit_profile.dart';
+import 'package:palseapp/features/settings/view/language_settings_view.dart';
 import 'package:palseapp/features/settings/view/settings_view.dart';
 import 'package:palseapp/features/splash/splash_view.dart';
 import 'package:palseapp/features/subscription/view/subscription_view.dart';
@@ -154,6 +155,11 @@ class AppRouter {
               path: faq,
               name: faq,
               builder: (context, state) => const FAQPage(),
+            ),
+            GoRoute(
+              path: languageSettings,
+              name: languageSettings,
+              builder: (context, state) => const LanguageSettingsView(),
             ),
           ],
         ),
