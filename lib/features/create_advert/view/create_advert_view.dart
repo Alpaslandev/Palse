@@ -12,8 +12,29 @@ import 'package:palseapp/features/create_advert/viewmodel/create_advert_view_mod
 import 'package:palseapp/core/widgets/location_sheet.dart';
 import 'package:provider/provider.dart';
 
-class CreateAdvertView extends StatelessWidget {
+class CreateAdvertView extends StatefulWidget {
   const CreateAdvertView({super.key});
+
+  @override
+  State<CreateAdvertView> createState() => _CreateAdvertViewState();
+}
+
+class _CreateAdvertViewState extends State<CreateAdvertView> {
+  // Form alanları için FocusNode'lar
+  final FocusNode _titleFocusNode = FocusNode();
+  final FocusNode _descriptionFocusNode = FocusNode();
+  final FocusNode _eventTypeFocusNode = FocusNode();
+  final FocusNode _locationFocusNode = FocusNode();
+
+  @override
+  void dispose() {
+    // FocusNode'ları temizle
+    _titleFocusNode.dispose();
+    _descriptionFocusNode.dispose();
+    _eventTypeFocusNode.dispose();
+    _locationFocusNode.dispose();
+    super.dispose();
+  }
 
   // Tarih ve saat seçimi için yardımcı metod
   Future<void> _selectDateTime(BuildContext context, bool isStartDate, CreateAdvertViewModel viewModel) async {
@@ -57,21 +78,32 @@ class CreateAdvertView extends StatelessWidget {
           child: Column(
             children: [
               TextFormField(
+                focusNode: _titleFocusNode,
                 decoration: const InputDecoration(labelText: 'İlan Başlığı'),
                 maxLength: 40,
                 onChanged: (value) => viewModel.advertName = value,
                 validator: (value) => value?.isEmpty ?? true ? 'İlan başlığı gerekli' : null,
+                textInputAction: TextInputAction.next,
+                onFieldSubmitted: (_) {
+                  FocusScope.of(context).requestFocus(_descriptionFocusNode);
+                },
               ),
               const SizedBox(height: 16),
               TextFormField(
+                focusNode: _descriptionFocusNode,
                 decoration: const InputDecoration(labelText: 'İlan Açıklaması'),
                 maxLines: 5,
                 maxLength: 300,
                 onChanged: (value) => viewModel.advertDescription = value,
                 validator: (value) => value?.isEmpty ?? true ? 'İlan açıklaması gerekli' : null,
+                textInputAction: TextInputAction.next,
+                onFieldSubmitted: (_) {
+                  FocusScope.of(context).requestFocus(_eventTypeFocusNode);
+                },
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<Categories>(
+                focusNode: _eventTypeFocusNode,
                 decoration: const InputDecoration(labelText: 'Etkinlik Tipi'),
                 value: viewModel.eventType,
                 items: Categories.values.map((Categories category) => DropdownMenuItem(value: category, child: Text(category.text))).toList(),
@@ -133,6 +165,7 @@ class CreateAdvertView extends StatelessWidget {
             const SizedBox(height: 16),
             TextField(
               controller: viewModel.locationController,
+              focusNode: _locationFocusNode,
               readOnly: true,
               decoration: const InputDecoration(labelText: 'Etkinlik Konumu'),
               onTap: () async {
@@ -258,66 +291,72 @@ class CreateAdvertView extends StatelessWidget {
       create: (context) => CreateAdvertViewModel(authProvider: context.read<AuthProvider>(), locationService: LocationService()),
       child: Consumer<CreateAdvertViewModel>(
         builder: (context, viewModel, child) {
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('İlan Oluştur'),
-            ),
-            body: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  Expanded(
-                    child: Stepper(
-                      type: StepperType.horizontal,
-                      currentStep: viewModel.currentStep,
-                      onStepContinue: viewModel.onStepContinue,
-                      onStepCancel: viewModel.onStepCancel,
-                      steps: _buildSteps(viewModel, context),
-                      connectorColor: WidgetStateProperty.fromMap({
-                        WidgetState.selected: Colors.blue,
-                        WidgetState.disabled: Colors.grey.shade400,
-                      }),
-                      controlsBuilder: (context, details) {
-                        // Boş bir widget döndürerek Stepper içindeki kontrolleri gizliyoruz
-                        return const SizedBox.shrink();
-                      },
-                    ),
-                  ),
-                ],
+          return GestureDetector(
+            // Ekranda boş bir alana tıklandığında klavyeyi kapat
+            onTap: () {
+              FocusScope.of(context).unfocus();
+            },
+            child: Scaffold(
+              appBar: AppBar(
+                title: const Text('İlan Oluştur'),
               ),
-            ),
-            // Butonları Scaffold'un en altına taşıyoruz
-            bottomNavigationBar: SafeArea(
-              child: Padding(
+              body: Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                child: Column(
                   children: [
-                    if (viewModel.currentStep > 0)
-                      TextButton.icon(
-                        onPressed: viewModel.onStepCancel,
-                        icon: const Icon(Icons.arrow_back),
-                        label: const Text('Geri', style: TextStyle(color: Colors.blue)),
-                      )
-                    else
-                      const SizedBox.shrink(),
-                    ElevatedButton(
-                      onPressed: () async {
-                        if (viewModel.currentStep == 2) {
-                          try {
-                            await viewModel.createAdvert();
-                            if (!context.mounted) return;
-                            context.go(myAdverts);
-                          } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
-                          }
-                        } else {
-                          viewModel.onStepContinue();
-                        }
-                      },
-                      child: Text(viewModel.currentStep == 2 ? 'Tamamla' : 'Devam Et'),
+                    Expanded(
+                      child: Stepper(
+                        type: StepperType.horizontal,
+                        currentStep: viewModel.currentStep,
+                        onStepContinue: viewModel.onStepContinue,
+                        onStepCancel: viewModel.onStepCancel,
+                        steps: _buildSteps(viewModel, context),
+                        connectorColor: WidgetStateProperty.fromMap({
+                          WidgetState.selected: Colors.blue,
+                          WidgetState.disabled: Colors.grey.shade400,
+                        }),
+                        controlsBuilder: (context, details) {
+                          // Boş bir widget döndürerek Stepper içindeki kontrolleri gizliyoruz
+                          return const SizedBox.shrink();
+                        },
+                      ),
                     ),
                   ],
+                ),
+              ),
+              // Butonları Scaffold'un en altına taşıyoruz
+              bottomNavigationBar: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      if (viewModel.currentStep > 0)
+                        TextButton.icon(
+                          onPressed: viewModel.onStepCancel,
+                          icon: const Icon(Icons.arrow_back),
+                          label: const Text('Geri', style: TextStyle(color: Colors.blue)),
+                        )
+                      else
+                        const SizedBox.shrink(),
+                      ElevatedButton(
+                        onPressed: () async {
+                          if (viewModel.currentStep == 2) {
+                            try {
+                              await viewModel.createAdvert();
+                              if (!context.mounted) return;
+                              context.go(myAdverts);
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+                            }
+                          } else {
+                            viewModel.onStepContinue();
+                          }
+                        },
+                        child: Text(viewModel.currentStep == 2 ? 'Tamamla' : 'Devam Et'),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
