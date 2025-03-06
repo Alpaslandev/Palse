@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/widgets/advert_card.dart';
@@ -51,17 +52,17 @@ class _MyAdvertViewState extends State<MyAdvertView> with TickerProviderStateMix
                   ),
                   labelColor: Colors.blue,
                   unselectedLabelColor: Colors.grey,
-                  tabs: const [
+                  tabs: [
                     Tab(
-                      text: 'İlanlarım',
+                      text: context.tr('my_listings'),
                       iconMargin: EdgeInsets.zero,
                     ),
                     Tab(
-                      text: 'Beğendiklerim',
+                      text: context.tr('my_likes'),
                       iconMargin: EdgeInsets.zero,
                     ),
                     Tab(
-                      text: 'Profilime Bakanlar',
+                      text: context.tr('profile_viewers'),
                       iconMargin: EdgeInsets.zero,
                     ),
                   ],
@@ -128,8 +129,8 @@ class _MyAdvertViewState extends State<MyAdvertView> with TickerProviderStateMix
   }
 
   Widget _buildEmptyAdvert() {
-    return const Center(
-      child: Text('İlan bulunamadı'),
+    return Center(
+      child: Text(context.tr('no_listing_found')),
     );
   }
 

@@ -41,10 +41,43 @@ const Map<String, String> en = {
   'camera': 'Camera',
   'gallery': 'Gallery',
 
+  // Listings and Profile
+  'my_listings': 'My Listings',
+  'my_likes': 'My Likes',
+  'profile_viewers': 'Profile Viewers',
+  'no_listing_found': 'No listing found',
+  'show_less': 'Show less',
+  'show_more': 'Show more...',
+  'likers': 'Likers',
+  'delete': 'Delete',
+  'like': 'Like',
+  'message': 'Message',
+  'report_listing': 'Report Listing',
+  'report_sent': 'Report has been sent',
+  'block_user': 'Block This User',
+  'user_blocked': 'User blocked',
+  'listings': 'Listings',
+  'send_message': 'Send Message',
+  'report_abuse': 'Report Abuse',
+  'comments': 'Comments',
+
   // Profile
   'edit_profile': 'Edit Profile',
   'settings': 'Settings',
   'logout': 'Logout',
+  'daily_task': 'Daily Task',
+  'daily_task_step1': 'Create a listing and send a message!',
+  'daily_task_step2': 'Complete the task, earn +100 XP in total!',
+  'complete_task': 'Complete Task',
+  'verify_profile_text': 'Verify that you are a real profile and\ngain extra visibility!',
+  'get_premium': 'Get Premium',
+
+  // Categories
+  'categories': 'Categories',
+  'save': 'Save',
+  'my_interests': 'My Interests',
+  'all_categories': 'All Categories',
+  'interests_saved': 'Your interests have been saved',
 
   // XP System
   'xp_system': 'XP System and Rewards',

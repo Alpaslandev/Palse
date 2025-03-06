@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:palseapp/core/constant/categories.dart';
+import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/services/firestore/customer_service.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
@@ -36,14 +37,14 @@ class _CategoriesViewState extends State<CategoriesView> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Kategoriler'),
+        title: Text(context.tr('categories')),
         centerTitle: false,
         actions: [
           Row(
             children: [
               ElevatedButton(
                 onPressed: changed ? saveCategories : null,
-                child: const Text('Kaydet'),
+                child: Text(context.tr('save')),
               ),
               const SizedBox(width: 16),
             ],
@@ -56,9 +57,9 @@ class _CategoriesViewState extends State<CategoriesView> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (selectedCategories.isNotEmpty) ...[
-              const Text(
-                'İlgi Alanlarım',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              Text(
+                context.tr('my_interests'),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               Wrap(
@@ -84,9 +85,9 @@ class _CategoriesViewState extends State<CategoriesView> {
               ),
               const SizedBox(height: 24),
             ],
-            const Text(
-              'Tüm Kategoriler',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Text(
+              context.tr('all_categories'),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Wrap(
@@ -124,7 +125,7 @@ class _CategoriesViewState extends State<CategoriesView> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('İlgi alanlarınız kaydedildi')),
+        SnackBar(content: Text(context.tr('interests_saved'))),
       );
     } catch (e) {
       debugPrint(e.toString());

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
@@ -34,14 +35,15 @@ class FriendProfileView extends StatelessWidget {
                             _subHeader(viewModel, context),
                             _ratingCard(viewModel, context),
                             Divider(),
-                            Text('İlanlar (${viewModel.adverts.length})', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                            Text('${context.tr('listings')} (${viewModel.adverts.length})',
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                           ],
                         ),
                       ),
                       const SizedBox(height: 16),
                       Expanded(
                         child: viewModel.adverts.isEmpty
-                            ? const Center(child: Text('Henüz ilan bulunmuyor'))
+                            ? Center(child: Text(context.tr('no_listings_yet')))
                             : ListView.builder(
                                 padding: EdgeInsets.zero,
                                 itemCount: viewModel.adverts.length,
@@ -64,7 +66,7 @@ class FriendProfileView extends StatelessWidget {
                       padding: const EdgeInsets.all(16.0),
                       child: ElevatedButton(
                         onPressed: () {},
-                        child: const Text('Mesaj Gönder'),
+                        child: Text(context.tr('send_message')),
                       ),
                     ),
                   ),
@@ -117,14 +119,14 @@ class FriendProfileView extends StatelessWidget {
             value: 'report',
             child: ListTile(
               leading: const Icon(Icons.report, color: Colors.red),
-              title: const Text('Kötüye Kullanım Bildir'),
+              title: Text(context.tr('report_abuse')),
             ),
           ),
           PopupMenuItem(
             value: 'block',
             child: ListTile(
               leading: const Icon(Icons.block, color: Colors.red),
-              title: const Text('Kullanıcıyı Engelle'),
+              title: Text(context.tr('block_user')),
             ),
           ),
         ],
@@ -145,7 +147,7 @@ Widget _ratingCard(FriendProfileViewModel viewModel, BuildContext context) {
             Row(
               children: [
                 Icon(Icons.star, color: Colors.amber),
-                Text('Yorumlar (${viewModel.customer?.comments?.length ?? 0})'),
+                Text('${context.tr('comments')} (${viewModel.customer?.comments?.length ?? 0})'),
               ],
             ),
           ],

@@ -31,6 +31,26 @@ const Map<String, String> tr = {
   'click_to_see_other_listings': 'Diğer ilanları görmek için tıklayın',
   'create_listing': 'İlan Ver',
 
+  // İlanlar ve Profil
+  'my_listings': 'İlanlarım',
+  'my_likes': 'Beğendiklerim',
+  'profile_viewers': 'Profilime Bakanlar',
+  'no_listing_found': 'İlan bulunamadı',
+  'show_less': 'Daha az göster',
+  'show_more': 'Devamını gör...',
+  'likers': 'Beğenenler',
+  'delete': 'Sil',
+  'like': 'Beğen',
+  'message': 'Mesaj',
+  'report_listing': 'İlanı Şikayet Et',
+  'report_sent': 'Şikayet işlemi başlatıldı',
+  'block_user': 'Bu Kullanıcıyı Engelle',
+  'user_blocked': 'Kullanıcı engellendi',
+  'listings': 'İlanlar',
+  'send_message': 'Mesaj Gönder',
+  'report_abuse': 'Kötüye Kullanım Bildir',
+  'comments': 'Yorumlar',
+
   // Mesajlar
   'no_messages': 'Henüz mesaj yok',
   'type_message': 'Mesaj yazın...',
@@ -45,9 +65,15 @@ const Map<String, String> tr = {
   'edit_profile': 'Profili Düzenle',
   'settings': 'Ayarlar',
   'logout': 'Çıkış Yap',
+  'daily_task': 'Bugünkü Görev',
+  'daily_task_step1': 'Bir ilan oluştur ve bir mesaj gönder!',
+  'daily_task_step2': 'Görevi tamamla, toplamda +100 XP kazan!',
+  'complete_task': 'Görevi Tamamla',
+  'verify_profile_text': 'Gerçek bir profil olduğunu doğrula ve\nekstra görünürlük kazan!',
+  'get_premium': 'Premium Ol',
 
   // XP Sistemi
-  'xp_system': 'XP Sistemi ve Ödüller',
+  'xp_system': 'XP Sistemi ve Ünvanlar',
   'ranks': 'Unvanlar',
   'ranks_description': 'Kazandığınız XP puanlarına göre unvanınız yükselir:',
 
@@ -97,4 +123,11 @@ const Map<String, String> tr = {
   'privacy_policy': 'Gizlilik Politikası',
   'about_us': 'Hakkımızda',
   'app_version': 'Uygulama Versiyonu',
+
+  // Kategoriler
+  'categories': 'Kategoriler',
+  'save': 'Kaydet',
+  'my_interests': 'İlgi Alanlarım',
+  'all_categories': 'Tüm Kategoriler',
+  'interests_saved': 'İlgi alanlarınız kaydedildi',
 };

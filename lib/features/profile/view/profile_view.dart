@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
@@ -108,7 +109,7 @@ Widget _ratingCard(Customer customer, BuildContext context) {
         Row(
           children: [
             Icon(Icons.star, color: Colors.amber),
-            Text('Yorumlar (${customer.comments?.length ?? 0})'),
+            Text('${context.tr('comments')} (${customer.comments?.length ?? 0})'),
           ],
         ),
       ],
@@ -148,9 +149,9 @@ class DailyTaskCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const Text(
-                    'Bugünkü Görev',
-                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  Text(
+                    context.tr('daily_task'),
+                    style: const TextStyle(color: Colors.white, fontSize: 16),
                   ),
                   const SizedBox(width: 4),
                   const Icon(Icons.bolt, color: Colors.yellow),
@@ -170,20 +171,20 @@ class DailyTaskCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          const Text(
-            '1. Bir ilan oluştur ve bir mesaj gönder!',
-            style: TextStyle(color: Colors.white),
+          Text(
+            '1. ${context.tr('daily_task_step1')}',
+            style: const TextStyle(color: Colors.white),
           ),
-          const Text(
-            '2. Görevi tamamla, toplamda +100 XP kazan!',
-            style: TextStyle(color: Colors.white),
+          Text(
+            '2. ${context.tr('daily_task_step2')}',
+            style: const TextStyle(color: Colors.white),
           ),
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
             child: OutlinedButton(
               onPressed: () {},
-              child: const Text('Görevi Tamamla'),
+              child: Text(context.tr('complete_task')),
             ),
           ),
         ],
@@ -210,10 +211,10 @@ class VerifyProfileButton extends StatelessWidget {
         ),
         onPressed: () {},
         icon: const Icon(Icons.check_circle, color: Colors.white),
-        label: const Text(
-          'Gerçek bir profil olduğunu doğrula ve\nekstra görünürlük kazan!',
+        label: Text(
+          context.tr('verify_profile_text'),
           textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.white),
+          style: const TextStyle(color: Colors.white),
         ),
       ),
     );
@@ -239,9 +240,9 @@ class PremiumButton extends StatelessWidget {
           context.push(subscription);
         },
         icon: const Icon(Icons.diamond, color: Colors.amber, size: 30),
-        label: const Text(
-          'Premium Ol',
-          style: TextStyle(color: Colors.white),
+        label: Text(
+          context.tr('get_premium'),
+          style: const TextStyle(color: Colors.white),
         ),
       ),
     );
@@ -267,7 +268,7 @@ class XPSystemButton extends StatelessWidget {
           context.push(xpEvents);
         },
         icon: const Icon(Icons.settings),
-        label: const Text('XP Sistemi ve Ünvanlar'),
+        label: Text(context.tr('xp_system')),
       ),
     );
   }

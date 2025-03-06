@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/models/advert.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
@@ -292,7 +293,7 @@ class AdvertCard extends StatelessWidget {
                     child: Padding(
                       padding: const EdgeInsets.only(top: 4),
                       child: Text(
-                        showFullDescription.value ? 'Daha az göster' : 'Devamını gör...',
+                        showFullDescription.value ? context.tr('show_less') : context.tr('show_more'),
                         style: TextStyle(
                           color: Theme.of(context).primaryColor,
                           fontWeight: FontWeight.bold,
@@ -350,12 +351,12 @@ class AdvertCard extends StatelessWidget {
           children: [
             Expanded(
               flex: 3,
-              child: _buildButton('Beğenenler', Icons.visibility_outlined, onSeeViewersTap ?? () {}),
+              child: _buildButton(context.tr('likers'), Icons.visibility_outlined, onSeeViewersTap ?? () {}),
             ),
             const SizedBox(width: 12),
             Expanded(
               flex: 2,
-              child: _buildButton('Sil', Icons.delete_outlined, onDeleteTap ?? () {}, isDelete: true),
+              child: _buildButton(context.tr('delete'), Icons.delete_outlined, onDeleteTap ?? () {}, isDelete: true),
             ),
           ],
         ),
@@ -375,7 +376,7 @@ class AdvertCard extends StatelessWidget {
                   Expanded(
                     flex: 3,
                     child: _buildButton(
-                      'Beğen',
+                      context.tr('like'),
                       isLiked ? Icons.favorite : Icons.favorite_border,
                       onLikeTap ?? () {},
                       showCount: true,
@@ -385,7 +386,7 @@ class AdvertCard extends StatelessWidget {
                 Expanded(
                   flex: 3,
                   child: _buildButton(
-                    'Mesaj',
+                    context.tr('message'),
                     Icons.message_outlined,
                     () => _handleMessageTap(context, currentCustomer, chatsService),
                   ),
@@ -434,21 +435,21 @@ class AdvertCard extends StatelessWidget {
           children: [
             ListTile(
               leading: const Icon(Icons.report_problem, color: Colors.red),
-              title: const Text('İlanı Şikayet Et'),
+              title: Text(context.tr('report_listing')),
               onTap: () {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Şikayet işlemi başlatıldı')),
+                  SnackBar(content: Text(context.tr('report_sent'))),
                 );
               },
             ),
             ListTile(
               leading: const Icon(Icons.block, color: Colors.orange),
-              title: const Text('Bu Kullanıcıyı Engelle'),
+              title: Text(context.tr('block_user')),
               onTap: () {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Kullanıcı engellendi')),
+                  SnackBar(content: Text(context.tr('user_blocked'))),
                 );
               },
             ),
