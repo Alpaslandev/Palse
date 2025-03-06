@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/models/location_model.dart';
 import 'package:palseapp/core/services/firestore/customer_service.dart';
@@ -8,7 +9,7 @@ class EditProfileViewModel extends ChangeNotifier {
   Customer user;
   final CustomerService customerService;
   bool isLoading = false;
-
+  XFile? selectedImage;
   // Text Controllers
   final TextEditingController nicknameController = TextEditingController();
   final TextEditingController nameController = TextEditingController();
@@ -20,6 +21,38 @@ class EditProfileViewModel extends ChangeNotifier {
 
   EditProfileViewModel({required this.user, required this.customerService}) {
     _initializeControllers();
+  }
+
+  // Yükleme durumunu ayarlamak için fonksiyon
+  void setLoading(bool value) {
+    isLoading = value;
+    notifyListeners();
+  }
+
+  // Profil fotoğrafı URL'ini güncelleyen fonksiyon
+  void updateProfilePictureUrl(String url) {
+    user.profilePictureUrl = url;
+    notifyListeners();
+  }
+
+  Future<void> pickImage() async {
+    try {
+      final XFile? image = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 70, // 0-100 arası kalite
+        maxWidth: 800, // maksimum genişlik
+        maxHeight: 800, // maksimum yükseklik
+        preferredCameraDevice: CameraDevice.front,
+      );
+
+      if (image != null) {
+        selectedImage = image;
+      }
+    } catch (e) {
+      debugPrint('Görsel seçme hatası: $e');
+    } finally {
+      notifyListeners();
+    }
   }
 
   void _initializeControllers() {
@@ -115,11 +148,43 @@ class EditProfileViewModel extends ChangeNotifier {
     try {
       isLoading = true;
       notifyListeners();
-      debugPrint('Updating profile with firstName: ${user.firstName}, lastName: ${user.lastName}');
-      debugPrint('Full user data: ${user.toJson()}');
-      await customerService.updateCustomer(user.userID!, user);
+
+      // Önce mevcut kullanıcı bilgilerini alalım
+      final currentUser = await customerService.getCustomer(user.userID!);
+
+      if (currentUser != null) {
+        // Mevcut kullanıcı verilerini koruyalım
+        final updatedUser = Customer(
+          userID: user.userID,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          nickname: user.nickname,
+          phoneNumber: user.phoneNumber,
+          email: user.email ?? currentUser.email,
+          birthday: user.birthday ?? currentUser.birthday,
+          gender: user.gender ?? currentUser.gender,
+          verification: user.verification,
+          isPremium: user.isPremium ?? currentUser.isPremium,
+          profilePictureUrl: user.profilePictureUrl,
+          favoriteCategories: user.favoriteCategories ?? currentUser.favoriteCategories,
+          adverts: user.adverts ?? currentUser.adverts,
+          blockUsers: user.blockUsers ?? currentUser.blockUsers,
+          favoriteAdverts: user.favoriteAdverts ?? currentUser.favoriteAdverts,
+          chatMap: user.chatMap ?? currentUser.chatMap,
+          location: user.location ?? currentUser.location,
+        );
+
+        debugPrint('Güncellenen profil verileri: ${updatedUser.toJson()}');
+        await customerService.updateCustomer(user.userID!, updatedUser);
+      } else {
+        // Eğer mevcut kullanıcı yoksa, şu anki verileri kullan
+        debugPrint('Mevcut kullanıcı bulunamadı. Şu anki veriler kullanılıyor.');
+        debugPrint('Profil verileri: ${user.toJson()}');
+        await customerService.updateCustomer(user.userID!, user);
+      }
     } catch (e) {
-      debugPrint('Error updating profile: $e');
+      debugPrint('Profil güncelleme hatası: $e');
+      throw Exception('Profil güncelleme hatası: $e');
     } finally {
       isLoading = false;
       notifyListeners();

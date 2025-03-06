@@ -68,7 +68,6 @@ class Advert {
       creatorGender: json['creatorGender'] != null ? Gender.values.byName(json['creatorGender']) : Gender.others,
       creatorIsVerified: json['creatorIsVerified'] ?? false,
       creatorIsPremium: json['creatorIsPremium'] ?? false,
-      creatorAverageRating: json['creatorAverageRating'] ?? 0,
     );
   }
 
@@ -89,7 +88,6 @@ class Advert {
       'creatorGender': creatorGender.name,
       'creatorIsVerified': creatorIsVerified,
       'creatorIsPremium': creatorIsPremium,
-      'creatorAverageRating': creatorAverageRating,
     };
   }
 
@@ -120,7 +118,6 @@ class Advert {
       creatorProfilePicture: creatorProfilePicture ?? this.creatorProfilePicture,
       creatorIsVerified: creatorIsVerified ?? this.creatorIsVerified,
       creatorIsPremium: creatorIsPremium ?? this.creatorIsPremium,
-      creatorAverageRating: creatorAverageRating?.toInt() ?? this.creatorAverageRating,
       advertType: advertType ?? this.advertType,
       createdAt: createdAt ?? this.createdAt,
       startEventDate: startEventDate ?? this.startEventDate,

@@ -69,8 +69,19 @@ class CreateAdvertViewModel extends ChangeNotifier {
   }
 
   void updateLocation(LocationModel location) {
+    debugPrint('UpdateLocation çağrıldı');
+    debugPrint('Gelen LocationModel: ${location.toString()}');
+    debugPrint('Konum Detayları - Şehir: ${location.city}, İlçe: ${location.district}, Ülke: ${location.country}');
+    debugPrint('Koordinatlar - Lat: ${location.lat}, Lon: ${location.lon}');
+
+    city = location.city;
+    district = location.district;
+    country = location.country;
+    address = location.displayString();
     locationModel = location;
     locationController.text = location.displayString();
+
+    debugPrint('Değerler güncellendi - Şehir: $city, İlçe: $district');
     notifyListeners();
   }
 

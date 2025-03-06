@@ -159,7 +159,7 @@ class ProfileSetupViewModel extends ChangeNotifier {
     try {
       final XFile? image = await ImagePicker().pickImage(
         source: ImageSource.gallery,
-        imageQuality: 60, // 0-100 arası kalite
+        imageQuality: 70, // 0-100 arası kalite
         maxWidth: 800, // maksimum genişlik
         maxHeight: 800, // maksimum yükseklik
         preferredCameraDevice: CameraDevice.front,

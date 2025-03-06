@@ -95,19 +95,32 @@ class _LocationSheetState extends State<LocationSheet> {
   Future<void> _searchLocation(String query) async {
     if (query.length < 3) return;
 
+    if (!mounted) return;
     setState(() => _isLoading = true);
+
     try {
       final results = await _locationService.searchLocation(query);
+      debugPrint('Konum arama sonuçları: ${results.length} sonuç bulundu');
+      for (var i = 0; i < results.length; i++) {
+        debugPrint('Sonuç $i: ${results[i].toString()}');
+      }
+
+      if (!mounted) return;
       setState(() => _suggestions = results);
     } catch (e) {
+      if (!mounted) return;
       _showErrorMessage('Hata: ${e.toString()}');
     } finally {
+      if (!mounted) return;
       setState(() => _isLoading = false);
     }
   }
 
   // LocationModel'i döndür
   void _returnLocationModel(LocationModel locationModel) {
+    debugPrint('Seçilen konum: ${locationModel.toString()}');
+    debugPrint('Konum detayları - Şehir: ${locationModel.city}, İlçe: ${locationModel.district}, Ülke: ${locationModel.country}');
+    debugPrint('Konum koordinatları - Lat: ${locationModel.lat}, Lon: ${locationModel.lon}');
     Navigator.pop(context, locationModel);
   }
 
@@ -120,6 +133,7 @@ class _LocationSheetState extends State<LocationSheet> {
   @override
   void dispose() {
     _searchController.dispose();
+    _debouncer.dispose();
     super.dispose();
   }
 }

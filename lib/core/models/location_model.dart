@@ -16,35 +16,58 @@ class LocationModel {
   GeoPoint? get geoPoint => lat != 0 && lon != 0 ? GeoPoint(lat, lon) : null;
 
   LocationModel({
-    required this.city,
-    required this.district,
-    required this.country,
+    required String city,
+    required String district,
+    required String country,
     required this.lat,
     required this.lon,
-    this.displayName,
-  });
+    String? displayName,
+  })  :
+        // String değerleri burada otomatik olarak büyük harfe dönüştürüyoruz
+        city = city.toUpperCase(),
+        district = district.toUpperCase(),
+        country = country.toUpperCase(),
+        displayName = displayName?.toUpperCase();
 
   // 1. OpenStreetMap API'den gelen JSON'ı işle
   factory LocationModel.fromOpenStreetMap(Map<String, dynamic> json) {
-    // debugPrint('OpenStreetMap: ${json.toString()}');
+    debugPrint('OpenStreetMap JSON başlangıç: ${json.toString()}');
+
     final Map<String, dynamic> addressData = json['address'] ?? {};
+    debugPrint('Adres verisi: $addressData');
+
+    // Veri dönüşümlerini detaylı loglayalım
+    final String city = addressData['city'] ?? addressData['state'] ?? addressData['province'] ?? '';
+    final String district = addressData['town'] ?? addressData['village'] ?? addressData['county'] ?? '';
+    final String country = addressData['country_code'] ?? 'TR';
+    final double lat = double.parse(json['lat'] ?? '0');
+    final double lon = double.parse(json['lon'] ?? '0');
+    final String displayName = json['display_name'] ?? '';
+
+    debugPrint('Dönüştürülen veriler:');
+    debugPrint('city: $city');
+    debugPrint('district: $district');
+    debugPrint('country: $country');
+    debugPrint('lat: $lat');
+    debugPrint('lon: $lon');
+    debugPrint('displayName: $displayName');
 
     final locationModel = LocationModel(
-      city: addressData['city'] ?? addressData['state'] ?? addressData['province'] ?? '',
-      district: addressData['town'] ?? addressData['village'] ?? addressData['county'] ?? '',
-      country: addressData['country_code'] ?? '',
-      lat: double.parse(json['lat'] ?? '0'),
-      lon: double.parse(json['lon'] ?? '0'),
-      displayName: json['display_name'] ?? '',
+      city: city,
+      district: district,
+      country: country,
+      lat: lat,
+      lon: lon,
+      displayName: displayName,
     );
 
-    debugPrint('LocationModel: ${locationModel.toString()}');
+    debugPrint('Oluşturulan LocationModel: ${locationModel.toString()}');
     return locationModel;
   }
 
   // 2. Placemark'tan LocationModel oluştur (Geocoding için)
   factory LocationModel.fromPlacemark(Placemark placemark, {required double lat, required double lon}) {
-    // debugPrint('Placemark: ${placemark.toString()}');
+    debugPrint('Placemark: ${placemark.toString()}');
     final locationModel = LocationModel(
       city: placemark.administrativeArea ?? '',
       district: placemark.subAdministrativeArea ?? placemark.locality ?? placemark.subLocality ?? '',
@@ -53,7 +76,7 @@ class LocationModel {
       lon: lon,
     );
 
-    debugPrint('LocationModel: ${locationModel.toString()}');
+    debugPrint('fromPlacemark: ${locationModel.toString()}');
     return locationModel;
   }
 
@@ -79,9 +102,9 @@ class LocationModel {
   // Firestore için JSON formatına dönüştür
   Map<String, dynamic> toJson() {
     return {
-      'city': city.toUpperCase(),
-      'district': district.toUpperCase(),
-      'country': country.toUpperCase(),
+      'city': city, // Zaten büyük harf
+      'district': district, // Zaten büyük harf
+      'country': country, // Zaten büyük harf
       'geoPoint': geoPoint,
     };
   }

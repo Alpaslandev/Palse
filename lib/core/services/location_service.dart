@@ -31,8 +31,10 @@ class LocationService {
 
       // Adres bilgilerini al
       final placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
+      debugPrint('Placemarks: ${placemarks.first}');
 
       if (placemarks.isNotEmpty) {
+        debugPrint('Placemarks: ${placemarks.first}');
         // LocationModel oluştur
         return LocationModel.fromPlacemark(placemarks.first, lat: position.latitude, lon: position.longitude);
       } else {
@@ -66,23 +68,42 @@ class LocationService {
 
   // Konum arama - OpenStreetMap API
   Future<List<LocationModel>> searchLocation(String query) async {
+    debugPrint('Konum arama başladı: $query');
     try {
       final response = await _dio.get('/search', queryParameters: {
         'q': query,
         'format': 'json',
         'addressdetails': 1,
         'limit': 5,
-        'countrycodes': 'tr',
+        'countrycodes': 'TR',
       });
 
-      return (response.data as List).map((json) => LocationModel.fromOpenStreetMap(json)).toList();
+      debugPrint('API yanıtı alındı: ${response.statusCode}');
+
+      if (response.data is List && response.data.isNotEmpty) {
+        debugPrint('Bulunan sonuç sayısı: ${response.data.length}');
+
+        final List<LocationModel> locations = [];
+
+        for (var i = 0; i < response.data.length; i++) {
+          debugPrint('Sonuç $i işleniyor...');
+          final item = response.data[i];
+          debugPrint('JSON veri: ${item.toString().substring(0, item.toString().length > 100 ? 100 : item.toString().length)}...');
+
+          final model = LocationModel.fromOpenStreetMap(item);
+          locations.add(model);
+          debugPrint('Model oluşturuldu: ${model.toString()}');
+        }
+
+        debugPrint('Toplam ${locations.length} konum modeli oluşturuldu');
+        return locations;
+      } else {
+        debugPrint('API yanıtında veri bulunamadı veya uygun formatta değil');
+        return [];
+      }
     } catch (e) {
+      debugPrint('Konum arama hatası: ${e.toString()}');
       throw Exception('Konum bulunamadı: ${e.toString()}');
     }
-  }
-
-  // GeoPoint oluştur
-  Future<GeoPoint?> getGeoPoint(LocationModel location) async {
-    return GeoPoint(location.lat, location.lon);
   }
 }

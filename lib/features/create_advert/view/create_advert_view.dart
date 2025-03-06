@@ -185,13 +185,31 @@ class _CreateAdvertViewState extends State<CreateAdvertView> {
               readOnly: true,
               decoration: const InputDecoration(labelText: 'Etkinlik Konumu'),
               onTap: () async {
+                if (!mounted) return;
+                debugPrint('Konum alanına tıklandı');
                 final result = await showModalBottomSheet<LocationModel>(
                   context: context,
-                  builder: (context) => const LocationSheet(),
+                  isScrollControlled: true,
+                  useSafeArea: true,
+                  isDismissible: true,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                  ),
+                  builder: (context) {
+                    debugPrint('LocationSheet oluşturuldu');
+                    return FractionallySizedBox(
+                      heightFactor: 0.95,
+                      child: const LocationSheet(),
+                    );
+                  },
                 );
 
+                debugPrint('BottomSheet kapatıldı, sonuç: ${result != null ? "var" : "yok"}');
+                if (!mounted) return;
                 if (result != null) {
+                  debugPrint('Seçilen konum viewModel\'e aktarılıyor: ${result.toString()}');
                   viewModel.updateLocation(result);
+                  debugPrint('viewModel güncellendi');
                 }
               },
             ),

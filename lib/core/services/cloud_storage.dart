@@ -13,6 +13,23 @@ enum FileType {
 class CloudStorageService {
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
+  // Verilen URL'deki dosyayı silme fonksiyonu
+  Future<void> deleteFile(String fileUrl) async {
+    try {
+      // Storage referansını URL'den al
+      final ref = _storage.refFromURL(fileUrl);
+      // Dosyayı sil
+      await ref.delete();
+      debugPrint('Dosya başarıyla silindi: $fileUrl');
+    } on FirebaseException catch (e) {
+      debugPrint('Dosya silme hatası: ${e.message}');
+      throw Exception('Dosya silme hatası: ${e.message}');
+    } catch (e) {
+      debugPrint('Beklenmeyen hata: $e');
+      throw Exception('Beklenmeyen hata: $e');
+    }
+  }
+
   Future<String> uploadUserFile({
     required String userId,
     required FileType fileType,

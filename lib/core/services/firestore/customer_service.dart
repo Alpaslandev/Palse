@@ -62,6 +62,21 @@ class CustomerService {
     }
   }
 
+  // Kullanıcı bilgilerini getirir - getCustomer metodu
+  Future<Customer?> getCustomer(String userId) async {
+    try {
+      final userDocument = await _firestore.collection("customers").doc(userId).get();
+      if (userDocument.exists) {
+        return Customer.fromJson(userDocument.data()!, userId);
+      }
+      debugPrint('Kullanıcı bulunamadı: $userId');
+      return null;
+    } catch (e) {
+      debugPrint('Kullanıcı bilgileri getirme hatası: $e');
+      return null;
+    }
+  }
+
   Future<void> likeAdvert(String advertId, String userId) async {
     try {
       await _firestore.collection('customers').doc(userId).update({

@@ -1,7 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/models/location_model.dart';
+import 'package:palseapp/core/services/cloud_storage.dart';
 import 'package:palseapp/core/services/firestore/customer_service.dart';
+import 'package:palseapp/core/utils/app_theme.dart';
 import 'package:palseapp/core/widgets/circle_profile_picture.dart';
 import 'package:palseapp/core/widgets/location_sheet.dart';
 import 'package:palseapp/features/settings/view/widgets/phone_number_sheet.dart';
@@ -18,6 +22,8 @@ class EditProfileView extends StatefulWidget {
 }
 
 class _EditProfileViewState extends State<EditProfileView> {
+  final CloudStorageService _cloudStorageService = CloudStorageService();
+
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
@@ -31,6 +37,40 @@ class _EditProfileViewState extends State<EditProfileView> {
                 onPressed: viewModel.isLoading
                     ? null
                     : () async {
+                        // Eğer fotoğraf seçildiyse önce fotoğrafı yükleyelim
+                        if (viewModel.selectedImage != null) {
+                          viewModel.setLoading(true);
+                          try {
+                            // Eski fotoğrafı silme işlemi
+                            if (viewModel.user.profilePictureUrl != null && viewModel.user.profilePictureUrl!.isNotEmpty) {
+                              await _cloudStorageService.deleteFile(viewModel.user.profilePictureUrl!);
+                            }
+
+                            // Yeni fotoğrafı yükleme
+                            final url = await _cloudStorageService.uploadUserFile(
+                              userId: viewModel.user.userID!,
+                              fileType: FileType.profile,
+                              fileName: viewModel.user.userID!,
+                              file: File(viewModel.selectedImage!.path),
+                            );
+
+                            // Profil fotoğrafı URL'ini güncelleme
+                            viewModel.updateProfilePictureUrl(url);
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Fotoğraf yükleme hatası: $e'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          } finally {
+                            viewModel.setLoading(false);
+                          }
+                        }
+
+                        // Profili güncelleme
                         await viewModel.updateProfil();
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -50,7 +90,7 @@ class _EditProfileViewState extends State<EditProfileView> {
                           valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
                         ),
                       )
-                    : const Text('Kaydet', style: TextStyle(color: Colors.blue)),
+                    : Text('Kaydet'),
               ),
             ],
           ),
@@ -59,12 +99,20 @@ class _EditProfileViewState extends State<EditProfileView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                CircleProfilePicture(imageUrl: viewModel.user.profilePictureUrl),
+                // Seçilen fotoğraf varsa onu, yoksa mevcut profil fotoğrafını göster
+                viewModel.selectedImage != null
+                    ? CircleAvatar(
+                        radius: 50,
+                        backgroundImage: FileImage(File(viewModel.selectedImage!.path)),
+                      )
+                    : CircleProfilePicture(imageUrl: viewModel.user.profilePictureUrl, radius: 50),
                 TextButton(
-                  onPressed: () {
-                    // TODO: Profil fotoğrafı değiştirme
+                  onPressed: () async {
+                    await viewModel.pickImage();
+                    // Fotoğrafı seçtikten sonra direkt yüklemiyoruz, sadece ui'da gösteriyoruz.
+                    // Yükleme işlemi Kaydet butonuna basıldığında gerçekleşecek
                   },
-                  child: const Text('Fotoğrafı Değiştir', style: TextStyle(color: Colors.blue)),
+                  child: const Text('Fotoğrafı Değiştir'),
                 ),
                 const SizedBox(height: 16),
                 Column(

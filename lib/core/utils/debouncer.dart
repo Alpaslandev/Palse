@@ -12,4 +12,10 @@ class Debouncer {
     _timer?.cancel();
     _timer = Timer(Duration(milliseconds: milliseconds), action);
   }
+
+  // Timer'ı temizlemek için dispose metodu
+  void dispose() {
+    _timer?.cancel();
+    _timer = null;
+  }
 }
