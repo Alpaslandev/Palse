@@ -7,7 +7,6 @@ enum UserRank {
   /// 0-99 XP: Keşfe Başlayan
   beginner(
     titleKey: 'rank_beginner',
-    defaultTitle: '🌟 Keşfe Başlayan',
     minXp: 0,
     maxXp: 99,
     icon: '🌟',
@@ -16,7 +15,6 @@ enum UserRank {
   /// 100-499 XP: Sosyal Keşifçi
   explorer(
     titleKey: 'rank_explorer',
-    defaultTitle: '🔍 Sosyal Keşifçi',
     minXp: 100,
     maxXp: 499,
     icon: '🔍',
@@ -25,7 +23,6 @@ enum UserRank {
   /// 500-999 XP: Bağlantı Ustası
   connector(
     titleKey: 'rank_connector',
-    defaultTitle: '🧩 Bağlantı Ustası',
     minXp: 500,
     maxXp: 999,
     icon: '🧩',
@@ -34,7 +31,6 @@ enum UserRank {
   /// 1000-2999 XP: Etkinlik Lideri
   leader(
     titleKey: 'rank_leader',
-    defaultTitle: '🎯 Etkinlik Lideri',
     minXp: 1000,
     maxXp: 2999,
     icon: '🎯',
@@ -43,7 +39,6 @@ enum UserRank {
   /// 3000+ XP: Sosyal Usta
   master(
     titleKey: 'rank_master',
-    defaultTitle: '👑 Sosyal Usta',
     minXp: 3000,
     maxXp: double.infinity,
     icon: '👑',
@@ -52,7 +47,6 @@ enum UserRank {
   /// Constructor
   const UserRank({
     required this.titleKey,
-    required this.defaultTitle,
     required this.minXp,
     required this.maxXp,
     required this.icon,
@@ -60,9 +54,6 @@ enum UserRank {
 
   /// Unvan başlığının anahtar değeri
   final String titleKey;
-
-  /// Varsayılan unvan başlığı (eski kullanım ve geçiş dönemi için)
-  final String defaultTitle;
 
   /// Minimum XP değeri
   final int minXp;
@@ -72,9 +63,6 @@ enum UserRank {
 
   /// Unvan ikonu
   final String icon;
-
-  /// Unvan başlığı - geriye dönük uyumluluk için
-  String get title => defaultTitle;
 
   /// Yerelleştirilmiş unvan başlığını al
   String getLocalizedTitle(BuildContext context) {

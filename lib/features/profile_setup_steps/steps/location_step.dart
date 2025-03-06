@@ -4,8 +4,6 @@ import 'package:palseapp/features/profile_setup_steps/viewmodel/profile_setup_vi
 import 'package:provider/provider.dart';
 import 'package:palseapp/core/services/location_service.dart';
 import 'package:palseapp/core/utils/debouncer.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart';
 
 class LocationStep extends StatefulWidget {
   const LocationStep({super.key, required this.viewModel});
@@ -18,7 +16,6 @@ class _LocationStepState extends State<LocationStep> {
   final Debouncer _debouncer = Debouncer(milliseconds: 300);
   List<LocationModel> _suggestions = [];
   bool _isLoading = false;
-  Position? _currentPosition;
 
   @override
   Widget build(BuildContext context) {

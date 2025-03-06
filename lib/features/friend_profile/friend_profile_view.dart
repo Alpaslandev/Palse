@@ -83,7 +83,7 @@ class FriendProfileView extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          '${userAchievements.rank.icon} ${userAchievements.rank.title} (${userAchievements.xp} XP)',
+          '${userAchievements.rank.icon} ${context.tr(userAchievements.rank.titleKey)} (${userAchievements.xp} XP)',
           style: TextStyle(fontSize: 11, color: AppTheme.primaryColor, fontWeight: FontWeight.bold),
         ),
         Text(viewModel.customer?.location?.displayStringWithDistance(authProvider.user!.location!) ?? '',

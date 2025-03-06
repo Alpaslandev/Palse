@@ -152,7 +152,7 @@ class FavoriteCategoryStep extends StatelessWidget {
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                category.text,
+                                category.getText(context),
                                 style: TextStyle(
                                   color: isSelected ? Theme.of(context).primaryColor : Colors.black87,
                                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,

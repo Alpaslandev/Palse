@@ -76,7 +76,7 @@ class XpEventsView extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              rank.title,
+                              context.tr(rank.titleKey),
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,

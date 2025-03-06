@@ -174,7 +174,7 @@ class AdvertCard extends StatelessWidget {
 
                       // 2. Satır: Kullanıcı rütbesi
                       Text(
-                        "${userAchievements.rank.icon} ${userAchievements.rank.title}",
+                        "${userAchievements.rank.icon} ${context.tr(userAchievements.rank.titleKey)}",
                         style: const TextStyle(
                           fontWeight: FontWeight.w400,
                           fontSize: 11,
@@ -188,7 +188,7 @@ class AdvertCard extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            advert.advertType.text,
+                            advert.advertType.getText(context),
                             style: const TextStyle(fontSize: 12, color: Colors.black87),
                           ),
                           Text(

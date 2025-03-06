@@ -6,7 +6,6 @@ import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/services/firestore/customer_service.dart';
 import 'package:palseapp/features/chats/widgets/chat_list_item.dart';
 import 'package:provider/provider.dart';
-import 'package:palseapp/features/chats/viewmodel/chats_view_model.dart';
 
 class ChatsView extends StatelessWidget {
   const ChatsView({

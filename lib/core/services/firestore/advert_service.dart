@@ -50,13 +50,13 @@ class AdvertService {
         return [];
       }
 
-      // Eski format değerler (enum.text)
-      final oldFormatValues = interests.map((interest) => interest.text).toList();
-      debugPrint('Eski format değerler: $oldFormatValues');
+      // Eski format değerler (Türkçe metin karşılıkları)
+      final oldFormatValues = interests.map((interest) => legacyTurkishTextMapReverse[interest] ?? interest.name).toList();
+      debugPrint('Eski format değerler (Türkçe): $oldFormatValues');
 
       // Yeni format değerler (enum.name)
       final newFormatValues = interests.map((interest) => interest.name).toList();
-      debugPrint('Yeni format değerler: $newFormatValues');
+      debugPrint('Yeni format değerler (enum.name): $newFormatValues');
 
       // Events koleksiyonuna referans
       final eventsRef = FirebaseFirestore.instance.collection('events');
@@ -64,12 +64,12 @@ class AdvertService {
       // Sorgular listesi
       List<Future<QuerySnapshot>> queries = [];
 
-      // Eski format için sorgular (advertType alanı için)
+      // Eski format için sorgular (Türkçe metinler için)
       for (var value in oldFormatValues) {
         queries.add(eventsRef.where('advertType', isEqualTo: value).limit(limit).get());
       }
 
-      // Yeni format için sorgular (advertType alanı için)
+      // Yeni format için sorgular (enum.name değerleri için)
       for (var value in newFormatValues) {
         queries.add(eventsRef.where('advertType', isEqualTo: value).limit(limit).get());
       }

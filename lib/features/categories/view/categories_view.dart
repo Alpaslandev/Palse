@@ -72,7 +72,7 @@ class _CategoriesViewState extends State<CategoriesView> {
                           ),
                           backgroundColor: AppTheme.primaryColor,
                           label: Text(
-                            category.text,
+                            category.getText(context),
                           ),
                           onDeleted: () {
                             setState(() {
@@ -96,7 +96,7 @@ class _CategoriesViewState extends State<CategoriesView> {
               children: unselectedCategories // Sadece seçili olmayan kategorileri göster
                   .map((category) => FilterChip(
                         avatar: Icon(category.icon, color: Colors.black),
-                        label: Text(category.text, style: const TextStyle(color: Colors.black)),
+                        label: Text(category.getText(context), style: const TextStyle(color: Colors.black)),
                         selected: false,
                         backgroundColor: Colors.white,
                         onSelected: (selected) {

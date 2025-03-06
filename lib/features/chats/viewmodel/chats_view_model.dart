@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:palseapp/core/services/firestore/customer_service.dart';
 import 'package:palseapp/core/models/chat_model.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/features/chats/service/chat_service.dart';
@@ -8,10 +7,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class ChatsViewModel extends ChangeNotifier {
   final ChatService _chatService = ChatService();
   final Customer _customer;
-  final CustomerService _customerService = CustomerService();
   bool isLoading = true;
 
-  ChatsViewModel(this._customer) {}
+  ChatsViewModel(this._customer);
 
   String? get currentUserId => _customer.userID;
   Customer? get currentUser => _customer;

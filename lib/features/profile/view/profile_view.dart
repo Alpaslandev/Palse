@@ -7,7 +7,6 @@ import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
 import 'package:palseapp/core/widgets/circle_profile_picture.dart';
 import 'package:palseapp/features/profile/widgets/leader_board.dart';
-import 'package:palseapp/features/profile/widgets/xp_events_view.dart';
 import 'package:palseapp/features/profile/widgets/xp_progress_card.dart';
 import 'package:provider/provider.dart';
 

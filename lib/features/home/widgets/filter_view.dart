@@ -1,12 +1,10 @@
 // İlan filtreleme görünümü
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/constant/categories.dart';
 import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/models/advert.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
-import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/services/firestore/advert_service.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
 import 'package:palseapp/core/widgets/advert_card.dart';
@@ -155,7 +153,7 @@ class _FilterViewState extends State<FilterView> {
               ...Categories.values.map((category) {
                 return DropdownMenuItem<Categories>(
                   value: category,
-                  child: Text(category.text),
+                  child: Text(category.getText(context)),
                 );
               }),
               DropdownMenuItem<Categories>(value: null, child: Text(context.tr('all'))),

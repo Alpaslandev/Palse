@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:palseapp/core/constant/categories.dart';
+import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/models/location_model.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
@@ -120,9 +121,11 @@ class _CreateAdvertViewState extends State<CreateAdvertView> {
               const SizedBox(height: 16),
               DropdownButtonFormField<Categories>(
                 focusNode: _eventTypeFocusNode,
-                decoration: const InputDecoration(labelText: 'Etkinlik Tipi'),
+                decoration: InputDecoration(labelText: context.tr('event_type')),
                 value: viewModel.eventType,
-                items: Categories.values.map((Categories category) => DropdownMenuItem(value: category, child: Text(category.text))).toList(),
+                items: Categories.values
+                    .map((Categories category) => DropdownMenuItem(value: category, child: Text(category.getText(context))))
+                    .toList(),
                 onChanged: (value) => viewModel.setEventType(value),
                 validator: (value) => value == null ? 'Etkinlik tipi seçiniz' : null,
               ),

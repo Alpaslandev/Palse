@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:palseapp/core/localization/app_localizations.dart';
 
 // Uygulama kategorilerini ve ikonlarını tutan enum
@@ -47,82 +46,9 @@ enum Categories {
     return context.tr(textKey);
   }
 
-  // Eski kullanımlar için geçici olarak doğrudan metni döndüren getter
-  // Bu geçiş sürecinde kullanılır, sonra kaldırılabilir
-  String get text {
-    // Burada geçici olarak sabit metinleri döndürüyoruz
-    // Bu kısmı geçiş sürecinde kullanabiliriz
-    switch (this) {
-      case Categories.kahveSohbet:
-        return 'Kahve ve Sohbet';
-      case Categories.kitapBulusma:
-        return 'Kitap Buluşmaları';
-      case Categories.dilKultur:
-        return 'Dil ve Kültür Değişimi';
-      case Categories.spor:
-        return 'Spor Faaliyetleri';
-      case Categories.halisaha:
-        return 'Halısaha Aktiviteleri';
-      case Categories.doga:
-        return 'Doğa Faaliyetleri';
-      case Categories.fitness:
-        return 'Fitness ve Egzersiz';
-      case Categories.sanatTarih:
-        return 'Sanat ve Tarihi Geziler';
-      case Categories.filmDizi:
-        return 'Film ve Dizi Buluşmaları';
-      case Categories.dans:
-        return 'Dans Buluşmaları';
-      case Categories.muzik:
-        return 'Müzik Faaliyetleri';
-      case Categories.konser:
-        return 'Konser Buluşmaları';
-      case Categories.parti:
-        return 'Parti ve Eğlence';
-      case Categories.mutfak:
-        return 'Mutfak Sanatları';
-      case Categories.egitim:
-        return 'Eğitim Faaliyetleri';
-      case Categories.arastirma:
-        return 'Araştırma Grupları';
-      case Categories.videoOyun:
-        return 'Video Oyunu Buluşmaları';
-      case Categories.elSanatlari:
-        return 'El Sanatları';
-      case Categories.yazilim:
-        return 'Yazılımcı Buluşmaları';
-      case Categories.yoga:
-        return 'Yoga ve Meditasyon';
-      case Categories.fotograf:
-        return 'Fotoğrafçılık Faaliyetleri';
-      case Categories.evcilHayvan:
-        return 'Evcil Hayvan Buluşmaları';
-      case Categories.motosiklet:
-        return 'Motosiklet Grupları';
-      case Categories.araba:
-        return 'Araba Grupları';
-      case Categories.moda:
-        return 'Moda ve Giyim';
-      case Categories.cevrimici:
-        return 'Çevrimiçi Etkinlikler';
-      case Categories.oyunTurnuva:
-        return 'Çevrimiçi Oyun Turnuvaları';
-      case Categories.seyahat:
-        return 'Seyahat Etkinlikleri';
-      case Categories.odaPaylas:
-        return 'Oda Paylaşımı ve Emlak';
-      case Categories.arabaKiralama:
-        return 'Araba Kiralama, Alım/Satım';
-      case Categories.esyaAlimSatim:
-        return 'Eşya Alım/Satım';
-      case Categories.diger:
-        return 'Diğer';
-    }
-  }
-
   // Tüm kategori metinlerini liste olarak döndürür
-  static List<String> getAllCategoryTexts() {
-    return Categories.values.map((e) => e.text).toList();
+  static List<String> getAllCategoryTexts(BuildContext context) {
+    return Categories.values.map((e) => e.getText(context)).toList();
   }
 
   // Bir context içinde tüm çevrilmiş kategori metinlerini döndürür
@@ -130,11 +56,84 @@ enum Categories {
     return Categories.values.map((e) => e.getText(context)).toList();
   }
 
-  // Metin değerine göre kategori enum'ını döndürür
-  static Categories fromText(String text) {
+  // Çevrilmiş metin değerine göre kategori enum'ını döndürür
+  static Categories fromLocalizedText(BuildContext context, String text) {
     return Categories.values.firstWhere(
-      (e) => e.text == text,
+      (e) => e.getText(context) == text,
       orElse: () => Categories.diger,
     );
   }
 }
+
+// Türkçe metin değerleri ile enum karşılıkları - Eski kayıtları parse etmek için
+// String (Türkçe metin) -> Categories (enum) map
+final Map<String, Categories> legacyTurkishTextMap = {
+  'Kahve ve Sohbet': Categories.kahveSohbet,
+  'Kitap Buluşmaları': Categories.kitapBulusma,
+  'Dil ve Kültür Değişimi': Categories.dilKultur,
+  'Spor Faaliyetleri': Categories.spor,
+  'Halısaha Aktiviteleri': Categories.halisaha,
+  'Doğa Faaliyetleri': Categories.doga,
+  'Fitness ve Egzersiz': Categories.fitness,
+  'Sanat ve Tarihi Geziler': Categories.sanatTarih,
+  'Film ve Dizi Buluşmaları': Categories.filmDizi,
+  'Dans Buluşmaları': Categories.dans,
+  'Müzik Faaliyetleri': Categories.muzik,
+  'Konser Buluşmaları': Categories.konser,
+  'Parti ve Eğlence': Categories.parti,
+  'Mutfak Sanatları': Categories.mutfak,
+  'Eğitim Faaliyetleri': Categories.egitim,
+  'Araştırma Grupları': Categories.arastirma,
+  'Video Oyunu Buluşmaları': Categories.videoOyun,
+  'El Sanatları': Categories.elSanatlari,
+  'Yazılımcı Buluşmaları': Categories.yazilim,
+  'Yoga ve Meditasyon': Categories.yoga,
+  'Fotoğrafçılık Faaliyetleri': Categories.fotograf,
+  'Evcil Hayvan Buluşmaları': Categories.evcilHayvan,
+  'Motosiklet Grupları': Categories.motosiklet,
+  'Araba Grupları': Categories.araba,
+  'Moda ve Giyim': Categories.moda,
+  'Çevrimiçi Etkinlikler': Categories.cevrimici,
+  'Çevrimiçi Oyun Turnuvaları': Categories.oyunTurnuva,
+  'Seyahat Etkinlikleri': Categories.seyahat,
+  'Oda Paylaşımı ve Emlak': Categories.odaPaylas,
+  'Araba Kiralama, Alım/Satım': Categories.arabaKiralama,
+  'Eşya Alım/Satım': Categories.esyaAlimSatim,
+  'Diğer': Categories.diger,
+};
+
+// Categories (enum) -> String (Türkçe metin) map - Search sorgularında kullanmak için
+final Map<Categories, String> legacyTurkishTextMapReverse = {
+  Categories.kahveSohbet: 'Kahve ve Sohbet',
+  Categories.kitapBulusma: 'Kitap Buluşmaları',
+  Categories.dilKultur: 'Dil ve Kültür Değişimi',
+  Categories.spor: 'Spor Faaliyetleri',
+  Categories.halisaha: 'Halısaha Aktiviteleri',
+  Categories.doga: 'Doğa Faaliyetleri',
+  Categories.fitness: 'Fitness ve Egzersiz',
+  Categories.sanatTarih: 'Sanat ve Tarihi Geziler',
+  Categories.filmDizi: 'Film ve Dizi Buluşmaları',
+  Categories.dans: 'Dans Buluşmaları',
+  Categories.muzik: 'Müzik Faaliyetleri',
+  Categories.konser: 'Konser Buluşmaları',
+  Categories.parti: 'Parti ve Eğlence',
+  Categories.mutfak: 'Mutfak Sanatları',
+  Categories.egitim: 'Eğitim Faaliyetleri',
+  Categories.arastirma: 'Araştırma Grupları',
+  Categories.videoOyun: 'Video Oyunu Buluşmaları',
+  Categories.elSanatlari: 'El Sanatları',
+  Categories.yazilim: 'Yazılımcı Buluşmaları',
+  Categories.yoga: 'Yoga ve Meditasyon',
+  Categories.fotograf: 'Fotoğrafçılık Faaliyetleri',
+  Categories.evcilHayvan: 'Evcil Hayvan Buluşmaları',
+  Categories.motosiklet: 'Motosiklet Grupları',
+  Categories.araba: 'Araba Grupları',
+  Categories.moda: 'Moda ve Giyim',
+  Categories.cevrimici: 'Çevrimiçi Etkinlikler',
+  Categories.oyunTurnuva: 'Çevrimiçi Oyun Turnuvaları',
+  Categories.seyahat: 'Seyahat Etkinlikleri',
+  Categories.odaPaylas: 'Oda Paylaşımı ve Emlak',
+  Categories.arabaKiralama: 'Araba Kiralama, Alım/Satım',
+  Categories.esyaAlimSatim: 'Eşya Alım/Satım',
+  Categories.diger: 'Diğer',
+};

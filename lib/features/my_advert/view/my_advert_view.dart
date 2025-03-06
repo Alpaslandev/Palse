@@ -79,7 +79,6 @@ class _MyAdvertViewState extends State<MyAdvertView> with TickerProviderStateMix
                               itemCount: viewModel.myAdverts.length,
                               itemBuilder: (context, index) {
                                 final advert = viewModel.myAdverts[index];
-                                final customer = authProvider.user;
                                 if (advert == null) return const SizedBox();
                                 return AdvertCard(
                                   advert: advert,
