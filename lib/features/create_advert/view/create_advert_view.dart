@@ -80,15 +80,15 @@ class _CreateAdvertViewState extends State<CreateAdvertView> {
             children: [
               TextFormField(
                 focusNode: _titleFocusNode,
-                decoration: const InputDecoration(labelText: 'İlan Başlığı'),
+                decoration: InputDecoration(labelText: context.tr('event_title')),
                 maxLength: 40,
                 onChanged: (value) => viewModel.advertName = value,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'İlan başlığı gerekli';
+                    return context.tr('event_title_required');
                   }
                   if (value.length < 15) {
-                    return 'İlan başlığı en az 15 karakter olmalı';
+                    return context.tr('event_title_min_length');
                   }
                   return null;
                 },
@@ -100,16 +100,16 @@ class _CreateAdvertViewState extends State<CreateAdvertView> {
               const SizedBox(height: 16),
               TextFormField(
                 focusNode: _descriptionFocusNode,
-                decoration: const InputDecoration(labelText: 'İlan Açıklaması'),
+                decoration: InputDecoration(labelText: context.tr('event_description')),
                 maxLines: 5,
                 maxLength: 300,
                 onChanged: (value) => viewModel.advertDescription = value,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'İlan açıklaması gerekli';
+                    return context.tr('event_description_required');
                   }
                   if (value.length < 15) {
-                    return 'İlan açıklaması en az 15 karakter olmalı';
+                    return context.tr('event_description_min_length');
                   }
                   return null;
                 },
@@ -124,10 +124,11 @@ class _CreateAdvertViewState extends State<CreateAdvertView> {
                 decoration: InputDecoration(labelText: context.tr('event_type')),
                 value: viewModel.eventType,
                 items: Categories.values
-                    .map((Categories category) => DropdownMenuItem(value: category, child: Text(category.getText(context))))
+                    .map((Categories category) =>
+                        DropdownMenuItem(value: category, child: Text(category.getText(context), style: const TextStyle(fontSize: 12))))
                     .toList(),
                 onChanged: (value) => viewModel.setEventType(value),
-                validator: (value) => value == null ? 'Etkinlik tipi seçiniz' : null,
+                validator: (value) => value == null ? context.tr('event_type_required') : null,
               ),
             ],
           ),
@@ -150,22 +151,22 @@ class _CreateAdvertViewState extends State<CreateAdvertView> {
               onPressed: viewModel.authProvider.user?.isPremium == true
                   ? viewModel.pickImage
                   : () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text('Yalnızca premium üyeler fotoğraf seçebilir.'),
+                        content: Text(context.tr('only_premium_users_can_select_photo')),
                         action: SnackBarAction(
-                            label: 'Premium ol',
+                            label: context.tr('premium_subscription'),
                             textColor: Colors.blue,
                             onPressed: () {
                               context.push(subscription);
                             }),
                       )),
               icon: const Icon(Icons.photo_camera),
-              label: const Text('Fotoğraf Seç'),
+              label: Text(context.tr('select_photo')),
             ),
             const SizedBox(height: 16),
             OutlinedButton.icon(
               onPressed: () => _showGallery(context, viewModel),
               icon: const Icon(Icons.photo_outlined),
-              label: const Text('Hazır Fotoğraf Kullan'),
+              label: Text(context.tr('use_ready_photo')),
             ),
           ],
         ),
@@ -177,7 +178,7 @@ class _CreateAdvertViewState extends State<CreateAdvertView> {
           children: [
             ListTile(
               leading: const Icon(Icons.calendar_today),
-              title: const Text('Etkinlik Zamanı'),
+              title: Text(context.tr('event_date')),
               subtitle: Text(DateFormat('dd/MM/yyyy HH:mm').format(viewModel.startDate ?? DateTime.now())),
               onTap: () => _selectDateTime(context, true, viewModel),
             ),
@@ -186,10 +187,9 @@ class _CreateAdvertViewState extends State<CreateAdvertView> {
               controller: viewModel.locationController,
               focusNode: _locationFocusNode,
               readOnly: true,
-              decoration: const InputDecoration(labelText: 'Etkinlik Konumu'),
+              decoration: InputDecoration(labelText: context.tr('event_location')),
               onTap: () async {
                 if (!mounted) return;
-                debugPrint('Konum alanına tıklandı');
                 final result = await showModalBottomSheet<LocationModel>(
                   context: context,
                   isScrollControlled: true,
@@ -199,7 +199,6 @@ class _CreateAdvertViewState extends State<CreateAdvertView> {
                     borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
                   ),
                   builder: (context) {
-                    debugPrint('LocationSheet oluşturuldu');
                     return FractionallySizedBox(
                       heightFactor: 0.95,
                       child: const LocationSheet(),
@@ -207,12 +206,9 @@ class _CreateAdvertViewState extends State<CreateAdvertView> {
                   },
                 );
 
-                debugPrint('BottomSheet kapatıldı, sonuç: ${result != null ? "var" : "yok"}');
                 if (!mounted) return;
                 if (result != null) {
-                  debugPrint('Seçilen konum viewModel\'e aktarılıyor: ${result.toString()}');
                   viewModel.updateLocation(result);
-                  debugPrint('viewModel güncellendi');
                 }
               },
             ),
@@ -335,7 +331,7 @@ class _CreateAdvertViewState extends State<CreateAdvertView> {
             },
             child: Scaffold(
               appBar: AppBar(
-                title: const Text('İlan Oluştur'),
+                title: Text(context.tr('create_advert')),
               ),
               body: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -372,7 +368,7 @@ class _CreateAdvertViewState extends State<CreateAdvertView> {
                         TextButton.icon(
                           onPressed: viewModel.onStepCancel,
                           icon: const Icon(Icons.arrow_back),
-                          label: const Text('Geri', style: TextStyle(color: Colors.blue)),
+                          label: Text(context.tr('back'), style: const TextStyle(color: Colors.blue)),
                         )
                       else
                         const SizedBox.shrink(),
@@ -396,11 +392,11 @@ class _CreateAdvertViewState extends State<CreateAdvertView> {
                             // Son adımda tarih ve konum seçilmiş mi kontrol et
                             if (viewModel.startDate == null) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Lütfen etkinlik zamanını seçin')),
+                                SnackBar(content: Text(context.tr('please_select_event_date'))),
                               );
                             } else if (viewModel.city.isEmpty || viewModel.district.isEmpty) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Lütfen etkinlik konumunu seçin')),
+                                SnackBar(content: Text(context.tr('please_select_event_location'))),
                               );
                             } else {
                               try {
@@ -413,7 +409,7 @@ class _CreateAdvertViewState extends State<CreateAdvertView> {
                             }
                           }
                         },
-                        child: Text(viewModel.currentStep == 2 ? 'Tamamla' : 'Devam Et'),
+                        child: Text(viewModel.currentStep == 2 ? context.tr('finish') : context.tr('continue')),
                       ),
                     ],
                   ),

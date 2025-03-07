@@ -4,19 +4,46 @@ import 'package:palseapp/core/constant/categories.dart';
 import 'package:palseapp/core/helper/categorie_parse.dart';
 import 'package:palseapp/core/helper/date_parse.dart';
 import 'package:palseapp/core/helper/location_parse.dart';
+import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/models/comment_model.dart';
 import 'package:palseapp/core/models/location_model.dart';
 import 'package:palseapp/core/models/chat_model.dart';
 
 enum Gender {
-  male(icon: 'assets/images/male.png', trName: 'Erkek', enName: 'Male'),
-  female(icon: 'assets/images/female.png', trName: 'Kadın', enName: 'Female'),
-  others(icon: 'assets/images/others.png', trName: 'Diğer', enName: 'Others');
+  male(icon: 'assets/images/male.png', textKey: 'gender_male'),
+  female(icon: 'assets/images/female.png', textKey: 'gender_female'),
+  others(icon: 'assets/images/others.png', textKey: 'gender_others');
 
-  const Gender({required this.icon, required this.trName, required this.enName});
+  const Gender({required this.icon, required this.textKey});
   final String icon;
-  final String trName;
-  final String enName;
+  final String textKey;
+
+  // Gender enum'ını string değerden elde etmek için yardımcı metot
+  static Gender fromString(String? value) {
+    if (value == null) return Gender.others;
+
+    // Lowercase ve trim işlemi yap
+    final normalized = value.toLowerCase().trim();
+
+    // Yaygın değerleri kontrol et
+    if (normalized == 'male' || normalized == 'erkek' || normalized == 'm') {
+      return Gender.male;
+    } else if (normalized == 'female' || normalized == 'kadın' || normalized == 'kadin' || normalized == 'f') {
+      return Gender.female;
+    }
+
+    // Enum adını kontrol et
+    try {
+      return Gender.values.byName(normalized);
+    } catch (_) {
+      return Gender.others;
+    }
+  }
+
+  // Çevirilmiş metni döndüren getter
+  String getText(BuildContext context) {
+    return context.tr(textKey);
+  }
 }
 
 class Customer {
@@ -112,32 +139,9 @@ class Customer {
       chatMap[otherUserId] = Chat.fromUserDocument(summaryJson);
     });
 
-    Gender parseGender(dynamic genderData) {
-      if (genderData == null) return Gender.others;
-
-      // String ise
-      if (genderData is String) {
-        // Küçük harfe çevir ve boşlukları temizle
-        String normalizedGender = genderData.toLowerCase().trim();
-
-        // Farklı yazım şekillerini kontrol et
-        if (normalizedGender == 'male' || normalizedGender == 'erkek' || normalizedGender == 'm') {
-          return Gender.male;
-        } else if (normalizedGender == 'female' || normalizedGender == 'kadın' || normalizedGender == 'kadin' || normalizedGender == 'f') {
-          return Gender.female;
-        }
-
-        // Enum adını doğrudan kontrol et (try-catch ile güvenli hale getir)
-        try {
-          return Gender.values.byName(normalizedGender);
-        } catch (e) {
-          // Hata durumunda varsayılan değer
-          return Gender.others;
-        }
-      }
-
-      return Gender.others;
-    }
+    // Gender değerini önceden normalize edelim
+    final genderValue = parsedJson['gender'];
+    final normalizedGender = genderValue != null ? Gender.fromString(genderValue.toString()) : Gender.others;
 
     try {
       return Customer(
@@ -160,7 +164,7 @@ class Customer {
         adverts: parsedJson['adverts'] != null ? List<String>.from(parsedJson['adverts']) : [],
         verification: parsedJson['verification'] ?? false,
         isPremium: parsedJson['isPremium'] ?? false,
-        gender: parsedJson['gender'] != null ? parseGender(parsedJson['gender']) : Gender.others,
+        gender: normalizedGender, // Normalize edilmiş gender değerini kullan
         birthday: parsedJson['birthday'] != null ? parseDateTime(parsedJson['birthday'], parsedJson['birthdayTime']) : null,
         chatMap: chatMap,
         profileViewers: parsedJson['profileViewers'] != null ? List<String>.from(parsedJson['profileViewers']) : [],
@@ -194,7 +198,7 @@ class Customer {
       'isPremium': isPremium ?? false,
       'blockUsers': blockUsers ?? [],
       'profileViewers': profileViewers ?? [],
-      'gender': gender?.name ?? Gender.others.name,
+      'gender': gender?.name.toLowerCase() ?? Gender.others.name.toLowerCase(),
       'birthday': birthday != null ? Timestamp.fromDate(birthday!) : null,
       'favoriteCategories': favoriteCategories?.map((category) => category.name).toList() ?? [],
       'favoriteAdverts': favoriteAdverts ?? [],

@@ -49,6 +49,10 @@ class Advert {
   });
 
   factory Advert.fromJson(Map<String, dynamic> json, String advertID) {
+    // Gender değerini önceden normalize edelim
+    final genderValue = json['creatorGender'];
+    final normalizedGender = genderValue != null ? Gender.fromString(genderValue.toString()) : Gender.others;
+
     return Advert(
       advertID: advertID,
       advertName: json['advertName'] ?? '',
@@ -65,7 +69,7 @@ class Advert {
       creatorLastName: json['creatorLastName'] ?? '',
       creatorName: json['creatorName'] ?? '',
       creatorProfilePicture: json['creatorProfilePicture'] ?? '',
-      creatorGender: json['creatorGender'] != null ? Gender.values.byName(json['creatorGender']) : Gender.others,
+      creatorGender: normalizedGender, // Normalize edilmiş gender değerini kullan
       creatorIsVerified: json['creatorIsVerified'] ?? false,
       creatorIsPremium: json['creatorIsPremium'] ?? false,
     );
@@ -85,7 +89,7 @@ class Advert {
       'creatorLastName': creatorLastName,
       'creatorName': creatorName,
       'creatorProfilePicture': creatorProfilePicture,
-      'creatorGender': creatorGender.name,
+      'creatorGender': creatorGender.name.toLowerCase(),
       'creatorIsVerified': creatorIsVerified,
       'creatorIsPremium': creatorIsPremium,
     };

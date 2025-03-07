@@ -208,7 +208,15 @@ class VerifyProfileButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(8),
           ),
         ),
-        onPressed: () {},
+        onPressed: () {
+          context.pushNamed(verified).then((value) {
+            if (value == true) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Doğrulama başarılı')),
+              );
+            }
+          });
+        },
         icon: const Icon(Icons.check_circle, color: Colors.white),
         label: Text(
           context.tr('verify_profile_text'),

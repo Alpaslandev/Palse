@@ -7,9 +7,16 @@ import 'package:palseapp/core/provider/locale_provider.dart';
 import 'package:palseapp/core/provider/theme_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
+
+  Future<void> _launchUrl(String url) async {
+    if (!await launchUrl(Uri.parse(url))) {
+      throw Exception('Could not launch $url');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,22 +77,22 @@ class SettingsView extends StatelessWidget {
           _SettingsTile(
             icon: Icons.question_mark_outlined,
             title: context.tr('faq'),
-            onTap: () => context.pushNamed(faq),
+            onTap: () async => await _launchUrl(faqUrl),
           ),
           _SettingsTile(
             icon: Icons.description_outlined,
             title: context.tr('terms_of_use'),
-            onTap: () => context.pushNamed(terms),
+            onTap: () async => await _launchUrl(termsUrl),
           ),
           _SettingsTile(
             icon: Icons.shield_outlined,
             title: context.tr('privacy_policy'),
-            onTap: () => context.pushNamed(privacy),
+            onTap: () async => await _launchUrl(privacyUrl),
           ),
           _SettingsTile(
             icon: Icons.info_outline,
             title: context.tr('about_us'),
-            onTap: () => context.pushNamed(about),
+            onTap: () async => await _launchUrl(aboutUrl),
           ),
           _SettingsTile(
             icon: Icons.logout_outlined,

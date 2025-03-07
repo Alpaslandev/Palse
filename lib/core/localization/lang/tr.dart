@@ -51,6 +51,27 @@ const Map<String, String> tr = {
   'report_abuse': 'Kötüye Kullanım Bildir',
   'comments': 'Yorumlar',
 
+  // Etkinlik Oluşturma
+  'create_advert': 'Etkinlik Oluştur',
+  'event_type': 'Etkinlik Tipi',
+  'event_description': 'İlan Açıklaması',
+  'event_date': 'Etkinlik Tarihi',
+  'event_location': 'Etkinlik Konumu',
+  'please_select_event_date': 'Lütfen etkinlik tarihini seçin',
+  'please_select_event_location': 'Lütfen etkinlik konumunu seçin',
+  'event_title': 'Etkinlik Başlığı',
+  'event_title_required': 'Etkinlik başlığı gerekli',
+  'event_title_min_length': 'Etkinlik başlığı en az 15 karakter olmalı',
+  'event_description_required': 'İlan açıklaması gerekli',
+  'event_description_min_length': 'İlan açıklaması en az 15 karakter olmalı',
+  'event_type_required': 'Etkinlik tipi seçiniz',
+  'select_photo': 'Fotoğraf Seç',
+  'use_ready_photo': 'Hazır Fotoğraf Kullan',
+  'only_premium_users_can_select_photo': 'Yalnızca premium üyeler fotoğraf seçebilir.',
+  'premium_subscription': 'Premium Abonelik',
+  'finish': 'Tamamla',
+  'back': 'Geri',
+
   // Mesajlar
   'no_messages': 'Henüz mesaj yok',
   'type_message': 'Mesaj yazın...',
@@ -201,6 +222,11 @@ const Map<String, String> tr = {
   'category_car_rental': 'Araba Kiralama, Alım/Satım',
   'category_items_trade': 'Eşya Alım/Satım',
   'category_other': 'Diğer',
+
+  // Gender
+  'gender_male': 'Erkek',
+  'gender_female': 'Kadın',
+  'gender_others': 'Diğer',
 
   // Rütbe/Ünvan çevirileri
   'rank_beginner': '🌟 Keşfe Başlayan',

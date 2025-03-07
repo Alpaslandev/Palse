@@ -196,6 +196,7 @@ class _EditProfileViewState extends State<EditProfileView> {
                     _buildTextField(
                       controller: viewModel.genderController,
                       label: context.tr('gender'),
+                      textKey: viewModel.user.gender?.textKey,
                       keyboardType: TextInputType.name,
                       readOnly: true,
                       prefixIcon: Icons.female,
@@ -218,9 +219,10 @@ class _EditProfileViewState extends State<EditProfileView> {
     IconData? prefixIcon,
     VoidCallback? onTap,
     IconData? suffixIcon,
+    String? textKey,
   }) {
     return TextField(
-      controller: controller,
+      controller: textKey != null ? TextEditingController(text: context.tr(textKey)) : controller,
       decoration: InputDecoration(
         labelText: label,
         border: const OutlineInputBorder(),

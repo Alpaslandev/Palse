@@ -162,19 +162,29 @@ PODS:
     - Flutter
     - FlutterMacOS
   - PromisesObjC (2.4.0)
-  - purchases_flutter (8.5.1):
+  - purchases_flutter (8.6.0):
     - Flutter
-    - PurchasesHybridCommon (= 13.18.1)
-  - PurchasesHybridCommon (13.18.1):
-    - RevenueCat (= 5.16.1)
+    - PurchasesHybridCommon (= 13.21.0)
+  - purchases_ui_flutter (8.6.0):
+    - Flutter
+    - PurchasesHybridCommonUI (= 13.21.0)
+  - PurchasesHybridCommon (13.21.0):
+    - RevenueCat (= 5.18.0)
+  - PurchasesHybridCommonUI (13.21.0):
+    - PurchasesHybridCommon (= 13.21.0)
+    - RevenueCatUI (= 5.18.0)
   - RecaptchaInterop (100.0.0)
-  - RevenueCat (5.16.1)
+  - RevenueCat (5.18.0)
+  - RevenueCatUI (5.18.0):
+    - RevenueCat (= 5.18.0)
   - shared_preferences_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
   - sqflite_darwin (0.0.4):
     - Flutter
     - FlutterMacOS
+  - url_launcher_ios (0.0.1):
+    - Flutter
 
 DEPENDENCIES:
   - cloud_firestore (from `.symlinks/plugins/cloud_firestore/ios`)
@@ -190,8 +200,10 @@ DEPENDENCIES:
   - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
   - purchases_flutter (from `.symlinks/plugins/purchases_flutter/ios`)
+  - purchases_ui_flutter (from `.symlinks/plugins/purchases_ui_flutter/ios`)
   - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
   - sqflite_darwin (from `.symlinks/plugins/sqflite_darwin/darwin`)
+  - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
 
 SPEC REPOS:
   trunk:
@@ -222,8 +234,10 @@ SPEC REPOS:
     - nanopb
     - PromisesObjC
     - PurchasesHybridCommon
+    - PurchasesHybridCommonUI
     - RecaptchaInterop
     - RevenueCat
+    - RevenueCatUI
 
 EXTERNAL SOURCES:
   cloud_firestore:
@@ -253,10 +267,14 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/path_provider_foundation/darwin"
   purchases_flutter:
     :path: ".symlinks/plugins/purchases_flutter/ios"
+  purchases_ui_flutter:
+    :path: ".symlinks/plugins/purchases_ui_flutter/ios"
   shared_preferences_foundation:
     :path: ".symlinks/plugins/shared_preferences_foundation/darwin"
   sqflite_darwin:
     :path: ".symlinks/plugins/sqflite_darwin/darwin"
+  url_launcher_ios:
+    :path: ".symlinks/plugins/url_launcher_ios/ios"
 
 CHECKOUT OPTIONS:
   FirebaseFirestore:
@@ -302,12 +320,16 @@ SPEC CHECKSUMS:
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
   path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
-  purchases_flutter: 1f3c8a832f847e99d2a648384d539b458c7bc04f
-  PurchasesHybridCommon: bcc204d982166d7fcece10eb98e2ee7c0b0ea668
+  purchases_flutter: cbcf97969b7bf0f1db71d802f4e682bb851f0576
+  purchases_ui_flutter: 1fd9285b377fc04d7e69cd778d940a0f735624d4
+  PurchasesHybridCommon: 9691d74a051f30858360d78936d59dc14575014e
+  PurchasesHybridCommonUI: 19a14aea9521c58814d2fba56f584ec58363c12c
   RecaptchaInterop: 7d1a4a01a6b2cb1610a47ef3f85f0c411434cb21
-  RevenueCat: d38c56d5e1058f955ee7fce4ea7b18d126235e64
+  RevenueCat: e825836f5d6baa870c53d7281be25a5fd91abd91
+  RevenueCatUI: f52648672be46e692955aab397a4a491f8aa196f
   shared_preferences_foundation: 9e1978ff2562383bd5676f64ec4e9aa8fa06a6f7
   sqflite_darwin: 20b2a3a3b70e43edae938624ce550a3cbf66a3d0
+  url_launcher_ios: 694010445543906933d732453a59da0a173ae33d
 
 PODFILE CHECKSUM: 0e777ac043a2d348fe3292ce8cffbc882e5b7e6c
 

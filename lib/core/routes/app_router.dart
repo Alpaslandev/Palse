@@ -25,6 +25,7 @@ import 'package:palseapp/features/profile_setup_steps/view/profile_setup_view.da
 import 'package:palseapp/features/settings/view/edit_profile.dart';
 import 'package:palseapp/features/settings/view/language_settings_view.dart';
 import 'package:palseapp/features/settings/view/settings_view.dart';
+import 'package:palseapp/features/settings/view/widgets/verified_screen.dart';
 import 'package:palseapp/features/splash/splash_view.dart';
 import 'package:palseapp/features/subscription/view/subscription_view.dart';
 
@@ -162,6 +163,11 @@ class AppRouter {
               builder: (context, state) => const LanguageSettingsView(),
             ),
           ],
+        ),
+        GoRoute(
+          path: "/verified",
+          name: verified,
+          builder: (context, state) => const VerifiedScreen(),
         ),
         ShellRoute(
           navigatorKey: _shellNavigatorKey,

@@ -61,6 +61,27 @@ const Map<String, String> en = {
   'report_abuse': 'Report Abuse',
   'comments': 'Comments',
 
+  // Create Advert
+  'create_advert': 'Create Advert',
+  'event_type': 'Event Type',
+  'event_description': 'Event Description',
+  'event_date': 'Event Date',
+  'event_location': 'Event Location',
+  'please_select_event_date': 'Please select an event date',
+  'please_select_event_location': 'Please select an event location',
+  'event_title': 'Event Title',
+  'event_title_required': 'Event title is required',
+  'event_title_min_length': 'Event title must be at least 15 characters',
+  'event_description_required': 'Event description is required',
+  'event_description_min_length': 'Event description must be at least 15 characters',
+  'event_type_required': 'Please select an event type',
+  'only_premium_users_can_select_photo': 'Only premium users can select a photo',
+  'premium_subscription': 'Premium Subscription',
+  'select_photo': 'Select Photo',
+  'use_ready_photo': 'Use Ready Photo',
+  'finish': 'Finish',
+  'back': 'Back',
+
   // Profile
   'edit_profile': 'Edit Profile',
   'settings': 'Settings',
@@ -201,6 +222,11 @@ const Map<String, String> en = {
   'category_car_rental': 'Car Rental & Trading',
   'category_items_trade': 'Item Trading',
   'category_other': 'Other',
+
+  // Gender
+  'gender_male': 'Male',
+  'gender_female': 'Female',
+  'gender_others': 'Others',
 
   // Rank translations
   'rank_beginner': '🌟 Discovery Beginner',

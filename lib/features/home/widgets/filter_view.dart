@@ -40,7 +40,8 @@ class _FilterViewState extends State<FilterView> {
 
     // Tüm ilanları çek
     final advertService = AdvertService();
-    List<Advert> allAdverts = await advertService.fetchAdverts(limit: 100); // Limit artırılabilir
+    List<Advert> allAdverts = await advertService.fetchAdverts(limit: 100);
+    debugPrint('Tüm cinsiyetler: ${allAdverts.map((e) => e.creatorGender.name).toSet()}');
 
     // Mesafe filtrelemesi
     if (_distance != null && _distance! > 0) {
@@ -55,22 +56,42 @@ class _FilterViewState extends State<FilterView> {
 
     // Cinsiyet filtrelemesi
     if (_selectedGender != null) {
-      allAdverts = allAdverts.where((advert) {
-        // Seçilen cinsiyete göre filtrele
-        if (_selectedGender == context.tr('male')) {
-          return advert.creatorGender == Gender.male;
-        } else if (_selectedGender == context.tr('female')) {
-          return advert.creatorGender == Gender.female;
-        }
+      debugPrint('Seçilen cinsiyet: $_selectedGender');
 
-        return true; // Eğer 'Hepsi' seçilmişse tüm ilanları göster
-      }).toList();
+      // Önce seçilen cinsiyeti normalize edelim (fromString metodu ile)
+      Gender? selectedGenderEnum;
+
+      if (_selectedGender == context.tr('male')) {
+        selectedGenderEnum = Gender.male;
+      } else if (_selectedGender == context.tr('female')) {
+        selectedGenderEnum = Gender.female;
+      }
+
+      debugPrint('Seçilen cinsiyet enum: ${selectedGenderEnum?.name}');
+
+      if (selectedGenderEnum != null) {
+        allAdverts = allAdverts.where((advert) {
+          final ilanCinsiyet = advert.creatorGender;
+          debugPrint('İlan cinsiyeti: ${ilanCinsiyet.name} == Seçilen: ${selectedGenderEnum!.name} => ${ilanCinsiyet == selectedGenderEnum}');
+
+          return advert.creatorGender == selectedGenderEnum;
+        }).toList();
+      }
+
+      debugPrint('Filtreleme sonucu kalan ilan sayısı: ${allAdverts.length}');
     }
 
     if (_selectedCategories != null) {
+      debugPrint('Seçilen kategoriler: ${_selectedCategories!.map((e) => e.name).toList()}');
+
       allAdverts = allAdverts.where((advert) {
+        final ilanKategori = advert.advertType;
+        debugPrint('İlan kategorisi: ${ilanKategori.name} - Seçilen kategorilerde var mı: ${_selectedCategories!.contains(ilanKategori)}');
+
         return _selectedCategories!.contains(advert.advertType);
       }).toList();
+
+      debugPrint('Kategori filtrelemesi sonucu kalan ilan sayısı: ${allAdverts.length}');
     }
 
     setState(() {
