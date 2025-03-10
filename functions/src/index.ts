@@ -40,6 +40,14 @@ export const sendNotification = onDocumentCreated(
       const isPremium = userData?.isPremium === true;
       const token = userData?.fcmToken;
 
+      // KULLANICI BİLGİLERİNİ LOGLAMA EKLEYELİM
+      console.log("=== KULLANICI BİLGİLERİ ===");
+      console.log(`ID: ${receiverId}`);
+      console.log(`Dil: ${userLang}`);
+      console.log(`Premium: ${isPremium}`);
+      console.log(`FCM Token: ${token ? "Var" : "Yok"}`);
+      console.log(`Tam Veri: ${JSON.stringify(userData, null, 2)}`);
+
       if (!token) {
         console.log("Kullanıcı FCM tokeni bulunamadı:", receiverId);
         return;
@@ -53,6 +61,11 @@ export const sendNotification = onDocumentCreated(
         receiverId: receiverId,
         click_action: "FLUTTER_NOTIFICATION_CLICK",
       };
+
+      // Bildirim tipini loglayalım
+      console.log("=== BİLDİRİM BİLGİLERİ ===");
+      console.log(`Bildirim Tipi: ${notificationType}`);
+      console.log(`Tüm Bildirim Verisi: ${JSON.stringify(notification, null, 2)}`);
 
       // Bildirime göre özel işlemler
       if (notificationType === "message" && chatId) {
@@ -96,14 +109,21 @@ export const sendNotification = onDocumentCreated(
           body = fallbackContent.body;
         }
       } else {
-        // Diğer bildirim türleri için standart içeriği al
-        const content = getNotificationContent(notificationType, userLang, isPremium);
-        title = content.title;
-        body = content.body;
+        // Bildirim içeriğini al
+        try {
+          // notifications.ts modülünden içeriği al
+          const {title: contentTitle, body: contentBody} = getNotificationContent(notificationType, userLang, isPremium);
+          title = contentTitle;
+          body = contentBody;
 
-        // Bildirim türüne göre ek veriler
-        if (notificationType === "likeAdvert" && notification.advertId) {
-          data.advertId = notification.advertId;
+          // Elde edilen içeriği logla
+          console.log("=== OLUŞTURULAN BİLDİRİM İÇERİĞİ ===");
+          console.log(`Başlık: "${title}"`);
+          console.log(`İçerik: "${body}"`);
+        } catch (error) {
+          console.error("Bildirim içeriği oluşturulurken hata:", error);
+          title = "Yeni Bildirim";
+          body = "Bildiriminiz var";
         }
       }
 
@@ -139,7 +159,7 @@ export const sendNotification = onDocumentCreated(
       console.log("Bildirim başarıyla gönderildi:", response);
 
       // Bildirim belgesini sil (opsiyonel)
-      // await event.data?.ref.delete();
+      await event.data?.ref.delete();
     } catch (error) {
       console.error("Bildirim gönderme hatası:", error);
     }

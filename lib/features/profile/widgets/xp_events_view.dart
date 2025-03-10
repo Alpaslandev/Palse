@@ -2,9 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
 import 'package:palseapp/features/achievement/achievements.dart';
+import 'package:palseapp/features/achievement/user_achievements.dart';
 
 class XpEventsView extends StatelessWidget {
-  const XpEventsView({super.key});
+  final UserAchievements? userAchievements;
+
+  const XpEventsView({
+    super.key,
+    this.userAchievements,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -122,6 +128,10 @@ class XpEventsView extends StatelessWidget {
                   contentPadding: EdgeInsets.zero,
                   title: Text(
                     '• ${context.tr(event.descriptionKey)}',
+                    style: const TextStyle(fontSize: 14, color: Colors.grey),
+                  ),
+                  subtitle: Text(
+                    '${userAchievements?.getTotalXpFromEvent(event) ?? 0} XP',
                     style: const TextStyle(fontSize: 14, color: Colors.grey),
                   ),
                   trailing: Container(

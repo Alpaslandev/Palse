@@ -16,7 +16,6 @@ import 'package:palseapp/core/utils/app_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
-import 'package:palseapp/features/chats/viewmodel/chats_view_model.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:palseapp/core/provider/subscription_provider.dart';
 import 'package:palseapp/core/widgets/scaffold_mess.dart';
@@ -80,7 +79,6 @@ void main() async {
         ChangeNotifierProvider.value(value: themeProvider),
         ChangeNotifierProvider.value(value: localeProvider),
         ChangeNotifierProvider.value(value: adsProvider),
-        ChangeNotifierProvider(create: (_) => ChatsViewModel(authProvider.user!)),
       ],
       child: MyApp(notificationService: notificationService),
     ),
@@ -113,7 +111,6 @@ class MyApp extends StatelessWidget {
       ],
       supportedLocales: AppLocalizations.supportedLocales,
       builder: (context, child) {
-        // Router hazır olduğunda context'i set et
         WidgetsBinding.instance.addPostFrameCallback((_) {
           notificationService.setContext(context);
         });

@@ -145,14 +145,28 @@ export function getNotificationContent(
   userLang = "tr",
   isPremium = false
 ): { title: string, body: string } {
+  console.log("=== getNotificationContent ÇAĞRILDI ===");
+  console.log(`Tip: ${notificationType}`);
+  console.log(`Dil: ${userLang}`);
+  console.log(`Premium: ${isPremium}`);
+
   const notificationConfig = notificationMessages[notificationType];
 
+  // notificationConfig var mı kontrol et
+  console.log(`Bildirim yapılandırması bulundu mu: ${notificationConfig ? "EVET" : "HAYIR"}`);
+
   if (!notificationConfig) {
+    console.log(`HATA: '${notificationType}' için bildirim yapılandırması bulunamadı!`);
+    console.log(`Mevcut bildirim tipleri: ${Object.keys(notificationMessages).join(", ")}`);
     return {
       title: "Yeni Bildirim",
       body: "Bildiriminiz var",
     };
   }
+
+  // notificationConfig içeriğini logla
+  console.log(`Bildirim başlıkları: ${JSON.stringify(notificationConfig.title)}`);
+  console.log(`Bildirim gövdeleri: ${JSON.stringify(notificationConfig.body)}`);
 
   // Premium kullanıcılar için farklı mesaj varsa kullan
   const messageType = isPremium && notificationConfig.body.premium ?
@@ -160,6 +174,8 @@ export function getNotificationContent(
     notificationConfig.body.nonPremium ?
       "nonPremium" :
       "normal";
+
+  console.log(`Seçilen mesaj tipi: ${messageType}`);
 
   // Title ve body seç
   const title = notificationConfig.title[userLang] || notificationConfig.title.tr || "Yeni Bildirim";
@@ -169,6 +185,9 @@ export function getNotificationContent(
              notificationConfig.body.fallback?.[userLang] ||
              notificationConfig.body.fallback?.tr ||
              "Yeni bildiriminiz var";
+
+  console.log(`Sonuç başlık: "${title}"`);
+  console.log(`Sonuç içerik: "${body}"`);
 
   return {title, body};
 }
