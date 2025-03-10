@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:palseapp/core/localization/app_localizations.dart';
+import 'package:palseapp/core/services/achievement_service.dart';
 import 'package:palseapp/features/achievement/achievements.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/features/achievement/premium_rewards.dart';
@@ -18,6 +19,7 @@ class _AchievementTestPageState extends State<AchievementTestPage> {
   Widget build(BuildContext context) {
     // AuthProvider'ı kullan
     final authProvider = Provider.of<AuthProvider>(context);
+    final achievementService = Provider.of<AchievementService>(context);
 
     // Kullanıcı henüz yüklenmemişse yükleniyor göster
     if (authProvider.user == null) {
@@ -35,11 +37,6 @@ class _AchievementTestPageState extends State<AchievementTestPage> {
         title: const Text('XP Sistemi Test'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add_circle_outline),
-            onPressed: () => _addCustomXp(authProvider),
-            tooltip: 'Özel XP Ekle',
-          ),
-          IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () => _resetAllXp(authProvider),
             tooltip: 'XP Sıfırla',
@@ -49,90 +46,7 @@ class _AchievementTestPageState extends State<AchievementTestPage> {
       body: Column(
         children: [
           // Kullanıcı XP ve seviye bilgileri
-          Card(
-            margin: const EdgeInsets.all(16),
-            elevation: 4,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 50,
-                        height: 50,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: authProvider.userRank.getRankColor(),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Text(
-                          authProvider.userRank.icon,
-                          style: const TextStyle(fontSize: 24),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Unvan: ${authProvider.userRank.getLocalizedTitle(context)}',
-                              style: Theme.of(context).textTheme.titleLarge,
-                            ),
-                            Text(
-                              'Toplam XP: ${authProvider.user!.totalXp}',
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  const Text('Seviye İlerlemesi:'),
-                  const SizedBox(height: 4),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: LinearProgressIndicator(
-                      value: _calculateProgress(authProvider),
-                      minHeight: 10,
-                      backgroundColor: Colors.grey.shade200,
-                      color: authProvider.userRank.getRankColor(),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text('Bir sonraki seviyeye: ${_xpToNextRank(authProvider)} XP'),
-                  const Divider(height: 24),
-                  Row(
-                    children: [
-                      const Icon(Icons.star, color: Colors.amber),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Premium Ödüller: ${authProvider.getEarnedPremiumRewardCount()}',
-                              style: const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            Text('Bir sonraki premium ödüle: ${authProvider.getXpToNextPremium()} XP'),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Premium Eşikler: ${PremiumRewards.getPremiumThresholds(50000).join(", ")}',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ],
-              ),
-            ),
-          ),
+          _xpAndLevel(authProvider, context),
 
           // Görevlerin listesi
           Expanded(
@@ -148,39 +62,91 @@ class _AchievementTestPageState extends State<AchievementTestPage> {
     );
   }
 
-  // Özel XP ekleme dialog'u
-  void _addCustomXp(AuthProvider authProvider) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        int amount = 100; // Varsayılan değer
-
-        return AlertDialog(
-          title: const Text('Özel XP Ekle'),
-          content: TextField(
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              labelText: 'XP Miktarı',
+  Widget _xpAndLevel(AuthProvider authProvider, BuildContext context) {
+    final achievementService = Provider.of<AchievementService>(context);
+    return Card(
+      margin: const EdgeInsets.all(16),
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 50,
+                  height: 50,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: achievementService.getUserRank(authProvider.user!.totalXp).getRankColor(),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    achievementService.getUserRank(authProvider.user!.totalXp).icon,
+                    style: const TextStyle(fontSize: 24),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Unvan: ${achievementService.getUserRank(authProvider.user!.totalXp).getLocalizedTitle(context)}',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      Text(
+                        'Toplam XP: ${authProvider.user!.totalXp}',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            onChanged: (value) {
-              amount = int.tryParse(value) ?? 100;
-            },
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('İptal'),
+            const SizedBox(height: 16),
+            const Text('Seviye İlerlemesi:'),
+            const SizedBox(height: 4),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: LinearProgressIndicator(
+                value: achievementService.getXpToNextRankPercentage(authProvider.user!.totalXp),
+                minHeight: 10,
+                backgroundColor: Colors.grey.shade200,
+                color: achievementService.getUserRank(authProvider.user!.totalXp).getRankColor(),
+              ),
             ),
-            TextButton(
-              onPressed: () {
-                authProvider.earnCustomXp(amount);
-                Navigator.pop(context);
-              },
-              child: const Text('Ekle'),
+            const SizedBox(height: 8),
+            Text('Bir sonraki seviyeye: ${AchievementService().getXpToNextRank(authProvider.user!.totalXp)} XP'),
+            const Divider(height: 24),
+            Row(
+              children: [
+                const Icon(Icons.star, color: Colors.amber),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Premium Ödüller: ${AchievementService().getEarnedPremiumRewardCount(authProvider.user!.totalXp)}',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      Text('Bir sonraki premium ödüle: ${AchievementService().getXpToNextPremium(authProvider.user!.totalXp)} XP'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Premium Eşikler: ${PremiumRewards.getPremiumThresholds(50000).join(", ")}',
+              style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
-        );
-      },
+        ),
+      ),
     );
   }
 
@@ -194,41 +160,16 @@ class _AchievementTestPageState extends State<AchievementTestPage> {
           content: const Text('Henüz bu işlev desteklenmiyor. Yeni sürümde eklenecektir.'),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () {
+                AchievementService().resetUserXp(authProvider.user!.userID!);
+                Navigator.pop(context);
+              },
               child: const Text('Tamam'),
             ),
           ],
         );
       },
     );
-  }
-
-  // İlerleme çubuğu için değer hesaplama
-  double _calculateProgress(AuthProvider authProvider) {
-    final rank = authProvider.userRank;
-    final totalXp = authProvider.user!.totalXp;
-
-    if (rank == UserRank.master) {
-      return 1.0; // En üst seviye için %100
-    }
-
-    final minXp = rank.minXp;
-    final maxXp = rank.maxXp as int;
-
-    return ((totalXp - minXp) / (maxXp - minXp)).clamp(0.0, 1.0);
-  }
-
-  // Bir sonraki seviyeye kalan XP hesaplama
-  int _xpToNextRank(AuthProvider authProvider) {
-    final rank = authProvider.userRank;
-    final totalXp = authProvider.user!.totalXp;
-
-    if (rank == UserRank.master) {
-      return 0;
-    }
-
-    final maxXp = rank.maxXp as int;
-    return maxXp - totalXp + 1;
   }
 
   // Görevleri gruplarına göre düzenle
@@ -278,8 +219,9 @@ class _AchievementTestPageState extends State<AchievementTestPage> {
 
   // Görev butonu widget'ı
   Widget _buildEventButton(XpEvent event, AuthProvider authProvider) {
-    final isCompleted = authProvider.isTaskCompleted(event);
-    final completionCount = authProvider.getTaskCompletionCount(event);
+    final achievementService = Provider.of<AchievementService>(context);
+    final isCompleted = achievementService.isTaskCompleted(authProvider.user!, event);
+    final completionCount = achievementService.getTaskCompletionCount(authProvider.user!, event);
     final isDailyTask = event.isDaily;
 
     // Butonun rengini belirleme
@@ -332,7 +274,7 @@ class _AchievementTestPageState extends State<AchievementTestPage> {
             ElevatedButton(
               onPressed: isCompleted && !event.isRepeatable
                   ? null // Tamamlanmış ve tekrarlanamaz görevleri devre dışı bırak
-                  : () => authProvider.earnXp(event),
+                  : () => achievementService.earnXp(authProvider.user!, event),
               style: ElevatedButton.styleFrom(
                 backgroundColor: buttonColor,
                 disabledBackgroundColor: Colors.grey.shade300,

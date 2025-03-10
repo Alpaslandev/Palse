@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
+import 'package:palseapp/core/services/achievement_service.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
 import 'package:palseapp/features/achievement/achievements.dart';
+import 'package:palseapp/features/achievement/premium_rewards.dart';
 import 'package:provider/provider.dart';
 
 class XpEventsView extends StatelessWidget {
@@ -12,6 +14,8 @@ class XpEventsView extends StatelessWidget {
   Widget build(BuildContext context) {
     // AuthProvider'ı kullan
     final authProvider = Provider.of<AuthProvider>(context);
+    // AchievementService'i doğrudan oluştur
+    final achievementService = Provider.of<AchievementService>(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -23,7 +27,7 @@ class XpEventsView extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
               children: [
                 // Kullanıcı seviye bilgileri
-                _buildUserLevelCard(context, authProvider),
+                _xpAndLevel(authProvider, context, achievementService),
                 const SizedBox(height: 16),
                 // Unvanlar kartı
                 _buildRanksCard(context),
@@ -31,7 +35,7 @@ class XpEventsView extends StatelessWidget {
                 // XP kazanma yolları
                 ...XpEventGroup.values.map((group) => Column(
                       children: [
-                        _buildEventCard(context, group, group.events, authProvider),
+                        _buildEventCard(context, group, group.events, authProvider, achievementService),
                         const SizedBox(height: 16),
                       ],
                     )),
@@ -40,29 +44,14 @@ class XpEventsView extends StatelessWidget {
     );
   }
 
-  // Kullanıcı seviye kartı
-  Widget _buildUserLevelCard(BuildContext context, AuthProvider authProvider) {
-    final rank = authProvider.userRank;
-    final currentXp = authProvider.user!.totalXp;
-
-    // İlerleme yüzdesi hesaplama
-    double progressPercentage = 0.0;
-    if (rank == UserRank.master) {
-      progressPercentage = 1.0;
-    } else {
-      final minXp = rank.minXp;
-      final maxXp = rank.maxXp as int;
-      progressPercentage = ((currentXp - minXp) / (maxXp - minXp)).clamp(0.0, 1.0);
-    }
-
-    // Bir sonraki seviyeye kalan XP
-    int xpToNextRank = 0;
-    if (rank != UserRank.master) {
-      final maxXp = rank.maxXp as int;
-      xpToNextRank = maxXp - currentXp + 1;
-    }
+  Widget _xpAndLevel(AuthProvider authProvider, BuildContext context, AchievementService achievementService) {
+    // Kullanıcının unvanını hesapla
+    final userRank = achievementService.getUserRank(authProvider.user!.totalXp);
 
     return Card(
+      margin: const EdgeInsets.all(16),
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -75,11 +64,11 @@ class XpEventsView extends StatelessWidget {
                   height: 50,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withOpacity(0.2),
+                    color: userRank.getRankColor(),
                     shape: BoxShape.circle,
                   ),
                   child: Text(
-                    rank.icon,
+                    userRank.icon,
                     style: const TextStyle(fontSize: 24),
                   ),
                 ),
@@ -89,18 +78,12 @@ class XpEventsView extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        context.tr(rank.titleKey),
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        'Unvan: ${userRank.getLocalizedTitle(context)}',
+                        style: Theme.of(context).textTheme.titleLarge,
                       ),
                       Text(
-                        '${context.tr('total_xp')}: $currentXp',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
-                        ),
+                        'Toplam XP: ${authProvider.user!.totalXp}',
+                        style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ],
                   ),
@@ -108,40 +91,42 @@ class XpEventsView extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
+            const Text('Seviye İlerlemesi:'),
+            const SizedBox(height: 4),
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: LinearProgressIndicator(
-                value: progressPercentage,
+                value: achievementService.getXpToNextRankPercentage(authProvider.user!.totalXp),
                 minHeight: 10,
                 backgroundColor: Colors.grey.shade200,
-                color: AppTheme.primaryColor,
+                color: userRank.getRankColor(),
               ),
             ),
             const SizedBox(height: 8),
-            Text(
-              rank == UserRank.master ? context.tr('max_level_reached') : '${context.tr('next_level')}: $xpToNextRank XP',
-              style: const TextStyle(fontSize: 14),
-            ),
-            const SizedBox(height: 8),
+            Text('Bir sonraki seviyeye: ${achievementService.getXpToNextRank(authProvider.user!.totalXp)} XP'),
+            const Divider(height: 24),
             Row(
               children: [
                 const Icon(Icons.star, color: Colors.amber),
                 const SizedBox(width: 8),
-                Text(
-                  '${context.tr('premium_rewards')}: ${authProvider.getEarnedPremiumRewardCount()}',
-                  style: const TextStyle(fontSize: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Premium Ödüller: ${achievementService.getEarnedPremiumRewardCount(authProvider.user!.totalXp)}',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      Text('Bir sonraki premium ödüle: ${achievementService.getXpToNextPremium(authProvider.user!.totalXp)} XP'),
+                    ],
+                  ),
                 ),
               ],
             ),
-            Row(
-              children: [
-                const Icon(Icons.hourglass_empty, color: Colors.amber),
-                const SizedBox(width: 8),
-                Text(
-                  '${context.tr('next_reward')}: ${authProvider.getXpToNextPremium()} XP',
-                  style: const TextStyle(fontSize: 14),
-                ),
-              ],
+            const SizedBox(height: 8),
+            Text(
+              'Premium Eşikler: ${PremiumRewards.getPremiumThresholds(50000).join(", ")}',
+              style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
         ),
@@ -220,7 +205,8 @@ class XpEventsView extends StatelessWidget {
     );
   }
 
-  Widget _buildEventCard(BuildContext context, XpEventGroup group, List<XpEvent> events, AuthProvider authProvider) {
+  Widget _buildEventCard(
+      BuildContext context, XpEventGroup group, List<XpEvent> events, AuthProvider authProvider, AchievementService achievementService) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -248,7 +234,7 @@ class XpEventsView extends StatelessWidget {
             const SizedBox(height: 8),
             ...group.events.map((event) {
               // Görevin kaç kez tamamlandığı bilgisini al
-              final completionCount = authProvider.getTaskCompletionCount(event);
+              final completionCount = achievementService.getTaskCompletionCount(authProvider.user!, event);
 
               // Bu görevden toplam ne kadar XP kazanıldığını hesapla
               final totalXpFromEvent = event.xpAmount * completionCount;

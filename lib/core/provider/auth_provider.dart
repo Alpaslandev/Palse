@@ -7,15 +7,12 @@ import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/services/auth/auth_service.dart';
 import 'package:palseapp/core/services/firestore/customer_service.dart';
 import 'package:palseapp/core/services/notification_service.dart';
-import 'package:palseapp/core/services/achievement_service.dart';
-import 'package:palseapp/features/achievement/achievements.dart';
 
 // Auth durumunu yöneten provider sınıfı
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService = AuthService();
   final CustomerService _userService = CustomerService();
   final NotificationService _notificationService = NotificationService();
-  final AchievementService _achievementService = AchievementService();
 
   bool _isLoading = true;
   User? _firebaseUser;
@@ -170,87 +167,6 @@ class AuthProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
-  }
-
-  // XP kazandırma metodu
-  Future<void> earnXp(XpEvent event) async {
-    if (_user == null) return;
-
-    try {
-      final updatedUser = await _achievementService.earnXp(_user!, event);
-
-      if (updatedUser.totalXp != _user!.totalXp) {
-        _user = updatedUser;
-        notifyListeners();
-      }
-    } catch (e) {
-      debugPrint('XP kazanırken hata: $e');
-    }
-  }
-
-  // Özel XP ekleme metodu
-  Future<void> earnCustomXp(int amount) async {
-    if (_user == null || amount <= 0) return;
-
-    try {
-      final updatedUser = await _achievementService.earnCustomXp(_user!, amount);
-
-      if (updatedUser.totalXp != _user!.totalXp) {
-        _user = updatedUser;
-        notifyListeners();
-      }
-    } catch (e) {
-      debugPrint('Özel XP eklerken hata: $e');
-    }
-  }
-
-  // Günlük görevleri sıfırlama metodu
-  Future<void> resetDailyTasks() async {
-    if (_user == null) return;
-
-    try {
-      final updatedUser = await _achievementService.resetDailyTasks(_user!);
-      _user = updatedUser;
-      notifyListeners();
-    } catch (e) {
-      debugPrint('Günlük görevleri sıfırlarken hata: $e');
-    }
-  }
-
-  // Kullanıcının unvanını döndüren getter
-  UserRank get userRank {
-    if (_user == null) return UserRank.beginner;
-    return _achievementService.getUserRank(_user!.totalXp);
-  }
-
-  // Kullanıcının görevi tamamlayıp tamamlamadığını kontrol eden metod
-  bool isTaskCompleted(XpEvent event) {
-    if (_user == null) return false;
-    return _achievementService.isTaskCompleted(_user!, event);
-  }
-
-  // Bir görevin kaç kez tamamlandığını hesaplayan metod
-  int getTaskCompletionCount(XpEvent event) {
-    if (_user == null) return 0;
-    return _achievementService.getTaskCompletionCount(_user!, event);
-  }
-
-  // Günlük görevin bugün tamamlanıp tamamlanmadığını kontrol eden metod
-  bool isDailyTaskCompletedToday() {
-    if (_user == null) return false;
-    return _achievementService.isDailyTaskCompletedToday(_user!);
-  }
-
-  // Kullanıcının kazandığı premium ödül sayısını döndüren metod
-  int getEarnedPremiumRewardCount() {
-    if (_user == null) return 0;
-    return _achievementService.getEarnedPremiumRewardCount(_user!.totalXp);
-  }
-
-  // Bir sonraki premium ödüle ne kadar XP kaldığını hesaplayan metod
-  int getXpToNextPremium() {
-    if (_user == null) return 0;
-    return _achievementService.getXpToNextPremium(_user!.totalXp);
   }
 
   // Çıkış yap

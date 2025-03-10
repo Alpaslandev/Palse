@@ -54,22 +54,6 @@ class SharedPrefService {
     return await _prefs!.setStringList(_notificationsKey, savedNotifications);
   }
 
-  // Kaydedilecek bildirim türlerini kontrol et
-  static List<NotificationsEnum> _getSaveableNotificationTypes() {
-    return [
-      NotificationsEnum.likeAdvert,
-      NotificationsEnum.comment,
-      NotificationsEnum.welcomeNotification,
-      NotificationsEnum.dailyTask,
-      NotificationsEnum.dailyTaskCompleted
-    ];
-  }
-
-  // Bildirim türünün kaydedilmesi gerekip gerekmediğini kontrol et
-  static bool shouldSaveNotificationType(NotificationsEnum type) {
-    return _getSaveableNotificationTypes().contains(type);
-  }
-
   // Tüm bildirimleri getir
   static Future<List<Map<String, dynamic>>> getNotifications() async {
     try {

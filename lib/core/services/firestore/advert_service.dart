@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:palseapp/core/constant/categories.dart';
-import 'package:palseapp/core/constant/notifications_enum.dart';
 import 'package:palseapp/core/models/advert.dart';
 import 'package:palseapp/core/services/notification_service.dart';
 
@@ -166,7 +165,7 @@ class AdvertService {
       }
       await notificationService.sendNotification(
         receiverId: creatorUserID,
-        notificationType: NotificationsEnum.likeAdvert.name,
+        notificationType: 'likeAdvert',
       );
     } catch (e) {
       debugPrint('İlan beğenme hatası: $e');

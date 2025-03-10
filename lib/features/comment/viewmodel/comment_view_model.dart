@@ -4,8 +4,6 @@ import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/services/firestore/customer_service.dart';
 import 'package:palseapp/core/services/notification_service.dart';
 
-import '../../../core/constant/notifications_enum.dart';
-
 class CommentViewModel extends ChangeNotifier {
   final CustomerService _customerService = CustomerService();
   final NotificationService _notificationService = NotificationService();
@@ -29,7 +27,7 @@ class CommentViewModel extends ChangeNotifier {
       _comments.add(comment);
       await _notificationService.sendNotification(
         receiverId: _friendCustomer.userID!,
-        notificationType: NotificationsEnum.comment.name,
+        notificationType: 'comment',
       );
       debugPrint('Yorum eklendi: ${comment.toString()}');
     } catch (e) {

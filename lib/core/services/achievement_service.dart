@@ -1,11 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:palseapp/core/models/customer.dart';
+import 'package:palseapp/core/services/notification_service.dart';
+import 'package:palseapp/core/services/shared_pref_service.dart';
+import 'package:palseapp/core/constant/notifications_enum.dart';
 import 'package:palseapp/features/achievement/achievements.dart';
 import 'package:palseapp/features/achievement/premium_rewards.dart';
 
 class AchievementService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final NotificationService _notificationService = NotificationService();
 
   // Customer modeline XP ekler
   Future<Customer> earnXp(Customer user, XpEvent event) async {
@@ -53,8 +57,51 @@ class AchievementService {
 
     // Firestore'a kaydet
     try {
-      await updateUserAchievement(user.userID!, updatedUser);
+      await _updateUserAchievement(user.userID!, updatedUser);
       debugPrint('${event.name} görevi tamamlandı, +${event.xpAmount} XP kazanıldı. Toplam XP: ${updatedUser.totalXp}');
+
+      // Bildirim kaydet
+      final bool isFirstCompletion = (newCompletedTasks[event.name] ?? 0) <= 1;
+
+      // Görev ilk kez tamamlandıysa
+      if (isFirstCompletion) {
+        await SharedPrefService.saveNotificationWithEnum(
+          type: NotificationsEnum.taskCompleted,
+          title: "Yeni Görev Tamamlandı!",
+          body: "${event.name} görevini tamamladınız ve ${event.xpAmount} XP kazandınız.",
+        );
+      } else {
+        // Tekrarlanan görevler için
+        await SharedPrefService.saveNotificationWithEnum(
+          type: NotificationsEnum.xpEarned,
+          title: "XP Kazandınız!",
+          body: "${event.name} görevinden ${event.xpAmount} XP kazandınız.",
+        );
+      }
+
+      // Eğer bu XP ile bir sonraki seviyeye geçildiyse
+      final oldRank = UserRank.fromXp(user.totalXp);
+      final newRank = UserRank.fromXp(updatedUser.totalXp);
+
+      if (oldRank != newRank) {
+        await SharedPrefService.saveNotificationWithEnum(
+          type: NotificationsEnum.rankUp,
+          title: "Yeni Seviye!",
+          body: "Tebrikler! ${newRank.titleKey} seviyesine ulaştınız.",
+        );
+      }
+
+      // Eğer bu XP ile premium ödül kazanıldıysa
+      final oldPremiumCount = PremiumRewards.earnedPremiumRewards(user.totalXp);
+      final newPremiumCount = PremiumRewards.earnedPremiumRewards(updatedUser.totalXp);
+
+      if (newPremiumCount > oldPremiumCount) {
+        await SharedPrefService.saveNotificationWithEnum(
+          type: NotificationsEnum.premiumReward,
+          title: "Premium Ödül Kazandınız!",
+          body: "Tebrikler! Yeni bir premium ödül kazandınız.",
+        );
+      }
     } catch (e) {
       debugPrint('XP eklenirken hata: $e');
     }
@@ -73,13 +120,65 @@ class AchievementService {
     );
 
     try {
-      await updateUserAchievement(user.userID!, updatedUser);
+      await _updateUserAchievement(user.userID!, updatedUser);
       debugPrint('Özel XP eklendi: +$amount XP. Toplam XP: ${updatedUser.totalXp}');
+
+      // Bildirim kaydet
+      await SharedPrefService.saveNotificationWithEnum(
+        type: NotificationsEnum.xpEarned,
+        title: "Özel XP Kazandınız!",
+        body: "$amount XP hesabınıza eklendi.",
+      );
+
+      // Eğer bu XP ile bir sonraki seviyeye geçildiyse
+      final oldRank = UserRank.fromXp(user.totalXp);
+      final newRank = UserRank.fromXp(updatedUser.totalXp);
+
+      if (oldRank != newRank) {
+        await SharedPrefService.saveNotificationWithEnum(
+          type: NotificationsEnum.rankUp,
+          title: "Yeni Seviye!",
+          body: "Tebrikler! ${newRank.titleKey} seviyesine ulaştınız.",
+        );
+      }
+
+      // Eğer bu XP ile premium ödül kazanıldıysa
+      final oldPremiumCount = PremiumRewards.earnedPremiumRewards(user.totalXp);
+      final newPremiumCount = PremiumRewards.earnedPremiumRewards(updatedUser.totalXp);
+
+      if (newPremiumCount > oldPremiumCount) {
+        await SharedPrefService.saveNotificationWithEnum(
+          type: NotificationsEnum.premiumReward,
+          title: "Premium Ödül Kazandınız!",
+          body: "Tebrikler! Yeni bir premium ödül kazandınız.",
+        );
+      }
     } catch (e) {
       debugPrint('Özel XP eklenirken hata: $e');
     }
 
     return updatedUser;
+  }
+
+  // Özel bir nedenle premium ödül verir
+  Future<void> grantPremiumReward(String userId, String reason) async {
+    if (userId.isEmpty) {
+      debugPrint('Kullanıcı ID bulunamadı, premium ödül verilemiyor');
+      return;
+    }
+
+    try {
+      // Sadece bildirim olarak kaydet, XP değişikliği yapmıyoruz
+      await SharedPrefService.saveNotificationWithEnum(
+        type: NotificationsEnum.premiumReward,
+        title: "🌟 Özel Premium Ödül!",
+        body: "Tebrikler! $reason nedeniyle özel bir premium ödül kazandınız.",
+      );
+
+      debugPrint('$userId kullanıcısına özel premium ödül verildi. Sebep: $reason');
+    } catch (e) {
+      debugPrint('Premium ödül verilirken hata: $e');
+    }
   }
 
   // Günlük görevleri sıfırlar
@@ -93,8 +192,15 @@ class AchievementService {
     );
 
     try {
-      await updateUserAchievement(user.userID!, updatedUser);
+      await _updateUserAchievement(user.userID!, updatedUser);
       debugPrint('Günlük görevler sıfırlandı');
+
+      // Bildirim kaydet
+      await SharedPrefService.saveNotificationWithEnum(
+        type: NotificationsEnum.dailyTask,
+        title: "Günlük Görevler Sıfırlandı",
+        body: "Günlük görevler sıfırlandı, yeni görevleri tamamlayarak XP kazanabilirsiniz.",
+      );
     } catch (e) {
       debugPrint('Günlük görevler sıfırlanırken hata: $e');
     }
@@ -103,7 +209,7 @@ class AchievementService {
   }
 
   // Kullanıcı başarılarını Firestore'a kaydeder
-  Future<void> updateUserAchievement(String uuid, Customer customer) async {
+  Future<void> _updateUserAchievement(String uuid, Customer customer) async {
     try {
       // Customer modeli içindeki achievements alanlarını güncelle
       await _firestore.collection("customers").doc(uuid).update({
@@ -115,6 +221,16 @@ class AchievementService {
       debugPrint('Achievement güncellenirken hata: $e');
       throw e;
     }
+  }
+
+  //Bir sonraki seviyeye kalan Xp miktarını yüzdelik oalrak döndürür
+  double getXpToNextRankPercentage(int totalXp) {
+    return (getXpToNextRank(totalXp) / UserRank.fromXp(totalXp).maxXp) * 100;
+  }
+
+  // Bir sonraki seviyeye kalan XP miktarını hesaplar
+  int getXpToNextRank(int totalXp) {
+    return (UserRank.fromXp(totalXp).maxXp as int) - totalXp;
   }
 
   // Premium ödül bilgilerini hesaplar
@@ -157,5 +273,21 @@ class AchievementService {
     final lastDate = user.lastDailyTaskDate!;
 
     return lastDate.year == now.year && lastDate.month == now.month && lastDate.day == now.day;
+  }
+
+  // Kullanıcının XP'sini sıfırlar
+  Future<void> resetUserXp(String uuid) async {
+    await _firestore.collection("customers").doc(uuid).update({
+      'totalXp': 0,
+      'completedTasks': {},
+      'lastDailyTaskDate': null,
+    });
+
+    // Bildirim kaydet
+    await SharedPrefService.saveNotificationWithEnum(
+      type: NotificationsEnum.xpReset,
+      title: "XP Sıfırlandı",
+      body: "XP'niz sıfırlandı. Yeniden XP kazanmaya başlayabilirsiniz.",
+    );
   }
 }

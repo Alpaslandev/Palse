@@ -48,13 +48,11 @@ class NotificationService {
       debugPrint('Ön planda bildirim alındı: ${message.notification?.body}');
 
       debugPrint('Bildirim data: ${message.data}');
-      final notificationType = NotificationsEnum.values.firstWhere((e) => e.name == message.data['type']);
       //  final notificationDate = (message.data['timestamp'] as Timestamp).toDate();
-      debugPrint('Bildirim notificationType: ${notificationType.title}');
 
-      if (notificationType.isSaveable) {
+      if (message.data['type'] != 'message') {
         SharedPrefService.saveNotificationWithEnum(
-          type: notificationType,
+          type: message.data['type'],
           body: message.notification?.body ?? '',
           title: message.notification?.title ?? '',
         );

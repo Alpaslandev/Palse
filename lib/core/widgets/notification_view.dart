@@ -73,7 +73,7 @@ class NotificationView extends StatelessWidget {
                                 Align(
                                   alignment: Alignment.topLeft,
                                   child: Text(
-                                    notificationType.nonPremium,
+                                    notificationType.description,
                                   ),
                                 ),
                                 Align(

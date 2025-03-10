@@ -2,32 +2,32 @@ import 'package:flutter/material.dart';
 import 'package:palseapp/core/localization/app_localizations.dart';
 
 enum NotificationsEnum {
-  likeAdvert(
-      title: 'Harika!',
-      nonPremium: '💖 İlanınız beğenildi! Beğenenleri görmek için tıklayın.',
-      premium: '💖 İlanınız beğenildi! Kimin beğendiğini görmek için ✨ premium üye olun.',
-      isSaveable: true),
-  comment(title: 'Dikkatler Üzerinde!', nonPremium: 'Profiline yorum yaptı! Hemen görüntüle', isSaveable: true),
-  newAdvertInCity(title: 'Yalnız Değilsin!', nonPremium: '🏙️ Şehrinizde harika bir ilan eklendi, hemen göz atın! 👀', isSaveable: true),
-  newAdvertInInterestArea(
-      title: 'Aradığını Buldun!', nonPremium: '✨ İlgi alanınıza hitap eden yepyeni bir ilan var! Hadi, kaçırmadan inceleyin! 🔍', isSaveable: false),
-  dailyTask(
-      title: '', nonPremium: 'Bugün Palse’de XP kazanma zamanı! Bir ilan oluştur ve bir mesaj gönder, +100 XP senin olsun! 🎯', isSaveable: true),
-  dailyTaskCompleted(title: '', nonPremium: 'Günlük görevlerin tamamlandı! Hemen görüntüle', isSaveable: true),
+  likeAdvert(title: 'İlan Beğenildi!', description: 'Bir ilanı beğendiniz, hemen görüntüle'),
+  comment(title: 'Yorum Eklendi!', description: 'Bir yorum eklendiniz, hemen görüntüle'),
+  dailyTask(title: 'Bugün Palse\'de XP kazanma zamanı!', description: 'Bir ilan oluştur ve bir mesaj gönder, +100 XP senin olsun! 🎯'),
 
-  welcomeNotification(
-      title: 'Çaylak!', nonPremium: 'Hoş geldin! İlk ilanını oluştur ve ilk mesajını gönder, toplam 1000 XP kazan! 🎉', isSaveable: true),
-  messageFromOldFriend(title: '', nonPremium: 'Uzun zamandır görüşmedik! Giriş yap ve bir mesaj gönder, hemen +35 XP kazan!', isSaveable: false);
+  dailyTaskCompleted(title: 'Günlük Görevler Tamamlandı!', description: 'Günlük görevlerin tamamlandı! Hemen görüntüle'),
 
-  final String nonPremium;
-  final String? premium;
+  messageFromOldFriend(title: 'Eski Arkadaştan Mesaj!', description: 'Uzun zamandır görüşmedik! Giriş yap ve bir mesaj gönder, hemen +35 XP kazan!'),
+
+  // XP sistemi bildirimleri
+  taskCompleted(title: 'Görev Tamamlandı!', description: '🎯 Bir görevi tamamladınız ve XP kazandınız!'),
+
+  xpEarned(title: 'XP Kazandınız!', description: '✨ Tebrikler! XP puanı kazandınız.'),
+
+  rankUp(title: 'Seviye Atladınız!', description: '🏆 Tebrikler! Yeni bir seviyeye ulaştınız.'),
+
+  premiumReward(title: 'Premium Ödül!', description: '🎁 Yeni bir premium ödül kazandınız!'),
+
+  xpReset(title: 'XP Sıfırlandı', description: '🔄 XP puanlarınız sıfırlandı.');
+
+  final String description;
   final String title;
-  final bool isSaveable;
 
-  const NotificationsEnum({required this.nonPremium, this.premium, required this.title, this.isSaveable = true});
+  const NotificationsEnum({required this.description, required this.title});
 
   // Çevirilmiş metni döndüren getter
   String getText(BuildContext context) {
-    return context.tr(nonPremium);
+    return context.tr(description);
   }
 }
