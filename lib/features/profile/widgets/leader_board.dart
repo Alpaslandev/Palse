@@ -135,11 +135,13 @@ class LeaderBoard extends StatelessWidget {
             '$xp XP',
             style: const TextStyle(color: Colors.white),
           ),
-          if (isFirstThree)
-            const Icon(
-              Icons.star,
-              color: Colors.white,
+          if (isFirstThree) ...[
+            const SizedBox(width: 4),
+            Text(
+              '🥇',
+              style: TextStyle(color: Colors.white, fontSize: 16),
             ),
+          ],
         ],
       ),
     );

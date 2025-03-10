@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:palseapp/core/models/comment_model.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/services/firestore/customer_service.dart';
+import 'package:palseapp/core/services/notification_service.dart';
+
+import '../../../core/constant/notifications_enum.dart';
 
 class CommentViewModel extends ChangeNotifier {
   final CustomerService _customerService = CustomerService();
+  final NotificationService _notificationService = NotificationService();
   final Customer _friendCustomer;
   bool _isLoading = false;
 
@@ -23,6 +27,10 @@ class CommentViewModel extends ChangeNotifier {
     try {
       await _customerService.addComment(_friendCustomer.userID!, comment);
       _comments.add(comment);
+      await _notificationService.sendNotification(
+        receiverId: _friendCustomer.userID!,
+        notificationType: NotificationsEnum.comment,
+      );
       debugPrint('Yorum eklendi: ${comment.toString()}');
     } catch (e) {
       debugPrint('Yorum ekleme hatası: $e');

@@ -25,6 +25,7 @@ class AppTheme {
   static const Color darkCardColor = Color(0xFF252525); // Kart rengi
   static const Color darkDividerColor = Color(0xFF424242); // Ayırıcı rengi
   static const Color darkIconColor = Color(0xFFBDBDBD); // İkon rengi
+  static const Color darkChipColor = Color(0xFF252525); // Chip rengi
 
   // Açık tema
   static ThemeData get theme => _createTheme(
@@ -82,6 +83,14 @@ class AppTheme {
       dividerColor: dividerColor,
       iconTheme: IconThemeData(color: iconColor),
 
+      cardTheme: CardTheme(
+        color: backgroundColor,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+      ),
+
       // AppBar teması
       appBarTheme: AppBarTheme(
         backgroundColor: backgroundColor,
@@ -130,20 +139,29 @@ class AppTheme {
       // Butonlar
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: primaryColor,
-          foregroundColor: isDark ? darkTextColor : Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        ),
+            backgroundColor: primaryColor,
+            foregroundColor: isDark ? darkTextColor : Colors.white,
+            shape: StadiumBorder(),
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            disabledBackgroundColor: primaryColor.withOpacity(0.5),
+            disabledForegroundColor: darkTextColor),
       ),
 
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           backgroundColor: backgroundColor,
           foregroundColor: textColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(50),
+          ),
         ),
+      ),
+
+      chipTheme: ChipThemeData(
+        backgroundColor: backgroundColor,
+        labelStyle: TextStyle(color: darkTextColor),
+        iconTheme: IconThemeData(color: darkTextColor),
+        shape: StadiumBorder(),
       ),
 
       // SwitchList'ler için tema

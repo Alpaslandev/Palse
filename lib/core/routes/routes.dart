@@ -15,6 +15,7 @@ const String languageSettings = 'languageSettings';
 const String leaderBoard = 'leaderBoard';
 const String xpEvents = '/xpEvents';
 const String verified = 'verified';
+const String paywall = 'paywall';
 
 const String filter = '/filter';
 

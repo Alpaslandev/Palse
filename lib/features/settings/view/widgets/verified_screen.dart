@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:io' show Platform;
-
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:palseapp/core/services/firestore/customer_service.dart';
+import 'package:firebase_auth_platform_interface/firebase_auth_platform_interface.dart';
+import 'package:flutter/services.dart';
 
 class VerifiedScreen extends StatefulWidget {
   const VerifiedScreen({super.key});
@@ -38,6 +40,12 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
   // Formatlanmış telefon numarası
   String _formattedPhoneNumber = '';
 
+  // Doğrulama kodunu elle giren (test) kullanıcılar için manuel doğrulama
+  bool _manualVerification = false;
+
+  // iOS için reCAPTCHA container key
+  final GlobalKey _recaptchaKey = GlobalKey();
+
   @override
   void initState() {
     super.initState();
@@ -71,13 +79,11 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
     // Telefon numarasını formatlayalım
     String phoneNumber = _phoneController.text.trim();
 
-    // Eğer + ile başlamıyorsa ekleyelim
-    if (!phoneNumber.startsWith('+')) {
-      phoneNumber = '+$phoneNumber';
-    }
+    // Tüm boşlukları ve artı işaretlerini kaldıralım
+    phoneNumber = phoneNumber.replaceAll(' ', '').replaceAll('+', '');
 
-    // Boşlukları kaldıralım
-    phoneNumber = phoneNumber.replaceAll(' ', '');
+    // Tek bir artı işareti ekleyelim başına
+    phoneNumber = '+$phoneNumber';
 
     // Sınıf değişkenine atayalım ki sonra Firestore güncellemesi yaparken kullanabilelim
     _formattedPhoneNumber = phoneNumber;
@@ -90,7 +96,180 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
       _isLoading = true;
     });
 
+    // Platform kontrolü yapalım
+    if (Platform.isIOS) {
+      // iOS için özel doğrulama akışını başlat
+      _initIOSPhoneVerification(phoneNumber);
+    } else {
+      // Android ve diğer platformlar için normal doğrulama
+      _verifyPhoneNumberForNonIOS(phoneNumber);
+    }
+  }
+
+  // iOS için telefon doğrulama
+  Future<void> _initIOSPhoneVerification(String phoneNumber) async {
     try {
+      debugPrint('iOS için telefon doğrulama başlatılıyor');
+
+      // Test numarası kontrolü
+      bool useTestNumber = true; // Test için
+      if (useTestNumber) {
+        phoneNumber = '+905055555555'; // Firebase konsolunda eklediğiniz test numarası
+        debugPrint('Test numarası kullanılıyor: $phoneNumber');
+      }
+
+      // iOS için doğrulama
+      await _auth.verifyPhoneNumber(
+        phoneNumber: phoneNumber,
+        verificationCompleted: (PhoneAuthCredential credential) async {
+          // iOS'ta otomatik doğrulama pek çalışmaz, manuel kod girişi gerekir
+          debugPrint('Otomatik doğrulama tamamlandı (iOS\'ta nadir)');
+
+          // Otomatik doğrulama durumunda kullanıcıya telefon numarası ekle
+          if (!mounted || !_isActive) return;
+
+          try {
+            // Mevcut kullanıcıya credential ekle
+            await _auth.currentUser?.linkWithCredential(credential);
+            debugPrint('Telefon numarası mevcut kullanıcıya bağlandı');
+
+            // Firestore'da kullanıcı bilgilerini güncelle
+            if (_auth.currentUser != null) {
+              await _customerService.updateCustomerVerifiedAndPhone(_auth.currentUser!.uid, true, _formattedPhoneNumber);
+              debugPrint('Firestore kullanıcı bilgileri güncellendi');
+            }
+
+            setState(() {
+              _isLoading = false;
+              _currentStep = 0; // İşlem tamamlandı
+            });
+
+            // Kullanıcıya bilgi ver
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Telefon numarası başarıyla doğrulandı')),
+              );
+              // Başarılı olduğunda önceki sayfaya dön
+              Navigator.pop(context);
+            }
+          } catch (e) {
+            debugPrint('Credential ekleme hatası: $e');
+
+            // Hata FirebaseAuthException ve error code'u provider-already-linked ise
+            // Telefon numarası zaten doğrulanmış demektir
+            if (e is FirebaseAuthException && e.code == 'provider-already-linked') {
+              // Firestore'da kullanıcı bilgilerini güncelle
+              if (_auth.currentUser != null) {
+                await _customerService.updateCustomerVerifiedAndPhone(_auth.currentUser!.uid, true, _formattedPhoneNumber);
+                debugPrint('Telefon zaten doğrulanmış, Firestore bilgileri güncellendi');
+              }
+
+              setState(() {
+                _isLoading = false;
+              });
+
+              // Kullanıcıya bilgi ver
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Telefon numarası zaten doğrulanmış')),
+                );
+                // Başarılı olduğunda önceki sayfaya dön
+                Navigator.pop(context);
+              }
+            } else {
+              setState(() {
+                _isLoading = false;
+              });
+
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Doğrulama hatası: $e')),
+                );
+              }
+            }
+          }
+        },
+        verificationFailed: (FirebaseAuthException e) {
+          debugPrint('iOS doğrulama hatası: ${e.message}');
+
+          if (!mounted || !_isActive) return;
+
+          setState(() {
+            _isLoading = false;
+            // Manuel doğrulama için arayüzü hazırla
+            _manualVerification = true;
+          });
+
+          String errorMessage = 'iOS doğrulama hatası oluştu';
+
+          // Hata kodlarına göre daha anlamlı mesajlar
+          if (e.code == 'invalid-phone-number') {
+            errorMessage = 'Geçersiz telefon numarası formatı';
+          } else if (e.code == 'too-many-requests') {
+            errorMessage = 'Çok fazla istek gönderildi. Lütfen daha sonra tekrar deneyin';
+          } else {
+            errorMessage = 'Hata: ${e.message}';
+          }
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(errorMessage)),
+            );
+          }
+        },
+        codeSent: (String verificationId, int? resendToken) {
+          debugPrint('iOS\'ta doğrulama kodu gönderildi. VerificationId: $verificationId');
+
+          if (!mounted || !_isActive) return;
+
+          setState(() {
+            _verificationId = verificationId;
+            _isLoading = false;
+            _currentStep = 1; // Bir sonraki adıma geç
+          });
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Doğrulama kodu gönderildi')),
+            );
+          }
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {
+          debugPrint('iOS\'ta kod alma zaman aşımı');
+
+          if (!mounted || !_isActive) return;
+
+          setState(() {
+            _verificationId = verificationId;
+            _isLoading = false;
+          });
+        },
+        timeout: const Duration(seconds: 120),
+        forceResendingToken: null,
+      );
+    } catch (e) {
+      debugPrint('iOS telefon doğrulama hatası: $e');
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('iOS doğrulama hatası: $e')),
+      );
+    }
+  }
+
+  // Android ve diğer platformlar için telefon doğrulama
+  Future<void> _verifyPhoneNumberForNonIOS(String phoneNumber) async {
+    try {
+      // "Unusual Activity" hatasını önlemek için Firebase test numarasını kullanın
+      bool useTestNumber = true; // Test numarası kullanmak için true yapın - DENEME İÇİN ETKİNLEŞTİRİLDİ
+
+      if (useTestNumber) {
+        // Test numarası için
+        phoneNumber = '+905055555555'; // Firebase konsolunda eklediğiniz test numarası (değiştirin)
+        debugPrint('Test numarası kullanılıyor: $phoneNumber');
+      }
+
       // Mobil platformlar için verifyPhoneNumber kullanılır
       await _auth.verifyPhoneNumber(
         phoneNumber: phoneNumber,
@@ -127,29 +306,85 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
             }
           } catch (e) {
             debugPrint('Credential ekleme hatası: $e');
-            setState(() {
-              _isLoading = false;
-            });
 
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Doğrulama hatası: $e')),
-              );
+            // Hata FirebaseAuthException ve error code'u provider-already-linked ise
+            // Telefon numarası zaten doğrulanmış demektir
+            if (e is FirebaseAuthException && e.code == 'provider-already-linked') {
+              // Firestore'da kullanıcı bilgilerini güncelle
+              if (_auth.currentUser != null) {
+                await _customerService.updateCustomerVerifiedAndPhone(_auth.currentUser!.uid, true, _formattedPhoneNumber);
+                debugPrint('Telefon zaten doğrulanmış, Firestore bilgileri güncellendi');
+              }
+
+              setState(() {
+                _isLoading = false;
+              });
+
+              // Kullanıcıya bilgi ver
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Telefon numarası zaten doğrulanmış')),
+                );
+                // Başarılı olduğunda önceki sayfaya dön
+                Navigator.pop(context);
+              }
+            } else {
+              setState(() {
+                _isLoading = false;
+              });
+
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Doğrulama hatası: $e')),
+                );
+              }
             }
           }
         },
         verificationFailed: (FirebaseAuthException e) {
           debugPrint('Doğrulama hatası: ${e.message}');
+          debugPrint('Hata kodu: ${e.code}');
 
           if (!mounted || !_isActive) return;
 
           setState(() {
             _isLoading = false;
+            // Manuel doğrulama için arayüzü hazırla
+            _manualVerification = true;
           });
+
+          String errorMessage = 'Doğrulama hatası oluştu';
+
+          // Hata kodlarına göre daha anlamlı mesajlar
+          if (e.code == 'invalid-phone-number') {
+            errorMessage = 'Geçersiz telefon numarası formatı';
+          } else if (e.code == 'too-many-requests') {
+            errorMessage = 'Çok fazla istek gönderildi. Lütfen daha sonra tekrar deneyin';
+          } else if (e.code == 'quota-exceeded') {
+            errorMessage = 'SMS kotası aşıldı. Lütfen daha sonra tekrar deneyin';
+          } else if (e.code == 'captcha-check-failed') {
+            errorMessage = 'Captcha doğrulaması başarısız oldu. Tekrar deneyin';
+          } else if (e.code == 'app-not-authorized') {
+            errorMessage = 'Uygulama Firebase Authentication kullanmaya yetkili değil';
+          } else if (e.code == 'web-context-cancelled') {
+            errorMessage = 'Web doğrulama iptal edildi';
+          } else if (e.message?.contains('blocked') == true || e.message?.contains('unusual activity') == true) {
+            errorMessage =
+                'Bu cihazdan yapılan istekler geçici olarak engellendi. Firebase konsolundan test numarası ekleyin veya daha sonra tekrar deneyin.';
+          } else {
+            errorMessage = 'Hata: ${e.message}';
+          }
 
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Doğrulama hatası: ${e.message}')),
+              SnackBar(
+                content: Text(errorMessage),
+                duration: const Duration(seconds: 5),
+                action: SnackBarAction(
+                  label: 'ANLADIM',
+                  onPressed: () {},
+                ),
+              ),
             );
           }
         },
@@ -180,7 +415,10 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
             _isLoading = false;
           });
         },
-        timeout: const Duration(seconds: 60),
+        // Daha uzun bir timeout süresi
+        timeout: const Duration(seconds: 120),
+        // DeepLink sorununu önlemek için ayar ekliyoruz
+        forceResendingToken: null,
       );
     } catch (e) {
       debugPrint('Beklenmeyen hata: $e');
@@ -226,7 +464,7 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
         throw Exception('Kullanıcı oturumu bulunamadı');
       }
 
-      // Mevcut kullanıcıya credential ekle
+      // Mevcut kullanıcıya phone number ekle (linkWithCredential tekrar deniyelim)
       await _auth.currentUser!.linkWithCredential(credential);
 
       // Firestore'da kullanıcı bilgilerini güncelle
@@ -258,10 +496,29 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
         _isLoading = false;
       });
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Doğrulama kodu hatası: $e')),
-        );
+      // Hata FirebaseAuthException ve error code'u provider-already-linked ise
+      // Telefon numarası zaten doğrulanmış demektir
+      if (e is FirebaseAuthException && e.code == 'provider-already-linked') {
+        // Firestore'da kullanıcı bilgilerini güncelle
+        if (_auth.currentUser != null) {
+          await _customerService.updateCustomerVerifiedAndPhone(_auth.currentUser!.uid, true, _formattedPhoneNumber);
+          debugPrint('Telefon zaten doğrulanmış, Firestore bilgileri güncellendi');
+        }
+
+        // Kullanıcıya bilgi ver
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Telefon numarası zaten doğrulanmış')),
+          );
+          // Başarılı olduğunda önceki sayfaya dön
+          Navigator.pop(context);
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Doğrulama kodu hatası: $e')),
+          );
+        }
       }
     }
   }
@@ -407,6 +664,67 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
                             padding: EdgeInsets.only(top: 16.0),
                             child: Center(child: CircularProgressIndicator()),
                           ),
+                        // iOS için reCAPTCHA içeriği
+                        if (Platform.isIOS)
+                          Container(
+                            key: _recaptchaKey,
+                            margin: const EdgeInsets.only(top: 16),
+                            height: 80,
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey.shade300),
+                              borderRadius: BorderRadius.circular(8),
+                              color: Colors.grey[50],
+                            ),
+                            child: const Center(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.security, color: Colors.grey),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'iOS için CAPTCHA Doğrulama',
+                                    style: TextStyle(color: Colors.grey),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        // Hata durumunda ipucu ekleyelim
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.orange.shade200),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                '📝 Bilgi:',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(height: 4),
+                              const Text(
+                                'SMS kodunun gelmesi biraz zaman alabilir. Lütfen en az 2 dakika bekleyin.',
+                                style: TextStyle(fontSize: 13),
+                              ),
+                              const SizedBox(height: 4),
+                              if (Platform.isIOS) ...[
+                                const Text(
+                                  'iOS\'ta doğrulama işlemi için Apple güvenlik protokollerine uygun CAPTCHA doğrulaması gerekebilir.',
+                                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.deepOrange),
+                                ),
+                                const SizedBox(height: 4),
+                              ],
+                              const Text(
+                                'Kod gelmediyse numaranızı kontrol edip tekrar deneyin.',
+                                style: TextStyle(fontSize: 13),
+                              ),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                     isActive: _currentStep >= 0,

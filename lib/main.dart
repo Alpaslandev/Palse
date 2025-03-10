@@ -2,9 +2,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:palseapp/core/localization/app_localizations.dart';
+import 'package:palseapp/core/provider/ads_provider.dart';
 import 'package:palseapp/core/provider/locale_provider.dart';
 import 'package:palseapp/core/provider/theme_provider.dart';
 import 'package:palseapp/core/routes/app_router.dart';
@@ -16,6 +18,7 @@ import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/features/chats/viewmodel/chats_view_model.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:palseapp/core/provider/subscription_provider.dart';
+import 'package:palseapp/core/widgets/scaffold_mess.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,6 +35,8 @@ void main() async {
       rethrow;
     }
   }
+
+  MobileAds.instance.initialize();
 
   // RevenueCat'i başlat
   if (Platform.isIOS) {
@@ -63,6 +68,7 @@ void main() async {
 
   final subscriptionProvider = SubscriptionProvider();
   final themeProvider = ThemeProvider();
+  final adsProvider = AdsProvider();
 
   runApp(
     MultiProvider(
@@ -71,6 +77,7 @@ void main() async {
         ChangeNotifierProvider.value(value: subscriptionProvider),
         ChangeNotifierProvider.value(value: themeProvider),
         ChangeNotifierProvider.value(value: localeProvider),
+        ChangeNotifierProvider.value(value: adsProvider),
         ChangeNotifierProvider(create: (_) => ChatsViewModel(authProvider.user!)),
       ],
       child: MyApp(notificationService: notificationService),
@@ -94,6 +101,7 @@ class MyApp extends StatelessWidget {
       darkTheme: AppTheme.darkTheme, // Koyu tema
       themeMode: themeProvider.themeMode, // Tema modunu provider'dan al
       routerConfig: AppRouter.router,
+      scaffoldMessengerKey: ScaffoldMess.rootScaffoldMessengerKey, // ScaffoldMess için GlobalKey kullan
       locale: localeProvider.locale, // Dil ayarını provider'dan al
       localizationsDelegates: const [
         AppLocalizations.delegate, // Kendi localization delegemiz

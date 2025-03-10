@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/provider/subscription_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
+import 'package:palseapp/features/subscription/view/paywall_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
 
@@ -42,8 +43,10 @@ class ProjectAppBar extends StatelessWidget implements PreferredSizeWidget {
             child: IconButton(
               onPressed: () async {
                 debugPrint('ringtone');
+                context.pushNamed(paywall);
                 //  await authProvider.logout();
                 //   context.push(notification);
+                /*
                 final paywallResult = await RevenueCatUI.presentPaywall();
                 debugPrint(paywallResult.toString());
 
@@ -58,6 +61,7 @@ class ProjectAppBar extends StatelessWidget implements PreferredSizeWidget {
                   await subscriptionProvider.updatePremiumStatus(true, authProvider.user?.userID ?? '');
                   debugPrint('restored');
                 }
+                */
               },
               icon: SvgPicture.asset(
                 'assets/vectors/ringtone_iconly_pro_1_x2.svg',

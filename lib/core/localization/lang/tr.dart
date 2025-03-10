@@ -71,7 +71,9 @@ const Map<String, String> tr = {
   'premium_subscription': 'Premium Abonelik',
   'finish': 'Tamamla',
   'back': 'Geri',
-
+  'advert_created_successfully_non_premium': 'Bundan sonraki ilanlarınızda reklam izlememek için premium üye olabilirsiniz.',
+  'advert_created_successfully_premium': 'İlanınız başarıyla oluşturuldu.',
+  'please_select_photo': 'Lütfen bir fotoğraf seçin',
   // Mesajlar
   'no_messages': 'Henüz mesaj yok',
   'type_message': 'Mesaj yazın...',
@@ -91,7 +93,6 @@ const Map<String, String> tr = {
   'daily_task_step2': 'Görevi tamamla, toplamda +100 XP kazan!',
   'complete_task': 'Görevi Tamamla',
   'verify_profile_text': 'Gerçek bir profil olduğunu doğrula ve\nekstra görünürlük kazan!',
-  'get_premium': 'Premium Ol',
 
   // XP Sistemi
   'xp_system': 'XP Sistemi ve Ünvanlar',
@@ -99,6 +100,7 @@ const Map<String, String> tr = {
   'ranks_description': 'Kazandığınız XP puanlarına göre unvanınız yükselir:',
 
   // Premium
+  'get_premium': 'Premium Ol',
   'premium_required': 'Premium Üyelik Gerekiyor',
   'premium_photo_message': 'Premium üyelik alarak fotoğraf gönderebilirsiniz.',
   'ok': 'Tamam',

@@ -1,6 +1,7 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:palseapp/core/constant/notifications_enum.dart';
 import 'package:palseapp/core/routes/app_router.dart';
 import 'package:palseapp/core/routes/routes.dart';
 
@@ -76,9 +77,7 @@ class NotificationService {
             TextButton(
               onPressed: () {
                 ScaffoldMessenger.of(_context!).hideCurrentMaterialBanner();
-                if (chatId != null && senderId != null && receiverId != null) {
-                  AppRouter.router.push('/chats/$chatId?otherId=$senderId&currentId=$receiverId');
-                }
+                AppRouter.router.push('/chats/$chatId');
               },
               child: const Text('Görüntüle'),
             ),
@@ -109,7 +108,7 @@ class NotificationService {
       final receiverId = data['receiverId'];
 
       if (chatId != null && senderId != null && receiverId != null) {
-        AppRouter.router.push('/chats/$chatId?otherId=$senderId&currentId=$receiverId');
+        AppRouter.router.push('/chats/$chatId');
       } else {
         AppRouter.router.push(notification);
       }
@@ -117,35 +116,22 @@ class NotificationService {
   }
 
   // Bildirim gönder
-  Future<void> sendMessageNotification({
+  Future<void> sendNotification({
     required String receiverId,
-    required String senderName,
-    required String message,
-    required String chatId,
-    required String senderId,
+    required NotificationsEnum notificationType,
+    String? chatId,
   }) async {
     try {
-      final userDoc = await _db.collection('customers').doc(receiverId).get();
-      final fcmToken = userDoc.data()?['fcmToken'] as String?;
-
-      if (fcmToken == null) {
-        debugPrint('Alıcının FCM token\'ı bulunamadı');
-        return;
-      }
-
       // Bildirim verilerini düzenleyelim
+      debugPrint('Bildirim gönderiliyor: $receiverId, $notificationType, $chatId');
       await _db.collection('notifications').add({
-        'token': fcmToken,
-        'title': senderName,
-        'body': message,
         'timestamp': FieldValue.serverTimestamp(),
         'receiverId': receiverId,
-        'type': 'message',
+        'type': notificationType.name,
         'chatId': chatId,
-        'senderId': senderId,
       });
 
-      debugPrint('Bildirim gönderildi: ChatId: $chatId, SenderId: $senderId');
+      debugPrint('Bildirim gönderildi');
     } catch (e) {
       debugPrint('Bildirim gönderme hatası: $e');
     }

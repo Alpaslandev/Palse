@@ -5,7 +5,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/models/chat_model.dart';
 import 'package:palseapp/core/models/customer.dart';
-import 'package:palseapp/features/chats/service/chat_service.dart';
+import 'package:palseapp/core/services/chat_service.dart';
 import 'package:palseapp/core/services/firestore/customer_service.dart';
 
 class MessagesViewModel extends ChangeNotifier {

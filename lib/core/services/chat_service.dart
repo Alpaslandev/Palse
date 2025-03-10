@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:palseapp/core/constant/notifications_enum.dart';
 import 'package:palseapp/core/models/chat_model.dart';
 import 'package:flutter/foundation.dart';
 import 'package:palseapp/core/services/notification_service.dart';
@@ -59,7 +60,7 @@ class ChatService {
   }
 
   // Mesaj gönderme
-  Future<void> sendMessage(String chatId, Message message, String currentUserId, String otherUserId, String senderName) async {
+  Future<void> sendMessage(String chatId, Message message, String senderId, String receiverId, String senderName) async {
     try {
       // 1. Batch işlemi başlat
       final batch = _db.batch();
@@ -82,11 +83,11 @@ class ChatService {
       // 4. Kullanıcı belgelerini güncelle
       // Gönderen için (kendi gönderdiği mesajın okunmadığını gösterir, unreadCount değişmez)
       batch.set(
-          _db.collection('customers').doc(currentUserId),
+          _db.collection('customers').doc(senderId),
           {
             'chatMap': {
-              otherUserId: {
-                'otherUserId': otherUserId,
+              receiverId: {
+                'otherUserId': receiverId,
                 'chatId': chatId,
                 'lastMessage': message.content,
                 'lastMessageTime': message.timestamp,
@@ -102,11 +103,11 @@ class ChatService {
       // Alıcı için (yeni mesaj okunmamış, unreadCount artar)
       // FieldValue.increment kullanarak mevcut değeri okumadan artırabiliriz
       batch.set(
-          _db.collection('customers').doc(otherUserId),
+          _db.collection('customers').doc(receiverId),
           {
             'chatMap': {
-              currentUserId: {
-                'otherUserId': currentUserId,
+              senderId: {
+                'otherUserId': senderId,
                 'chatId': chatId,
                 'senderName': senderName,
                 'lastMessage': message.content,
@@ -124,12 +125,10 @@ class ChatService {
       await batch.commit();
 
       // 6. Bildirimi gönder
-      await notificationService.sendMessageNotification(
-        receiverId: otherUserId,
-        senderName: senderName,
-        message: message.type.value == 'image' ? '📷 Fotoğraf gönderdi' : message.content,
+      await notificationService.sendNotification(
+        receiverId: receiverId,
         chatId: chatId,
-        senderId: message.senderId,
+        notificationType: NotificationsEnum.message,
       );
     } catch (e) {
       _logError('sendMessage', e, stackTrace: StackTrace.current);

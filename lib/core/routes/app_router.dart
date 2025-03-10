@@ -27,6 +27,7 @@ import 'package:palseapp/features/settings/view/language_settings_view.dart';
 import 'package:palseapp/features/settings/view/settings_view.dart';
 import 'package:palseapp/features/settings/view/widgets/verified_screen.dart';
 import 'package:palseapp/features/splash/splash_view.dart';
+import 'package:palseapp/features/subscription/view/paywall_screen.dart';
 import 'package:palseapp/features/subscription/view/subscription_view.dart';
 
 // Router sınıfını oluştur
@@ -93,12 +94,6 @@ class AppRouter {
               },
             ),
           ],
-        ),
-        GoRoute(
-          name: 'subscription',
-          path: subscription,
-          parentNavigatorKey: rootNavigatorKey, // Ana navigator'ı kullan
-          builder: (context, state) => const SubscriptionView(),
         ),
         GoRoute(
           name: 'xpEvents',
@@ -168,6 +163,26 @@ class AppRouter {
           path: "/verified",
           name: verified,
           builder: (context, state) => const VerifiedScreen(),
+        ),
+        GoRoute(
+          path: "/$paywall",
+          name: paywall,
+          pageBuilder: (context, state) => CustomTransitionPage(
+            key: state.pageKey,
+            child: const PaywallScreen(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              // Alttan yukarı doğru kaydırma animasyonu
+              const begin = Offset(0, 1); // Başlangıç pozisyonu (alt)
+              const end = Offset.zero; // Bitiş pozisyonu (üst)
+              const curve = Curves.easeInOut;
+
+              var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+              return SlideTransition(
+                position: animation.drive(tween),
+                child: child,
+              );
+            },
+          ),
         ),
         ShellRoute(
           navigatorKey: _shellNavigatorKey,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:palseapp/core/constant/notifications_enum.dart';
 import 'package:palseapp/core/models/advert.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/services/firestore/advert_service.dart';
@@ -124,16 +125,9 @@ class HomeViewModel extends ChangeNotifier {
         // Kullanıcının belgesini de güncelle
         await _customerService.likeAdvert(advertId, userId);
 
-        String message = advert.creatorIsPremium
-            ? '💖 İlanınız beğenildi! Beğenenleri görmek için tıklayın.'
-            : '💖 İlanınız beğenildi! Kimin beğendiğini görmek için ✨ premium üye olun.';
-
-        _notificationService.sendMessageNotification(
+        await _notificationService.sendNotification(
           receiverId: advert.creatorUserID,
-          senderName: 'Harika!',
-          message: message,
-          chatId: '',
-          senderId: '',
+          notificationType: NotificationsEnum.likeAdvert,
         );
       }
     } catch (e) {

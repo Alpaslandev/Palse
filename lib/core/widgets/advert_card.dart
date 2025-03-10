@@ -10,7 +10,7 @@ import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/widgets/circle_profile_picture.dart';
 import 'package:palseapp/features/achievement/user_achievements.dart';
-import 'package:palseapp/features/chats/service/chat_service.dart';
+import 'package:palseapp/core/services/chat_service.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -47,7 +47,6 @@ class AdvertCard extends StatelessWidget {
     final currentCustomer = context.read<AuthProvider>().user!;
     final chatsService = ChatService();
     return Card(
-      elevation: 0,
       margin: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -189,7 +188,7 @@ class AdvertCard extends StatelessWidget {
                         children: [
                           Text(
                             advert.advertType.getText(context),
-                            style: const TextStyle(fontSize: 12, color: Colors.black87),
+                            style: const TextStyle(fontSize: 12),
                           ),
                           Text(
                             DateFormat('dd/MM/yyyy').format(advert.createdAt!),

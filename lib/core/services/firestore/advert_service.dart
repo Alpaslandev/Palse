@@ -1,10 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:palseapp/core/constant/categories.dart';
+import 'package:palseapp/core/constant/notifications_enum.dart';
 import 'package:palseapp/core/models/advert.dart';
+import 'package:palseapp/core/services/notification_service.dart';
 
 class AdvertService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final NotificationService notificationService = NotificationService();
 
   // Şehre göre ilanları getir (index gerekmeden)
   Future<List<Advert>> fetchAdvertsByCity(

@@ -6,9 +6,11 @@ import 'package:intl/intl.dart';
 import 'package:palseapp/core/constant/categories.dart';
 import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/models/location_model.dart';
+import 'package:palseapp/core/provider/ads_provider.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/services/location_service.dart';
+import 'package:palseapp/core/widgets/scaffold_mess.dart';
 import 'package:palseapp/features/create_advert/viewmodel/create_advert_view_model.dart';
 import 'package:palseapp/core/widgets/location_sheet.dart';
 import 'package:provider/provider.dart';
@@ -156,7 +158,7 @@ class _CreateAdvertViewState extends State<CreateAdvertView> {
                             label: context.tr('premium_subscription'),
                             textColor: Colors.blue,
                             onPressed: () {
-                              context.push(subscription);
+                              context.pushNamed(paywall);
                             }),
                       )),
               icon: const Icon(Icons.photo_camera),
@@ -266,7 +268,7 @@ class _CreateAdvertViewState extends State<CreateAdvertView> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Hazır Fotoğraflar', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    Text(context.tr('use_ready_photo'), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                     IconButton(
                       onPressed: () => Navigator.pop(context),
                       icon: const Icon(Icons.close),
@@ -382,29 +384,54 @@ class _CreateAdvertViewState extends State<CreateAdvertView> {
                           } else if (viewModel.currentStep == 1) {
                             // İkinci adımda fotoğraf seçilmiş mi kontrol et
                             if (viewModel.advertImage == null) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Lütfen bir fotoğraf seçin')),
-                              );
+                              ScaffoldMess.showErrorSnackBar(context.tr('please_select_photo'));
                             } else {
                               viewModel.onStepContinue();
                             }
                           } else if (viewModel.currentStep == 2) {
                             // Son adımda tarih ve konum seçilmiş mi kontrol et
                             if (viewModel.startDate == null) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(context.tr('please_select_event_date'))),
-                              );
+                              ScaffoldMess.showErrorSnackBar(context.tr('please_select_event_date'));
                             } else if (viewModel.city.isEmpty || viewModel.district.isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(context.tr('please_select_event_location'))),
-                              );
+                              ScaffoldMess.showErrorSnackBar(context.tr('please_select_event_location'));
                             } else {
-                              try {
+                              // Premium kullanıcı ise direkt ilan oluştur
+                              if (viewModel.authProvider.user?.isPremium == true) {
                                 await viewModel.createAdvert();
                                 if (!context.mounted) return;
-                                context.go(myAdverts);
-                              } catch (e) {
-                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+
+                                // context.go yerine pushReplacement kullan
+                                context.pushReplacement(myAdverts);
+
+                                // Sonra başarı mesajını göster
+                                ScaffoldMess.showSuccessSnackBar(
+                                  context.tr('advert_created_successfully_premium'),
+                                );
+                              } else {
+                                // Premium değilse, reklam göster ve sonrasında ilan oluştur
+                                try {
+                                  await context.read<AdsProvider>().showRewardedAd(onRewarded: (reward) async {
+                                    await viewModel.createAdvert();
+                                    if (!context.mounted) return;
+
+                                    // Önce ilanlarım sayfasına git (navigasyon stack'ini değiştirmek için)
+                                    // go yerine pushReplacement kullanarak stack'i boşaltmadan değiştiriyoruz
+                                    context.pushReplacement(myAdverts);
+
+                                    // Sonra premium olmayı öneren snackbar göster (premium sayfası stack'e eklenecek)
+                                    ScaffoldMess.showGotoSnackBar(
+                                      context.tr('advert_created_successfully_non_premium'),
+                                      context.tr('get_premium'),
+                                      paywall, // Paywall sayfasına yönlendirir
+                                      shouldReplaceCurrentScreen: false, // Stack'e ekler
+                                    );
+                                  });
+                                } catch (e) {
+                                  if (!context.mounted) return;
+                                  ScaffoldMess.showErrorSnackBar(
+                                    e.toString(),
+                                  );
+                                }
                               }
                             }
                           }

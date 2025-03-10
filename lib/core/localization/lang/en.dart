@@ -81,7 +81,9 @@ const Map<String, String> en = {
   'use_ready_photo': 'Use Ready Photo',
   'finish': 'Finish',
   'back': 'Back',
-
+  'advert_created_successfully_non_premium': 'You can now create ads without ads by subscribing to premium.',
+  'advert_created_successfully_premium': 'Your advert has been created successfully.',
+  'please_select_photo': 'Please select a photo',
   // Profile
   'edit_profile': 'Edit Profile',
   'settings': 'Settings',
@@ -91,7 +93,6 @@ const Map<String, String> en = {
   'daily_task_step2': 'Complete the task, earn +100 XP in total!',
   'complete_task': 'Complete Task',
   'verify_profile_text': 'Verify that you are a real profile and\ngain extra visibility!',
-  'get_premium': 'Get Premium',
 
   // Categories
   'categories': 'Categories',
@@ -106,6 +107,7 @@ const Map<String, String> en = {
   'ranks_description': 'Your rank increases based on the XP points you earn:',
 
   // Premium
+  'get_premium': 'Get Premium',
   'premium_required': 'Premium Membership Required',
   'premium_photo_message': 'Get premium membership to send photos.',
   'ok': 'OK',
