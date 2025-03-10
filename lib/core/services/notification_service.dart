@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:palseapp/core/constant/notifications_enum.dart';
 import 'package:palseapp/core/routes/app_router.dart';
 import 'package:palseapp/core/routes/routes.dart';
+import 'package:palseapp/core/services/shared_pref_service.dart';
 
 class NotificationService {
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
@@ -44,7 +45,21 @@ class NotificationService {
   void _configureFCM() {
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       debugPrint('Ön planda bildirim alındı: ${message.notification?.title}');
+      debugPrint('Ön planda bildirim alındı: ${message.notification?.body}');
+
       debugPrint('Bildirim data: ${message.data}');
+      final notificationType = NotificationsEnum.values.firstWhere((e) => e.name == message.data['type']);
+      //  final notificationDate = (message.data['timestamp'] as Timestamp).toDate();
+      debugPrint('Bildirim notificationType: ${notificationType.title}');
+
+      if (notificationType.isSaveable) {
+        SharedPrefService.saveNotificationWithEnum(
+          type: notificationType,
+          body: message.notification?.body ?? '',
+          title: message.notification?.title ?? '',
+        );
+        debugPrint('Bildirim kaydedildi');
+      }
 
       if (_context == null) return;
 
@@ -77,7 +92,7 @@ class NotificationService {
             TextButton(
               onPressed: () {
                 ScaffoldMessenger.of(_context!).hideCurrentMaterialBanner();
-                AppRouter.router.push('/chats/$chatId');
+                AppRouter.router.push('/chats/$chatId?otherId=$senderId&currentId=$receiverId');
               },
               child: const Text('Görüntüle'),
             ),
@@ -92,7 +107,7 @@ class NotificationService {
       );
 
       // 4 saniye sonra otomatik kapat
-      Future.delayed(const Duration(seconds: 4), () {
+      Future.delayed(const Duration(seconds: 400), () {
         if (_context != null) {
           ScaffoldMessenger.of(_context!).hideCurrentMaterialBanner();
         }
@@ -103,12 +118,13 @@ class NotificationService {
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       debugPrint('Arka planda bildirim tıklandı');
       final data = message.data;
+
       final chatId = data['chatId'];
       final senderId = data['senderId'];
       final receiverId = data['receiverId'];
 
-      if (chatId != null && senderId != null && receiverId != null) {
-        AppRouter.router.push('/chats/$chatId');
+      if (chatId != null && senderId != null) {
+        AppRouter.router.push('/chats/$chatId?otherId=$senderId&currentId=$receiverId');
       } else {
         AppRouter.router.push(notification);
       }
@@ -118,7 +134,7 @@ class NotificationService {
   // Bildirim gönder
   Future<void> sendNotification({
     required String receiverId,
-    required NotificationsEnum notificationType,
+    required String notificationType,
     String? chatId,
   }) async {
     try {
@@ -127,7 +143,7 @@ class NotificationService {
       await _db.collection('notifications').add({
         'timestamp': FieldValue.serverTimestamp(),
         'receiverId': receiverId,
-        'type': notificationType.name,
+        'type': notificationType,
         'chatId': chatId,
       });
 

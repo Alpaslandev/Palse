@@ -126,7 +126,8 @@ class AppRouter {
           ],
         ),
         GoRoute(
-          path: notification,
+          path: "/notification",
+          name: notification,
           parentNavigatorKey: rootNavigatorKey, // Ana navigator'ı kullan
           builder: (context, state) => const NotificationView(),
         ),

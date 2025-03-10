@@ -29,7 +29,7 @@ class CommentViewModel extends ChangeNotifier {
       _comments.add(comment);
       await _notificationService.sendNotification(
         receiverId: _friendCustomer.userID!,
-        notificationType: NotificationsEnum.comment,
+        notificationType: NotificationsEnum.comment.name,
       );
       debugPrint('Yorum eklendi: ${comment.toString()}');
     } catch (e) {

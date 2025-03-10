@@ -120,15 +120,10 @@ class HomeViewModel extends ChangeNotifier {
 
         // Sadece UI'ı bilgilendir
 
-        await _advertService.likeAdvert(advertId, userId);
+        await _advertService.likeAdvert(advertId, userId, advert.creatorUserID);
 
         // Kullanıcının belgesini de güncelle
         await _customerService.likeAdvert(advertId, userId);
-
-        await _notificationService.sendNotification(
-          receiverId: advert.creatorUserID,
-          notificationType: NotificationsEnum.likeAdvert,
-        );
       }
     } catch (e) {
       debugPrint('İlan beğenme hatası: $e');

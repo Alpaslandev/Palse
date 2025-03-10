@@ -32,7 +32,7 @@ const String myAdverts = '/myAdverts';
 const String seeViewers = 'seeViewers';
 
 const String categories = '/categories';
-const String notification = '/notification';
+const String notification = 'notification';
 const String createAdvert = '/createAdvert';
 const String createAdvertStep1 = '/createAdvertStep1';
 const String createAdvertStep2 = '/createAdvertStep2';

@@ -128,7 +128,7 @@ class ChatService {
       await notificationService.sendNotification(
         receiverId: receiverId,
         chatId: chatId,
-        notificationType: NotificationsEnum.message,
+        notificationType: 'message',
       );
     } catch (e) {
       _logError('sendMessage', e, stackTrace: StackTrace.current);

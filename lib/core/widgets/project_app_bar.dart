@@ -43,25 +43,7 @@ class ProjectAppBar extends StatelessWidget implements PreferredSizeWidget {
             child: IconButton(
               onPressed: () async {
                 debugPrint('ringtone');
-                context.pushNamed(paywall);
-                //  await authProvider.logout();
-                //   context.push(notification);
-                /*
-                final paywallResult = await RevenueCatUI.presentPaywall();
-                debugPrint(paywallResult.toString());
-
-                if (paywallResult == PaywallResult.purchased) {
-                  await subscriptionProvider.updatePremiumStatus(true, authProvider.user?.userID ?? '');
-                  debugPrint('purchased');
-                } else if (paywallResult == PaywallResult.cancelled) {
-                  debugPrint('cancelled');
-                } else if (paywallResult == PaywallResult.error) {
-                  debugPrint('error');
-                } else if (paywallResult == PaywallResult.restored) {
-                  await subscriptionProvider.updatePremiumStatus(true, authProvider.user?.userID ?? '');
-                  debugPrint('restored');
-                }
-                */
+                context.pushNamed(notification);
               },
               icon: SvgPicture.asset(
                 'assets/vectors/ringtone_iconly_pro_1_x2.svg',

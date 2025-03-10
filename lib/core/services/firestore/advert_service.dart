@@ -149,7 +149,7 @@ class AdvertService {
     }
   }
 
-  Future<void> likeAdvert(String advertId, String userId) async {
+  Future<void> likeAdvert(String advertId, String userId, String creatorUserID) async {
     try {
       final docSnapshot = await _firestore.collection('events').doc(advertId).get();
       if (docSnapshot.exists) {
@@ -164,6 +164,10 @@ class AdvertService {
           });
         }
       }
+      await notificationService.sendNotification(
+        receiverId: creatorUserID,
+        notificationType: NotificationsEnum.likeAdvert.name,
+      );
     } catch (e) {
       debugPrint('İlan beğenme hatası: $e');
     }

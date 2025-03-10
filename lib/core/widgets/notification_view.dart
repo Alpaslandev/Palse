@@ -1,20 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:palseapp/core/constant/notifications_enum.dart';
 import 'package:palseapp/core/localization/app_localizations.dart';
+import 'package:palseapp/core/services/shared_pref_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class NotificationView extends StatelessWidget {
   const NotificationView({super.key});
 
-  Future<List<String>> _getStoredNotifications() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList('notifications') ?? [];
-  }
-
   Future<void> _removeNotification(int index, BuildContext context) async {
-    // final prefs = await SharedPreferences.getInstance();
-    // List<String> notifications = prefs.getStringList('notifications') ?? [];
-    // notifications.removeAt(index); // Bildirimi listeden kaldır
-    // await prefs.setStringList('notifications', notifications);
+    await SharedPrefService.removeNotification(index);
   }
 
   @override
@@ -31,13 +25,13 @@ class NotificationView extends StatelessWidget {
             height: 100,
           ),
           Expanded(
-            child: FutureBuilder<List<String>>(
-              future: _getStoredNotifications(),
+            child: FutureBuilder<List<Map<String, dynamic>>>(
+              future: SharedPrefService.getNotifications(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Center(child: CircularProgressIndicator());
                 } else if (snapshot.hasError) {
-                  return Center(child: Text(context.tr('error_occurred') + ': ${snapshot.error}'));
+                  return Center(child: Text('${context.tr('error_occurred')}: ${snapshot.error}'));
                 } else {
                   final notifications = snapshot.data ?? [];
 
@@ -49,6 +43,8 @@ class NotificationView extends StatelessWidget {
                     itemCount: notifications.length,
                     itemBuilder: (context, index) {
                       final notification = notifications[index];
+                      final notificationType = NotificationsEnum.values.firstWhere((e) => e.name == notification['type']);
+                      debugPrint('bildirimler notification: ${notifications[index]}');
                       return Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                         child: Container(
@@ -69,14 +65,16 @@ class NotificationView extends StatelessWidget {
                                     child: Row(
                                       mainAxisAlignment: MainAxisAlignment.start,
                                       crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [],
+                                      children: [
+                                        Text(notificationType.title),
+                                      ],
                                     ),
                                   ),
                                 ),
                                 Align(
                                   alignment: Alignment.topLeft,
                                   child: Text(
-                                    notification,
+                                    notificationType.nonPremium,
                                   ),
                                 ),
                                 Align(

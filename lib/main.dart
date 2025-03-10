@@ -11,6 +11,7 @@ import 'package:palseapp/core/provider/locale_provider.dart';
 import 'package:palseapp/core/provider/theme_provider.dart';
 import 'package:palseapp/core/routes/app_router.dart';
 import 'package:palseapp/core/services/notification_service.dart';
+import 'package:palseapp/core/services/shared_pref_service.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -69,6 +70,7 @@ void main() async {
   final subscriptionProvider = SubscriptionProvider();
   final themeProvider = ThemeProvider();
   final adsProvider = AdsProvider();
+  await SharedPrefService.init();
 
   runApp(
     MultiProvider(

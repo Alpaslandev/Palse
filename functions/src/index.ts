@@ -36,7 +36,7 @@ export const sendNotification = onDocumentCreated(
       }
 
       const userData = userDoc.data();
-      const userLang = userData?.languagePreference || "TR";
+      const userLang = userData?.languagePreference || "tr";
       const isPremium = userData?.isPremium === true;
       const token = userData?.fcmToken;
 
@@ -61,35 +61,19 @@ export const sendNotification = onDocumentCreated(
           // Sohbet bilgilerini al
           const chatDoc = await chatCollection.doc(chatId).get();
 
-          if (!chatDoc.exists) {
-            console.log("Sohbet bulunamadı:", chatId);
-            throw new Error("Sohbet bulunamadı");
-          }
-
           const chatData = chatDoc.data();
           const lastMessage = chatData?.lastMessage || "";
-
-
-          if (!lastMessage) {
-            console.log("Sohbette mesaj bulunamadı");
-            throw new Error("Mesaj bulunamadı");
-          }
 
           // Gönderici bilgilerini al
           const senderId = chatData?.lastMessageSenderId || "";
           const senderDoc = await customerCollection.doc(senderId).get();
 
-          if (!senderDoc.exists) {
-            console.log("Gönderici bulunamadı:", senderId);
-            throw new Error("Gönderici bulunamadı");
-          }
-
           const senderData = senderDoc.data();
           const senderName = senderData?.firstName || "Kullanıcı";
 
           // Mesaj içeriğini düzenle (çok uzunsa kısalt)
-          let messageText = lastMessage.text || "";
-          if (messageText.length > 50) {
+          let messageText = lastMessage || "";
+          if (lastMessage.length > 50) {
             messageText = messageText.substring(0, 47) + "...";
           }
 
@@ -103,6 +87,7 @@ export const sendNotification = onDocumentCreated(
           // Ek veriler
           data.chatId = chatId;
           data.senderId = senderId;
+          data.receiverId = receiverId;
         } catch (error) {
           console.log("Mesaj bilgisi alınamadı:", error);
           // Hata durumunda varsayılan mesaj kullan

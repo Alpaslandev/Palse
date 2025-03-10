@@ -104,27 +104,6 @@ class MyAdvertViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Like/Unlike işlemleri
-  Future<void> likeAdvert(String advertId, String userId) async {
-    try {
-      await _advertService.likeAdvert(advertId, userId);
-      await _customerService.likeAdvert(advertId, userId);
-      // Stream kullandığımız için notifyListeners() gerekmiyor
-    } catch (e) {
-      debugPrint('Like hatası: $e');
-    }
-  }
-
-  Future<void> unlikeAdvert(String advertId, String userId) async {
-    try {
-      await _advertService.unlikeAdvert(advertId, userId);
-      await _customerService.unlikeAdvert(advertId, userId);
-      // Stream kullandığımız için notifyListeners() gerekmiyor
-    } catch (e) {
-      debugPrint('Unlike hatası: $e');
-    }
-  }
-
   @override
   void dispose() {
     _myAdverts.clear();
