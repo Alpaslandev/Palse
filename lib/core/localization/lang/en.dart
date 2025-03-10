@@ -121,7 +121,7 @@ const Map<String, String> en = {
   'welcome_rewards': 'Welcome Rewards (One-time)',
   'listing': 'Listing',
   'messaging': 'Messaging',
-  'commenting': 'Commenting and Receiving Comments',
+  'commenting': 'Comments',
   'daily_tasks': 'Daily Tasks',
 
   // XP Event Descriptions

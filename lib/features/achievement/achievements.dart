@@ -112,28 +112,25 @@ enum UserRank {
 /// Basitleştirilmiş versiyonu
 enum XpEvent {
   // Tek seferlik görevler
-  firstListing(500, 'İlk ilanını oluşturma', 'first_listing_description', isRepeatable: false, isDaily: false),
-  firstMessage(500, 'İlk mesajını gönderme', 'first_message_description', isRepeatable: false, isDaily: false),
+  firstListing(500, 'first_listing_description', isRepeatable: false, isDaily: false),
+  firstMessage(500, 'first_message_description', isRepeatable: false, isDaily: false),
 
   // Tekrarlanabilir görevler
-  createListing(100, 'Yeni ilan oluştur', 'create_listing_description', isRepeatable: true, isDaily: false),
-  sendMessage(35, 'İlk defa mesaj gönderilen kullanıcı başına', 'send_message_description', isRepeatable: true, isDaily: false),
-  receiveMessage(10, 'İlanınıza gelen her ilk mesaj', 'receive_message_description', isRepeatable: true, isDaily: false),
-  writeComment(15, 'Birine yorum yazma', 'write_comment_description', isRepeatable: true, isDaily: false),
-  receiveComment(10, 'Profiline yorum alma', 'receive_comment_description', isRepeatable: true, isDaily: false),
+  createListing(100, 'create_listing_description', isRepeatable: true, isDaily: false),
+  sendMessage(35, 'send_first_message_description', isRepeatable: true, isDaily: false),
+  receiveMessage(10, 'receive_first_message_description', isRepeatable: true, isDaily: false),
+  writeComment(15, 'write_comment_description', isRepeatable: true, isDaily: false),
+  receiveComment(10, 'receive_comment_description', isRepeatable: true, isDaily: false),
 
   // Günlük görevler
-  dailyTaskCreateListingAndMessage(100, 'Bir ilan oluştur ve bir mesaj gönder', 'daily_task_description', isRepeatable: false, isDaily: true),
-  dailyLogin(10, 'Uygulamaya günlük giriş', 'daily_login_description', isRepeatable: false, isDaily: true);
+  dailyTaskCreateListingAndMessage(100, 'daily_task_listing_and_message_description', isRepeatable: false, isDaily: true),
+  dailyLogin(10, 'daily_login_description', isRepeatable: false, isDaily: true);
 
   /// Constructor
-  const XpEvent(this.xpAmount, this.description, this.descriptionKey, {required this.isRepeatable, required this.isDaily});
+  const XpEvent(this.xpAmount, this.descriptionKey, {required this.isRepeatable, required this.isDaily});
 
   /// Kazanılan XP miktarı
   final int xpAmount;
-
-  /// Olay açıklaması (Türkçe)
-  final String description;
 
   /// Olay açıklaması için çeviri anahtarı
   final String descriptionKey;

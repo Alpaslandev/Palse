@@ -7,7 +7,7 @@ import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/services/auth/auth_service.dart';
 import 'package:palseapp/core/services/firestore/customer_service.dart';
 import 'package:palseapp/core/services/notification_service.dart';
-import 'package:palseapp/features/achievement/achievement_manager.dart';
+import 'package:palseapp/core/services/achievement_service.dart';
 import 'package:palseapp/features/achievement/achievements.dart';
 
 // Auth durumunu yöneten provider sınıfı
@@ -15,13 +15,12 @@ class AuthProvider extends ChangeNotifier {
   final AuthService _authService = AuthService();
   final CustomerService _userService = CustomerService();
   final NotificationService _notificationService = NotificationService();
+  final AchievementService _achievementService = AchievementService();
 
   bool _isLoading = true;
   User? _firebaseUser;
   Customer? _user;
   bool _isFirstTime = true;
-  // AchievementManager başlatıldı mı kontrolü
-  bool _isAchievementManagerInitialized = false;
 
   // Getterlar
   bool get isLoading => _isLoading;
@@ -81,13 +80,6 @@ class AuthProvider extends ChangeNotifier {
           _isFirstTime = false;
           _notificationService.saveUserToken(userId);
           debugPrint('User token saved');
-          // AchievementManager'ı başlat
-          _initializeAchievementManager();
-        } // Eğer AchievementManager zaten başlatılmışsa ve veri değişmişse
-        else if (_isAchievementManagerInitialized && userData.exists) {
-          // XP ve görev verilerinde bir değişiklik olduysa
-          // bu değişikliği AchievementManager'a yansıt
-          _updateAchievementManager();
         }
 
         debugPrint('User data: ${_user?.toJson()}');
@@ -180,145 +172,85 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  // AchievementManager'ı başlat
-  void _initializeAchievementManager() {
-    if (_user != null && !_isAchievementManagerInitialized) {
-      try {
-        // String-tabanlı Map'i enum Map'e dönüştür
-        final Map<XpEvent, int> completedTasks = {};
-        _user!.completedTasks.forEach((key, value) {
-          try {
-            final event = XpEvent.values.firstWhere((e) => e.name == key);
-            completedTasks[event] = value;
-          } catch (e) {
-            debugPrint('Bilinmeyen XpEvent: $key');
-          }
-        });
+  // XP kazandırma metodu
+  Future<void> earnXp(XpEvent event) async {
+    if (_user == null) return;
 
-        // UserAchievements nesnesini oluştur
-        final achievements = UserAchievements(
-          totalXp: _user!.totalXp,
-          completedTasks: completedTasks,
-          lastDailyTaskDate: _user!.lastDailyTaskDate,
-        );
+    try {
+      final updatedUser = await _achievementService.earnXp(_user!, event);
 
-        // Achievement Manager'ı başlat
-        AchievementManager().initialize(achievements);
-
-        // Değişiklikleri dinle
-        AchievementManager().addListener(_onAchievementsChanged);
-
-        // Flag'i güncelle
-        _isAchievementManagerInitialized = true;
-
-        debugPrint('Achievement Manager initialized successfully');
-      } catch (e) {
-        debugPrint('Achievement Manager initialization error: $e');
+      if (updatedUser.totalXp != _user!.totalXp) {
+        _user = updatedUser;
+        notifyListeners();
       }
+    } catch (e) {
+      debugPrint('XP kazanırken hata: $e');
     }
   }
 
-  // AchievementManager'daki değişiklikleri dinleyen metod
-  void _onAchievementsChanged(UserAchievements achievements) {
-    // Firestore stream tarafından güncelleniyor olabileceği için
-    // önce çift yönlü bir güncelleme oluşmaması için kontrol yap
+  // Özel XP ekleme metodu
+  Future<void> earnCustomXp(int amount) async {
+    if (_user == null || amount <= 0) return;
 
-    // Eğer değişiklik varsa Customer modelini güncelle
-    if (_user != null &&
-        (_user!.totalXp != achievements.totalXp ||
-            _mapsDifferent(_user!.completedTasks, achievements.completedTasks.map((key, value) => MapEntry(key.name, value))) ||
-            _datesNotEqual(_user!.lastDailyTaskDate, achievements.lastDailyTaskDate))) {
-      // Güncellenmiş Customer modelini oluştur
-      final updatedUser = _user!.copyWith(
-        totalXp: achievements.totalXp,
-        completedTasks: achievements.completedTasks.map((key, value) => MapEntry(key.name, value)),
-        lastDailyTaskDate: achievements.lastDailyTaskDate,
-      );
+    try {
+      final updatedUser = await _achievementService.earnCustomXp(_user!, amount);
 
-      // Yerel modeli güncelle
+      if (updatedUser.totalXp != _user!.totalXp) {
+        _user = updatedUser;
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Özel XP eklerken hata: $e');
+    }
+  }
+
+  // Günlük görevleri sıfırlama metodu
+  Future<void> resetDailyTasks() async {
+    if (_user == null) return;
+
+    try {
+      final updatedUser = await _achievementService.resetDailyTasks(_user!);
       _user = updatedUser;
-
-      // Firebase'e kaydet (önemli: bu işlem _userStreamSubscription'ı tekrar tetikleyecek)
-      _userService.updateCustomer(_user!.userID!, updatedUser);
-
-      // UI güncelleme
       notifyListeners();
-
-      debugPrint('User data updated from Achievement Manager');
+    } catch (e) {
+      debugPrint('Günlük görevleri sıfırlarken hata: $e');
     }
   }
 
-  // Firestore'dan gelen verilere göre AchievementManager'ı güncelle
-  void _updateAchievementManager() {
-    // Önce mevcut durumu al
-    final currentAchievements = AchievementManager().userAchievements;
-
-    // Firestore'dan gelen verilerle karşılaştır
-    if (currentAchievements.totalXp != _user!.totalXp ||
-        _mapsDifferent(_user!.completedTasks, _convertEnumMapToStringMap(currentAchievements.completedTasks)) ||
-        _datesNotEqual(currentAchievements.lastDailyTaskDate, _user!.lastDailyTaskDate)) {
-      // AchievementManager'daki dinleyiciyi geçici olarak kaldır
-      // (çift güncelleme olmasın)
-      AchievementManager().removeListener(_onAchievementsChanged);
-
-      // Yeni değerleri hazırla
-      final Map<XpEvent, int> completedTasks = _parseToEnumMap(_user!.completedTasks);
-
-      // UserAchievements nesnesini oluştur
-      final achievements = UserAchievements(
-        totalXp: _user!.totalXp,
-        completedTasks: completedTasks,
-        lastDailyTaskDate: _user!.lastDailyTaskDate,
-      );
-
-      // Achievement Manager'ı güncelle
-      AchievementManager().initialize(achievements);
-
-      // Dinleyiciyi tekrar ekle
-      AchievementManager().addListener(_onAchievementsChanged);
-
-      debugPrint('Achievement Manager updated from Firestore data');
-    }
+  // Kullanıcının unvanını döndüren getter
+  UserRank get userRank {
+    if (_user == null) return UserRank.beginner;
+    return _achievementService.getUserRank(_user!.totalXp);
   }
 
-  // String map'i XpEvent map'e dönüştüren yardımcı metod
-  Map<XpEvent, int> _parseToEnumMap(Map<String, int> stringMap) {
-    final result = <XpEvent, int>{};
-    stringMap.forEach((key, value) {
-      try {
-        final event = XpEvent.values.firstWhere((e) => e.name == key);
-        result[event] = value;
-      } catch (e) {
-        debugPrint('Bilinmeyen XpEvent: $key');
-      }
-    });
-    return result;
+  // Kullanıcının görevi tamamlayıp tamamlamadığını kontrol eden metod
+  bool isTaskCompleted(XpEvent event) {
+    if (_user == null) return false;
+    return _achievementService.isTaskCompleted(_user!, event);
   }
 
-  // XpEvent map'i String map'e dönüştüren yardımcı metod
-  Map<String, int> _convertEnumMapToStringMap(Map<XpEvent, int> enumMap) {
-    return enumMap.map((key, value) => MapEntry(key.name, value));
+  // Bir görevin kaç kez tamamlandığını hesaplayan metod
+  int getTaskCompletionCount(XpEvent event) {
+    if (_user == null) return 0;
+    return _achievementService.getTaskCompletionCount(_user!, event);
   }
 
-  // İki map'in içeriğinin farklı olup olmadığını kontrol eden yardımcı metod
-  bool _mapsDifferent(Map<String, int> map1, Map<String, int> map2) {
-    if (map1.length != map2.length) return true;
-
-    for (final entry in map1.entries) {
-      if (!map2.containsKey(entry.key) || map2[entry.key] != entry.value) {
-        return true;
-      }
-    }
-
-    return false;
+  // Günlük görevin bugün tamamlanıp tamamlanmadığını kontrol eden metod
+  bool isDailyTaskCompletedToday() {
+    if (_user == null) return false;
+    return _achievementService.isDailyTaskCompletedToday(_user!);
   }
 
-  // İki tarih nesnesinin eşit olup olmadığını kontrol eden yardımcı metod
-  bool _datesNotEqual(DateTime? date1, DateTime? date2) {
-    if (date1 == null && date2 == null) return false;
-    if (date1 == null || date2 == null) return true;
+  // Kullanıcının kazandığı premium ödül sayısını döndüren metod
+  int getEarnedPremiumRewardCount() {
+    if (_user == null) return 0;
+    return _achievementService.getEarnedPremiumRewardCount(_user!.totalXp);
+  }
 
-    return date1.year != date2.year || date1.month != date2.month || date1.day != date2.day;
+  // Bir sonraki premium ödüle ne kadar XP kaldığını hesaplayan metod
+  int getXpToNextPremium() {
+    if (_user == null) return 0;
+    return _achievementService.getXpToNextPremium(_user!.totalXp);
   }
 
   // Çıkış yap
@@ -326,11 +258,6 @@ class AuthProvider extends ChangeNotifier {
     try {
       _isLoading = true;
       notifyListeners();
-      // AchievementManager dinleyicisini kaldır
-      if (_isAchievementManagerInitialized) {
-        AchievementManager().removeListener(_onAchievementsChanged);
-        _isAchievementManagerInitialized = false;
-      }
       await _authService.signOut();
     } catch (e) {
       debugPrint('Logout error: $e');
@@ -344,11 +271,6 @@ class AuthProvider extends ChangeNotifier {
   // Dispose metodu
   @override
   void dispose() {
-    // AchievementManager dinleyicisini kaldır
-    if (_isAchievementManagerInitialized) {
-      AchievementManager().removeListener(_onAchievementsChanged);
-    }
-
     _userStreamSubscription?.cancel();
     super.dispose();
   }
