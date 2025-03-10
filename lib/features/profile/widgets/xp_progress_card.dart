@@ -19,7 +19,7 @@ class XPProgressCard extends StatelessWidget {
           spacing: 2,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(context.tr(customer.rank.titleKey),
+            Text('${context.tr(customer.rank.titleKey)} ${customer.rank.icon}',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,

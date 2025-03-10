@@ -184,7 +184,11 @@ const Map<String, String> en = {
   'to_next_level_part2': ' remaining!',
   'to_next_premium_part1': 'To next premium reward: ',
   'to_next_premium_part2': ' remaining!',
-
+  'total_xp': 'Total XP',
+  'premium_rewards': 'Premium Rewards',
+  'next_reward': 'Next Reward',
+  'max_level_reached': 'Max level reached',
+  'next_level': 'Next Level',
   // Filtering
   'filtering': 'Filtering',
   'distance': 'Distance',
@@ -234,9 +238,9 @@ const Map<String, String> en = {
   'gender_others': 'Others',
 
   // Rank translations
-  'rank_beginner': '🌟 Discovery Beginner',
-  'rank_explorer': '🔍 Social Explorer',
-  'rank_connector': '🧩 Connection Master',
-  'rank_leader': '🎯 Event Leader',
-  'rank_master': '👑 Social Master',
+  'rank_beginner': 'Discovery Beginner',
+  'rank_explorer': 'Social Explorer',
+  'rank_connector': 'Connection Master',
+  'rank_leader': 'Event Leader',
+  'rank_master': 'Social Master',
 };

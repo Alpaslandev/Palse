@@ -184,6 +184,11 @@ const Map<String, String> tr = {
   'to_next_level_part2': ' kaldı!',
   'to_next_premium_part1': 'Bir sonraki premium ödülüne ',
   'to_next_premium_part2': ' kaldı!',
+  'total_xp': 'Toplam XP',
+  'premium_rewards': 'Premium Ödülleri',
+  'next_reward': 'Bir sonraki ödül',
+  'max_level_reached': 'Maksimum seviyeye ulaştınız',
+  'next_level': 'Bir sonraki seviye',
 
   // Filtreleme
   'filtering': 'Filtreleme',
@@ -234,9 +239,9 @@ const Map<String, String> tr = {
   'gender_others': 'Diğer',
 
   // Rütbe/Ünvan çevirileri
-  'rank_beginner': '🌟 Keşfe Başlayan',
-  'rank_explorer': '🔍 Sosyal Keşifçi',
-  'rank_connector': '🧩 Bağlantı Ustası',
-  'rank_leader': '🎯 Etkinlik Lideri',
-  'rank_master': '👑 Sosyal Usta',
+  'rank_beginner': 'Keşfe Başlayan',
+  'rank_explorer': 'Sosyal Keşifçi',
+  'rank_connector': 'Bağlantı Ustası',
+  'rank_leader': ' Etkinlik Lideri',
+  'rank_master': 'Sosyal Usta',
 };

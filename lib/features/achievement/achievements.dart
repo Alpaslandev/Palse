@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/features/achievement/premium_rewards.dart';
@@ -63,6 +64,21 @@ enum UserRank {
 
   /// Unvan ikonu
   final String icon;
+
+  Color getRankColor() {
+    switch (this) {
+      case UserRank.beginner:
+        return Colors.blue.shade300;
+      case UserRank.explorer:
+        return Colors.green.shade400;
+      case UserRank.connector:
+        return Colors.amber.shade600;
+      case UserRank.leader:
+        return Colors.orange.shade600;
+      case UserRank.master:
+        return Colors.purple.shade600;
+    }
+  }
 
   /// Yerelleştirilmiş unvan başlığını al
   String getLocalizedTitle(BuildContext context) {

@@ -65,7 +65,7 @@ class _AchievementTestPageState extends State<AchievementTestPage> {
                         height: 50,
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
-                          color: _getRankColor(authProvider.userRank),
+                          color: authProvider.userRank.getRankColor(),
                           shape: BoxShape.circle,
                         ),
                         child: Text(
@@ -100,7 +100,7 @@ class _AchievementTestPageState extends State<AchievementTestPage> {
                       value: _calculateProgress(authProvider),
                       minHeight: 10,
                       backgroundColor: Colors.grey.shade200,
-                      color: _getRankColor(authProvider.userRank),
+                      color: authProvider.userRank.getRankColor(),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -352,22 +352,6 @@ class _AchievementTestPageState extends State<AchievementTestPage> {
         ),
       ),
     );
-  }
-
-  // Rank rengini döndüren yardımcı metod
-  Color _getRankColor(UserRank rank) {
-    switch (rank) {
-      case UserRank.beginner:
-        return Colors.blue.shade300;
-      case UserRank.explorer:
-        return Colors.green.shade400;
-      case UserRank.connector:
-        return Colors.amber.shade600;
-      case UserRank.leader:
-        return Colors.orange.shade600;
-      case UserRank.master:
-        return Colors.purple.shade600;
-    }
   }
 
   // Görev grubunun rengini döndüren yardımcı metod
