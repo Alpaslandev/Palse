@@ -54,7 +54,7 @@ class MessagesViewModel extends ChangeNotifier {
   }
 
   // Mesaj gönder
-  Future<void> sendMessage(String chatId, String senderId, String receiverId, String content, String senderName) async {
+  Future<void> sendMessage(String chatId, String senderId, String receiverId, String content, String senderName, MessageType type) async {
     if (content.trim().isEmpty) return;
 
     try {
@@ -66,7 +66,7 @@ class MessagesViewModel extends ChangeNotifier {
         senderId: senderId,
         content: content,
         timestamp: DateTime.now(),
-        type: MessageType.text,
+        type: type,
         quotedMessage: _quotedMessage?.content,
         quotedMessageId: _quotedMessage?.messageId,
       );
@@ -141,10 +141,7 @@ class MessagesViewModel extends ChangeNotifier {
         notifyListeners();
 
         final String imageUrl = await _uploadImage(File(image.path));
-        // Debug mesajları localize edilmeyecek çünkü bunlar kullanıcıya gösterilmiyor
-        // Örneğin:
-        // debugPrint('Yükleme ilerlemesi: ${snapshot.bytesTransferred}/${snapshot.totalBytes}');
-        await sendImageMessage(imageUrl, senderName);
+        await sendMessage(chatId, currentUserId, otherUserId, imageUrl, senderName, MessageType.image);
       }
     } catch (e) {
       // Debug mesajları localize edilmeyecek çünkü bunlar kullanıcıya gösterilmiyor
@@ -178,42 +175,6 @@ class MessagesViewModel extends ChangeNotifier {
     } catch (e) {
       // Debug mesajları localize edilmeyecek çünkü bunlar kullanıcıya gösterilmiyor
       rethrow;
-    }
-  }
-
-  // Görsel mesajı gönder
-  Future<void> sendImageMessage(String imageUrl, String senderName) async {
-    try {
-      // Debug mesajları localize edilmeyecek çünkü bunlar kullanıcıya gösterilmiyor
-      // Örneğin:
-      // debugPrint('Görsel mesaj gönderiliyor... URL: $imageUrl');
-      final messageToSend = Message(
-        senderId: currentUserId,
-        content: imageUrl,
-        timestamp: DateTime.now(),
-        type: MessageType.image,
-        quotedMessage: _quotedMessage?.content,
-        quotedMessageId: _quotedMessage?.senderId,
-      );
-
-      // Debug mesajları localize edilmeyecek çünkü bunlar kullanıcıya gösterilmiyor
-      // Örneğin:
-      // debugPrint('Message objesi oluşturuldu: ${messageToSend.toMap()}');
-
-      await _chatService.sendMessage(
-        chatId,
-        messageToSend,
-        currentUserId,
-        otherUserId,
-        senderName,
-      );
-
-      // Debug mesajları localize edilmeyecek çünkü bunlar kullanıcıya gösterilmiyor
-      // Örneğin:
-      // debugPrint('Görsel mesaj başarıyla gönderildi!');
-      setQuotedMessage(null);
-    } catch (e) {
-      // Debug mesajları localize edilmeyecek çünkü bunlar kullanıcıya gösterilmiyor
     }
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/features/achievement/premium_rewards.dart';
+import 'package:palseapp/core/localization/locale_manager.dart';
 
 /// XP seviyelerine göre kullanıcı unvanlarını tanımlayan enum
 enum UserRank {
@@ -85,6 +86,11 @@ enum UserRank {
     return context.tr(titleKey);
   }
 
+  /// Context olmadan yerelleştirilmiş unvan başlığını al
+  String getLocalizedTitleWithoutContext() {
+    return LocaleManager.translate(titleKey);
+  }
+
   String getLocalizedIcon(BuildContext context) {
     return context.tr(icon);
   }
@@ -164,6 +170,11 @@ enum XpEvent {
   /// Yerelleştirilmiş açıklama metni
   String getLocalizedDescription(BuildContext context) {
     return context.tr(descriptionKey);
+  }
+
+  /// Context olmadan yerelleştirilmiş açıklama metni
+  String getLocalizedDescriptionWithoutContext() {
+    return LocaleManager.translate(descriptionKey);
   }
 
   /// Görevin kategorisini döndüren getter

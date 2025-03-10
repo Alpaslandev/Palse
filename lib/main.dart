@@ -6,6 +6,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:palseapp/core/localization/app_localizations.dart';
+import 'package:palseapp/core/localization/locale_manager.dart';
 import 'package:palseapp/core/provider/ads_provider.dart';
 import 'package:palseapp/core/provider/locale_provider.dart';
 import 'package:palseapp/core/provider/theme_provider.dart';
@@ -63,6 +64,10 @@ void main() async {
   // Cihazın diline uygun tarih formatlamasını başlat
   final locale = localeProvider.locale;
   debugPrint('Locale: $locale');
+
+  // LocaleManager'ı ayarla
+  LocaleManager.setLocale(locale);
+
   await initializeDateFormatting(locale.toString(), null);
   Intl.defaultLocale = locale.toString();
   debugPrint('Intl.defaultLocale: ${Intl.defaultLocale}');
@@ -96,6 +101,11 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final localeProvider = Provider.of<LocaleProvider>(context);
+
+    // Locale değiştiğinde LocaleManager'ı güncelle
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      LocaleManager.setLocale(localeProvider.locale);
+    });
 
     return MaterialApp.router(
       title: 'Palse App',

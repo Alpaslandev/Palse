@@ -274,7 +274,7 @@ class _AchievementTestPageState extends State<AchievementTestPage> {
             ElevatedButton(
               onPressed: isCompleted && !event.isRepeatable
                   ? null // Tamamlanmış ve tekrarlanamaz görevleri devre dışı bırak
-                  : () => achievementService.earnXp(authProvider.user!, event, context),
+                  : () => achievementService.earnXp(user: authProvider.user!, event: event),
               style: ElevatedButton.styleFrom(
                 backgroundColor: buttonColor,
                 disabledBackgroundColor: Colors.grey.shade300,

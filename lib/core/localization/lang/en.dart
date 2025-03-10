@@ -198,6 +198,23 @@ const Map<String, String> en = {
   'category': 'Category',
   'apply': 'Apply',
 
+  // Success Notifications
+  'notification_task_completed_title': 'New Task Completed!',
+  'notification_task_completed_body': 'You have completed the {task} task and earned {xp} XP.',
+  'notification_xp_earned_title': 'XP Earned!',
+  'notification_xp_earned_body': 'You have earned {xp} XP from the {task} task.',
+  'notification_rank_up_title': 'New Level!',
+  'notification_rank_up_body':
+      'Congratulations! You have reached {xp} XP and are now a {rank} {icon}! Explore more and take a step closer to leadership!',
+  'notification_premium_reward_title': 'Premium Reward Earned!',
+  'notification_premium_reward_body': 'Congratulations! You have reached {xp} XP and earned 1 Week Premium Membership! Enjoy! 🎉',
+  'notification_next_premium_title': 'No Stopping!',
+  'notification_next_premium_body': 'Only {xp} XP left for the next premium reward! Create an ad and send a message!',
+  'notification_daily_task_reset_title': 'Daily Tasks Reset',
+  'notification_daily_task_reset_body': 'Daily tasks have been reset. You can start earning XP by completing new tasks.',
+  'notification_xp_reset_title': 'XP Reset',
+  'notification_xp_reset_body': 'Your XP has been reset. You can start earning XP again.',
+
   // Categories - Enum translations
   'category_coffee_chat': 'Coffee & Chat',
   'category_book_meetings': 'Book Meetups',

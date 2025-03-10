@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/localization/app_localizations.dart';
+import 'package:palseapp/core/models/chat_model.dart';
 import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/features/messages/viewmodel/messages_view_model.dart';
 import 'package:provider/provider.dart';
@@ -22,6 +23,26 @@ class MessageInput extends StatelessWidget {
     required this.isPremium,
     required this.senderName,
   });
+
+  // URL tespiti yapan yardımcı fonksiyon
+  bool isUrl(String text) {
+    // Basit bir URL regex kontrolü
+    final urlRegExp = RegExp(
+      r'^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-zA-Z0-9]+([\-\.]{1}[a-zA-Z0-9]+)*\.[a-zA-Z]{2,5}(:[0-9]{1,5})?(\/.*)?$',
+      caseSensitive: false,
+    );
+    return urlRegExp.hasMatch(text.trim());
+  }
+
+  // Görsel URL'si olup olmadığını kontrol eden fonksiyon
+  bool isImageUrl(String text) {
+    // Görsel uzantılarını kontrol et
+    final imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg'];
+    final lowerText = text.toLowerCase();
+
+    // Hem URL olmalı hem de görsel uzantısına sahip olmalı
+    return isUrl(text) && imageExtensions.any((ext) => lowerText.endsWith(ext));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -142,12 +163,29 @@ class MessageInput extends StatelessWidget {
                             icon: const Icon(Icons.send),
                             onPressed: () {
                               if (_messageController.text.trim().isNotEmpty) {
+                                // Mesajın URL olup olmadığını kontrol et
+                                final messageText = _messageController.text.trim();
+
+                                // Mesaj tipini belirle: görsel URL mi, normal URL mi, normal mesaj mı?
+                                MessageType messageType;
+                                if (isImageUrl(messageText)) {
+                                  // Görsel URL ise image tipi olarak işaretle
+                                  messageType = MessageType.image;
+                                } else if (isUrl(messageText)) {
+                                  // Normal URL ise url tipi olarak işaretle
+                                  messageType = MessageType.url;
+                                } else {
+                                  // Normal metin mesajı
+                                  messageType = MessageType.text;
+                                }
+
                                 viewModel.sendMessage(
                                   chatId,
                                   currentUserId,
                                   otherUserId,
-                                  _messageController.text,
+                                  messageText,
                                   senderName,
+                                  messageType,
                                 );
                                 _messageController.clear();
                               }

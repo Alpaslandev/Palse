@@ -150,6 +150,23 @@ const Map<String, String> tr = {
   'about_us': 'Hakkımızda',
   'app_version': 'Uygulama Versiyonu',
 
+  // Başarı Bildirimleri
+  'notification_task_completed_title': 'Yeni Görev Tamamlandı!',
+  'notification_task_completed_body': '{task} görevini tamamladınız ve {xp} XP kazandınız.',
+  'notification_xp_earned_title': 'XP Kazandınız!',
+  'notification_xp_earned_body': '{task} görevinden {xp} XP kazandınız.',
+  'notification_rank_up_title': 'Yeni Seviye!',
+  'notification_rank_up_body':
+      'Tebrikler! {xp} XP\'ye ulaştın ve artık bir {rank} {icon} oldun! Daha fazla keşfet ve liderliğe bir adım daha yaklaş!',
+  'notification_premium_reward_title': 'Premium Ödül Kazandınız!',
+  'notification_premium_reward_body': 'Tebrikler! {xp} XP\'ye ulaştın ve 1 Haftalık Premium Üyelik kazandın! Keyfini çıkar! 🎉',
+  'notification_next_premium_title': 'Durmak Yok!',
+  'notification_next_premium_body': 'Bir sonraki premium ödül için sadece {xp} XP kaldı! Hemen bir ilan oluştur ve mesaj gönder!',
+  'notification_daily_task_reset_title': 'Günlük Görevler Sıfırlandı',
+  'notification_daily_task_reset_body': 'Günlük görevler sıfırlandı, yeni görevleri tamamlayarak XP kazanabilirsiniz.',
+  'notification_xp_reset_title': 'XP Sıfırlandı',
+  'notification_xp_reset_body': 'XP\'niz sıfırlandı. Yeniden XP kazanmaya başlayabilirsiniz.',
+
   // Kategoriler
   'categories': 'Kategoriler',
   'save': 'Kaydet',

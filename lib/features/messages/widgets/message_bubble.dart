@@ -7,6 +7,7 @@ import 'package:palseapp/core/models/chat_model.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/features/messages/viewmodel/messages_view_model.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class MessageBubble extends StatelessWidget {
   final Message message;
@@ -17,6 +18,20 @@ class MessageBubble extends StatelessWidget {
     required this.message,
     required this.isMe,
   });
+
+  // URL'yi açmak için yardımcı fonksiyon
+  Future<void> _launchUrl(String url) async {
+    // URL'nin http/https ile başlayıp başlamadığını kontrol et
+    String launchableUrl = url;
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      launchableUrl = 'https://$url';
+    }
+
+    final Uri uri = Uri.parse(launchableUrl);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      debugPrint('URL açılamadı: $uri');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,8 +88,10 @@ class MessageBubble extends StatelessWidget {
                     if (message.quotedMessage != null) _buildQuotedMessage(message),
 
                     // Mesaj tipine göre içeriği göster
-                    if (message.type == 'image')
+                    if (message.type == MessageType.image)
                       _buildImageMessage(message.content)
+                    else if (message.type == MessageType.url)
+                      _buildUrlMessage(message.content, isMe)
                     else
                       Text(
                         message.content,
@@ -115,6 +132,65 @@ class MessageBubble extends StatelessWidget {
     );
   }
 
+  // URL mesajları için özel widget
+  Widget _buildUrlMessage(String url, bool isMe) {
+    return InkWell(
+      onTap: () => _launchUrl(url),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // URL önizleme kartı
+          Container(
+            decoration: BoxDecoration(
+              color: isMe ? Colors.blue.shade800 : Colors.grey[200],
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: isMe ? Colors.blue.shade900 : Colors.grey[400]!, width: 1),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Link ikonu ve URL
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    children: [
+                      Icon(Icons.link, color: isMe ? Colors.white70 : Colors.blue[800], size: 20),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          url,
+                          style: TextStyle(
+                            color: isMe ? Colors.white : Colors.blue[900],
+                            fontSize: 14,
+                            decoration: TextDecoration.underline,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Açıklama metni
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+                  child: Text(
+                    "Bağlantıyı açmak için dokun", // Sabit metin kullandım
+                    style: TextStyle(
+                      color: isMe ? Colors.white70 : Colors.grey[600],
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildQuotedMessage(Message message) {
     if (message.quotedMessage == null) return const SizedBox.shrink();
 
@@ -136,32 +212,53 @@ class MessageBubble extends StatelessWidget {
   }
 
   Widget _buildImageMessage(String url) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
-      child: CachedNetworkImage(
-        imageUrl: url,
-        width: 200,
-        height: 200,
-        fit: BoxFit.cover,
-        placeholder: (context, url) => Container(
-          width: 200,
-          height: 200,
-          color: Colors.grey[200],
-          child: const Center(
-            child: CircularProgressIndicator(),
-          ),
-        ),
-        errorWidget: (context, url, error) {
-          debugPrint('Görsel yükleme hatası: $error');
-          return Container(
-            width: 200,
-            height: 200,
-            color: Colors.grey[200],
-            child: const Center(
-              child: Icon(Icons.error_outline, color: Colors.red, size: 40),
+    return GestureDetector(
+      onTap: () => _launchUrl(url), // Görsele tıklandığında da URL'yi açabilsin
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: CachedNetworkImage(
+              imageUrl: url,
+              width: 200,
+              height: 200,
+              fit: BoxFit.cover,
+              placeholder: (context, url) => Container(
+                width: 200,
+                height: 200,
+                color: Colors.grey[200],
+                child: const Center(
+                  child: CircularProgressIndicator(),
+                ),
+              ),
+              errorWidget: (context, url, error) {
+                debugPrint('Görsel yükleme hatası: $error');
+                return Container(
+                  width: 200,
+                  height: 200,
+                  color: Colors.grey[200],
+                  child: const Center(
+                    child: Icon(Icons.error_outline, color: Colors.red, size: 40),
+                  ),
+                );
+              },
             ),
-          );
-        },
+          ),
+          // Görselin altında küçük URL'yi göster (isteğe bağlı)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              url,
+              style: TextStyle(
+                color: isMe ? Colors.white70 : Colors.grey[600],
+                fontSize: 12,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
       ),
     );
   }

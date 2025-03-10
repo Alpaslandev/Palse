@@ -8,13 +8,16 @@ import 'package:palseapp/core/constant/notifications_enum.dart';
 import 'package:palseapp/core/widgets/scaffold_mess.dart';
 import 'package:palseapp/features/achievement/achievements.dart';
 import 'package:palseapp/features/achievement/premium_rewards.dart';
+import 'package:palseapp/core/localization/app_localizations.dart';
+import 'package:palseapp/core/localization/locale_manager.dart';
 
 class AchievementService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final NotificationService _notificationService = NotificationService();
   final CustomerService _customerService = CustomerService();
+
   // Customer modeline XP ekler
-  Future<Customer> earnXp(Customer user, XpEvent event, BuildContext context) async {
+  Future<Customer> earnXp({required Customer user, required XpEvent event}) async {
     // Erken kontrol - kullanıcı yoksa işlem yapma
     if (user.userID == null) {
       debugPrint('Kullanıcı ID bulunamadı, XP eklenemedi');
@@ -60,8 +63,6 @@ class AchievementService {
     // Firestore'a kaydet
     try {
       await _updateUserAchievement(user.userID!, updatedUser);
-      debugPrint('${event.name} görevi tamamlandı, +${event.xpAmount} XP kazanıldı. Toplam XP: ${updatedUser.totalXp}');
-
       // Bildirim kaydet
       final bool isFirstCompletion = (newCompletedTasks[event.name] ?? 0) <= 1;
 
@@ -69,20 +70,22 @@ class AchievementService {
       if (isFirstCompletion) {
         await SharedPrefService.saveNotificationWithEnum(
           type: NotificationsEnum.taskCompleted.name,
-          title: "Yeni Görev Tamamlandı!",
-          body: "${event.getLocalizedDescription(context)} görevini tamamladınız ve ${event.xpAmount} XP kazandınız.",
+          title: LocaleManager.translate('notification_task_completed_title'),
+          body: LocaleManager.translateWithParams(
+              'notification_task_completed_body', {'task': event.getLocalizedDescriptionWithoutContext(), 'xp': event.xpAmount.toString()}),
         );
-        ScaffoldMess.showSuccessSnackBar(
-            'Tebrikler! ${event.getLocalizedDescription(context)} görevini tamamladınız ve ${event.xpAmount} XP kazandınız.');
+        ScaffoldMess.showSuccessSnackBar(LocaleManager.translateWithParams(
+            'notification_task_completed_body', {'task': event.getLocalizedDescriptionWithoutContext(), 'xp': event.xpAmount.toString()}));
       } else {
         // Tekrarlanan görevler için
         await SharedPrefService.saveNotificationWithEnum(
           type: NotificationsEnum.xpEarned.name,
-          title: "XP Kazandınız!",
-          body: "${event.getLocalizedDescription(context)} görevinden ${event.xpAmount} XP kazandınız.",
+          title: LocaleManager.translate('notification_xp_earned_title'),
+          body: LocaleManager.translateWithParams(
+              'notification_xp_earned_body', {'task': event.getLocalizedDescriptionWithoutContext(), 'xp': event.xpAmount.toString()}),
         );
-        ScaffoldMess.showSuccessSnackBar(
-            'Tebrikler! ${event.getLocalizedDescription(context)} görevini tamamladınız ve ${event.xpAmount} XP kazandınız.');
+        ScaffoldMess.showSuccessSnackBar(LocaleManager.translateWithParams(
+            'notification_xp_earned_body', {'task': event.getLocalizedDescriptionWithoutContext(), 'xp': event.xpAmount.toString()}));
       }
 
       // Eğer bu XP ile bir sonraki seviyeye geçildiyse
@@ -92,26 +95,34 @@ class AchievementService {
       if (oldRank != newRank) {
         await SharedPrefService.saveNotificationWithEnum(
           type: NotificationsEnum.rankUp.name,
-          title: "Yeni Seviye!",
-          body: "Tebrikler! ${newRank.getLocalizedTitle(context)} ${newRank.icon} seviyesine ulaştınız.",
+          title: LocaleManager.translate('notification_rank_up_title'),
+          body: LocaleManager.translateWithParams('notification_rank_up_body',
+              {'xp': updatedUser.totalXp.toString(), 'rank': newRank.getLocalizedTitleWithoutContext(), 'icon': newRank.icon}),
         );
-        ScaffoldMess.showSuccessSnackBar('Tebrikler! ${newRank.getLocalizedTitle(context)} ${newRank.icon} seviyesine ulaştınız.');
+        ScaffoldMess.showSuccessSnackBar(LocaleManager.translateWithParams('notification_rank_up_body',
+            {'xp': updatedUser.totalXp.toString(), 'rank': newRank.getLocalizedTitleWithoutContext(), 'icon': newRank.icon}));
       }
 
       // Eğer bu XP ile premium ödül kazanıldıysa
       final oldPremiumCount = PremiumRewards.earnedPremiumRewards(user.totalXp);
       final newPremiumCount = PremiumRewards.earnedPremiumRewards(updatedUser.totalXp);
-
+      final xpToNextPremium = PremiumRewards.xpToNextPremium(updatedUser.totalXp);
       await _customerService.updateCustomer(updatedUser.userID!, updatedUser.copyWith(isPremium: true));
 
       if (newPremiumCount > oldPremiumCount) {
         await SharedPrefService.saveNotificationWithEnum(
           type: NotificationsEnum.premiumReward.name,
-          title: "Premium Ödül Kazandınız!",
-          body: "Tebrikler! Yeni bir premium ödül kazandınız.",
+          title: LocaleManager.translate('notification_premium_reward_title'),
+          body: LocaleManager.translateWithParams('notification_premium_reward_body', {'xp': updatedUser.totalXp.toString()}),
         );
-        ScaffoldMess.showSuccessSnackBar('Tebrikler! Yeni bir premium ödül kazandınız.');
+        ScaffoldMess.showSuccessSnackBar(
+            LocaleManager.translateWithParams('notification_premium_reward_body', {'xp': updatedUser.totalXp.toString()}));
       }
+      await SharedPrefService.saveNotificationWithEnum(
+        type: NotificationsEnum.premiumReward.name,
+        title: LocaleManager.translate('notification_next_premium_title'),
+        body: LocaleManager.translateWithParams('notification_next_premium_body', {'xp': xpToNextPremium.toString()}),
+      );
     } catch (e) {
       debugPrint('XP eklenirken hata: $e');
     }
@@ -136,8 +147,8 @@ class AchievementService {
       // Bildirim kaydet
       await SharedPrefService.saveNotificationWithEnum(
         type: NotificationsEnum.dailyTask.name,
-        title: "Günlük Görevler Sıfırlandı",
-        body: "Günlük görevler sıfırlandı, yeni görevleri tamamlayarak XP kazanabilirsiniz.",
+        title: LocaleManager.translate('notification_daily_task_reset_title'),
+        body: LocaleManager.translate('notification_daily_task_reset_body'),
       );
     } catch (e) {
       debugPrint('Günlük görevler sıfırlanırken hata: $e');
@@ -241,8 +252,8 @@ class AchievementService {
     // Bildirim kaydet
     await SharedPrefService.saveNotificationWithEnum(
       type: NotificationsEnum.xpReset.name,
-      title: "XP Sıfırlandı",
-      body: "XP'niz sıfırlandı. Yeniden XP kazanmaya başlayabilirsiniz.",
+      title: LocaleManager.translate('notification_xp_reset_title'),
+      body: LocaleManager.translate('notification_xp_reset_body'),
     );
   }
 }

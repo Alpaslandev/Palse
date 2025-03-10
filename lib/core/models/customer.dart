@@ -56,6 +56,7 @@ class Customer {
   String? nickname;
   String? userID;
   String? appIdentifier;
+  String? languagePreference;
   List<String>? adverts;
   bool? verification;
   bool? isPremium;
@@ -80,6 +81,7 @@ class Customer {
     this.phoneNumber,
     this.firstName,
     this.lastName,
+    this.languagePreference = 'tr',
     this.nickname,
     this.favoriteCategories = const [],
     this.adverts = const [],
@@ -188,6 +190,7 @@ class Customer {
                     .toList() ??
                 []
             : [],
+        languagePreference: parsedJson['languagePreference'] ?? 'tr',
         favoriteAdverts: parsedJson['favoriteAdverts'] != null ? List<String>.from(parsedJson['favoriteAdverts']) : [],
         adverts: parsedJson['adverts'] != null ? List<String>.from(parsedJson['adverts']) : [],
         verification: parsedJson['verification'] ?? false,
@@ -223,6 +226,7 @@ class Customer {
       'lastName': lastName ?? '',
       'nickname': nickname ?? '',
       'appIdentifier': appIdentifier ?? '',
+      'languagePreference': languagePreference ?? 'tr',
       'adverts': adverts ?? [],
       'verification': verification ?? false,
       'isPremium': isPremium ?? false,
@@ -250,6 +254,7 @@ class Customer {
     String? nickname,
     String? userID,
     String? appIdentifier,
+    String? languagePreference,
     List<String>? adverts,
     bool? verification,
     bool? isPremium,
@@ -270,6 +275,7 @@ class Customer {
       email: email ?? this.email,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       nickname: nickname ?? this.nickname,
+      languagePreference: languagePreference ?? this.languagePreference,
       favoriteCategories: favoriteCategories ?? this.favoriteCategories,
       favoriteAdverts: favoriteAdverts ?? this.favoriteAdverts,
       adverts: adverts ?? this.adverts,
