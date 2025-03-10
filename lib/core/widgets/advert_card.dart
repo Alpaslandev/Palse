@@ -9,7 +9,6 @@ import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/widgets/circle_profile_picture.dart';
-import 'package:palseapp/features/achievement/user_achievements.dart';
 import 'package:palseapp/core/services/chat_service.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -107,7 +106,6 @@ class AdvertCard extends StatelessWidget {
     required BuildContext context,
     required Customer currentCustomer,
   }) {
-    UserAchievements userAchievements = UserAchievements(xp: customer.xp);
     return InkWell(
       onTap: () {
         context.push(friendProfile, extra: advert.creatorUserID);
@@ -173,7 +171,7 @@ class AdvertCard extends StatelessWidget {
 
                       // 2. Satır: Kullanıcı rütbesi
                       Text(
-                        "${userAchievements.rank.icon} ${context.tr(userAchievements.rank.titleKey)}",
+                        "${customer.rank.icon} ${context.tr(customer.rank.titleKey)}",
                         style: const TextStyle(
                           fontWeight: FontWeight.w400,
                           fontSize: 11,

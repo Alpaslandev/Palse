@@ -41,3 +41,6 @@ const String createAdvertStep3 = '/createAdvertStep3';
 const String subscription = '/subscription';
 const String friendProfile = '/friendProfile';
 const String comment = 'comment';
+
+// XP ve görev test sayfası
+const String achievementTest = '/achievementTest';

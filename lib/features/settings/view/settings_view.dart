@@ -48,8 +48,14 @@ class SettingsView extends StatelessWidget {
           _SectionTitle(title: context.tr('application')),
           _SettingsTile(
             icon: Icons.notifications_outlined,
-            title: context.tr('notifications'),
+            title: context.tr('notification'),
             onTap: () => context.pushNamed(editNotification),
+          ),
+          _SettingsTile(
+            icon: Icons.emoji_events_outlined,
+            title: 'XP Test Sayfası',
+            subtitle: 'XP ve görev sistemini test etmek için',
+            onTap: () => context.pushNamed('achievementTest'),
           ),
           // Tema seçim seçeneği
           SwitchListTile(
@@ -146,6 +152,7 @@ class _SettingsTile extends StatelessWidget {
   final Widget? trailing;
   final Color? titleColor;
   final VoidCallback? onTap;
+  final String? subtitle;
 
   const _SettingsTile({
     required this.icon,
@@ -153,6 +160,7 @@ class _SettingsTile extends StatelessWidget {
     this.trailing,
     this.titleColor,
     this.onTap,
+    this.subtitle,
   });
 
   @override
@@ -164,6 +172,7 @@ class _SettingsTile extends StatelessWidget {
         style: TextStyle(color: titleColor),
       ),
       trailing: trailing ?? const Icon(Icons.chevron_right),
+      subtitle: subtitle != null ? Text(subtitle!, style: const TextStyle(color: Colors.grey)) : null,
       onTap: onTap,
     );
   }

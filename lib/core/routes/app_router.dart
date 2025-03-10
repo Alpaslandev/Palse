@@ -9,6 +9,7 @@ import 'package:palseapp/core/widgets/faq_page.dart';
 import 'package:palseapp/core/widgets/landing_view.dart';
 import 'package:palseapp/core/widgets/notification_view.dart';
 import 'package:palseapp/core/widgets/see_likers.dart';
+import 'package:palseapp/features/achievement/achievement_test_page.dart';
 import 'package:palseapp/features/auth/views/login_view.dart';
 import 'package:palseapp/features/categories/view/categories_view.dart';
 import 'package:palseapp/features/chats/view/chats_view.dart';
@@ -28,7 +29,6 @@ import 'package:palseapp/features/settings/view/settings_view.dart';
 import 'package:palseapp/features/settings/view/widgets/verified_screen.dart';
 import 'package:palseapp/features/splash/splash_view.dart';
 import 'package:palseapp/features/subscription/view/paywall_screen.dart';
-import 'package:palseapp/features/subscription/view/subscription_view.dart';
 
 // Router sınıfını oluştur
 class AppRouter {
@@ -241,6 +241,22 @@ class AppRouter {
               pageBuilder: (context, state) => CustomTransitionPage(
                 key: state.pageKey,
                 child: const ProfileView(),
+                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                  return FadeTransition(
+                    opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+                    child: child,
+                  );
+                },
+              ),
+            ),
+
+            // XP ve Görev Test Sayfası
+            GoRoute(
+              path: achievementTest,
+              name: 'achievementTest',
+              pageBuilder: (context, state) => CustomTransitionPage(
+                key: state.pageKey,
+                child: const AchievementTestPage(),
                 transitionsBuilder: (context, animation, secondaryAnimation, child) {
                   return FadeTransition(
                     opacity: CurveTween(curve: Curves.easeInOut).animate(animation),

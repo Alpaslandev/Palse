@@ -191,4 +191,9 @@ class CustomerService {
       throw Exception('Yorum şikayet edilemedi: $e');
     }
   }
+
+  /// Kullanıcı bilgilerini günceller
+  Future<void> updateUser(String uuid, Customer user) async {
+    await _firestore.collection('customers').doc(uuid).update(user.toJson());
+  }
 }

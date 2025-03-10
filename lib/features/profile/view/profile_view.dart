@@ -6,6 +6,8 @@ import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
 import 'package:palseapp/core/widgets/circle_profile_picture.dart';
+import 'package:palseapp/features/achievement/achievement_test_page.dart';
+import 'package:palseapp/features/achievement/achievements.dart';
 import 'package:palseapp/features/profile/widgets/leader_board.dart';
 import 'package:palseapp/features/profile/widgets/xp_progress_card.dart';
 import 'package:provider/provider.dart';
@@ -31,7 +33,6 @@ class ProfileView extends StatelessWidget {
 
                 // XP İlerleme kartı
                 XPProgressCard(
-                  xp: 200,
                   onLeaderboardPressed: () {
                     showModalBottomSheet(
                       isScrollControlled: true,
@@ -134,6 +135,12 @@ class DailyTaskCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+    final userAchievements = authProvider.user?.achievements;
+
+    // Günlük görevin tamamlanıp tamamlanmadığını kontrol et
+    final bool isDailyTaskCompleted = userAchievements?.lastDailyTaskDate != null;
+
     return Container(
       decoration: BoxDecoration(
         color: AppTheme.primaryColor,
@@ -159,7 +166,7 @@ class DailyTaskCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
+                  color: Colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Text(
@@ -172,18 +179,54 @@ class DailyTaskCard extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             '1. ${context.tr('daily_task_step1')}',
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(
+              color: Colors.white,
+              decoration: isDailyTaskCompleted ? TextDecoration.lineThrough : null,
+            ),
           ),
           Text(
             '2. ${context.tr('daily_task_step2')}',
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(
+              color: Colors.white,
+              decoration: isDailyTaskCompleted ? TextDecoration.lineThrough : null,
+            ),
           ),
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
             child: OutlinedButton(
-              onPressed: () {},
-              child: Text(context.tr('complete_task')),
+              onPressed: isDailyTaskCompleted
+                  ? null // Görev tamamlandıysa buton devre dışı
+                  : () async {
+                      // Görevi tamamla butonuna basıldığında
+                      if (userAchievements != null) {
+                        // Günlük görevi tamamla ve XP kazan (XpEvent.dailyTaskListingAndMessage görevi için)
+                        final updatedAchievements = userAchievements.earnXp(XpEvent.dailyTaskCreateListingAndMessage);
+
+                        // Kullanıcı bilgilerini güncelle
+                        //   await authProvider.updateUserAchievements(updatedAchievements);
+
+                        // Başarılı mesajı göster
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(context.tr('daily_task_completed')),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        }
+                      }
+                    },
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.white,
+                side: const BorderSide(color: Colors.white),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                disabledForegroundColor: Colors.white.withOpacity(0.5),
+                disabledBackgroundColor: Colors.transparent,
+              ),
+              child: Text(isDailyTaskCompleted ? context.tr('task_completed') : context.tr('complete_task')),
             ),
           ),
         ],
@@ -209,13 +252,14 @@ class VerifyProfileButton extends StatelessWidget {
           ),
         ),
         onPressed: () {
-          context.pushNamed(verified).then((value) {
-            if (value == true) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Doğrulama başarılı')),
-              );
-            }
-          });
+          context.push(achievementTest);
+          // context.pushNamed(verified).then((value) {
+          //   if (value == true) {
+          //     ScaffoldMessenger.of(context).showSnackBar(
+          //       const SnackBar(content: Text('Doğrulama başarılı')),
+          //     );
+          //   }
+          // });
         },
         icon: const Icon(Icons.check_circle, color: Colors.white),
         label: Text(

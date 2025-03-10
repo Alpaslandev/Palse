@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:palseapp/core/constant/notifications_enum.dart';
 import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/services/shared_pref_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class NotificationView extends StatelessWidget {
   const NotificationView({super.key});

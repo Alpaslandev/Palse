@@ -8,6 +8,7 @@ import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/models/comment_model.dart';
 import 'package:palseapp/core/models/location_model.dart';
 import 'package:palseapp/core/models/chat_model.dart';
+import 'package:palseapp/features/achievement/achievements.dart';
 
 enum Gender {
   male(icon: 'assets/images/male.png', textKey: 'gender_male'),
@@ -68,8 +69,10 @@ class Customer {
 
   List<Comment>? comments;
   LocationModel? location;
-  int xp;
-  bool isWelcomeReward;
+
+  final int totalXp;
+  final Map<String, int> completedTasks;
+  final DateTime? lastDailyTaskDate;
 
   Customer({
     this.profilePictureUrl,
@@ -91,8 +94,9 @@ class Customer {
     this.profileViewers = const [],
     this.comments = const [],
     this.location,
-    this.xp = 0,
-    this.isWelcomeReward = false,
+    this.totalXp = 0,
+    this.completedTasks = const {},
+    this.lastDailyTaskDate,
   }) : appIdentifier = 'Customer App';
 
   String fullName() => '$firstName $lastName';
@@ -129,6 +133,30 @@ class Customer {
     final now = DateTime.now();
     final age = now.year - birthday!.year;
     return age;
+  }
+
+  // Kullanıcının unvanını döndüren getter
+  UserRank get rank => UserRank.fromXp(totalXp);
+
+  // UserAchievements nesnesini döndüren getter
+  UserAchievements get achievements => UserAchievements(
+        totalXp: totalXp,
+        completedTasks: _parseCompletedTasks(),
+        lastDailyTaskDate: lastDailyTaskDate,
+      );
+
+  // String->XpEvent dönüşümü yapan yardımcı metod
+  Map<XpEvent, int> _parseCompletedTasks() {
+    final result = <XpEvent, int>{};
+    completedTasks.forEach((key, value) {
+      try {
+        final event = XpEvent.values.firstWhere((e) => e.name == key);
+        result[event] = value;
+      } catch (e) {
+        print('Bilinmeyen XpEvent: $key');
+      }
+    });
+    return result;
   }
 
   factory Customer.fromJson(Map<String, dynamic> parsedJson, String userID) {
@@ -170,8 +198,10 @@ class Customer {
         profileViewers: parsedJson['profileViewers'] != null ? List<String>.from(parsedJson['profileViewers']) : [],
         comments: parsedJson['comments'] != null ? List<Comment>.from(parsedJson['comments'].map((comment) => Comment.fromJson(comment))) : [],
         location: parsedJson['location'] != null ? parseCustomerLocation(parsedJson) : parseCustomerLocation(parsedJson),
-        xp: parsedJson['xp'] ?? 0,
-        isWelcomeReward: parsedJson['isWelcomeReward'] ?? false,
+        totalXp: parsedJson['totalXp'] ?? 0,
+        completedTasks: parsedJson['completedTasks'] != null ? Map<String, int>.from(parsedJson['completedTasks']) : {},
+        lastDailyTaskDate:
+            parsedJson['lastDailyTaskDate'] != null ? parseDateTime(parsedJson['lastDailyTaskDate'], parsedJson['lastDailyTaskDateTime']) : null,
       );
     } catch (e) {
       debugPrint('Customer.fromJson error: $e');
@@ -205,8 +235,9 @@ class Customer {
       'location': location?.toJson() ?? {},
       'chatMap': chatMapJson,
       'comments': comments?.map((comment) => comment.toJson()).toList() ?? [],
-      'xp': xp,
-      'isWelcomeReward': isWelcomeReward,
+      'totalXp': totalXp,
+      'completedTasks': completedTasks,
+      'lastDailyTaskDate': lastDailyTaskDate != null ? Timestamp.fromDate(lastDailyTaskDate!) : null,
     };
   }
 
@@ -230,8 +261,9 @@ class Customer {
     List<String>? profileViewers,
     List<Comment>? comments,
     LocationModel? location,
-    int? xp,
-    bool? isWelcomeReward,
+    int? totalXp,
+    Map<String, int>? completedTasks,
+    DateTime? lastDailyTaskDate,
   }) {
     return Customer(
       profilePictureUrl: profilePictureUrl ?? this.profilePictureUrl,
@@ -249,12 +281,13 @@ class Customer {
       chatMap: chatMap,
       profileViewers: profileViewers ?? this.profileViewers,
       comments: comments ?? this.comments,
-      xp: xp ?? this.xp,
-      isWelcomeReward: isWelcomeReward ?? this.isWelcomeReward,
       location: location ?? this.location,
       blockUsers: blockUsers ?? this.blockUsers,
       firstName: firstName ?? this.firstName,
       lastName: lastName ?? this.lastName,
+      totalXp: totalXp ?? this.totalXp,
+      completedTasks: completedTasks ?? this.completedTasks,
+      lastDailyTaskDate: lastDailyTaskDate ?? this.lastDailyTaskDate,
     );
   }
 }

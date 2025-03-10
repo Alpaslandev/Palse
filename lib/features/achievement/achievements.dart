@@ -109,28 +109,25 @@ enum UserRank {
 }
 
 /// XP kazandıran olay türlerini tanımlayan enum
+/// Basitleştirilmiş versiyonu
 enum XpEvent {
-  /// Hoş Geldin Ödülleri (Tek Seferlik)
-  firstListing(500, 'İlk ilanını oluşturma', 'first_listing_description'),
-  firstMessage(500, 'İlk mesajını gönderme', 'first_message_description'),
+  // Tek seferlik görevler
+  firstListing(500, 'İlk ilanını oluşturma', 'first_listing_description', isRepeatable: false, isDaily: false),
+  firstMessage(500, 'İlk mesajını gönderme', 'first_message_description', isRepeatable: false, isDaily: false),
 
-  /// İlan Verme
-  createListing(100, 'Yeni ilan oluştur', 'create_listing_description'),
-  receiveFirstMessage(10, 'İlanınıza gelen her ilk mesaj', 'receive_first_message_description'),
+  // Tekrarlanabilir görevler
+  createListing(100, 'Yeni ilan oluştur', 'create_listing_description', isRepeatable: true, isDaily: false),
+  sendMessage(35, 'İlk defa mesaj gönderilen kullanıcı başına', 'send_message_description', isRepeatable: true, isDaily: false),
+  receiveMessage(10, 'İlanınıza gelen her ilk mesaj', 'receive_message_description', isRepeatable: true, isDaily: false),
+  writeComment(15, 'Birine yorum yazma', 'write_comment_description', isRepeatable: true, isDaily: false),
+  receiveComment(10, 'Profiline yorum alma', 'receive_comment_description', isRepeatable: true, isDaily: false),
 
-  /// Mesajlaşma
-  sendFirstMessage(35, 'İlk defa mesaj gönderilen kullanıcı başına', 'send_first_message_description'),
-
-  /// Yorumlama ve Yorum Almak
-  writeComment(15, 'Birine yorum yazma', 'write_comment_description'),
-  receiveComment(10, 'Profiline yorum alma', 'receive_comment_description'),
-
-  /// Günlük Görev
-  dailyTaskListingAndMessage(100, 'Bir ilan oluştur ve bir mesaj gönder', 'daily_task_listing_and_message_description'),
-  dailyLogin(10, 'Uygulamaya günlük giriş', 'daily_login_description');
+  // Günlük görevler
+  dailyTaskCreateListingAndMessage(100, 'Bir ilan oluştur ve bir mesaj gönder', 'daily_task_description', isRepeatable: false, isDaily: true),
+  dailyLogin(10, 'Uygulamaya günlük giriş', 'daily_login_description', isRepeatable: false, isDaily: true);
 
   /// Constructor
-  const XpEvent(this.xpAmount, this.description, this.descriptionKey);
+  const XpEvent(this.xpAmount, this.description, this.descriptionKey, {required this.isRepeatable, required this.isDaily});
 
   /// Kazanılan XP miktarı
   final int xpAmount;
@@ -141,52 +138,76 @@ enum XpEvent {
   /// Olay açıklaması için çeviri anahtarı
   final String descriptionKey;
 
+  /// Görevin tekrarlanabilir olup olmadığı
+  final bool isRepeatable;
+
+  /// Görevin günlük görev olup olmadığı
+  final bool isDaily;
+
   /// Yerelleştirilmiş açıklama metni
   String getLocalizedDescription(BuildContext context) {
     return context.tr(descriptionKey);
   }
 
-  /// Event'in ait olduğu grubu bulan yardımcı metod
-  XpEventGroup get group {
-    for (final group in XpEventGroup.values) {
-      if (group.events.contains(this)) {
-        return group;
-      }
+  /// Görevin kategorisini döndüren getter
+  String get category {
+    if (isDaily) {
+      return 'Günlük Görevler';
+    } else if (!isRepeatable) {
+      return 'Hoş Geldin Ödülleri';
+    } else if (this == XpEvent.createListing || this == XpEvent.receiveMessage) {
+      return 'İlan Verme';
+    } else if (this == XpEvent.sendMessage) {
+      return 'Mesajlaşma';
+    } else if (this == XpEvent.writeComment || this == XpEvent.receiveComment) {
+      return 'Yorumlama ve Yorum Almak';
     }
-    throw Exception('Event bir gruba ait değil: $this');
+    return 'Genel';
   }
 }
 
 /// XP event gruplarını tanımlayan enum
 enum XpEventGroup {
-  welcomeRewards('Hoş Geldin Ödülleri (Tek Seferlik)', 'welcome_rewards', [
-    XpEvent.firstListing,
-    XpEvent.firstMessage,
-  ]),
+  welcomeRewards(
+      'welcome_rewards',
+      [
+        XpEvent.firstListing,
+        XpEvent.firstMessage,
+      ],
+      '🎁'),
 
-  listing('İlan Verme', 'listing', [
-    XpEvent.createListing,
-    XpEvent.receiveFirstMessage,
-  ]),
+  listing(
+      'listing',
+      [
+        XpEvent.createListing,
+        XpEvent.receiveMessage,
+      ],
+      '📋'),
 
-  messaging('Mesajlaşma', 'messaging', [
-    XpEvent.sendFirstMessage,
-  ]),
+  messaging(
+      'messaging',
+      [
+        XpEvent.sendMessage,
+      ],
+      '💬'),
 
-  commenting('Yorumlama ve Yorum Almak', 'commenting', [
-    XpEvent.writeComment,
-    XpEvent.receiveComment,
-  ]),
+  commenting(
+      'commenting',
+      [
+        XpEvent.writeComment,
+        XpEvent.receiveComment,
+      ],
+      '💭'),
 
-  dailyTasks('Günlük Görev', 'daily_tasks', [
-    XpEvent.dailyTaskListingAndMessage,
-    XpEvent.dailyLogin,
-  ]);
+  dailyTasks(
+      'daily_tasks',
+      [
+        XpEvent.dailyTaskCreateListingAndMessage,
+        XpEvent.dailyLogin,
+      ],
+      '📅');
 
-  const XpEventGroup(this.title, this.titleKey, this.events);
-
-  /// Grup başlığı (Türkçe)
-  final String title;
+  const XpEventGroup(this.titleKey, this.events, this.emoji);
 
   /// Grup başlığı için çeviri anahtarı
   final String titleKey;
@@ -194,30 +215,143 @@ enum XpEventGroup {
   /// Bu gruba ait eventler
   final List<XpEvent> events;
 
+  /// Grup için emoji getirir
+  final String emoji;
+
   /// Yerelleştirilmiş başlık
   String getLocalizedTitle(BuildContext context) {
     return context.tr(titleKey);
   }
 }
 
-// /// XP eventlerine erişim için yardımcı sınıf (isteğe bağlı)
-// class XpEventHelper {
-//   /// Tüm grupları ve içindeki eventleri map olarak döndürür
-//   static Map<XpEventGroup, List<XpEvent>> getAllGroupedEvents() {
-//     final Map<XpEventGroup, List<XpEvent>> result = {};
-    
-//     for (final group in XpEventGroup.values) {
-//       result[group] = group.events;
-//     }
-    
-//     return result;
-//   }
-  
-//   /// Belirli bir türdeki tüm eventleri döndürür (örn: tüm günlük görevler)
-//   static List<XpEvent> getEventsByType({bool? isWelcomeReward, bool? isDailyTask}) {
-//     return XpEvent.values.where((event) => 
-//       (isWelcomeReward == null || event.isWelcomeReward == isWelcomeReward) &&
-//       (isDailyTask == null || event.isDailyTask == isDailyTask)
-//     ).toList();
-//   }
-// }
+/// Kullanıcı Achievement Sistemi
+class UserAchievements {
+  /// Toplam XP miktarı
+  final int totalXp;
+
+  /// Tamamlanan görevler ve tamamlanma sayıları
+  final Map<XpEvent, int> completedTasks;
+
+  /// Son günlük görev tamamlama tarihi
+  final DateTime? lastDailyTaskDate;
+
+  UserAchievements({
+    this.totalXp = 0,
+    this.completedTasks = const {},
+    this.lastDailyTaskDate,
+  });
+
+  /// Kullanıcının mevcut unvanı
+  UserRank get rank => UserRank.fromXp(totalXp);
+
+  /// Kullanıcının mevcut unvanda ilerleme yüzdesi
+  double get progressPercentage => rank.getProgressPercentage(totalXp);
+
+  /// Bir sonraki unvana geçmek için gereken XP
+  int get xpToNextRank => rank.xpToNextRank(totalXp);
+
+  /// Bir sonraki premium ödüle kalan XP
+  int get xpToNextPremium => PremiumRewards.xpToNextPremium(totalXp);
+
+  /// Kullanıcının kazandığı premium ödül sayısı
+  int get earnedPremiumRewards => PremiumRewards.earnedPremiumRewards(totalXp);
+
+  /// Görevin bugün tamamlanıp tamamlanmadığını kontrol eder
+  bool isDailyTaskCompletedToday() {
+    if (lastDailyTaskDate == null) return false;
+
+    final now = DateTime.now();
+    return lastDailyTaskDate!.year == now.year && lastDailyTaskDate!.month == now.month && lastDailyTaskDate!.day == now.day;
+  }
+
+  /// Belirli bir görevin tamamlanıp tamamlanmadığını kontrol eder
+  bool isTaskCompleted(XpEvent event) {
+    if (event.isDaily) {
+      return isDailyTaskCompletedToday();
+    }
+
+    return completedTasks.containsKey(event) && completedTasks[event]! > 0;
+  }
+
+  /// Belirli bir görevin kaç kez tamamlandığını döndürür
+  int getTaskCompletionCount(XpEvent event) {
+    return completedTasks[event] ?? 0;
+  }
+
+  /// XP kazanma işlemi
+  UserAchievements earnXp(XpEvent event) {
+    // Eğer günlük görevse ve bugün zaten tamamlanmışsa, XP verme
+    if (event.isDaily && isDailyTaskCompletedToday()) {
+      return this;
+    }
+
+    // Eğer tekrarlanamaz bir görevse ve zaten tamamlanmışsa, XP verme
+    if (!event.isRepeatable && isTaskCompleted(event)) {
+      return this;
+    }
+
+    // Yeni XP ve tamamlanan görevleri güncelle
+    var newCompletedTasks = Map<XpEvent, int>.from(completedTasks);
+    newCompletedTasks[event] = (newCompletedTasks[event] ?? 0) + 1;
+
+    // Günlük görev için son tamamlanma tarihini güncelle
+    DateTime? newLastDailyTaskDate = lastDailyTaskDate;
+    if (event.isDaily) {
+      newLastDailyTaskDate = DateTime.now();
+    }
+
+    return UserAchievements(
+      totalXp: totalXp + event.xpAmount,
+      completedTasks: newCompletedTasks,
+      lastDailyTaskDate: newLastDailyTaskDate,
+    );
+  }
+
+  /// XpEvent kullanmadan özel XP kazanma (ödül vb. için)
+  UserAchievements earnCustomXp(int amount) {
+    return UserAchievements(
+      totalXp: totalXp + amount,
+      completedTasks: completedTasks,
+      lastDailyTaskDate: lastDailyTaskDate,
+    );
+  }
+
+  /// Tüm günlük görevleri sıfırlar (Gece 12'de çağrılabilir)
+  UserAchievements resetDailyTasks() {
+    return UserAchievements(
+      totalXp: totalXp,
+      completedTasks: completedTasks,
+      lastDailyTaskDate: null,
+    );
+  }
+
+  /// JSON'dan UserAchievements oluşturur
+  factory UserAchievements.fromJson(Map<String, dynamic> json) {
+    final taskCompletions = <XpEvent, int>{};
+    final taskData = json['completedTasks'] as Map<String, dynamic>? ?? {};
+
+    taskData.forEach((key, value) {
+      try {
+        final event = XpEvent.values.firstWhere((e) => e.name == key);
+        taskCompletions[event] = value as int;
+      } catch (e) {
+        print('Bilinmeyen XpEvent: $key');
+      }
+    });
+
+    return UserAchievements(
+      totalXp: json['totalXp'] ?? 0,
+      completedTasks: taskCompletions,
+      lastDailyTaskDate: json['lastDailyTaskDate'] != null ? DateTime.parse(json['lastDailyTaskDate']) : null,
+    );
+  }
+
+  /// UserAchievements'ı JSON'a dönüştürür
+  Map<String, dynamic> toJson() {
+    return {
+      'totalXp': totalXp,
+      'completedTasks': completedTasks.map((key, value) => MapEntry(key.name, value)),
+      'lastDailyTaskDate': lastDailyTaskDate?.toIso8601String(),
+    };
+  }
+}

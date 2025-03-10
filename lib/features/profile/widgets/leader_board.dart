@@ -111,7 +111,7 @@ class LeaderBoard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text('${context.tr('your_rank')}: ${index + 1}.', style: const TextStyle(color: Colors.white)),
-            _buildListTileTrailing(user.user?.xp ?? 0, false),
+            _buildListTileTrailing(user.user?.achievements.totalXp ?? 0, false),
           ],
         ),
       ),

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
 import 'package:palseapp/features/achievement/achievements.dart';
-import 'package:palseapp/features/achievement/user_achievements.dart';
 
 class XpEventsView extends StatelessWidget {
   final UserAchievements? userAchievements;
@@ -115,35 +114,87 @@ class XpEventsView extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 16),
-            Text(
-              context.tr(group.titleKey),
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.primaryColor,
-              ),
+            Row(
+              children: [
+                Text(
+                  group.emoji,
+                  style: const TextStyle(fontSize: 24),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    context.tr(group.titleKey),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.primaryColor,
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 8),
-            ...group.events.map((event) => ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(
-                    '• ${context.tr(event.descriptionKey)}',
-                    style: const TextStyle(fontSize: 14, color: Colors.grey),
+            ...group.events.map((event) {
+              // Görevin kaç kez tamamlandığı bilgisini al
+              final completionCount = userAchievements?.completedTasks[event] ?? 0;
+              // Bu görevden toplam ne kadar XP kazanıldığını hesapla
+              final totalXpFromEvent = event.xpAmount;
+              final isCompleted = completionCount > 0;
+              return ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isCompleted ? AppTheme.primaryColor : Colors.grey.withOpacity(0.3),
                   ),
-                  subtitle: Text(
-                    '${userAchievements?.getTotalXpFromEvent(event) ?? 0} XP',
-                    style: const TextStyle(fontSize: 14, color: Colors.grey),
+                  child: isCompleted
+                      ? const Icon(Icons.check, size: 20, color: Colors.white)
+                      : Center(
+                          child: Text(
+                            '+${event.xpAmount}',
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                ),
+                title: Text(
+                  context.tr(event.descriptionKey),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: isCompleted ? Colors.black : Colors.grey,
+                    decoration: isCompleted && group == XpEventGroup.welcomeRewards ? TextDecoration.lineThrough : TextDecoration.none,
                   ),
-                  trailing: Container(
-                    width: 70,
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryColor,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text('+${event.xpAmount} XP', style: const TextStyle(color: Colors.white)),
+                ),
+                // Görev tamamlanma sayısı ve toplam kazanılan XP
+                subtitle: completionCount > 0
+                    ? Text(
+                        '${completionCount}x • ${totalXpFromEvent} XP',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                        ),
+                      )
+                    : null,
+                // Her görevin sağ tarafında XP değeri
+                trailing: Container(
+                  width: 70,
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: isCompleted && group == XpEventGroup.welcomeRewards ? Colors.grey : AppTheme.primaryColor,
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                )),
+                  child: Text(
+                    '+${event.xpAmount} XP',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
+              );
+            }),
             const SizedBox(height: 8),
           ],
         ),

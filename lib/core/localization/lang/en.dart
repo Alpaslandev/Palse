@@ -134,6 +134,9 @@ const Map<String, String> en = {
   'receive_comment_description': 'Receive a comment on your profile',
   'daily_task_listing_and_message_description': 'Create a listing and send a message',
   'daily_login_description': 'Daily app login',
+  'no_daily_task_yet': 'No daily task yet',
+  'daily_task_completed': 'Daily task completed! +100 XP earned',
+  'task_completed': 'Task Completed',
 
   // Language Settings
   'language_settings': 'Language Settings',

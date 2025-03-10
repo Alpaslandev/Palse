@@ -5,7 +5,6 @@ import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
 import 'package:palseapp/core/widgets/advert_card.dart';
-import 'package:palseapp/features/achievement/user_achievements.dart';
 import 'package:palseapp/features/friend_profile/friend_profile_view_model.dart';
 import 'package:provider/provider.dart';
 
@@ -77,13 +76,12 @@ class FriendProfileView extends StatelessWidget {
   }
 
   Widget _subHeader(FriendProfileViewModel viewModel, BuildContext context) {
-    final userAchievements = UserAchievements(xp: viewModel.customer?.xp ?? 0);
     final authProvider = context.read<AuthProvider>();
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          '${userAchievements.rank.icon} ${context.tr(userAchievements.rank.titleKey)} (${userAchievements.xp} XP)',
+          '${viewModel.customer?.rank.icon} ${context.tr(viewModel.customer?.rank.titleKey ?? '')} (${viewModel.customer?.achievements.totalXp} XP)',
           style: TextStyle(fontSize: 11, color: AppTheme.primaryColor, fontWeight: FontWeight.bold),
         ),
         Text(viewModel.customer?.location?.displayStringWithDistance(authProvider.user!.location!) ?? '',

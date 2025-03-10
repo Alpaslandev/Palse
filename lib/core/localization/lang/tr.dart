@@ -127,6 +127,9 @@ const Map<String, String> tr = {
   'receive_comment_description': 'Profiline yorum alma',
   'daily_task_listing_and_message_description': 'Bir ilan oluştur ve bir mesaj gönder',
   'daily_login_description': 'Uygulamaya günlük giriş',
+  'no_daily_task_yet': 'Henüz günlük görevin yok',
+  'daily_task_completed': 'Günlük görev tamamlandı! +100 XP kazandın',
+  'task_completed': 'Görev Tamamlandı',
 
   // Dil Ayarları
   'language_settings': 'Dil Ayarları',

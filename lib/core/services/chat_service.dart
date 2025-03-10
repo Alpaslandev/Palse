@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:palseapp/core/constant/notifications_enum.dart';
 import 'package:palseapp/core/models/chat_model.dart';
 import 'package:flutter/foundation.dart';
 import 'package:palseapp/core/services/notification_service.dart';
