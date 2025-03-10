@@ -49,8 +49,8 @@ class NotificationService {
 
       debugPrint('Bildirim data: ${message.data}');
       //  final notificationDate = (message.data['timestamp'] as Timestamp).toDate();
-
-      if (message.data['type'] != 'message') {
+      final bool isMessage = message.data['type'] == 'message';
+      if (!isMessage) {
         SharedPrefService.saveNotificationWithEnum(
           type: message.data['type'],
           body: message.notification?.body ?? '',
@@ -87,13 +87,16 @@ class NotificationService {
             child: Icon(Icons.message, color: Colors.white),
           ),
           actions: [
-            TextButton(
-              onPressed: () {
-                ScaffoldMessenger.of(_context!).hideCurrentMaterialBanner();
-                AppRouter.router.push('/chats/$chatId?otherId=$senderId&currentId=$receiverId');
-              },
-              child: const Text('Görüntüle'),
-            ),
+            if (isMessage)
+              TextButton(
+                onPressed: () {
+                  ScaffoldMessenger.of(_context!).hideCurrentMaterialBanner();
+                  if (chatId != null && senderId != null && receiverId != null) {
+                    AppRouter.router.push('/chats/$chatId?otherId=$senderId&currentId=$receiverId');
+                  }
+                },
+                child: const Text('Görüntüle'),
+              ),
             TextButton(
               onPressed: () {
                 ScaffoldMessenger.of(_context!).hideCurrentMaterialBanner();

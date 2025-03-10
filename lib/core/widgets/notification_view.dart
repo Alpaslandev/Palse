@@ -1,13 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:palseapp/core/constant/notifications_enum.dart';
 import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/services/shared_pref_service.dart';
 
-class NotificationView extends StatelessWidget {
+class NotificationView extends StatefulWidget {
   const NotificationView({super.key});
 
+  @override
+  State<NotificationView> createState() => _NotificationViewState();
+}
+
+class _NotificationViewState extends State<NotificationView> {
   Future<void> _removeNotification(int index, BuildContext context) async {
     await SharedPrefService.removeNotification(index);
+    setState(() {});
+  }
+
+  Future<void> _removeAllNotifications(BuildContext context) async {
+    await SharedPrefService.clearNotifications();
+    setState(() {});
   }
 
   @override
@@ -17,12 +27,15 @@ class NotificationView extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(context.tr('notifications')),
+        actions: [
+          IconButton(
+            onPressed: () => _removeAllNotifications(context),
+            icon: Icon(Icons.delete),
+          ),
+        ],
       ),
       body: Column(
         children: [
-          SizedBox(
-            height: 100,
-          ),
           Expanded(
             child: FutureBuilder<List<Map<String, dynamic>>>(
               future: SharedPrefService.getNotifications(),
@@ -38,11 +51,15 @@ class NotificationView extends StatelessWidget {
                     return Center(child: Text(context.tr('no_notifications')));
                   }
 
+                  // Tarihe göre sırala
+                  notifications.sort((a, b) {
+                    return b['receivedAt'].compareTo(a['receivedAt']);
+                  });
+
                   return ListView.builder(
                     itemCount: notifications.length,
                     itemBuilder: (context, index) {
                       final notification = notifications[index];
-                      final notificationType = NotificationsEnum.values.firstWhere((e) => e.name == notification['type']);
                       debugPrint('bildirimler notification: ${notifications[index]}');
                       return Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
@@ -65,7 +82,7 @@ class NotificationView extends StatelessWidget {
                                       mainAxisAlignment: MainAxisAlignment.start,
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text(notificationType.title),
+                                        Text(notification['title']),
                                       ],
                                     ),
                                   ),
@@ -73,16 +90,21 @@ class NotificationView extends StatelessWidget {
                                 Align(
                                   alignment: Alignment.topLeft,
                                   child: Text(
-                                    notificationType.description,
+                                    notification['body'],
                                   ),
                                 ),
                                 Align(
                                   alignment: Alignment.topRight,
-                                  child: IconButton(
-                                    icon: Icon(Icons.delete, color: Colors.red),
-                                    onPressed: () {
-                                      _removeNotification(index, context);
-                                    },
+                                  child: Row(
+                                    children: [
+                                      Text(notification['receivedAt'].substring(0, 10)),
+                                      IconButton(
+                                        icon: Icon(Icons.delete, color: Colors.red),
+                                        onPressed: () {
+                                          _removeNotification(index, context);
+                                        },
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],

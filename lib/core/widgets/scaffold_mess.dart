@@ -166,6 +166,34 @@ class ScaffoldMess extends StatelessWidget {
     _showSnackBarWithState(snackBar, context);
   }
 
+  static void showSuccessTaskSnackBar(
+    String message, {
+    String? eventName,
+    Duration? duration,
+    String? actionLabel,
+    VoidCallback? onActionPressed,
+    SnackBarBehavior behavior = SnackBarBehavior.floating,
+    double? width,
+    BuildContext? context,
+  }) {
+    final SnackBar snackBar = SnackBar(
+      content: eventName != null ? Text(eventName) : Text(message),
+      backgroundColor: Colors.green,
+      duration: duration ?? const Duration(seconds: 5),
+      behavior: behavior,
+      width: width,
+      action: actionLabel != null && onActionPressed != null
+          ? SnackBarAction(
+              label: actionLabel,
+              textColor: Colors.white,
+              onPressed: onActionPressed,
+            )
+          : null,
+    );
+
+    _showSnackBarWithState(snackBar, context);
+  }
+
   /// Uyarı mesajı içeren Snackbar gösterir
   ///
   /// [message] - Gösterilecek uyarı mesajı

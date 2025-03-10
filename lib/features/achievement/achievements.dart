@@ -85,6 +85,10 @@ enum UserRank {
     return context.tr(titleKey);
   }
 
+  String getLocalizedIcon(BuildContext context) {
+    return context.tr(icon);
+  }
+
   /// XP değerine göre uygun unvanı döndüren yardımcı metod
   static UserRank fromXp(int xp) {
     return UserRank.values.firstWhere(

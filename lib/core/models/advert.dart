@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:palseapp/core/constant/categories.dart';
 import 'package:palseapp/core/helper/categorie_parse.dart';
 import 'package:palseapp/core/helper/date_parse.dart';
@@ -52,27 +53,41 @@ class Advert {
     // Gender değerini önceden normalize edelim
     final genderValue = json['creatorGender'];
     final normalizedGender = genderValue != null ? Gender.fromString(genderValue.toString()) : Gender.others;
+    try {
+      return Advert(
+        advertID: advertID,
+        advertName: json['advertName'] ?? '',
+        description: json['description'] ?? json['advertContext'] ?? '',
+        creatorUserID: json['creatorUserID'] ?? '',
+        startEventDate: parseDateTime(json['startEventDate'] ?? json['advertDate'], json['advertTime']),
+        advertType: parseCategoryType(json['advertType']) ?? Categories.diger,
+        advertImage: json['advertImage'] ?? '',
+        likers: json['likers'] != null ? List<String>.from(json['likers']) : [],
+        location: parseAdvertLocation(json),
+        createdAt: (json['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
 
-    return Advert(
-      advertID: advertID,
-      advertName: json['advertName'] ?? '',
-      description: json['description'] ?? json['advertContext'] ?? '',
-      creatorUserID: json['creatorUserID'] ?? '',
-      startEventDate: parseDateTime(json['startEventDate'] ?? json['advertDate'], json['advertTime']),
-      advertType: parseCategoryType(json['advertType']) ?? Categories.diger,
-      advertImage: json['advertImage'] ?? '',
-      likers: json['likers'] != null ? List<String>.from(json['likers']) : [],
-      location: parseAdvertLocation(json),
-      createdAt: (json['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-
-      // Yeni alanlar için null kontrolü
-      creatorLastName: json['creatorLastName'] ?? '',
-      creatorName: json['creatorName'] ?? '',
-      creatorProfilePicture: json['creatorProfilePicture'] ?? '',
-      creatorGender: normalizedGender, // Normalize edilmiş gender değerini kullan
-      creatorIsVerified: json['creatorIsVerified'] ?? false,
-      creatorIsPremium: json['creatorIsPremium'] ?? false,
-    );
+        // Yeni alanlar için null kontrolü
+        creatorLastName: json['creatorLastName'] ?? '',
+        creatorName: json['creatorName'] ?? '',
+        creatorProfilePicture: json['creatorProfilePicture'] ?? '',
+        creatorGender: normalizedGender, // Normalize edilmiş gender değerini kullan
+        creatorIsVerified: json['creatorIsVerified'] ?? false,
+        creatorIsPremium: json['creatorIsPremium'] ?? false,
+      );
+    } catch (e) {
+      debugPrint('İlan oluşturulurken hata: $e');
+      return Advert(
+        advertID: advertID,
+        advertName: '',
+        description: '',
+        creatorUserID: '',
+        startEventDate: DateTime.now(),
+        advertType: Categories.diger,
+        advertImage: '',
+        likers: [],
+        location: LocationModel(city: '', district: '', country: '', lat: 0, lon: 0),
+      );
+    }
   }
 
   Map<String, dynamic> toJson() {

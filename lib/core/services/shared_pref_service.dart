@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
-import 'package:palseapp/core/constant/notifications_enum.dart';
 
 class SharedPrefService {
   static SharedPreferences? _prefs;
@@ -16,7 +15,7 @@ class SharedPrefService {
 
   // Bildirimi NotificationsEnum ile kaydet
   static Future<bool> saveNotificationWithEnum({
-    required NotificationsEnum type,
+    required String type,
     required String body,
     required String title,
   }) async {
@@ -31,7 +30,7 @@ class SharedPrefService {
         'id': DateTime.now().millisecondsSinceEpoch.toString(),
         'body': body,
         'title': title,
-        'type': type.name, // enum adı
+        'type': type,
         'receivedAt': DateTime.now().toIso8601String(),
         'read': false
       };

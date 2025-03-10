@@ -26,13 +26,12 @@ class PremiumOverlay extends StatelessWidget {
       children: [
         // Altta child widget
         child,
-
         // Üstte blur overlay
         Positioned.fill(
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3), // 3 3
             child: GestureDetector(
-              onTap: () => context.push(subscription),
+              onTap: () => context.pushNamed(paywall),
               child: Container(
                 color: Colors.white.withValues(alpha: 0.8),
                 child: Center(
@@ -54,7 +53,7 @@ class PremiumOverlay extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       ElevatedButton(
-                        onPressed: () => context.push(subscription),
+                        onPressed: () => context.pushNamed(paywall),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blue,
                           foregroundColor: Colors.white,

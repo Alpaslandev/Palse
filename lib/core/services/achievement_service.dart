@@ -1,18 +1,20 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:palseapp/core/models/customer.dart';
+import 'package:palseapp/core/services/firestore/customer_service.dart';
 import 'package:palseapp/core/services/notification_service.dart';
 import 'package:palseapp/core/services/shared_pref_service.dart';
 import 'package:palseapp/core/constant/notifications_enum.dart';
+import 'package:palseapp/core/widgets/scaffold_mess.dart';
 import 'package:palseapp/features/achievement/achievements.dart';
 import 'package:palseapp/features/achievement/premium_rewards.dart';
 
 class AchievementService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final NotificationService _notificationService = NotificationService();
-
+  final CustomerService _customerService = CustomerService();
   // Customer modeline XP ekler
-  Future<Customer> earnXp(Customer user, XpEvent event) async {
+  Future<Customer> earnXp(Customer user, XpEvent event, BuildContext context) async {
     // Erken kontrol - kullanıcı yoksa işlem yapma
     if (user.userID == null) {
       debugPrint('Kullanıcı ID bulunamadı, XP eklenemedi');
@@ -66,17 +68,21 @@ class AchievementService {
       // Görev ilk kez tamamlandıysa
       if (isFirstCompletion) {
         await SharedPrefService.saveNotificationWithEnum(
-          type: NotificationsEnum.taskCompleted,
+          type: NotificationsEnum.taskCompleted.name,
           title: "Yeni Görev Tamamlandı!",
-          body: "${event.name} görevini tamamladınız ve ${event.xpAmount} XP kazandınız.",
+          body: "${event.getLocalizedDescription(context)} görevini tamamladınız ve ${event.xpAmount} XP kazandınız.",
         );
+        ScaffoldMess.showSuccessSnackBar(
+            'Tebrikler! ${event.getLocalizedDescription(context)} görevini tamamladınız ve ${event.xpAmount} XP kazandınız.');
       } else {
         // Tekrarlanan görevler için
         await SharedPrefService.saveNotificationWithEnum(
-          type: NotificationsEnum.xpEarned,
+          type: NotificationsEnum.xpEarned.name,
           title: "XP Kazandınız!",
-          body: "${event.name} görevinden ${event.xpAmount} XP kazandınız.",
+          body: "${event.getLocalizedDescription(context)} görevinden ${event.xpAmount} XP kazandınız.",
         );
+        ScaffoldMess.showSuccessSnackBar(
+            'Tebrikler! ${event.getLocalizedDescription(context)} görevini tamamladınız ve ${event.xpAmount} XP kazandınız.');
       }
 
       // Eğer bu XP ile bir sonraki seviyeye geçildiyse
@@ -85,100 +91,32 @@ class AchievementService {
 
       if (oldRank != newRank) {
         await SharedPrefService.saveNotificationWithEnum(
-          type: NotificationsEnum.rankUp,
+          type: NotificationsEnum.rankUp.name,
           title: "Yeni Seviye!",
-          body: "Tebrikler! ${newRank.titleKey} seviyesine ulaştınız.",
+          body: "Tebrikler! ${newRank.getLocalizedTitle(context)} ${newRank.icon} seviyesine ulaştınız.",
         );
+        ScaffoldMess.showSuccessSnackBar('Tebrikler! ${newRank.getLocalizedTitle(context)} ${newRank.icon} seviyesine ulaştınız.');
       }
 
       // Eğer bu XP ile premium ödül kazanıldıysa
       final oldPremiumCount = PremiumRewards.earnedPremiumRewards(user.totalXp);
       final newPremiumCount = PremiumRewards.earnedPremiumRewards(updatedUser.totalXp);
 
+      await _customerService.updateCustomer(updatedUser.userID!, updatedUser.copyWith(isPremium: true));
+
       if (newPremiumCount > oldPremiumCount) {
         await SharedPrefService.saveNotificationWithEnum(
-          type: NotificationsEnum.premiumReward,
+          type: NotificationsEnum.premiumReward.name,
           title: "Premium Ödül Kazandınız!",
           body: "Tebrikler! Yeni bir premium ödül kazandınız.",
         );
+        ScaffoldMess.showSuccessSnackBar('Tebrikler! Yeni bir premium ödül kazandınız.');
       }
     } catch (e) {
       debugPrint('XP eklenirken hata: $e');
     }
 
     return updatedUser;
-  }
-
-  // Özel miktar XP ekler
-  Future<Customer> earnCustomXp(Customer user, int amount) async {
-    if (user.userID == null || amount <= 0) {
-      return user;
-    }
-
-    final updatedUser = user.copyWith(
-      totalXp: user.totalXp + amount,
-    );
-
-    try {
-      await _updateUserAchievement(user.userID!, updatedUser);
-      debugPrint('Özel XP eklendi: +$amount XP. Toplam XP: ${updatedUser.totalXp}');
-
-      // Bildirim kaydet
-      await SharedPrefService.saveNotificationWithEnum(
-        type: NotificationsEnum.xpEarned,
-        title: "Özel XP Kazandınız!",
-        body: "$amount XP hesabınıza eklendi.",
-      );
-
-      // Eğer bu XP ile bir sonraki seviyeye geçildiyse
-      final oldRank = UserRank.fromXp(user.totalXp);
-      final newRank = UserRank.fromXp(updatedUser.totalXp);
-
-      if (oldRank != newRank) {
-        await SharedPrefService.saveNotificationWithEnum(
-          type: NotificationsEnum.rankUp,
-          title: "Yeni Seviye!",
-          body: "Tebrikler! ${newRank.titleKey} seviyesine ulaştınız.",
-        );
-      }
-
-      // Eğer bu XP ile premium ödül kazanıldıysa
-      final oldPremiumCount = PremiumRewards.earnedPremiumRewards(user.totalXp);
-      final newPremiumCount = PremiumRewards.earnedPremiumRewards(updatedUser.totalXp);
-
-      if (newPremiumCount > oldPremiumCount) {
-        await SharedPrefService.saveNotificationWithEnum(
-          type: NotificationsEnum.premiumReward,
-          title: "Premium Ödül Kazandınız!",
-          body: "Tebrikler! Yeni bir premium ödül kazandınız.",
-        );
-      }
-    } catch (e) {
-      debugPrint('Özel XP eklenirken hata: $e');
-    }
-
-    return updatedUser;
-  }
-
-  // Özel bir nedenle premium ödül verir
-  Future<void> grantPremiumReward(String userId, String reason) async {
-    if (userId.isEmpty) {
-      debugPrint('Kullanıcı ID bulunamadı, premium ödül verilemiyor');
-      return;
-    }
-
-    try {
-      // Sadece bildirim olarak kaydet, XP değişikliği yapmıyoruz
-      await SharedPrefService.saveNotificationWithEnum(
-        type: NotificationsEnum.premiumReward,
-        title: "🌟 Özel Premium Ödül!",
-        body: "Tebrikler! $reason nedeniyle özel bir premium ödül kazandınız.",
-      );
-
-      debugPrint('$userId kullanıcısına özel premium ödül verildi. Sebep: $reason');
-    } catch (e) {
-      debugPrint('Premium ödül verilirken hata: $e');
-    }
   }
 
   // Günlük görevleri sıfırlar
@@ -197,7 +135,7 @@ class AchievementService {
 
       // Bildirim kaydet
       await SharedPrefService.saveNotificationWithEnum(
-        type: NotificationsEnum.dailyTask,
+        type: NotificationsEnum.dailyTask.name,
         title: "Günlük Görevler Sıfırlandı",
         body: "Günlük görevler sıfırlandı, yeni görevleri tamamlayarak XP kazanabilirsiniz.",
       );
@@ -225,12 +163,29 @@ class AchievementService {
 
   //Bir sonraki seviyeye kalan Xp miktarını yüzdelik oalrak döndürür
   double getXpToNextRankPercentage(int totalXp) {
-    return (getXpToNextRank(totalXp) / UserRank.fromXp(totalXp).maxXp) * 100;
+    final userRank = UserRank.fromXp(totalXp);
+
+    // Master seviyesi için %100 ilerleme göster
+    if (userRank == UserRank.master) {
+      return 1.0;
+    }
+
+    final xpForCurrentRank = totalXp - userRank.minXp;
+    final xpRangeForRank = (userRank.maxXp as int) - userRank.minXp;
+
+    return xpForCurrentRank / xpRangeForRank;
   }
 
   // Bir sonraki seviyeye kalan XP miktarını hesaplar
   int getXpToNextRank(int totalXp) {
-    return (UserRank.fromXp(totalXp).maxXp as int) - totalXp;
+    final userRank = UserRank.fromXp(totalXp);
+
+    // Master seviyesi için 0 değeri döndür (en üst seviye)
+    if (userRank == UserRank.master) {
+      return 0;
+    }
+
+    return (userRank.maxXp as int) - totalXp;
   }
 
   // Premium ödül bilgilerini hesaplar
@@ -285,7 +240,7 @@ class AchievementService {
 
     // Bildirim kaydet
     await SharedPrefService.saveNotificationWithEnum(
-      type: NotificationsEnum.xpReset,
+      type: NotificationsEnum.xpReset.name,
       title: "XP Sıfırlandı",
       body: "XP'niz sıfırlandı. Yeniden XP kazanmaya başlayabilirsiniz.",
     );
