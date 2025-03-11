@@ -40,10 +40,7 @@ class ProjectAppBar extends StatelessWidget implements PreferredSizeWidget {
                 shape: const CircleBorder(),
                 clipBehavior: Clip.hardEdge,
                 child: IconButton(
-                  onPressed: () async {
-                    debugPrint('ringtone');
-                    context.pushNamed(notification);
-                  },
+                  onPressed: () => context.pushNamed(notification),
                   icon: SvgPicture.asset(
                     'assets/vectors/ringtone_iconly_pro_1_x2.svg',
                     width: 24,
@@ -97,10 +94,7 @@ class ProjectAppBar extends StatelessWidget implements PreferredSizeWidget {
                 shape: const CircleBorder(),
                 clipBehavior: Clip.hardEdge,
                 child: IconButton(
-                  onPressed: () {
-                    debugPrint('chat');
-                    context.pushNamed(chats);
-                  },
+                  onPressed: () => context.pushNamed(chats),
                   icon: SvgPicture.asset(
                     'assets/vectors/chat_iconly_pro_x2.svg',
                     width: 24,

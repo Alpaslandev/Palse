@@ -103,7 +103,7 @@ class _FilterViewState extends State<FilterView> {
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
+    final authProvider = context.read<AuthProvider>();
     _currentUser = authProvider.user; // Kullanıcıyı burada atayalım
 
     return Scaffold(

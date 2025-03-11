@@ -22,7 +22,8 @@ class _NotificationViewState extends State<NotificationView> {
 
   @override
   Widget build(BuildContext context) {
-    // final authViewModel = Provider.of<AuthViewModel>(context);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Scaffold(
       appBar: AppBar(
@@ -30,7 +31,10 @@ class _NotificationViewState extends State<NotificationView> {
         actions: [
           IconButton(
             onPressed: () => _removeAllNotifications(context),
-            icon: Icon(Icons.delete),
+            icon: Icon(
+              Icons.delete,
+              color: colorScheme.error,
+            ),
           ),
         ],
       ),
@@ -41,14 +45,28 @@ class _NotificationViewState extends State<NotificationView> {
               future: SharedPrefService.getNotifications(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
+                  return Center(
+                    child: CircularProgressIndicator(
+                      color: colorScheme.primary,
+                    ),
+                  );
                 } else if (snapshot.hasError) {
-                  return Center(child: Text('${context.tr('error_occurred')}: ${snapshot.error}'));
+                  return Center(
+                    child: Text(
+                      '${context.tr('error_occurred')}: ${snapshot.error}',
+                      style: TextStyle(color: colorScheme.error),
+                    ),
+                  );
                 } else {
                   final notifications = snapshot.data ?? [];
 
                   if (notifications.isEmpty) {
-                    return Center(child: Text(context.tr('no_notifications')));
+                    return Center(
+                      child: Text(
+                        context.tr('no_notifications'),
+                        style: TextStyle(color: colorScheme.onSurfaceVariant),
+                      ),
+                    );
                   }
 
                   // Tarihe göre sırala
@@ -65,24 +83,30 @@ class _NotificationViewState extends State<NotificationView> {
                         padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                         child: Container(
                           decoration: BoxDecoration(
-                            color: Color(0xFFF7F7F7),
+                            color: theme.brightness == Brightness.light ? const Color(0xFFF7F7F7) : colorScheme.surfaceVariant,
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Container(
-                            padding: EdgeInsets.fromLTRB(12, 12, 0, 12),
+                            padding: const EdgeInsets.fromLTRB(12, 12, 0, 12),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.start,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Container(
-                                  margin: EdgeInsets.fromLTRB(0, 0, 0, 4),
+                                  margin: const EdgeInsets.fromLTRB(0, 0, 0, 4),
                                   child: Align(
                                     alignment: Alignment.topLeft,
                                     child: Row(
                                       mainAxisAlignment: MainAxisAlignment.start,
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text(notification['title']),
+                                        Text(
+                                          notification['title'],
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: colorScheme.onSurface,
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   ),
@@ -91,15 +115,29 @@ class _NotificationViewState extends State<NotificationView> {
                                   alignment: Alignment.topLeft,
                                   child: Text(
                                     notification['body'],
+                                    style: TextStyle(
+                                      color: colorScheme.onSurface,
+                                    ),
                                   ),
                                 ),
                                 Align(
                                   alignment: Alignment.topRight,
                                   child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
-                                      Text(notification['receivedAt'].substring(0, 10)),
+                                      Text(
+                                        notification['receivedAt'].substring(0, 10),
+                                        style: TextStyle(
+                                          color: colorScheme.onSurfaceVariant,
+                                          fontSize: 12,
+                                        ),
+                                      ),
                                       IconButton(
-                                        icon: Icon(Icons.delete, color: Colors.red),
+                                        icon: Icon(
+                                          Icons.delete,
+                                          color: colorScheme.error,
+                                          size: 20,
+                                        ),
                                         onPressed: () {
                                           _removeNotification(index, context);
                                         },
