@@ -42,34 +42,23 @@ class _FilterViewState extends State<FilterView> {
     // Tüm ilanları çek
     final advertService = AdvertService();
     List<Advert> allAdverts = await advertService.fetchAdverts(limit: 100);
-    debugPrint('Tüm cinsiyetler: ${allAdverts.map((e) => e.creatorGender.name).toSet()}');
 
     // Mesafe filtrelemesi
     if (_distance != null && _distance! > 0) {
       allAdverts = allAdverts.where((advert) {
         // Kullanıcının konumu ile ilanın konumu arasındaki mesafeyi hesapla
-        if (advert.location == null || _currentUser?.location == null) return false;
+        if (_currentUser?.location == null) return false;
 
-        int distance = _currentUser!.location!.distanceTo(advert.location!);
+        int distance = _currentUser!.location!.distanceTo(advert.location);
         return distance <= _distance!;
       }).toList();
     }
 
     // Cinsiyet filtrelemesi
     if (_selectedGender != null) {
-      debugPrint('Seçilen cinsiyet: $_selectedGender');
-
-      // Önce seçilen cinsiyeti normalize edelim (fromString metodu ile)
-      Gender? selectedGenderEnum;
-
-      if (selectedGenderEnum != null) {
-        allAdverts = allAdverts.where((advert) {
-          final ilanCinsiyet = advert.creatorGender.name.toLowerCase();
-          debugPrint('İlan cinsiyeti: ${ilanCinsiyet} == Seçilen: ${selectedGenderEnum!.name} => ${ilanCinsiyet == selectedGenderEnum.name}');
-
-          return advert.creatorGender.name.toLowerCase() == selectedGenderEnum.name.toLowerCase();
-        }).toList();
-      }
+      allAdverts = allAdverts.where((advert) {
+        return advert.creatorGender.name.toLowerCase() == _selectedGender!.name.toLowerCase();
+      }).toList();
 
       debugPrint('Filtreleme sonucu kalan ilan sayısı: ${allAdverts.length}');
     }
@@ -85,6 +74,25 @@ class _FilterViewState extends State<FilterView> {
       }).toList();
 
       debugPrint('Kategori filtrelemesi sonucu kalan ilan sayısı: ${allAdverts.length}');
+    }
+
+    // Konuma göre sıralama - yakından uzağa
+    if (_currentUser?.location != null) {
+      allAdverts.sort((a, b) {
+        // Eğer konum bilgisi yoksa en sona koy
+        if (a.location == null) return 1;
+        if (b.location == null) return -1;
+
+        // Mesafeleri hesapla
+        int distanceA = _currentUser!.location!.distanceTo(a.location);
+        int distanceB = _currentUser!.location!.distanceTo(b.location);
+
+        // Yakından uzağa sırala
+        return distanceA.compareTo(distanceB);
+      });
+
+      debugPrint(
+          'İlanlar konuma göre sıralandı. İlk 3 ilan mesafeleri: ${allAdverts.take(3).map((e) => _currentUser!.location!.distanceTo(e.location)).toList()}');
     }
 
     setState(() {
@@ -196,8 +204,10 @@ class _FilterViewState extends State<FilterView> {
     return ListView.builder(
       itemCount: adverts.length,
       itemBuilder: (context, index) {
+        final advert = adverts[index];
+        // Mesafeyi göstermek için AdvertCard'a mesafe bilgisini ekleyebiliriz
         return AdvertCard(
-          advert: adverts[index],
+          advert: advert,
         );
       },
     );

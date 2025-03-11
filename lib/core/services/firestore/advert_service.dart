@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:palseapp/core/constant/categories.dart';
 import 'package:palseapp/core/models/advert.dart';
+import 'package:palseapp/core/models/location_model.dart';
 import 'package:palseapp/core/services/notification_service.dart';
 
 class AdvertService {
@@ -13,10 +14,11 @@ class AdvertService {
     String? city, {
     DocumentSnapshot? lastDocument,
     int limit = 25,
+    LocationModel? userLocation,
   }) async {
     try {
       if (city == null || city.isEmpty) {
-        return await fetchAdverts(lastDocument: lastDocument, limit: limit);
+        return await fetchAdverts(lastDocument: lastDocument, limit: limit, userLocation: userLocation);
       }
 
       final upperCity = city;
@@ -34,6 +36,12 @@ class AdvertService {
       final querySnapshot = await query.get();
       final adverts = querySnapshot.docs.map((doc) => Advert.fromJson(doc.data(), doc.id)).toList();
 
+      // Şehre göre ilanları karıştır
+      if (adverts.isNotEmpty) {
+        adverts.shuffle();
+        debugPrint('Şehre göre ilanlar karıştırıldı.');
+      }
+
       debugPrint('Bulunan ilan sayısı: ${adverts.length}');
       return adverts;
     } catch (e) {
@@ -47,6 +55,7 @@ class AdvertService {
     List<Categories>? interests, {
     DocumentSnapshot? lastDocument,
     int limit = 25,
+    LocationModel? userLocation,
   }) async {
     try {
       // İlgi alanı yoksa boş liste döndür
@@ -98,9 +107,10 @@ class AdvertService {
       final adverts = uniqueAdverts.values.toList();
       debugPrint('Bulunan ilan sayısı: ${adverts.length}');
 
-      // Tarihe göre sırala (yeniden eskiye)
+      // İlgi alanlarına göre ilanları karıştır
       if (adverts.isNotEmpty) {
-        adverts.sort((a, b) => b.createdAt!.compareTo(a.createdAt!));
+        adverts.shuffle();
+        debugPrint('İlgi alanlarına göre ilanlar karıştırıldı.');
       }
 
       return adverts;
@@ -115,6 +125,7 @@ class AdvertService {
   Future<List<Advert>> fetchAdverts({
     DocumentSnapshot? lastDocument,
     int limit = 25,
+    LocationModel? userLocation,
   }) async {
     try {
       var query = _firestore.collection('events').limit(limit);
@@ -126,12 +137,90 @@ class AdvertService {
       final querySnapshot = await query.get();
       final adverts = querySnapshot.docs.map((doc) => Advert.fromJson(doc.data(), doc.id)).toList();
 
+      // Konuma göre sıralama - SADECE fetchAdverts için
+      if (userLocation != null) {
+        _sortAdvertsByDistance(adverts, userLocation);
+        debugPrint('Tüm ilanlar konuma göre sıralandı.');
+      }
+
       debugPrint('Toplam ilan sayısı: ${adverts.length}');
       return adverts;
     } catch (e) {
       debugPrint('İlanlar çekilirken hata: $e');
       return [];
     }
+  }
+
+  // Other sekmesi için ilanları getir - Kullanıcının şehrinde ve ilgi alanlarında olmayan ilanlar
+  Future<List<Advert>> fetchOtherAdverts({
+    required String? userCity,
+    required List<Categories>? userInterests,
+    DocumentSnapshot? lastDocument,
+    int limit = 25,
+    LocationModel? userLocation,
+  }) async {
+    try {
+      debugPrint('Other sekmesi için ilanlar getiriliyor...');
+      debugPrint('Kullanıcı şehri: $userCity');
+      debugPrint('Kullanıcı ilgi alanları: ${userInterests?.map((e) => e.name).toList()}');
+
+      // Tüm ilanları çek
+      var query = _firestore.collection('events').limit(limit * 3); // Daha fazla ilan çekelim, filtreleme yapacağız
+
+      if (lastDocument != null) {
+        query = query.startAfterDocument(lastDocument);
+      }
+
+      final querySnapshot = await query.get();
+      final allAdverts = querySnapshot.docs.map((doc) => Advert.fromJson(doc.data(), doc.id)).toList();
+
+      debugPrint('Toplam çekilen ilan sayısı: ${allAdverts.length}');
+
+      // Kullanıcının şehrinde ve ilgi alanlarında olmayan ilanları filtrele
+      List<Advert> otherAdverts = allAdverts.where((advert) {
+        // Kullanıcının şehrinde değilse ve ilgi alanlarında değilse göster
+        bool isNotInUserCity = userCity == null || userCity.isEmpty || advert.location?.city != userCity;
+        bool isNotInUserInterests = userInterests == null || userInterests.isEmpty || !userInterests.contains(advert.advertType);
+
+        return isNotInUserCity && isNotInUserInterests;
+      }).toList();
+
+      // Limit uygula
+      if (otherAdverts.length > limit) {
+        otherAdverts = otherAdverts.sublist(0, limit);
+      }
+
+      debugPrint('Filtreleme sonrası kalan ilan sayısı: ${otherAdverts.length}');
+
+      // Konuma göre sıralama
+      if (userLocation != null) {
+        _sortAdvertsByDistance(otherAdverts, userLocation);
+        debugPrint('Other ilanlar konuma göre sıralandı.');
+      }
+
+      return otherAdverts;
+    } catch (e) {
+      debugPrint('Other ilanlar çekilirken hata: $e');
+      return [];
+    }
+  }
+
+  // İlanları mesafeye göre sıralayan yardımcı metod
+  void _sortAdvertsByDistance(List<Advert> adverts, LocationModel userLocation) {
+    adverts.sort((a, b) {
+      // Eğer konum bilgisi yoksa en sona koy
+      if (a.location == null) return 1;
+      if (b.location == null) return -1;
+
+      // Mesafeleri hesapla
+      int distanceA = userLocation.distanceTo(a.location);
+      int distanceB = userLocation.distanceTo(b.location);
+
+      // Yakından uzağa sırala
+      return distanceA.compareTo(distanceB);
+    });
+
+    debugPrint('İlanlar konuma göre sıralandı.');
   }
 
 // İlan adverts koleksiyonlarında arar

@@ -64,6 +64,7 @@ class HomeViewModel extends ChangeNotifier {
             user?.location?.city ?? '',
             lastDocument: _lastDocument,
             limit: _pageSize,
+            userLocation: user?.location,
           );
           break;
         case 1:
@@ -72,11 +73,13 @@ class HomeViewModel extends ChangeNotifier {
               user?.favoriteCategories ?? [],
               lastDocument: _lastDocument,
               limit: _pageSize,
+              userLocation: user?.location,
             );
           } else {
             newAdverts = await _advertService.fetchAdverts(
               lastDocument: _lastDocument,
               limit: _pageSize,
+              userLocation: user?.location,
             );
           }
           break;
@@ -84,6 +87,7 @@ class HomeViewModel extends ChangeNotifier {
           newAdverts = await _advertService.fetchAdverts(
             lastDocument: _lastDocument,
             limit: _pageSize,
+            userLocation: user?.location,
           );
       }
 
