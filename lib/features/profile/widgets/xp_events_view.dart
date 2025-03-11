@@ -16,13 +16,19 @@ class XpEventsView extends StatelessWidget {
     final authProvider = Provider.of<AuthProvider>(context);
     // AchievementService'i doğrudan oluştur
     final achievementService = Provider.of<AchievementService>(context);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(context.tr('xp_system')),
       ),
       body: authProvider.user == null
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(
+              child: CircularProgressIndicator(
+                color: colorScheme.primary,
+              ),
+            )
           : ListView(
               padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
               children: [
@@ -47,6 +53,8 @@ class XpEventsView extends StatelessWidget {
   Widget _xpAndLevel(AuthProvider authProvider, BuildContext context, AchievementService achievementService) {
     // Kullanıcının unvanını hesapla
     final userRank = achievementService.getUserRank(authProvider.user!.totalXp);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Card(
       margin: const EdgeInsets.all(16),
@@ -79,11 +87,11 @@ class XpEventsView extends StatelessWidget {
                     children: [
                       Text(
                         'Unvan: ${userRank.getLocalizedTitle(context)}',
-                        style: Theme.of(context).textTheme.titleLarge,
+                        style: theme.textTheme.titleLarge,
                       ),
                       Text(
                         'Toplam XP: ${authProvider.user!.totalXp}',
-                        style: Theme.of(context).textTheme.titleMedium,
+                        style: theme.textTheme.titleMedium,
                       ),
                     ],
                   ),
@@ -91,20 +99,29 @@ class XpEventsView extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            const Text('Seviye İlerlemesi:'),
+            Text(
+              'Seviye İlerlemesi:',
+              style: TextStyle(color: theme.colorScheme.onSurface),
+            ),
             const SizedBox(height: 4),
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: LinearProgressIndicator(
                 value: achievementService.getXpToNextRankPercentage(authProvider.user!.totalXp),
                 minHeight: 10,
-                backgroundColor: Colors.grey.shade200,
+                backgroundColor: theme.brightness == Brightness.light ? Colors.grey.shade200 : theme.colorScheme.surfaceVariant,
                 color: userRank.getRankColor(),
               ),
             ),
             const SizedBox(height: 8),
-            Text('Bir sonraki seviyeye: ${achievementService.getXpToNextRank(authProvider.user!.totalXp)} XP'),
-            const Divider(height: 24),
+            Text(
+              'Bir sonraki seviyeye: ${achievementService.getXpToNextRank(authProvider.user!.totalXp)} XP',
+              style: TextStyle(color: theme.colorScheme.onSurface),
+            ),
+            Divider(
+              height: 24,
+              color: theme.dividerColor,
+            ),
             Row(
               children: [
                 const Icon(Icons.star, color: Colors.amber),
@@ -115,9 +132,15 @@ class XpEventsView extends StatelessWidget {
                     children: [
                       Text(
                         'Premium Ödüller: ${achievementService.getEarnedPremiumRewardCount(authProvider.user!.totalXp)}',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.onSurface,
+                        ),
                       ),
-                      Text('Bir sonraki premium ödüle: ${achievementService.getXpToNextPremium(authProvider.user!.totalXp)} XP'),
+                      Text(
+                        'Bir sonraki premium ödüle: ${achievementService.getXpToNextPremium(authProvider.user!.totalXp)} XP',
+                        style: TextStyle(color: theme.colorScheme.onSurface),
+                      ),
                     ],
                   ),
                 ),
@@ -126,7 +149,7 @@ class XpEventsView extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'Premium Eşikler: ${PremiumRewards.getPremiumThresholds(50000).join(", ")}',
-              style: Theme.of(context).textTheme.bodySmall,
+              style: theme.textTheme.bodySmall,
             ),
           ],
         ),
@@ -136,6 +159,9 @@ class XpEventsView extends StatelessWidget {
 
   // Unvanlar kartı
   Widget _buildRanksCard(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -144,16 +170,19 @@ class XpEventsView extends StatelessWidget {
           children: [
             Text(
               context.tr('ranks'),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: AppTheme.primaryColor,
+                color: colorScheme.primary,
               ),
             ),
             const SizedBox(height: 16),
             Text(
               context.tr('ranks_description'),
-              style: const TextStyle(fontSize: 14, color: Colors.grey),
+              style: TextStyle(
+                fontSize: 14,
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 12),
             ...UserRank.values.map((rank) => Padding(
@@ -164,7 +193,7 @@ class XpEventsView extends StatelessWidget {
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          color: AppTheme.primaryColor.withOpacity(0.1),
+                          color: colorScheme.primary.withOpacity(0.1),
                           shape: BoxShape.circle,
                         ),
                         child: Center(
@@ -181,16 +210,17 @@ class XpEventsView extends StatelessWidget {
                           children: [
                             Text(
                               context.tr(rank.titleKey),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
+                                color: colorScheme.onSurface,
                               ),
                             ),
                             Text(
                               rank == UserRank.master ? '${rank.minXp}+ XP' : '${rank.minXp} - ${rank.maxXp} XP',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 14,
-                                color: Colors.grey,
+                                color: colorScheme.onSurfaceVariant,
                               ),
                             ),
                           ],
@@ -207,6 +237,9 @@ class XpEventsView extends StatelessWidget {
 
   Widget _buildEventCard(
       BuildContext context, XpEventGroup group, List<XpEvent> events, AuthProvider authProvider, AchievementService achievementService) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -218,10 +251,10 @@ class XpEventsView extends StatelessWidget {
               children: [
                 Text(
                   context.tr(group.titleKey),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.primaryColor,
+                    color: colorScheme.primary,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -248,14 +281,14 @@ class XpEventsView extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black,
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 title: Text(
                   context.tr(event.descriptionKey),
                   style: TextStyle(
                     fontSize: 14,
-                    color: isCompleted ? Colors.black : Colors.grey,
+                    color: isCompleted ? colorScheme.onSurface : colorScheme.onSurface.withOpacity(0.6),
                     decoration: isCompleted && !event.isRepeatable ? TextDecoration.lineThrough : TextDecoration.none,
                   ),
                 ),
@@ -263,9 +296,9 @@ class XpEventsView extends StatelessWidget {
                 subtitle: completionCount > 0
                     ? Text(
                         '${completionCount}x • ${totalXpFromEvent} XP ${context.tr('total')}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
-                          color: Colors.grey,
+                          color: colorScheme.onSurfaceVariant,
                         ),
                       )
                     : null,
@@ -274,12 +307,14 @@ class XpEventsView extends StatelessWidget {
                   width: 70,
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: isCompleted && !event.isRepeatable ? Colors.grey : AppTheme.primaryColor,
+                    color: isCompleted && !event.isRepeatable ? theme.disabledColor : colorScheme.primary,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
                     '+${event.xpAmount} XP',
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(
+                      color: isCompleted && !event.isRepeatable ? Colors.white70 : Colors.white,
+                    ),
                   ),
                 ),
               );

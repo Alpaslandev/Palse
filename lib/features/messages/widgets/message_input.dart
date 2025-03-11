@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/models/chat_model.dart';
 import 'package:palseapp/core/routes/routes.dart';
+import 'package:palseapp/core/utils/app_theme.dart';
 import 'package:palseapp/features/messages/viewmodel/messages_view_model.dart';
 import 'package:provider/provider.dart';
 
@@ -46,6 +47,9 @@ class MessageInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Consumer<MessagesViewModel>(
       builder: (context, viewModel, child) {
         return SafeArea(
@@ -61,9 +65,9 @@ class MessageInput extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
+                      color: colorScheme.quoteBackground,
                       border: Border(
-                        top: BorderSide(color: Colors.grey.shade300),
+                        top: BorderSide(color: theme.dividerColor),
                       ),
                     ),
                     child: Row(
@@ -71,7 +75,7 @@ class MessageInput extends StatelessWidget {
                         Container(
                           width: 4,
                           height: 40,
-                          color: Colors.blue,
+                          color: theme.colorScheme.primary,
                           margin: const EdgeInsets.only(right: 8),
                         ),
                         Expanded(
@@ -82,7 +86,7 @@ class MessageInput extends StatelessWidget {
                               Text(
                                 context.tr('quote'),
                                 style: TextStyle(
-                                  color: Colors.blue,
+                                  color: theme.colorScheme.primary,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -90,12 +94,13 @@ class MessageInput extends StatelessWidget {
                                 viewModel.quotedMessage?.content ?? '',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
+                                style: TextStyle(color: theme.colorScheme.onSurface),
                               ),
                             ],
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.close),
+                          icon: Icon(Icons.close, color: theme.colorScheme.onSurface),
                           onPressed: () => viewModel.clearQuotedMessage(),
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
@@ -108,10 +113,10 @@ class MessageInput extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: theme.scaffoldBackgroundColor,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.grey.withOpacity(0.1),
+                        color: theme.shadowColor.withOpacity(0.1),
                         spreadRadius: 1,
                         blurRadius: 1,
                       ),
@@ -123,21 +128,22 @@ class MessageInput extends StatelessWidget {
                       if (viewModel.isUploadingImage)
                         LinearProgressIndicator(
                           value: viewModel.uploadProgress,
-                          backgroundColor: Colors.grey[200],
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                          backgroundColor: theme.colorScheme.surfaceVariant,
+                          valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
                         ),
                       Row(
                         children: [
                           IconButton(
                             icon: viewModel.isUploadingImage
-                                ? const SizedBox(
+                                ? SizedBox(
                                     width: 24,
                                     height: 24,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
+                                      color: theme.colorScheme.primary,
                                     ),
                                   )
-                                : const Icon(Icons.attach_file),
+                                : Icon(Icons.attach_file, color: theme.colorScheme.onSurface),
                             onPressed: isPremium
                                 ? viewModel.isUploadingImage
                                     ? null
@@ -151,16 +157,18 @@ class MessageInput extends StatelessWidget {
                                 controller: _messageController,
                                 decoration: InputDecoration(
                                   hintText: context.tr('type_message'),
+                                  hintStyle: TextStyle(color: theme.hintColor),
                                   border: InputBorder.none,
                                   contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                                 ),
+                                style: TextStyle(color: theme.colorScheme.onSurface),
                                 maxLines: null,
                                 textCapitalization: TextCapitalization.sentences,
                               ),
                             ),
                           ),
                           IconButton(
-                            icon: const Icon(Icons.send),
+                            icon: Icon(Icons.send, color: theme.colorScheme.primary),
                             onPressed: () {
                               if (_messageController.text.trim().isNotEmpty) {
                                 // Mesajın URL olup olmadığını kontrol et
@@ -205,18 +213,29 @@ class MessageInput extends StatelessWidget {
   }
 
   void _showPremiumDialog(BuildContext context) {
+    final theme = Theme.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(context.tr('premium_required')),
-        content: Text(context.tr('premium_photo_message')),
+        backgroundColor: theme.colorScheme.surface,
+        title: Text(
+          context.tr('premium_required'),
+          style: TextStyle(color: theme.colorScheme.onSurface),
+        ),
+        content: Text(
+          context.tr('premium_photo_message'),
+          style: TextStyle(color: theme.colorScheme.onSurface),
+        ),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
               context.pushNamed(paywall);
             },
-            child: Text(context.tr('ok')),
+            child: Text(
+              context.tr('ok'),
+              style: TextStyle(color: theme.colorScheme.primary),
+            ),
           ),
         ],
       ),

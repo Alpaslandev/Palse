@@ -114,7 +114,6 @@ class _FilterViewState extends State<FilterView> {
           ? const Center(child: CircularProgressIndicator())
           : !_isFiltered
               ? PremiumOverlay(
-                  isPremium: _currentUser?.isPremium ?? false,
                   child: _filterView(context),
                 )
               : _filteredList(adverts: _filteredAdverts, currentCustomer: _currentUser!, currentUser: _currentUser!, context: context),

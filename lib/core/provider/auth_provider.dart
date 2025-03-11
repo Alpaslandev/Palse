@@ -75,7 +75,12 @@ class AuthProvider extends ChangeNotifier {
 
     _userStreamSubscription = _userService.streamFirestore(userId).listen((userData) {
       if (userData.exists && userData.data() != null) {
-        _user = Customer.fromJson(userData.data() as Map<String, dynamic>, userId);
+        final newUser = Customer.fromJson(userData.data() as Map<String, dynamic>, userId);
+
+        // Önceki kullanıcı verisi ile yeni kullanıcı verisini karşılaştır
+        final bool isPremiumChanged = _user?.isPremium != newUser.isPremium;
+
+        _user = newUser;
         if (_isFirstTime) {
           _isFirstTime = false;
           _notificationService.saveUserToken(userId);
@@ -84,11 +89,20 @@ class AuthProvider extends ChangeNotifier {
         }
 
         debugPrint('User data: ${_user?.toJson()}');
+
+        // Sadece isPremium değişmişse bildirim gönder
+        if (isPremiumChanged) {
+          debugPrint('isPremium değişti: ${_user?.isPremium}');
+          notifyListeners();
+        } else {
+          // Diğer değişiklikler için normal bildirim
+          notifyListeners();
+        }
       } else {
         debugPrint('User data not found');
         _user = null;
+        notifyListeners();
       }
-      notifyListeners();
       debugPrint('User data updated: ${_user?.userID}');
     }, onError: (error) {
       debugPrint('User stream error: $error');

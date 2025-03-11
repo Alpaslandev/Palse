@@ -1,9 +1,11 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/models/location_model.dart';
+import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/services/cloud_storage.dart';
 import 'package:palseapp/core/services/firestore/customer_service.dart';
 import 'package:palseapp/core/widgets/circle_profile_picture.dart';
@@ -146,29 +148,15 @@ class _EditProfileViewState extends State<EditProfileView> {
                         suffixIcon: Icons.edit,
                       ),
                       _buildTextField(
-                        onTap: () async {
-                          showModalBottomSheet(
-                            context: context,
-                            isScrollControlled: true,
-                            shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-                            ),
-                            builder: (context) => const PhoneNumberSheet(),
-                          ).then((result) {
-                            if (result == true) {
-                              // Telefon doğrulama başarılı
-                              viewModel.updatePhone(viewModel.phoneController.text, true);
-                              if (!context.mounted) return;
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(context.tr('phone_verification_success'))),
-                              );
-                            }
-                          });
+                        onTap: () {
+                          if (viewModel.user.verification == false) {
+                            context.pushNamed(verified);
+                          }
                         },
                         controller: viewModel.phoneController,
                         label: context.tr('phone'),
                         keyboardType: TextInputType.phone,
-                        readOnly: viewModel.user.verification == true,
+                        readOnly: true,
                         prefixIcon: Icons.phone,
                         suffixIcon: viewModel.user.verification == false ? Icons.edit : Icons.check,
                       ),

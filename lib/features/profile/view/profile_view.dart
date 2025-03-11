@@ -46,7 +46,7 @@ class ProfileView extends StatelessWidget {
                 const DailyTaskCard(),
 
                 // Profil doğrulama butonu
-                const VerifyProfileButton(),
+                if (authProvider.user?.verification == false) const VerifyProfileButton(),
 
                 // Premium buton
                 if (authProvider.user?.isPremium == false) const PremiumButton(),
@@ -64,6 +64,9 @@ class ProfileView extends StatelessWidget {
 
 // Profil başlığı bileşeni
 Widget profileHeader(BuildContext context, AuthProvider authProvider) {
+  final theme = Theme.of(context);
+  final colorScheme = theme.colorScheme;
+
   return Row(
     children: [
       CircleProfilePicture(
@@ -78,26 +81,26 @@ Widget profileHeader(BuildContext context, AuthProvider authProvider) {
             children: [
               Text(
                 '${authProvider.user?.fullName()} (${authProvider.user?.getAge()})',
-                style: Theme.of(context).textTheme.titleLarge,
+                style: theme.textTheme.titleLarge,
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(width: 2),
               if (authProvider.user?.isPremium == false) const Icon(Icons.verified, color: Colors.yellow, size: 16),
-              if (authProvider.user?.verification == false) const Icon(Icons.verified, color: Colors.blue, size: 16),
+              if (authProvider.user?.verification == false) Icon(Icons.verified, color: colorScheme.primary, size: 16),
             ],
           ),
           if (authProvider.user?.nickname != null)
             Text(
               '@${authProvider.user?.nickname}',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey,
-                  ),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
         ],
       ),
       const Spacer(),
       IconButton(
-        icon: const Icon(Icons.settings_outlined),
+        icon: Icon(Icons.settings_outlined, color: colorScheme.onSurface),
         onPressed: () {
           context.pushNamed(settings);
         },
@@ -108,8 +111,11 @@ Widget profileHeader(BuildContext context, AuthProvider authProvider) {
 
 // Yorumlar kartı
 Widget _ratingCard(Customer customer, BuildContext context) {
+  final theme = Theme.of(context);
+  final colorScheme = theme.colorScheme;
+
   return Card(
-      color: Colors.grey.shade200,
+      color: theme.brightness == Brightness.light ? Colors.grey.shade200 : colorScheme.surfaceVariant,
       child: ListTile(
         onTap: () => context.pushNamed(comment, extra: customer),
         title: Row(
@@ -117,15 +123,18 @@ Widget _ratingCard(Customer customer, BuildContext context) {
           children: [
             Row(
               children: [
-                Icon(Icons.star, color: Colors.amber),
-                Text('${context.tr('comments')} (${customer.comments?.length ?? 0})'),
+                const Icon(Icons.star, color: Colors.amber),
+                Text(
+                  '${context.tr('comments')} (${customer.comments?.length ?? 0})',
+                  style: TextStyle(color: colorScheme.onSurface),
+                ),
               ],
             ),
           ],
         ),
         trailing: Container(
           decoration: BoxDecoration(
-            border: Border(left: BorderSide(color: Colors.grey, width: 1)), // Sol kenara gri çizgi ekleniyor
+            border: Border(left: BorderSide(color: theme.dividerColor, width: 1)),
           ),
           child: Padding(
             padding: const EdgeInsets.only(left: 8.0),
@@ -146,13 +155,15 @@ class DailyTaskCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     final userAchievements = authProvider.user?.achievements;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     // Günlük görevin tamamlanıp tamamlanmadığını kontrol et
     final bool isDailyTaskCompleted = userAchievements?.lastDailyTaskDate != null;
 
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.primaryColor,
+        color: colorScheme.primary,
         borderRadius: BorderRadius.circular(8),
       ),
       padding: const EdgeInsets.all(16),
@@ -226,7 +237,9 @@ class DailyTaskCard extends StatelessWidget {
                         }
                       }
                     },
-              child: Text(isDailyTaskCompleted ? context.tr('task_completed') : context.tr('complete_task')),
+              child: Text(
+                isDailyTaskCompleted ? context.tr('task_completed') : context.tr('complete_task'),
+              ),
             ),
           ),
         ],
@@ -241,6 +254,8 @@ class VerifyProfileButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
@@ -278,11 +293,13 @@ class PremiumButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.black,
+          backgroundColor: theme.brightness == Brightness.dark ? Colors.grey.shade800 : Colors.black,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
           ),
@@ -306,6 +323,9 @@ class XPSystemButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return SizedBox(
       width: double.infinity,
       child: OutlinedButton.icon(
@@ -314,12 +334,16 @@ class XPSystemButton extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
           ),
+          foregroundColor: colorScheme.primary,
         ),
         onPressed: () {
           context.pushNamed(xpEvents);
         },
-        icon: const Icon(Icons.settings),
-        label: Text(context.tr('xp_system')),
+        icon: Icon(Icons.settings, color: colorScheme.primary),
+        label: Text(
+          context.tr('xp_system'),
+          style: TextStyle(color: colorScheme.primary),
+        ),
       ),
     );
   }

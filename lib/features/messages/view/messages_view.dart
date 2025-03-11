@@ -122,6 +122,7 @@ class _MessagesViewState extends State<MessagesView> {
     final user = Provider.of<AuthProvider>(context, listen: false).user;
     final senderName = user?.firstName ?? '';
     final isPremium = user?.isPremium ?? false;
+    final theme = Theme.of(context);
 
     return ChangeNotifierProvider.value(
       value: _viewModel,
@@ -145,12 +146,21 @@ class _MessagesViewState extends State<MessagesView> {
                       stream: vm.getMessages(widget.chatId),
                       builder: (context, snapshot) {
                         if (snapshot.hasError) {
-                          return Center(child: Text(context.tr('error_occurred')));
+                          return Center(
+                            child: Text(
+                              context.tr('error_occurred'),
+                              style: TextStyle(color: theme.colorScheme.error),
+                            ),
+                          );
                         }
 
                         // İlk yüklemede loading göster
                         if (!snapshot.hasData && snapshot.connectionState == ConnectionState.waiting) {
-                          return const Center(child: CircularProgressIndicator());
+                          return Center(
+                            child: CircularProgressIndicator(
+                              color: theme.colorScheme.primary,
+                            ),
+                          );
                         }
 
                         final messages = snapshot.data ?? [];
@@ -175,7 +185,10 @@ class _MessagesViewState extends State<MessagesView> {
 
                         if (messages.isEmpty) {
                           return Center(
-                            child: Text(context.tr('no_messages')),
+                            child: Text(
+                              context.tr('no_messages'),
+                              style: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.7)),
+                            ),
                           );
                         }
 

@@ -2,11 +2,9 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/models/customer.dart';
-import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/services/firestore/customer_service.dart';
 import 'package:palseapp/core/widgets/premium_overlay.dart';
-import 'package:provider/provider.dart';
 
 class SeeLikersView extends StatelessWidget {
   const SeeLikersView({super.key, required this.viewers});
@@ -19,7 +17,6 @@ class SeeLikersView extends StatelessWidget {
         title: const Text('Beğenenler'),
       ),
       body: PremiumOverlay(
-        isPremium: context.watch<AuthProvider>().user?.isPremium ?? false,
         child: viewers.isEmpty
             ? const Center(child: Text('Henüz beğenen yok'))
             : Material(

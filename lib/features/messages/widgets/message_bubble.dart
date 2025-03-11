@@ -37,6 +37,8 @@ class MessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final vm = context.read<MessagesViewModel>();
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
@@ -48,7 +50,7 @@ class MessageBubble extends StatelessWidget {
           context.read<MessagesViewModel>().setQuotedMessage(message);
           return false;
         },
-        background: _buildSwipeBackground(),
+        background: _buildSwipeBackground(theme),
         child: Row(
           mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.end,
@@ -74,7 +76,7 @@ class MessageBubble extends StatelessWidget {
                   maxWidth: MediaQuery.of(context).size.width * 0.65,
                 ),
                 decoration: BoxDecoration(
-                  color: isMe ? AppTheme.primaryColor : Colors.grey[300],
+                  color: isMe ? colorScheme.chatBubbleSent : colorScheme.chatBubbleReceived,
                   borderRadius: BorderRadius.only(
                     topLeft: const Radius.circular(12),
                     topRight: const Radius.circular(12),
@@ -86,15 +88,15 @@ class MessageBubble extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (message.quotedMessage != null) _buildQuotedMessage(message),
+                    if (message.quotedMessage != null) _buildQuotedMessage(message, theme),
 
                     // Mesaj tipine göre içeriği göster
                     if (message.type == MessageType.image)
-                      _buildImageMessage(message.content)
+                      _buildImageMessage(message.content, theme)
                     else if (message.type == MessageType.url)
-                      _buildUrlMessage(message.content, isMe)
+                      _buildUrlMessage(message.content, isMe, theme)
                     else
-                      _buildTextMessage(message.content, isMe),
+                      _buildTextMessage(message.content, isMe, theme),
 
                     const SizedBox(height: 5),
                     Row(
@@ -103,7 +105,7 @@ class MessageBubble extends StatelessWidget {
                         Text(
                           DateFormat('HH:mm').format(message.timestamp),
                           style: TextStyle(
-                            color: isMe ? Colors.white70 : Colors.black54,
+                            color: isMe ? colorScheme.chatBubbleSentText.withOpacity(0.7) : colorScheme.chatBubbleReceivedText.withOpacity(0.7),
                             fontSize: 12,
                           ),
                         ),
@@ -112,7 +114,7 @@ class MessageBubble extends StatelessWidget {
                           Icon(
                             message.isRead ? Icons.done_all : Icons.done,
                             size: 14,
-                            color: message.isRead ? Colors.white : Colors.white70,
+                            color: message.isRead ? colorScheme.chatBubbleSentText : colorScheme.chatBubbleSentText.withOpacity(0.7),
                           ),
                         ],
                       ],
@@ -128,7 +130,9 @@ class MessageBubble extends StatelessWidget {
   }
 
   // Metin mesajları için yeni widget
-  Widget _buildTextMessage(String content, bool isMe) {
+  Widget _buildTextMessage(String content, bool isMe, ThemeData theme) {
+    final colorScheme = theme.colorScheme;
+
     return GestureDetector(
       onLongPress: () {
         // Metni panoya kopyala
@@ -137,13 +141,13 @@ class MessageBubble extends StatelessWidget {
       },
       child: TextSelectionTheme(
         data: TextSelectionThemeData(
-          selectionColor: isMe ? Colors.white.withOpacity(0.3) : Colors.blue.withOpacity(0.3),
-          cursorColor: isMe ? Colors.white70 : Colors.blue,
+          selectionColor: isMe ? colorScheme.chatBubbleSentText.withOpacity(0.3) : colorScheme.primary.withOpacity(0.3),
+          cursorColor: isMe ? colorScheme.chatBubbleSentText.withOpacity(0.7) : colorScheme.primary,
         ),
         child: SelectableText(
           content,
           style: TextStyle(
-            color: isMe ? Colors.white : Colors.black,
+            color: isMe ? colorScheme.chatBubbleSentText : colorScheme.chatBubbleReceivedText,
             fontSize: 16,
           ),
           showCursor: true,
@@ -159,7 +163,9 @@ class MessageBubble extends StatelessWidget {
   }
 
   // URL mesajları için özel widget
-  Widget _buildUrlMessage(String url, bool isMe) {
+  Widget _buildUrlMessage(String url, bool isMe, ThemeData theme) {
+    final colorScheme = theme.colorScheme;
+
     return InkWell(
       onTap: () => _launchUrl(url),
       onLongPress: () {
@@ -173,9 +179,9 @@ class MessageBubble extends StatelessWidget {
           // URL önizleme kartı
           Container(
             decoration: BoxDecoration(
-              color: isMe ? Colors.blue.shade800 : Colors.grey[200],
+              color: isMe ? colorScheme.primary.withOpacity(0.8) : colorScheme.urlBackground,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: isMe ? Colors.blue.shade900 : Colors.grey[400]!, width: 1),
+              border: Border.all(color: isMe ? colorScheme.primary.withOpacity(0.9) : theme.colorScheme.outline, width: 1),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -185,18 +191,18 @@ class MessageBubble extends StatelessWidget {
                   padding: const EdgeInsets.all(8.0),
                   child: Row(
                     children: [
-                      Icon(Icons.link, color: isMe ? Colors.white70 : Colors.blue[800], size: 20),
+                      Icon(Icons.link, color: isMe ? colorScheme.chatBubbleSentText.withOpacity(0.7) : colorScheme.primary, size: 20),
                       const SizedBox(width: 8),
                       Flexible(
                         child: TextSelectionTheme(
                           data: TextSelectionThemeData(
-                            selectionColor: isMe ? Colors.white.withOpacity(0.3) : Colors.blue.withOpacity(0.3),
-                            cursorColor: isMe ? Colors.white70 : Colors.blue,
+                            selectionColor: isMe ? colorScheme.chatBubbleSentText.withOpacity(0.3) : colorScheme.primary.withOpacity(0.3),
+                            cursorColor: isMe ? colorScheme.chatBubbleSentText.withOpacity(0.7) : colorScheme.primary,
                           ),
                           child: SelectableText(
                             url,
                             style: TextStyle(
-                              color: isMe ? Colors.white : Colors.blue[900],
+                              color: isMe ? colorScheme.chatBubbleSentText : colorScheme.primary,
                               fontSize: 14,
                               decoration: TextDecoration.underline,
                             ),
@@ -218,7 +224,7 @@ class MessageBubble extends StatelessWidget {
                   child: Text(
                     "Bağlantıyı açmak için dokun", // Sabit metin kullandım
                     style: TextStyle(
-                      color: isMe ? Colors.white70 : Colors.grey[600],
+                      color: isMe ? colorScheme.chatBubbleSentText.withOpacity(0.7) : theme.colorScheme.onSurface.withOpacity(0.7),
                       fontSize: 12,
                       fontStyle: FontStyle.italic,
                     ),
@@ -232,74 +238,44 @@ class MessageBubble extends StatelessWidget {
     );
   }
 
-  Widget _buildQuotedMessage(Message message) {
+  // Alıntılanan mesaj widget'ı
+  Widget _buildQuotedMessage(Message message, ThemeData theme) {
     if (message.quotedMessage == null) return const SizedBox.shrink();
 
-    return GestureDetector(
-      onLongPress: () {
-        // Alıntılanmış metni panoya kopyala
-        Clipboard.setData(ClipboardData(text: message.quotedMessage!));
-      },
-      child: Container(
-        padding: const EdgeInsets.all(8),
-        margin: const EdgeInsets.only(bottom: 8),
-        decoration: BoxDecoration(
-          color: Colors.grey[200],
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.grey[400]!),
-        ),
-        child: TextSelectionTheme(
-          data: TextSelectionThemeData(
-            selectionColor: Colors.blue.withOpacity(0.3),
-            cursorColor: Colors.blue,
-          ),
-          child: SelectableText(
-            message.quotedMessage!,
-            maxLines: 2,
-            style: const TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
-            contextMenuBuilder: (context, editableTextState) {
-              return AdaptiveTextSelectionToolbar.editableText(
-                editableTextState: editableTextState,
-              );
-            },
+    final colorScheme = theme.colorScheme;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 5),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: colorScheme.quotedMessageBackground,
+        borderRadius: BorderRadius.circular(8),
+        border: Border(
+          left: BorderSide(
+            color: colorScheme.primary,
+            width: 3,
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildImageMessage(String url) {
-    return GestureDetector(
-      onTap: () => _launchUrl(url), // Görsele tıklandığında da URL'yi açabilsin
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: CachedNetworkImage(
-              imageUrl: url,
-              width: 200,
-              height: 200,
-              fit: BoxFit.cover,
-              placeholder: (context, url) => Container(
-                width: 200,
-                height: 200,
-                color: Colors.grey[200],
-                child: const Center(
-                  child: CircularProgressIndicator(),
-                ),
-              ),
-              errorWidget: (context, url, error) {
-                debugPrint('Görsel yükleme hatası: $error');
-                return Container(
-                  width: 200,
-                  height: 200,
-                  color: Colors.grey[200],
-                  child: const Center(
-                    child: Icon(Icons.error_outline, color: Colors.red, size: 40),
-                  ),
-                );
-              },
+          Text(
+            "Alıntı", // Sabit metin
+            style: TextStyle(
+              color: colorScheme.primary,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            message.quotedMessage ?? '',
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: theme.colorScheme.onSurface.withOpacity(0.8),
+              fontSize: 13,
             ),
           ),
         ],
@@ -307,14 +283,62 @@ class MessageBubble extends StatelessWidget {
     );
   }
 
-  Widget _buildSwipeBackground() {
+  // Kaydırma arka planı
+  Widget _buildSwipeBackground(ThemeData theme) {
     return Container(
-      padding: const EdgeInsets.only(left: 16),
       alignment: Alignment.centerLeft,
-      color: Colors.blue.withValues(alpha: 0.2),
-      child: const Icon(
-        Icons.format_quote,
-        color: Colors.blue,
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      color: theme.scaffoldBackgroundColor,
+      child: Row(
+        children: [
+          Icon(
+            Icons.format_quote,
+            color: theme.colorScheme.primary,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            'Alıntıla',
+            style: TextStyle(color: theme.colorScheme.primary),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Görsel mesajlar için widget
+  Widget _buildImageMessage(String imageUrl, ThemeData theme) {
+    return GestureDetector(
+      onTap: () {
+        // Büyük görüntü gösterimi veya URL açılımı
+      },
+      child: Container(
+        constraints: const BoxConstraints(maxHeight: 200),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: CachedNetworkImage(
+            imageUrl: imageUrl,
+            placeholder: (context, url) => Container(
+              height: 100,
+              color: theme.colorScheme.surfaceVariant,
+              child: Center(
+                child: CircularProgressIndicator(
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+            ),
+            errorWidget: (context, url, error) => Container(
+              height: 100,
+              color: theme.colorScheme.errorContainer,
+              child: Center(
+                child: Icon(
+                  Icons.error,
+                  color: theme.colorScheme.error,
+                ),
+              ),
+            ),
+            fit: BoxFit.contain,
+          ),
+        ),
       ),
     );
   }

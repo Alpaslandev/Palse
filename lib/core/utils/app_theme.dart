@@ -10,6 +10,26 @@ class AppTheme {
   static const Color warningColor = Color(0xFFFFC107); // Uyarı sarısı
   static const Color errorColor = Color(0xFFE53935); // Hata kırmızısı
 
+  // Uygulama özgü semantik renkler
+  static const Color chatBubbleSentColor = Color(0xFFE3F2FD); // Gönderilen mesaj balonu
+  static const Color chatBubbleReceivedColor = Color(0xFFEEEEEE); // Alınan mesaj balonu
+  static const Color unreadIndicatorColor = Color(0xFF1976D2); // Okunmamış mesaj/bildirim göstergesi
+  static const Color verifiedBadgeColor = Color(0xFF4CAF50); // Doğrulanmış rozet rengi
+  static const Color unverifiedBadgeColor = Color(0xFFE53935); // Doğrulanmamış rozet rengi
+  static const Color premiumFeatureColor = Color(0xFFFFD700); // Premium özellik rengi
+  static const Color notificationBadgeColor = Color(0xFFE53935); // Bildirim rozeti rengi
+  static const Color activeChatColor = Color(0xFF4CAF50); // Aktif kullanıcı göstergesi
+
+  // Mesajlaşma özel renkleri - Açık tema
+  static const Color lightQuoteBackgroundColor = Color(0xFFF5F5F5); // Alıntı arkaplanı
+  static const Color lightUrlBackgroundColor = Color(0xFFF5F5F5); // URL arkaplanı
+  static const Color lightQuotedMessageBackgroundColor = Color(0xFFF0F0F0); // Alıntılanmış mesaj arkaplanı
+
+  // Mesajlaşma özel renkleri - Koyu tema
+  static const Color darkQuoteBackgroundColor = Color(0xFF2A2A2A); // Alıntı arkaplanı
+  static const Color darkUrlBackgroundColor = Color(0xFF2A2A2A); // URL arkaplanı
+  static const Color darkQuotedMessageBackgroundColor = Color(0xFF303030); // Alıntılanmış mesaj arkaplanı
+
   // Bilgi kartları için renkler
   static const Color infoColor = Color(0xFF2196F3); // Bilgi mavi
 
@@ -44,15 +64,27 @@ class AppTheme {
   static const Color lightIconColor = Color(0xFF616161); // İkon rengi
   static const Color lightSubtitleColor = Color(0xFF757575); // Alt başlık rengi
 
-  // Koyu tema renkleri
-  static const Color darkTextColor = Color(0xFFEEEEEE); // Metin rengi
+  // Koyu tema renkleri - Kontrast iyileştirildi
+  static const Color darkTextColor = Color(0xFFFAFAFA); // Metin rengi (daha parlak beyaz)
   static const Color darkBackgroundColor = Color(0xFF121212); // Arka plan rengi
   static const Color darkSurfaceColor = Color(0xFF1E1E1E); // Yüzey rengi
   static const Color darkCardColor = Color(0xFF252525); // Kart rengi
   static const Color darkDividerColor = Color(0xFF424242); // Ayırıcı rengi
-  static const Color darkIconColor = Color(0xFFBDBDBD); // İkon rengi
+  static const Color darkIconColor = Color(0xFFE0E0E0); // İkon rengi (daha parlak)
   static const Color darkChipColor = Color(0xFF252525); // Chip rengi
-  static const Color darkSubtitleColor = Color(0xFFAAAAAA); // Alt başlık rengi
+  static const Color darkSubtitleColor = Color(0xFFBDBDBD); // Alt başlık rengi (daha parlak)
+
+  // Mesajlaşma ekranı renkleri - Açık tema
+  static const Color lightChatBubbleSentColor = Color(0xFFE3F2FD); // Gönderilen mesaj arka planı
+  static const Color lightChatBubbleSentTextColor = Color(0xFF212121); // Gönderilen mesaj metni
+  static const Color lightChatBubbleReceivedColor = Color(0xFFEEEEEE); // Alınan mesaj arka planı
+  static const Color lightChatBubbleReceivedTextColor = Color(0xFF212121); // Alınan mesaj metni
+
+  // Mesajlaşma ekranı renkleri - Koyu tema
+  static const Color darkChatBubbleSentColor = Color(0xFF1E3A5F); // Gönderilen mesaj arka planı
+  static const Color darkChatBubbleSentTextColor = Color(0xFFFAFAFA); // Gönderilen mesaj metni
+  static const Color darkChatBubbleReceivedColor = Color(0xFF2A2A2A); // Alınan mesaj arka planı
+  static const Color darkChatBubbleReceivedTextColor = Color(0xFFFAFAFA); // Alınan mesaj metni
 
   // Açık tema
   static ThemeData get theme => _createTheme(
@@ -71,6 +103,13 @@ class AppTheme {
         infoBorderColor: lightInfoBorderColor,
         warningBackgroundColor: lightWarningBackgroundColor,
         warningBorderColor: lightWarningBorderColor,
+        chatBubbleSentColor: lightChatBubbleSentColor,
+        chatBubbleSentTextColor: lightChatBubbleSentTextColor,
+        chatBubbleReceivedColor: lightChatBubbleReceivedColor,
+        chatBubbleReceivedTextColor: lightChatBubbleReceivedTextColor,
+        quoteBackgroundColor: lightQuoteBackgroundColor,
+        urlBackgroundColor: lightUrlBackgroundColor,
+        quotedMessageBackgroundColor: lightQuotedMessageBackgroundColor,
       );
 
   // Koyu tema
@@ -90,6 +129,13 @@ class AppTheme {
         infoBorderColor: darkInfoBorderColor,
         warningBackgroundColor: darkWarningBackgroundColor,
         warningBorderColor: darkWarningBorderColor,
+        chatBubbleSentColor: darkChatBubbleSentColor,
+        chatBubbleSentTextColor: darkChatBubbleSentTextColor,
+        chatBubbleReceivedColor: darkChatBubbleReceivedColor,
+        chatBubbleReceivedTextColor: darkChatBubbleReceivedTextColor,
+        quoteBackgroundColor: darkQuoteBackgroundColor,
+        urlBackgroundColor: darkUrlBackgroundColor,
+        quotedMessageBackgroundColor: darkQuotedMessageBackgroundColor,
       );
 
   // Ortak tema oluşturma fonksiyonu
@@ -109,6 +155,13 @@ class AppTheme {
     required Color infoBorderColor,
     required Color warningBackgroundColor,
     required Color warningBorderColor,
+    required Color chatBubbleSentColor,
+    required Color chatBubbleSentTextColor,
+    required Color chatBubbleReceivedColor,
+    required Color chatBubbleReceivedTextColor,
+    required Color quoteBackgroundColor,
+    required Color urlBackgroundColor,
+    required Color quotedMessageBackgroundColor,
   }) {
     final isDark = brightness == Brightness.dark;
 
@@ -131,6 +184,7 @@ class AppTheme {
         tertiary: infoColor,
         tertiaryContainer: infoBackgroundColor,
         errorContainer: warningBackgroundColor,
+        // Yeni eklenen semantik renkler için extensions kullanılacak
       ),
 
       // Temel renkler
@@ -197,11 +251,11 @@ class AppTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
             backgroundColor: primaryColor,
-            foregroundColor: isDark ? darkTextColor : Colors.white,
-            shape: StadiumBorder(),
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            foregroundColor: Colors.white, // Her zaman beyaz olsun (daha iyi kontrast için)
+            shape: const StadiumBorder(),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             disabledBackgroundColor: primaryColor.withOpacity(0.5),
-            disabledForegroundColor: darkTextColor),
+            disabledForegroundColor: isDark ? darkTextColor : Colors.white.withOpacity(0.7)),
       ),
 
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -215,10 +269,10 @@ class AppTheme {
       ),
 
       chipTheme: ChipThemeData(
-        backgroundColor: backgroundColor,
-        labelStyle: TextStyle(color: darkTextColor),
-        iconTheme: IconThemeData(color: darkTextColor),
-        shape: StadiumBorder(),
+        backgroundColor: isDark ? darkChipColor : backgroundColor,
+        labelStyle: TextStyle(color: textColor),
+        iconTheme: IconThemeData(color: iconColor),
+        shape: const StadiumBorder(),
       ),
 
       // SwitchList'ler için tema
@@ -245,4 +299,33 @@ class AppTheme {
       ),
     );
   }
+}
+
+// Tema renkleri için extension
+extension CustomColorScheme on ColorScheme {
+  // Mesajlaşma renkleri
+  Color get chatBubbleSent => brightness == Brightness.light ? AppTheme.lightChatBubbleSentColor : AppTheme.darkChatBubbleSentColor;
+
+  Color get chatBubbleSentText => brightness == Brightness.light ? AppTheme.lightChatBubbleSentTextColor : AppTheme.darkChatBubbleSentTextColor;
+
+  Color get chatBubbleReceived => brightness == Brightness.light ? AppTheme.lightChatBubbleReceivedColor : AppTheme.darkChatBubbleReceivedColor;
+
+  Color get chatBubbleReceivedText =>
+      brightness == Brightness.light ? AppTheme.lightChatBubbleReceivedTextColor : AppTheme.darkChatBubbleReceivedTextColor;
+
+  // Mesajlaşma özel renkleri
+  Color get quoteBackground => brightness == Brightness.light ? AppTheme.lightQuoteBackgroundColor : AppTheme.darkQuoteBackgroundColor;
+
+  Color get urlBackground => brightness == Brightness.light ? AppTheme.lightUrlBackgroundColor : AppTheme.darkUrlBackgroundColor;
+
+  Color get quotedMessageBackground =>
+      brightness == Brightness.light ? AppTheme.lightQuotedMessageBackgroundColor : AppTheme.darkQuotedMessageBackgroundColor;
+
+  // Uygulama özgü renkler
+  Color get verified => AppTheme.verifiedBadgeColor;
+  Color get unverified => AppTheme.unverifiedBadgeColor;
+  Color get premium => AppTheme.premiumFeatureColor;
+  Color get notification => AppTheme.notificationBadgeColor;
+  Color get activeChat => AppTheme.activeChatColor;
+  Color get unreadIndicator => AppTheme.unreadIndicatorColor;
 }

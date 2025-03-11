@@ -138,10 +138,7 @@ class _MyAdvertViewState extends State<MyAdvertView> with TickerProviderStateMix
   }
 
   Widget _buildProfileViewersTab(MyAdvertViewModel viewModel, AuthProvider authProvider) {
-    final isPremium = context.watch<SubscriptionProvider>().isPremium;
-
     return PremiumOverlay(
-      isPremium: context.watch<AuthProvider>().user?.isPremium ?? false,
       child: viewModel.recentlyViewed.isEmpty
           ? _buildEmptyAdvert()
           : GridView.builder(
