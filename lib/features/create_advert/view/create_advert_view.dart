@@ -161,7 +161,7 @@ class _CreateAdvertViewState extends State<CreateAdvertView> {
                               context.pushNamed(paywall);
                             }),
                       )),
-              icon: const Icon(Icons.photo_camera),
+              icon: Icon(Icons.photo_camera, color: Theme.of(context).colorScheme.surface),
               label: Text(context.tr('select_photo')),
             ),
             const SizedBox(height: 16),

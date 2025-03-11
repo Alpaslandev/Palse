@@ -75,12 +75,6 @@ class HomeViewModel extends ChangeNotifier {
               limit: _pageSize,
               userLocation: user?.location,
             );
-          } else {
-            newAdverts = await _advertService.fetchAdverts(
-              lastDocument: _lastDocument,
-              limit: _pageSize,
-              userLocation: user?.location,
-            );
           }
           break;
         case 2: // Other sekmesi

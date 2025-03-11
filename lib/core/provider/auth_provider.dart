@@ -43,7 +43,6 @@ class AuthProvider extends ChangeNotifier {
       _authService.authStateChanges.listen((User? user) async {
         debugPrint('Auth State Changed: ${user?.email}');
         _firebaseUser = user;
-        notifyListeners();
 
         // await Future.delayed(const Duration(seconds: 4));
 

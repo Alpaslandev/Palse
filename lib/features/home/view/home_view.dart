@@ -106,30 +106,32 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                             child: Card(
                               child: Padding(
                                 padding: const EdgeInsets.all(16.0),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      _tabController.index == 0
-                                          ? context.tr('no_listings_in_your_city')
-                                          : context.tr('no_listings_in_your_interests'),
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(fontSize: 16),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    TextButton(
-                                      onPressed: () {
-                                        _tabController.animateTo(2);
-                                      },
-                                      child: Text(
-                                        context.tr('click_to_see_other_listings'),
-                                        style: const TextStyle(
-                                          color: Colors.blue,
-                                          fontWeight: FontWeight.bold,
+                                child: Center(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        _tabController.index == 0
+                                            ? context.tr('no_listings_in_your_city')
+                                            : context.tr('no_listings_in_your_interests'),
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(fontSize: 16),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      TextButton(
+                                        onPressed: () {
+                                          _tabController.animateTo(2);
+                                        },
+                                        child: Text(
+                                          context.tr('click_to_see_other_listings'),
+                                          style: const TextStyle(
+                                            color: Colors.blue,
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
