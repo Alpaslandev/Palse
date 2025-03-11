@@ -6,6 +6,7 @@ import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/provider/locale_provider.dart';
 import 'package:palseapp/core/provider/theme_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
+import 'package:palseapp/features/achievement/achievement_test_page.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -55,7 +56,12 @@ class SettingsView extends StatelessWidget {
             icon: Icons.emoji_events_outlined,
             title: 'XP Test Sayfası',
             subtitle: 'XP ve görev sistemini test etmek için',
-            onTap: () => context.pushNamed('achievementTest'),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AchievementTestPage()),
+              );
+            },
           ),
           // Firestore yedekleme seçeneği
           _SettingsTile(

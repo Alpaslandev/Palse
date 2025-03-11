@@ -1,12 +1,68 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
+import 'package:palseapp/core/services/shared_pref_service.dart';
 import 'package:provider/provider.dart';
 
-class ProjectAppBar extends StatelessWidget implements PreferredSizeWidget {
+class ProjectAppBar extends StatefulWidget implements PreferredSizeWidget {
   const ProjectAppBar({super.key});
+
+  @override
+  Size get preferredSize => Size.fromHeight(kToolbarHeight);
+
+  @override
+  State<ProjectAppBar> createState() => _ProjectAppBarState();
+}
+
+class _ProjectAppBarState extends State<ProjectAppBar> {
+  int _unreadNotificationsCount = 0;
+  late StreamSubscription<int> _notificationSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // İlk değeri yükle
+    _loadInitialUnreadCount();
+
+    // Stream'i dinle
+    _notificationSubscription = SharedPrefService.notificationCountStream.listen((count) {
+      if (mounted) {
+        setState(() {
+          _unreadNotificationsCount = count;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _notificationSubscription.cancel();
+    super.dispose();
+  }
+
+  // İlk değeri yükle
+  Future<void> _loadInitialUnreadCount() async {
+    final count = await SharedPrefService.getUnreadNotificationsCount();
+    if (mounted) {
+      setState(() {
+        _unreadNotificationsCount = count;
+      });
+    }
+  }
+
+  void _navigateToNotifications() async {
+    // Bildirim ekranına git
+    context.pushNamed(notification);
+
+    // Tüm bildirimleri okundu olarak işaretle
+    await SharedPrefService.markAllNotificationsAsRead();
+
+    // Not: Stream sayesinde otomatik olarak sayaç güncellenecek
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +96,7 @@ class ProjectAppBar extends StatelessWidget implements PreferredSizeWidget {
                 shape: const CircleBorder(),
                 clipBehavior: Clip.hardEdge,
                 child: IconButton(
-                  onPressed: () => context.pushNamed(notification),
+                  onPressed: _navigateToNotifications,
                   icon: SvgPicture.asset(
                     'assets/vectors/ringtone_iconly_pro_1_x2.svg',
                     width: 24,
@@ -50,30 +106,31 @@ class ProjectAppBar extends StatelessWidget implements PreferredSizeWidget {
                 ),
               ),
             ),
-            Positioned(
-              top: 0,
-              right: 10,
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: const BoxDecoration(
-                  color: Colors.blue,
-                  shape: BoxShape.circle,
-                ),
-                constraints: const BoxConstraints(
-                  minWidth: 16,
-                  minHeight: 16,
-                ),
-                child: Text(
-                  '2',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
+            if (_unreadNotificationsCount > 0)
+              Positioned(
+                top: 0,
+                right: 10,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: const BoxDecoration(
+                    color: Colors.blue,
+                    shape: BoxShape.circle,
                   ),
-                  textAlign: TextAlign.center,
+                  constraints: const BoxConstraints(
+                    minWidth: 16,
+                    minHeight: 16,
+                  ),
+                  child: Text(
+                    _unreadNotificationsCount.toString(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
-              ),
-            )
+              )
           ],
         ),
         Stack(
@@ -134,7 +191,4 @@ class ProjectAppBar extends StatelessWidget implements PreferredSizeWidget {
       ],
     );
   }
-
-  @override
-  Size get preferredSize => Size.fromHeight(kToolbarHeight);
 }

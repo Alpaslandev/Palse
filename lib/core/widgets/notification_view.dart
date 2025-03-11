@@ -10,6 +10,13 @@ class NotificationView extends StatefulWidget {
 }
 
 class _NotificationViewState extends State<NotificationView> {
+  @override
+  void initState() {
+    super.initState();
+    // Sayfa açıldığında tüm bildirimleri okundu olarak işaretle
+    SharedPrefService.markAllNotificationsAsRead();
+  }
+
   Future<void> _removeNotification(int index, BuildContext context) async {
     await SharedPrefService.removeNotification(index);
     setState(() {});

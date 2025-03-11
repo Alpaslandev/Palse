@@ -15,6 +15,7 @@ import 'package:palseapp/core/services/achievement_service.dart';
 import 'package:palseapp/core/services/notification_service.dart';
 import 'package:palseapp/core/services/shared_pref_service.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
+import 'package:palseapp/firebase_options.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
@@ -27,7 +28,7 @@ void main() async {
 
   // Firebase'i güvenli şekilde başlat
   try {
-    await Firebase.initializeApp();
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   } catch (e) {
     if (e.toString().contains('duplicate-app')) {
       // Zaten başlatılmış, görmezden gel

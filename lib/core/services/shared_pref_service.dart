@@ -1,13 +1,23 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
+import 'dart:async';
 
 class SharedPrefService {
   static SharedPreferences? _prefs;
 
+  // Bildirim sayısı için stream controller
+  static final StreamController<int> _notificationCountController = StreamController<int>.broadcast();
+
+  // Bildirim sayısı stream'i
+  static Stream<int> get notificationCountStream => _notificationCountController.stream;
+
   // SharedPreferences'ı başlat
   static Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
+
+    // İlk değeri stream'e gönder
+    _updateNotificationCount();
   }
   // ----- BİLDİRİM İŞLEMLERİ İÇİN ÖZEL METODLAR -----
 
@@ -39,7 +49,12 @@ class SharedPrefService {
       savedNotifications.add(jsonEncode(notification));
 
       // Kaydet
-      return await _prefs!.setStringList(_notificationsKey, savedNotifications);
+      final result = await _prefs!.setStringList(_notificationsKey, savedNotifications);
+
+      // Bildirim sayısını güncelle ve stream'e gönder
+      _updateNotificationCount();
+
+      return result;
     } catch (e) {
       debugPrint("Bildirim kaydedilirken hata: $e");
       return false;
@@ -50,7 +65,12 @@ class SharedPrefService {
     _prefs ??= await SharedPreferences.getInstance();
     List<String> savedNotifications = _prefs!.getStringList(_notificationsKey) ?? [];
     savedNotifications.removeAt(index);
-    return await _prefs!.setStringList(_notificationsKey, savedNotifications);
+    final result = await _prefs!.setStringList(_notificationsKey, savedNotifications);
+
+    // Bildirim sayısını güncelle ve stream'e gönder
+    _updateNotificationCount();
+
+    return result;
   }
 
   // Tüm bildirimleri getir
@@ -97,7 +117,12 @@ class SharedPrefService {
       if (!updated) return false;
 
       // Güncellenen listeyi kaydet
-      return await _prefs!.setStringList(_notificationsKey, savedNotifications);
+      final result = await _prefs!.setStringList(_notificationsKey, savedNotifications);
+
+      // Bildirim sayısını güncelle ve stream'e gönder
+      _updateNotificationCount();
+
+      return result;
     } catch (e) {
       debugPrint("Bildirim okundu işaretlenirken hata: $e");
       return false;
@@ -123,7 +148,12 @@ class SharedPrefService {
       }
 
       // Güncellenen listeyi kaydet
-      return await _prefs!.setStringList(_notificationsKey, savedNotifications);
+      final result = await _prefs!.setStringList(_notificationsKey, savedNotifications);
+
+      // Bildirim sayısını güncelle ve stream'e gönder
+      _updateNotificationCount();
+
+      return result;
     } catch (e) {
       debugPrint("Tüm bildirimler okundu işaretlenirken hata: $e");
       return false;
@@ -150,9 +180,24 @@ class SharedPrefService {
     }
   }
 
+  // Bildirim sayısını güncelle ve stream'e gönder
+  static Future<void> _updateNotificationCount() async {
+    final count = await getUnreadNotificationsCount();
+    _notificationCountController.add(count);
+  }
+
   static Future<void> clearNotifications() async {
     _prefs ??= await SharedPreferences.getInstance();
     await _prefs!.remove(_notificationsKey);
+
+    // Bildirim sayısını güncelle ve stream'e gönder
+    _updateNotificationCount();
+
     debugPrint('Bildirimler temizlendi');
+  }
+
+  // Uygulama kapanırken stream'i kapat
+  static void dispose() {
+    _notificationCountController.close();
   }
 }
