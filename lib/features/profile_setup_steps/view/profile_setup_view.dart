@@ -20,6 +20,7 @@ class ProfileSetupView extends StatelessWidget {
       child: Consumer<ProfileSetupViewModel>(
         builder: (context, viewModel, child) {
           return Scaffold(
+            resizeToAvoidBottomInset: false,
             appBar: AppBar(
               backgroundColor: Colors.white,
               elevation: 0,
