@@ -16,6 +16,11 @@ class AchievementService {
   final NotificationService _notificationService = NotificationService();
   final CustomerService _customerService = CustomerService();
 
+  // Ödüllendirilmiş sohbetleri tutacak map anahtarları
+  static const String _rewardedChatsKey = 'rewardedChats';
+  static const String _firstMessageSentKey = 'firstMessageSent';
+  static const String _firstMessageReceivedKey = 'firstMessageReceived';
+
   // Customer modeline XP ekler
   Future<Customer> earnXp({required Customer user, required XpEvent event}) async {
     // Erken kontrol - kullanıcı yoksa işlem yapma
@@ -107,9 +112,10 @@ class AchievementService {
       final oldPremiumCount = PremiumRewards.earnedPremiumRewards(user.totalXp);
       final newPremiumCount = PremiumRewards.earnedPremiumRewards(updatedUser.totalXp);
       final xpToNextPremium = PremiumRewards.xpToNextPremium(updatedUser.totalXp);
-      await _customerService.updateCustomer(updatedUser.userID!, updatedUser.copyWith(isPremium: true));
 
       if (newPremiumCount > oldPremiumCount) {
+        await _customerService.updateCustomer(updatedUser.userID!, updatedUser.copyWith(isPremium: true));
+
         await SharedPrefService.saveNotificationWithEnum(
           type: NotificationsEnum.premiumReward.name,
           title: LocaleManager.translate('notification_premium_reward_title'),
@@ -255,5 +261,99 @@ class AchievementService {
       title: LocaleManager.translate('notification_xp_reset_title'),
       body: LocaleManager.translate('notification_xp_reset_body'),
     );
+  }
+
+  // Belirli bir sohbet için ödül alınıp alınmadığını kontrol eder
+  Future<bool> hasChatReward(String userId, String chatId, String rewardType) async {
+    try {
+      // Kullanıcının ödüllendirilmiş sohbet listesini al
+      final userDoc = await _firestore.collection('customers').doc(userId).get();
+
+      if (!userDoc.exists) return false;
+
+      final data = userDoc.data();
+      if (data == null) return false;
+
+      // Ödüllendirilmiş sohbetler map'ini kontrol et
+      final Map<String, dynamic> rewardedChats = Map<String, dynamic>.from(data[_rewardedChatsKey] ?? {});
+
+      // Belirli ödül tipi için sohbet listesini al
+      final List<dynamic> rewardedChatIds = List<dynamic>.from(rewardedChats[rewardType] ?? []);
+
+      // Sohbet ID'si bu listede var mı kontrol et
+      return rewardedChatIds.contains(chatId);
+    } catch (e) {
+      debugPrint('hasChatReward hatası: $e');
+      return false; // Hata durumunda ödül vermek daha güvenli
+    }
+  }
+
+  // İlk mesaj gönderme ödülü alınmış mı?
+  Future<bool> hasFirstMessageSentReward(String userId, String chatId) async {
+    return await hasChatReward(userId, chatId, _firstMessageSentKey);
+  }
+
+  // İlk mesaj alma ödülü alınmış mı?
+  Future<bool> hasFirstMessageReceivedReward(String userId, String chatId) async {
+    return await hasChatReward(userId, chatId, _firstMessageReceivedKey);
+  }
+
+  // Sohbet için ödül kaydeder
+  Future<void> saveChatReward(String userId, String chatId, String rewardType) async {
+    try {
+      // Mevcut ödüllendirilmiş sohbetleri güncelle - array-union kullan
+      await _firestore.collection('customers').doc(userId).set({
+        _rewardedChatsKey: {
+          rewardType: FieldValue.arrayUnion([chatId])
+        }
+      }, SetOptions(merge: true));
+
+      debugPrint('💾 Ödül kaydedildi: $rewardType, sohbet: $chatId, kullanıcı: $userId');
+    } catch (e) {
+      debugPrint('saveChatReward hatası: $e');
+    }
+  }
+
+  // İlk mesaj gönderme ödülünü kaydet
+  Future<void> saveFirstMessageSentReward(String userId, String chatId) async {
+    await saveChatReward(userId, chatId, _firstMessageSentKey);
+  }
+
+  // İlk mesaj alma ödülünü kaydet
+  Future<void> saveFirstMessageReceivedReward(String userId, String chatId) async {
+    await saveChatReward(userId, chatId, _firstMessageReceivedKey);
+  }
+
+  // Mesaj ödüllerini işle ve XP ver (eğer daha önce verilmediyse)
+  Future<void> processMessageRewards(
+      {required Customer user, required String chatId, required bool isFirstMessageFromUs, required bool isFirstMessageFromOther}) async {
+    if (user.userID == null) {
+      debugPrint('⚠️ Kullanıcı ID bulunamadı, ödül işlemi iptal edildi');
+      return;
+    }
+
+    // Bizim ilk mesajımız ise
+    if (isFirstMessageFromUs) {
+      final hasReward = await hasFirstMessageSentReward(user.userID!, chatId);
+      if (!hasReward) {
+        debugPrint('🎮 İlk mesaj gönderme ödülü verilecek - Sohbet: $chatId');
+        await earnXp(user: user, event: XpEvent.sendMessage);
+        await saveFirstMessageSentReward(user.userID!, chatId);
+      } else {
+        debugPrint('ℹ️ İlk mesaj gönderme ödülü daha önce verilmiş - Sohbet: $chatId');
+      }
+    }
+
+    // Karşıdan gelen ilk mesaj ise
+    if (isFirstMessageFromOther) {
+      final hasReward = await hasFirstMessageReceivedReward(user.userID!, chatId);
+      if (!hasReward) {
+        debugPrint('🎮 İlk mesaj alma ödülü verilecek - Sohbet: $chatId');
+        await earnXp(user: user, event: XpEvent.receiveMessage);
+        await saveFirstMessageReceivedReward(user.userID!, chatId);
+      } else {
+        debugPrint('ℹ️ İlk mesaj alma ödülü daha önce verilmiş - Sohbet: $chatId');
+      }
+    }
   }
 }

@@ -1,18 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:palseapp/core/models/advert.dart';
 import 'package:palseapp/core/models/customer.dart';
+import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/services/firestore/advert_service.dart';
 import 'package:palseapp/core/services/firestore/customer_service.dart';
+import 'package:palseapp/core/services/notification_service.dart';
 
 class FriendProfileViewModel extends ChangeNotifier {
   final AdvertService advertService = AdvertService();
   final CustomerService customerService = CustomerService();
+  final NotificationService notificationService = NotificationService();
+  final AuthProvider authProvider;
   final String customerID;
   Customer? customer;
   List<Advert> adverts = [];
   bool isLoading = false;
 
-  FriendProfileViewModel({required this.customerID}) {
+  FriendProfileViewModel({required this.customerID, required this.authProvider}) {
     getCustomer();
   }
 
@@ -43,7 +47,7 @@ class FriendProfileViewModel extends ChangeNotifier {
       final advert = await advertService.fetchAdvertById(eventId);
       if (advert != null) {
         adverts.add(advert);
-        debugPrint('İlan eklendi: ${advert.advertName}');
+        debugPrint('İlan eklendi: ${advert.title}');
       }
     }
   }

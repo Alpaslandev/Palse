@@ -1,13 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:palseapp/core/models/chat_model.dart';
 import 'package:flutter/foundation.dart';
-import 'package:palseapp/core/services/notification_service.dart';
 
 class ChatService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
-  final NotificationService notificationService;
 
-  ChatService({NotificationService? notificationService}) : notificationService = notificationService ?? NotificationService();
+  ChatService();
 
   // Var olan sohbeti bul
   Future<String?> findExistingChat(String userId1, String userId2) async {
@@ -79,6 +77,20 @@ class ChatService {
       };
       batch.update(_db.collection('chats').doc(chatId), chatUpdate);
 
+      // 3.1 Bu chatId'ye ait mesaj sayısını kontrol et (ilk mesaj mı?)
+      final messagesCount = await _db.collection('chats').doc(chatId).collection('messages').count().get();
+      final isFirstMessage = messagesCount.count == 0; // Yeni eklenen mesaj hariç mesaj sayısı
+
+      // İlk mesaj için ekstra bilgiler
+      Map<String, dynamic> extraData = {};
+      if (isFirstMessage) {
+        debugPrint('📝 Bu sohbetteki ilk mesaj! Gönderen: $senderId');
+        extraData = {'firstMessageSenderId': senderId};
+
+        // Chat belgesine de ilk mesaj bilgisini ekle
+        batch.update(_db.collection('chats').doc(chatId), {'firstMessageSenderId': senderId});
+      }
+
       // 4. Kullanıcı belgelerini güncelle
       // Gönderen için (kendi gönderdiği mesajın okunmadığını gösterir, unreadCount değişmez)
       batch.set(
@@ -94,6 +106,7 @@ class ChatService {
                 'lastMessageType': message.type.value,
                 'isLastMessageRead': false, // Karşı taraf henüz okumadı
                 // unreadCount değişmez
+                ...extraData, // İlk mesaj bilgisini ekle (varsa)
               }
             }
           },
@@ -114,7 +127,8 @@ class ChatService {
                 'lastMessageSenderId': message.senderId,
                 'lastMessageType': message.type.value,
                 'isLastMessageRead': false, // Yeni mesajı henüz okumadı
-                'unreadCount': FieldValue.increment(1) // Mevcut değeri 1 artır
+                'unreadCount': FieldValue.increment(1), // Mevcut değeri 1 artır
+                ...extraData, // İlk mesaj bilgisini ekle (varsa)
               }
             }
           },
@@ -122,13 +136,6 @@ class ChatService {
 
       // 5. Değişiklikleri kaydet
       await batch.commit();
-
-      // 6. Bildirimi gönder
-      await notificationService.sendNotification(
-        receiverId: receiverId,
-        chatId: chatId,
-        notificationType: 'message',
-      );
     } catch (e) {
       _logError('sendMessage', e, stackTrace: StackTrace.current);
       rethrow;

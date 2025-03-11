@@ -24,7 +24,7 @@ class AdvertCard extends StatelessWidget {
     this.onMessageTap,
     this.isLiked = false,
     this.onDeleteTap,
-    this.onSeeViewersTap,
+    this.onSeeLikersTap,
     this.isMyLikes = false,
     this.isFriendProfile = false,
   });
@@ -38,7 +38,7 @@ class AdvertCard extends StatelessWidget {
   final VoidCallback? onLikeTap;
   final VoidCallback? onMessageTap;
   final VoidCallback? onDeleteTap;
-  final VoidCallback? onSeeViewersTap;
+  final VoidCallback? onSeeLikersTap;
   final bool isLiked;
 
   @override
@@ -108,7 +108,7 @@ class AdvertCard extends StatelessWidget {
   }) {
     return InkWell(
       onTap: () {
-        context.push(friendProfile, extra: advert.creatorUserID);
+        context.pushNamed(friendProfile, extra: advert.creatorUserID);
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -261,7 +261,7 @@ class AdvertCard extends StatelessWidget {
           children: [
             // İlan başlığı
             Text(
-              advert.advertName,
+              advert.title,
               style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -348,7 +348,7 @@ class AdvertCard extends StatelessWidget {
           children: [
             Expanded(
               flex: 3,
-              child: _buildButton(context.tr('likers'), Icons.visibility_outlined, onSeeViewersTap ?? () {}),
+              child: _buildButton(context.tr('likers'), Icons.visibility_outlined, onSeeLikersTap ?? () {}),
             ),
             const SizedBox(width: 12),
             Expanded(

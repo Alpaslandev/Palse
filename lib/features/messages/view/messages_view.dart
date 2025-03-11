@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/models/chat_model.dart';
+import 'package:palseapp/core/services/achievement_service.dart';
+import 'package:palseapp/features/achievement/achievements.dart';
 import 'package:palseapp/features/messages/widgets/message_app_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:palseapp/features/messages/viewmodel/messages_view_model.dart';
@@ -31,6 +33,9 @@ class _MessagesViewState extends State<MessagesView> {
   late final String currentUserId;
   late final String otherUserId;
 
+  // İlk mesaj kontrolü için flag
+  bool _hasCheckedFirstMessage = false;
+
   @override
   void initState() {
     super.initState();
@@ -46,6 +51,70 @@ class _MessagesViewState extends State<MessagesView> {
   // Klavyeyi kapatmak için kullanılacak fonksiyon
   void _dismissKeyboard() {
     FocusScope.of(context).unfocus();
+  }
+
+  // Karşı tarafın ilk mesajı mı kontrolü
+  bool _isFirstMessageFromOtherUser(List<Message> messages) {
+    if (messages.isEmpty) return false;
+
+    // Karşı taraftan gelen mesajlar
+    final messagesFromOther = messages.where((msg) => msg.senderId == widget.otherUserId).toList();
+    // Bizden giden mesajlar
+    final messagesFromUs = messages.where((msg) => msg.senderId == widget.currentUserId).toList();
+
+    // Karşı taraftan mesaj varsa ve bizden hiç mesaj yoksa
+    return messagesFromOther.isNotEmpty && messagesFromUs.isEmpty;
+  }
+
+  // Bizim ilk mesajımız mı kontrolü
+  bool _isFirstMessageFromUs(List<Message> messages) {
+    if (messages.isEmpty) return false;
+
+    // Karşı taraftan gelen mesajlar
+    final messagesFromOther = messages.where((msg) => msg.senderId == widget.otherUserId).toList();
+    // Bizden giden mesajlar
+    final messagesFromUs = messages.where((msg) => msg.senderId == widget.currentUserId).toList();
+
+    // Bizden mesaj varsa ve karşı taraftan hiç mesaj yoksa
+    return messagesFromUs.isNotEmpty && messagesFromOther.isEmpty;
+  }
+
+  // İlk mesaj için XP ödülü ver
+  void _checkAndRewardFirstMessage(List<Message> messages) {
+    if (_hasCheckedFirstMessage) {
+      debugPrint('🔄 Bu sohbet için daha önce XP kontrolü yapılmış, tekrar kontrol edilmiyor.');
+      return;
+    }
+
+    // Hemen flag'i true yap ki birden fazla kontrol olmasın
+    _hasCheckedFirstMessage = true;
+    debugPrint('🔒 XP kontrolü kilitleniyor - yeni kontroller engelleniyor');
+
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (authProvider.user == null) {
+      debugPrint('⚠️ Kullanıcı bilgisi bulunamadı, XP kontrolü yapılamıyor.');
+      return;
+    }
+
+    // Debug için mesaj sayılarını yazdır
+    final messagesFromOther = messages.where((msg) => msg.senderId == widget.otherUserId).length;
+    final messagesFromUs = messages.where((msg) => msg.senderId == widget.currentUserId).length;
+    debugPrint('📊 Mesaj İstatistikleri:');
+    debugPrint('- Karşı taraftan gelen mesaj sayısı: $messagesFromOther');
+    debugPrint('- Bizden giden mesaj sayısı: $messagesFromUs');
+
+    // İlk mesaj durumlarını kontrol et
+    final isFirstFromUs = _isFirstMessageFromUs(messages);
+    final isFirstFromOther = _isFirstMessageFromOtherUser(messages);
+
+    // Ödül işleme
+    final achievementService = AchievementService();
+    achievementService
+        .processMessageRewards(
+            user: authProvider.user!, chatId: widget.chatId, isFirstMessageFromUs: isFirstFromUs, isFirstMessageFromOther: isFirstFromOther)
+        .then((_) {
+      debugPrint('✅ XP kontrolleri tamamlandı.');
+    });
   }
 
   @override
@@ -85,6 +154,14 @@ class _MessagesViewState extends State<MessagesView> {
                         }
 
                         final messages = snapshot.data ?? [];
+
+                        // İlk mesaj kontrolü ve ödül verme
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (!_hasCheckedFirstMessage && messages.isNotEmpty) {
+                            debugPrint('🔍 İlk kez mesaj kontrolü yapılıyor...');
+                            _checkAndRewardFirstMessage(messages);
+                          }
+                        });
 
                         // Yeni mesaj geldiğinde otomatik olarak okundu olarak işaretle
                         WidgetsBinding.instance.addPostFrameCallback((_) {

@@ -37,6 +37,22 @@ export const notificationMessages: NotificationMessages = {
       },
     },
   },
+  profileViewed: {
+    title: {
+      tr: "👀",
+      en: "👀",
+    },
+    body: {
+      premium: {
+        tr: "Profiliniz görüntülendi! Kimin görüntülediğini görmek için ✨ premium üye olun.",
+        en: "Your profile was viewed! Become a ✨ premium member to see who viewed it.",
+      },
+      nonPremium: {
+        tr: "Profiliniz görüntülendi! Kimin görüntülediğini görmek için tıklayın.",
+        en: "Your profile was viewed! Click to see who viewed it.",
+      },
+    },
+  },
   comment: {
     title: {
       tr: "Dikkatler Üzerinde!",

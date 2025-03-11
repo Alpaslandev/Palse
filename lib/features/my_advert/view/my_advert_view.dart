@@ -6,6 +6,7 @@ import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/widgets/advert_card.dart';
 import 'package:palseapp/core/widgets/premium_overlay.dart';
 import 'package:palseapp/core/widgets/recently_viewer.dart';
+import 'package:palseapp/core/widgets/scaffold_mess.dart';
 import 'package:palseapp/features/my_advert/viewmodel/my_advert_view_model.dart';
 import 'package:provider/provider.dart';
 import 'package:palseapp/core/provider/subscription_provider.dart';
@@ -83,11 +84,14 @@ class _MyAdvertViewState extends State<MyAdvertView> with TickerProviderStateMix
                                 return AdvertCard(
                                   advert: advert,
                                   isUserAdvert: true,
-                                  onDeleteTap: () {
+                                  onDeleteTap: () async {
                                     debugPrint('sil');
-                                    //  viewModel.deleteAdvert(advert.advertID);
+                                    await viewModel.deleteAdvert(advertId: advert.advertID ?? '', userId: authProvider.user?.userID ?? '');
+                                    if (!context.mounted) return;
+                                    ScaffoldMess.showSuccessSnackBar(context.tr('advert_deleted_successfully'));
                                   },
-                                  onSeeViewersTap: () {
+                                  onSeeLikersTap: () {
+                                    // TODO: Görüntüleyenler sayısını görüntüleme
                                     context.pushNamed(seeViewers, extra: advert.likers);
                                   },
                                 );
@@ -109,7 +113,7 @@ class _MyAdvertViewState extends State<MyAdvertView> with TickerProviderStateMix
                                   advert: advert,
                                   isMyLikes: true,
                                   isLiked: advert.likers.contains(authProvider.user?.userID ?? ''),
-                                  onProfileTap: () => context.push(friendProfile, extra: customer),
+                                  onProfileTap: () => context.pushNamed(friendProfile, extra: customer?.userID),
                                   onMessageTap: () => debugPrint('mesaj'),
                                 );
                               },
@@ -153,7 +157,7 @@ class _MyAdvertViewState extends State<MyAdvertView> with TickerProviderStateMix
                 if (customer == null) return const SizedBox();
                 return RecentlyViewer(
                   customer: customer,
-                  onProfileTap: () => context.push(friendProfile, extra: customer.userID),
+                  onProfileTap: () => context.pushNamed(friendProfile, extra: customer.userID),
                 );
               },
             ),

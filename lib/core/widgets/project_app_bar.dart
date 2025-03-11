@@ -11,6 +11,7 @@ class ProjectAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
+    final theme = Theme.of(context);
     return AppBar(
       scrolledUnderElevation: 0,
       title: Row(
@@ -21,33 +22,62 @@ class ProjectAppBar extends StatelessWidget implements PreferredSizeWidget {
         ],
       ),
       actions: [
-        Container(
-          width: 40,
-          height: 40,
-          margin: const EdgeInsets.symmetric(horizontal: 5),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: Colors.grey.shade300,
-              width: 1.5,
-            ),
-          ),
-          child: Material(
-            color: Colors.transparent,
-            shape: const CircleBorder(),
-            clipBehavior: Clip.hardEdge,
-            child: IconButton(
-              onPressed: () async {
-                debugPrint('ringtone');
-                context.pushNamed(notification);
-              },
-              icon: SvgPicture.asset(
-                'assets/vectors/ringtone_iconly_pro_1_x2.svg',
-                width: 24,
-                height: 24,
+        Stack(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              margin: const EdgeInsets.symmetric(horizontal: 5),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.grey.shade300,
+                  width: 1.5,
+                ),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                shape: const CircleBorder(),
+                clipBehavior: Clip.hardEdge,
+                child: IconButton(
+                  onPressed: () async {
+                    debugPrint('ringtone');
+                    context.pushNamed(notification);
+                  },
+                  icon: SvgPicture.asset(
+                    'assets/vectors/ringtone_iconly_pro_1_x2.svg',
+                    width: 24,
+                    height: 24,
+                    colorFilter: ColorFilter.mode(theme.colorScheme.onSurface, BlendMode.srcIn),
+                  ),
+                ),
               ),
             ),
-          ),
+            Positioned(
+              top: 0,
+              right: 10,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: const BoxDecoration(
+                  color: Colors.blue,
+                  shape: BoxShape.circle,
+                ),
+                constraints: const BoxConstraints(
+                  minWidth: 16,
+                  minHeight: 16,
+                ),
+                child: Text(
+                  '2',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            )
+          ],
         ),
         Stack(
           children: [
@@ -69,17 +99,17 @@ class ProjectAppBar extends StatelessWidget implements PreferredSizeWidget {
                 child: IconButton(
                   onPressed: () {
                     debugPrint('chat');
-                    context.push(chats);
+                    context.pushNamed(chats);
                   },
                   icon: SvgPicture.asset(
                     'assets/vectors/chat_iconly_pro_x2.svg',
                     width: 24,
                     height: 24,
+                    colorFilter: ColorFilter.mode(theme.colorScheme.onSurface, BlendMode.srcIn),
                   ),
                 ),
               ),
             ),
-            // Okunmamış mesaj sayısı badge'i
             if (authProvider.user?.hasUnreadChats ?? false)
               Positioned(
                 top: 0,

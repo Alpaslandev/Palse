@@ -7,6 +7,7 @@ import 'package:palseapp/core/models/chat_model.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/features/messages/viewmodel/messages_view_model.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class MessageBubble extends StatelessWidget {
@@ -93,13 +94,7 @@ class MessageBubble extends StatelessWidget {
                     else if (message.type == MessageType.url)
                       _buildUrlMessage(message.content, isMe)
                     else
-                      Text(
-                        message.content,
-                        style: TextStyle(
-                          color: isMe ? Colors.white : Colors.black,
-                          fontSize: 16,
-                        ),
-                      ),
+                      _buildTextMessage(message.content, isMe),
 
                     const SizedBox(height: 5),
                     Row(
@@ -132,10 +127,46 @@ class MessageBubble extends StatelessWidget {
     );
   }
 
+  // Metin mesajları için yeni widget
+  Widget _buildTextMessage(String content, bool isMe) {
+    return GestureDetector(
+      onLongPress: () {
+        // Metni panoya kopyala
+        Clipboard.setData(ClipboardData(text: content));
+        // Geri bildirim göster (bir snackbar veya toast mesajı)
+      },
+      child: TextSelectionTheme(
+        data: TextSelectionThemeData(
+          selectionColor: isMe ? Colors.white.withOpacity(0.3) : Colors.blue.withOpacity(0.3),
+          cursorColor: isMe ? Colors.white70 : Colors.blue,
+        ),
+        child: SelectableText(
+          content,
+          style: TextStyle(
+            color: isMe ? Colors.white : Colors.black,
+            fontSize: 16,
+          ),
+          showCursor: true,
+          cursorRadius: const Radius.circular(2),
+          contextMenuBuilder: (context, editableTextState) {
+            return AdaptiveTextSelectionToolbar.editableText(
+              editableTextState: editableTextState,
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   // URL mesajları için özel widget
   Widget _buildUrlMessage(String url, bool isMe) {
     return InkWell(
       onTap: () => _launchUrl(url),
+      onLongPress: () {
+        // URL'yi panoya kopyala
+        Clipboard.setData(ClipboardData(text: url));
+        // Geri bildirim göster
+      },
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -157,15 +188,25 @@ class MessageBubble extends StatelessWidget {
                       Icon(Icons.link, color: isMe ? Colors.white70 : Colors.blue[800], size: 20),
                       const SizedBox(width: 8),
                       Flexible(
-                        child: Text(
-                          url,
-                          style: TextStyle(
-                            color: isMe ? Colors.white : Colors.blue[900],
-                            fontSize: 14,
-                            decoration: TextDecoration.underline,
+                        child: TextSelectionTheme(
+                          data: TextSelectionThemeData(
+                            selectionColor: isMe ? Colors.white.withOpacity(0.3) : Colors.blue.withOpacity(0.3),
+                            cursorColor: isMe ? Colors.white70 : Colors.blue,
                           ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                          child: SelectableText(
+                            url,
+                            style: TextStyle(
+                              color: isMe ? Colors.white : Colors.blue[900],
+                              fontSize: 14,
+                              decoration: TextDecoration.underline,
+                            ),
+                            maxLines: 2,
+                            contextMenuBuilder: (context, editableTextState) {
+                              return AdaptiveTextSelectionToolbar.editableText(
+                                editableTextState: editableTextState,
+                              );
+                            },
+                          ),
                         ),
                       ),
                     ],
@@ -194,19 +235,35 @@ class MessageBubble extends StatelessWidget {
   Widget _buildQuotedMessage(Message message) {
     if (message.quotedMessage == null) return const SizedBox.shrink();
 
-    return Container(
-      padding: const EdgeInsets.all(8),
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: Colors.grey[200],
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey[400]!),
-      ),
-      child: Text(
-        message.quotedMessage!,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
+    return GestureDetector(
+      onLongPress: () {
+        // Alıntılanmış metni panoya kopyala
+        Clipboard.setData(ClipboardData(text: message.quotedMessage!));
+      },
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        margin: const EdgeInsets.only(bottom: 8),
+        decoration: BoxDecoration(
+          color: Colors.grey[200],
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.grey[400]!),
+        ),
+        child: TextSelectionTheme(
+          data: TextSelectionThemeData(
+            selectionColor: Colors.blue.withOpacity(0.3),
+            cursorColor: Colors.blue,
+          ),
+          child: SelectableText(
+            message.quotedMessage!,
+            maxLines: 2,
+            style: const TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
+            contextMenuBuilder: (context, editableTextState) {
+              return AdaptiveTextSelectionToolbar.editableText(
+                editableTextState: editableTextState,
+              );
+            },
+          ),
+        ),
       ),
     );
   }
@@ -243,19 +300,6 @@ class MessageBubble extends StatelessWidget {
                   ),
                 );
               },
-            ),
-          ),
-          // Görselin altında küçük URL'yi göster (isteğe bağlı)
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Text(
-              url,
-              style: TextStyle(
-                color: isMe ? Colors.white70 : Colors.grey[600],
-                fontSize: 12,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],

@@ -74,9 +74,17 @@ Widget profileHeader(BuildContext context, AuthProvider authProvider) {
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '${authProvider.user?.fullName()} (${authProvider.user?.getAge()})',
-            style: Theme.of(context).textTheme.titleLarge,
+          Row(
+            children: [
+              Text(
+                '${authProvider.user?.fullName()} (${authProvider.user?.getAge()})',
+                style: Theme.of(context).textTheme.titleLarge,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(width: 2),
+              if (authProvider.user?.isPremium == false) const Icon(Icons.verified, color: Colors.yellow, size: 16),
+              if (authProvider.user?.verification == false) const Icon(Icons.verified, color: Colors.blue, size: 16),
+            ],
           ),
           if (authProvider.user?.nickname != null)
             Text(
@@ -91,7 +99,7 @@ Widget profileHeader(BuildContext context, AuthProvider authProvider) {
       IconButton(
         icon: const Icon(Icons.settings_outlined),
         onPressed: () {
-          context.push(settings);
+          context.pushNamed(settings);
         },
       ),
     ],
@@ -101,32 +109,33 @@ Widget profileHeader(BuildContext context, AuthProvider authProvider) {
 // Yorumlar kartı
 Widget _ratingCard(Customer customer, BuildContext context) {
   return Card(
+      color: Colors.grey.shade200,
       child: ListTile(
-    onTap: () => context.pushNamed(comment, extra: customer),
-    title: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Row(
+        onTap: () => context.pushNamed(comment, extra: customer),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Icon(Icons.star, color: Colors.amber),
-            Text('${context.tr('comments')} (${customer.comments?.length ?? 0})'),
+            Row(
+              children: [
+                Icon(Icons.star, color: Colors.amber),
+                Text('${context.tr('comments')} (${customer.comments?.length ?? 0})'),
+              ],
+            ),
           ],
         ),
-      ],
-    ),
-    trailing: Container(
-      decoration: BoxDecoration(
-        border: Border(left: BorderSide(color: Colors.grey, width: 1)), // Sol kenara gri çizgi ekleniyor
-      ),
-      child: Padding(
-        padding: const EdgeInsets.only(left: 8.0),
-        child: Text(
-          customer.getAverage().toStringAsFixed(1),
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.orange),
+        trailing: Container(
+          decoration: BoxDecoration(
+            border: Border(left: BorderSide(color: Colors.grey, width: 1)), // Sol kenara gri çizgi ekleniyor
+          ),
+          child: Padding(
+            padding: const EdgeInsets.only(left: 8.0),
+            child: Text(
+              customer.getAverage().toStringAsFixed(1),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.orange),
+            ),
+          ),
         ),
-      ),
-    ),
-  ));
+      ));
 }
 
 // Günlük görev kartı
@@ -217,15 +226,6 @@ class DailyTaskCard extends StatelessWidget {
                         }
                       }
                     },
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.white,
-                side: const BorderSide(color: Colors.white),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                disabledForegroundColor: Colors.white.withOpacity(0.5),
-                disabledBackgroundColor: Colors.transparent,
-              ),
               child: Text(isDailyTaskCompleted ? context.tr('task_completed') : context.tr('complete_task')),
             ),
           ),
@@ -252,7 +252,7 @@ class VerifyProfileButton extends StatelessWidget {
           ),
         ),
         onPressed: () {
-          context.push(achievementTest);
+          context.pushNamed(achievementTest);
           // context.pushNamed(verified).then((value) {
           //   if (value == true) {
           //     ScaffoldMessenger.of(context).showSnackBar(
@@ -288,7 +288,7 @@ class PremiumButton extends StatelessWidget {
           ),
         ),
         onPressed: () {
-          context.push(subscription);
+          context.pushNamed(paywall);
         },
         icon: const Icon(Icons.diamond, color: Colors.amber, size: 30),
         label: Text(
@@ -316,7 +316,7 @@ class XPSystemButton extends StatelessWidget {
           ),
         ),
         onPressed: () {
-          context.push(xpEvents);
+          context.pushNamed(xpEvents);
         },
         icon: const Icon(Icons.settings),
         label: Text(context.tr('xp_system')),

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
+import 'package:palseapp/core/services/chat_service.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
 import 'package:palseapp/core/widgets/advert_card.dart';
 import 'package:palseapp/features/friend_profile/friend_profile_view_model.dart';
@@ -14,9 +15,9 @@ class FriendProfileView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint(customerID);
+    final userID = context.read<AuthProvider>().user!.userID;
     return ChangeNotifierProvider(
-      create: (context) => FriendProfileViewModel(customerID: customerID),
+      create: (context) => FriendProfileViewModel(customerID: customerID, authProvider: context.read<AuthProvider>()),
       child: Consumer<FriendProfileViewModel>(
         builder: (context, viewModel, child) {
           return Scaffold(
@@ -64,7 +65,18 @@ class FriendProfileView extends StatelessWidget {
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: ElevatedButton(
-                        onPressed: () {},
+                        onPressed: () async {
+                          final ChatService chatsService = ChatService();
+
+                          final chatId = await chatsService.startOrGetChat(
+                            customerID,
+                            userID!,
+                          );
+
+                          if (context.mounted) {
+                            context.push('/chats/$chatId?otherId=$customerID&currentId=$userID');
+                          }
+                        },
                         child: Text(context.tr('send_message')),
                       ),
                     ),

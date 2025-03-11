@@ -93,21 +93,15 @@ class CreateAdvertViewModel extends ChangeNotifier {
     _setLoading(true);
     try {
       final advert = Advert(
-        advertName: advertName,
+        title: advertName,
         description: advertDescription,
         creatorUserID: authProvider.user!.userID!,
         advertType: eventType ?? Categories.diger,
-        location: locationModel,
+        location: locationModel!,
         advertImage: advertImage?.path ?? '',
         startEventDate: startDate ?? DateTime.now(),
         createdAt: DateTime.now(),
         likers: [],
-        creatorAverageRating: authProvider.user!.getAverage().toInt(),
-        creatorIsVerified: authProvider.user!.verification ?? false,
-        creatorIsPremium: authProvider.user!.isPremium ?? false,
-        creatorLastName: authProvider.user!.lastName ?? '',
-        creatorName: authProvider.user!.firstName ?? '',
-        creatorProfilePicture: authProvider.user!.profilePictureUrl ?? '',
         creatorGender: authProvider.user!.gender ?? Gender.male,
       );
 

@@ -50,6 +50,7 @@ const Map<String, String> tr = {
   'send_message': 'Mesaj Gönder',
   'report_abuse': 'Kötüye Kullanım Bildir',
   'comments': 'Yorumlar',
+  'advert_deleted_successfully': 'İlan başarıyla silindi',
 
   // Etkinlik Oluşturma
   'create_advert': 'Etkinlik Oluştur',

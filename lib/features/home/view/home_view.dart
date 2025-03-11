@@ -85,7 +85,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                   ),
                   IconButton(
                     onPressed: () {
-                      context.push(filter);
+                      context.pushNamed(filter);
                     },
                     icon: SvgPicture.asset(
                       'assets/vectors/filter_x2.svg',
@@ -180,7 +180,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
             floatingActionButton: FloatingActionButton.extended(
               backgroundColor: AppTheme.primaryColor,
               shape: const StadiumBorder(),
-              onPressed: () => context.push(createAdvert),
+              onPressed: () => context.pushNamed(createAdvert),
               label: Text(context.tr('create_listing'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           );

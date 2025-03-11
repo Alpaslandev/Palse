@@ -60,7 +60,7 @@ const Map<String, String> en = {
   'send_message': 'Send Message',
   'report_abuse': 'Report Abuse',
   'comments': 'Comments',
-
+  'advert_deleted_successfully': 'Advert deleted successfully',
   // Create Advert
   'create_advert': 'Create Advert',
   'event_type': 'Event Type',

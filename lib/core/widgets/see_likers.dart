@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
-import 'package:palseapp/core/provider/subscription_provider.dart';
+import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/services/firestore/customer_service.dart';
 import 'package:palseapp/core/widgets/premium_overlay.dart';
 import 'package:provider/provider.dart';
@@ -14,7 +14,6 @@ class SeeLikersView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isPremium = context.watch<SubscriptionProvider>().isPremium;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Beğenenler'),
@@ -31,9 +30,8 @@ class SeeLikersView extends StatelessWidget {
                     return Material(
                       child: Card(
                         margin: const EdgeInsets.only(bottom: 8),
-                        child: StreamBuilder<Customer?>(
-                          // Stream'i CustomerService'den alıyoruz
-                          stream: CustomerService().getUserStream(viewers[index]),
+                        child: FutureBuilder<Customer?>(
+                          future: CustomerService().fetchUserFromFirestore(viewers[index]),
                           builder: (context, snapshot) {
                             if (snapshot.connectionState == ConnectionState.waiting) {
                               return const ListTile(
@@ -65,7 +63,7 @@ class SeeLikersView extends StatelessWidget {
                               ),
                               title: Text('${user.firstName} ${user.lastName}'),
                               subtitle: Text(user.nickname ?? ''),
-                              onTap: () => context.push('/friendProfile', extra: user),
+                              onTap: () => context.pushNamed(friendProfile, extra: user.userID),
                             );
                           },
                         ),

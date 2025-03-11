@@ -401,7 +401,7 @@ class _CreateAdvertViewState extends State<CreateAdvertView> {
                                 if (!context.mounted) return;
 
                                 // context.go yerine pushReplacement kullan
-                                context.pushReplacement(myAdverts);
+                                context.pushReplacementNamed(myAdverts);
 
                                 // Sonra başarı mesajını göster
                                 ScaffoldMess.showSuccessSnackBar(
@@ -416,7 +416,7 @@ class _CreateAdvertViewState extends State<CreateAdvertView> {
 
                                     // Önce ilanlarım sayfasına git (navigasyon stack'ini değiştirmek için)
                                     // go yerine pushReplacement kullanarak stack'i boşaltmadan değiştiriyoruz
-                                    context.pushReplacement(myAdverts);
+                                    context.pushReplacementNamed(myAdverts);
 
                                     // Sonra premium olmayı öneren snackbar göster (premium sayfası stack'e eklenecek)
                                     ScaffoldMess.showGotoSnackBar(

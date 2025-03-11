@@ -97,6 +97,17 @@ class CustomerService {
     }
   }
 
+  Future<void> deleteAdvertFromCustomer(String advertId, String userId) async {
+    try {
+      await _firestore.collection('customers').doc(userId).update({
+        'adverts': FieldValue.arrayRemove([advertId])
+      });
+      debugPrint('İlan başarıyla silindi');
+    } catch (e) {
+      debugPrint('İlan silme hatası: $e');
+    }
+  }
+
   // Silinen ilanlara ait referansları kullanıcılardan temizle
   Future<void> cleanupDeletedAdvertReferences() async {
     try {
@@ -153,6 +164,14 @@ class CustomerService {
   // Firestore verilerini stream olarak dinleme
   Stream<DocumentSnapshot<Object?>> streamFirestore(String userId) {
     return _firestore.collection('customers').doc(userId).snapshots();
+  }
+
+  Future<void> updateUserLastSeen(String userId) async {
+    try {
+      await _firestore.collection('customers').doc(userId).update({'lastSeen': Timestamp.now()});
+    } catch (e) {
+      debugPrint('Kullanıcı görünümü güncellenirken hata: $e');
+    }
   }
 
   Future<void> addComment(String userId, Comment comment) async {

@@ -89,8 +89,11 @@ class HomeViewModel extends ChangeNotifier {
 
       if (newAdverts.isNotEmpty) {
         // Son dökümanı güncelle - DÜZELTME BURADA
-        _lastDocument =
-            await _firestore.collection('events').where('advertID', isEqualTo: newAdverts.last.advertID).get().then((value) => value.docs.first);
+        _lastDocument = await _firestore
+            .collection('events')
+            .where('advertID', isEqualTo: newAdverts.last.advertID)
+            .get()
+            .then((value) => value.docs.isNotEmpty ? value.docs.first : null);
 
         // Yeni ilanları ekle
         _adverts.addAll(newAdverts);

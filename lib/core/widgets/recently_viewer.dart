@@ -1,7 +1,9 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
+import 'package:palseapp/core/routes/routes.dart';
 import 'package:provider/provider.dart';
 
 class RecentlyViewer extends StatelessWidget {
@@ -13,7 +15,9 @@ class RecentlyViewer extends StatelessWidget {
   Widget build(BuildContext context) {
     final Customer currentCustomer = context.read<AuthProvider>().user!;
     return GestureDetector(
-      onTap: onProfileTap,
+      onTap: () {
+        context.pushNamed(friendProfile, extra: customer.userID);
+      },
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(

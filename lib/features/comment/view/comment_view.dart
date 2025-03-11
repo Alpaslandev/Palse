@@ -68,6 +68,7 @@ class CommentView extends StatelessWidget {
   void _showAddCommentSheet(BuildContext context, CommentViewModel viewModel, Customer currentUser) async {
     final commentMap = await showModalBottomSheet<Map<String, dynamic>>(
       context: context,
+      isScrollControlled: true,
       builder: (context) {
         return AddCommentBottomSheet();
       },

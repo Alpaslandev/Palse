@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
+import 'package:palseapp/core/widgets/circle_profile_picture.dart';
 import 'package:palseapp/features/messages/viewmodel/messages_view_model.dart';
 
 class MessageAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -36,14 +37,12 @@ class MessageAppBar extends StatelessWidget implements PreferredSizeWidget {
         builder: (context, snapshot) {
           final user = snapshot.data;
           return GestureDetector(
-            onTap: () => context.push(friendProfile, extra: otherUserId),
+            onTap: () => context.pushNamed(friendProfile, extra: otherUserId),
             child: Row(
               children: [
-                CircleAvatar(
-                  backgroundImage: user?.profilePictureUrl != null && user!.profilePictureUrl!.isNotEmpty
-                      ? CachedNetworkImageProvider(user.profilePictureUrl!) as ImageProvider
-                      : const AssetImage('assets/images/dostum_olsana.png'),
-                  radius: 18,
+                CircleProfilePicture(
+                  imageUrl: user?.profilePictureUrl!,
+                  radius: 24,
                 ),
                 const SizedBox(width: 12),
                 Column(
@@ -62,7 +61,9 @@ class MessageAppBar extends StatelessWidget implements PreferredSizeWidget {
                             decorationColor: Colors.white,
                           ),
                         ),
-                        if (user?.phoneNumber != null && user?.phoneNumber == '') const Icon(Icons.verified, color: Colors.yellow, size: 14),
+                        const SizedBox(width: 2),
+                        if (user?.isPremium == true) const Icon(Icons.verified, color: Colors.yellow, size: 14),
+                        if (user?.verification == true) const Icon(Icons.verified, color: Colors.blue, size: 14),
                       ],
                     ),
                     if (user?.nickname != null && user?.nickname != '')
@@ -74,20 +75,19 @@ class MessageAppBar extends StatelessWidget implements PreferredSizeWidget {
                           fontWeight: FontWeight.w400,
                         ),
                       ),
-                    if (user?.isPremium != true)
-                      Row(
-                        children: [
-                          const Icon(Icons.workspace_premium, color: Colors.yellow, size: 14),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Sosyal Usta (${0} XP)',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                            ),
+                    Row(
+                      children: [
+                        const Icon(Icons.workspace_premium, color: Colors.yellow, size: 14),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Sosyal Usta (${0} XP)',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ],

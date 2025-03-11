@@ -64,6 +64,19 @@ class MyAdvertViewModel extends ChangeNotifier {
     }
   }
 
+  Future<void> deleteAdvert({required String advertId, required String userId}) async {
+    try {
+      await _advertService.deleteAdvert(advertId);
+      await _customerService.deleteAdvertFromCustomer(advertId, userId);
+      _myAdverts.removeWhere((advert) => advert?.advertID == advertId);
+      // fetchAdvertsWithCustomers();
+    } catch (e) {
+      debugPrint('İlan silme hatası: ${e.toString()}');
+    } finally {
+      notifyListeners();
+    }
+  }
+
   // Kullanıcı UID'leri ile kullanıcıları çekiyoruz
   Future<void> fetchRecentlyViewed() async {
     if (_authProvider.user?.profileViewers != null) {

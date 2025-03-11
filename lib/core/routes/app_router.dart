@@ -8,6 +8,7 @@ import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/widgets/faq_page.dart';
 import 'package:palseapp/core/widgets/landing_view.dart';
 import 'package:palseapp/core/widgets/notification_view.dart';
+import 'package:palseapp/core/widgets/recently_viewer.dart';
 import 'package:palseapp/core/widgets/see_likers.dart';
 import 'package:palseapp/features/achievement/achievement_test_page.dart';
 import 'package:palseapp/features/auth/views/login_view.dart';
@@ -29,6 +30,7 @@ import 'package:palseapp/features/settings/view/settings_view.dart';
 import 'package:palseapp/features/settings/view/widgets/verified_screen.dart';
 import 'package:palseapp/features/splash/splash_view.dart';
 import 'package:palseapp/features/subscription/view/paywall_screen.dart';
+import 'package:palseapp/backup_example.dart';
 
 // Router sınıfını oluştur
 class AppRouter {
@@ -73,14 +75,14 @@ class AppRouter {
           builder: (context, state) => const ProfileSetupView(),
         ),
         GoRoute(
-          path: chats,
-          name: 'chats',
+          path: "/$chats",
+          name: chats,
           parentNavigatorKey: rootNavigatorKey,
           builder: (context, state) => ChatsView(),
           routes: [
             GoRoute(
               path: ':chatId', // URL parametresi olarak chatId
-              name: 'messages',
+              name: messages,
               parentNavigatorKey: rootNavigatorKey,
               builder: (context, state) {
                 final chatId = state.pathParameters['chatId']!;
@@ -96,19 +98,20 @@ class AppRouter {
           ],
         ),
         GoRoute(
-          name: 'xpEvents',
-          path: xpEvents,
+          name: xpEvents,
+          path: "/$xpEvents",
           parentNavigatorKey: rootNavigatorKey, // Ana navigator'ı kullan
           builder: (context, state) => const XpEventsView(),
         ),
         GoRoute(
-          name: 'filter',
-          path: filter,
+          name: filter,
+          path: "/$filter",
           parentNavigatorKey: rootNavigatorKey, // Ana navigator'ı kullan
           builder: (context, state) => const FilterView(),
         ),
         GoRoute(
-          path: friendProfile,
+          path: "/$friendProfile",
+          name: friendProfile,
           parentNavigatorKey: rootNavigatorKey, // Ana navigator'ı kullan
           builder: (context, state) {
             final customerID = state.extra! as String; // Null check eklendi
@@ -116,7 +119,7 @@ class AppRouter {
           },
           routes: [
             GoRoute(
-              path: '/comment',
+              path: '/$comment',
               name: comment,
               builder: (context, state) {
                 final customer = state.extra! as Customer; // Null check eklendi
@@ -126,22 +129,24 @@ class AppRouter {
           ],
         ),
         GoRoute(
-          path: "/notification",
+          path: "/$notification",
           name: notification,
           parentNavigatorKey: rootNavigatorKey, // Ana navigator'ı kullan
           builder: (context, state) => const NotificationView(),
         ),
         GoRoute(
-          path: createAdvert,
+          path: "/$createAdvert",
+          name: createAdvert,
           parentNavigatorKey: rootNavigatorKey, // Ana navigator'ı kullan
           builder: (context, state) => const CreateAdvertView(),
         ),
         GoRoute(
-          path: settings,
+          path: "/$settings",
+          name: settings,
           builder: (context, state) => const SettingsView(),
           routes: [
             GoRoute(
-              path: editProfile,
+              path: "/$editProfile",
               name: editProfile,
               builder: (context, state) {
                 final user = state.extra! as Customer;
@@ -149,19 +154,19 @@ class AppRouter {
               },
             ),
             GoRoute(
-              path: faq,
+              path: "/$faq",
               name: faq,
               builder: (context, state) => const FAQPage(),
             ),
             GoRoute(
-              path: languageSettings,
+              path: "/$languageSettings",
               name: languageSettings,
               builder: (context, state) => const LanguageSettingsView(),
             ),
           ],
         ),
         GoRoute(
-          path: "/verified",
+          path: "/$verified",
           name: verified,
           builder: (context, state) => const VerifiedScreen(),
         ),
@@ -185,6 +190,12 @@ class AppRouter {
             },
           ),
         ),
+        GoRoute(
+          path: "/$firestoreBackup",
+          name: firestoreBackup,
+          parentNavigatorKey: rootNavigatorKey,
+          builder: (context, state) => const FirestoreBackupExample(),
+        ),
         ShellRoute(
           navigatorKey: _shellNavigatorKey,
           builder: (context, state, child) => LandingView(child: child),
@@ -204,8 +215,8 @@ class AppRouter {
               ),
             ),
             GoRoute(
-              path: myAdverts,
-              name: 'myAdverts',
+              path: "/$myAdverts",
+              name: myAdverts,
               pageBuilder: (context, state) => CustomTransitionPage(
                 key: state.pageKey,
                 child: const MyAdvertView(),
@@ -218,15 +229,20 @@ class AppRouter {
               ),
               routes: [
                 GoRoute(
-                  path: seeViewers,
+                  path: "/$seeViewers",
                   name: seeViewers,
                   builder: (context, state) => SeeLikersView(viewers: state.extra as List<String>? ?? []),
+                ),
+                GoRoute(
+                  path: "/$recentlyViewers",
+                  name: recentlyViewers,
+                  builder: (context, state) => RecentlyViewer(customer: state.extra as Customer, onProfileTap: () {}),
                 ),
               ],
             ),
             GoRoute(
-              path: categories,
-              name: 'categories',
+              path: "/$categories",
+              name: categories,
               pageBuilder: (context, state) => CustomTransitionPage(
                 key: state.pageKey,
                 child: const CategoriesView(),
@@ -236,8 +252,8 @@ class AppRouter {
               ),
             ),
             GoRoute(
-              path: profile,
-              name: 'profile',
+              path: "/$profile",
+              name: profile,
               pageBuilder: (context, state) => CustomTransitionPage(
                 key: state.pageKey,
                 child: const ProfileView(),
@@ -252,8 +268,8 @@ class AppRouter {
 
             // XP ve Görev Test Sayfası
             GoRoute(
-              path: achievementTest,
-              name: 'achievementTest',
+              path: "/$achievementTest",
+              name: achievementTest,
               pageBuilder: (context, state) => CustomTransitionPage(
                 key: state.pageKey,
                 child: const AchievementTestPage(),

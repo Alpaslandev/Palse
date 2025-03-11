@@ -8,6 +8,7 @@ import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/services/firestore/advert_service.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
 import 'package:palseapp/core/widgets/advert_card.dart';
+import 'package:palseapp/core/widgets/premium_overlay.dart';
 import 'package:provider/provider.dart';
 
 class FilterView extends StatefulWidget {
@@ -112,7 +113,10 @@ class _FilterViewState extends State<FilterView> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : !_isFiltered
-              ? _filterView(context)
+              ? PremiumOverlay(
+                  isPremium: _currentUser?.isPremium ?? false,
+                  child: _filterView(context),
+                )
               : _filteredList(adverts: _filteredAdverts, currentCustomer: _currentUser!, currentUser: _currentUser!, context: context),
     );
   }

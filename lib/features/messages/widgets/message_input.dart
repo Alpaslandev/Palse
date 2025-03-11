@@ -214,7 +214,7 @@ class MessageInput extends StatelessWidget {
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
-              context.push(subscription);
+              context.pushNamed(paywall);
             },
             child: Text(context.tr('ok')),
           ),

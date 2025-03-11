@@ -16,10 +16,10 @@ class LandingView extends StatefulWidget {
 class _LandingViewState extends State<LandingView> {
   int _getSelectedIndex(BuildContext context) {
     final String location = GoRouterState.of(context).matchedLocation;
-    if (location.startsWith(home)) return 0;
-    if (location.startsWith(categories)) return 1;
-    if (location.startsWith(myAdverts)) return 2;
-    if (location.startsWith(profile)) return 3;
+    if (location.startsWith("/$home")) return 0;
+    if (location.startsWith("/$categories")) return 1;
+    if (location.startsWith("/$myAdverts")) return 2;
+    if (location.startsWith("/$profile")) return 3;
     return 0;
   }
 
@@ -29,13 +29,13 @@ class _LandingViewState extends State<LandingView> {
         context.goNamed(home);
         break;
       case 1:
-        context.go(categories);
+        context.goNamed(categories);
         break;
       case 2:
-        context.go(myAdverts);
+        context.goNamed(myAdverts);
         break;
       case 3:
-        context.go(profile);
+        context.goNamed(profile);
         break;
     }
   }

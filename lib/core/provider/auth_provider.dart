@@ -76,6 +76,7 @@ class AuthProvider extends ChangeNotifier {
         if (_isFirstTime) {
           _isFirstTime = false;
           _notificationService.saveUserToken(userId);
+          _userService.updateUserLastSeen(userId);
           debugPrint('User token saved');
         }
 

@@ -1,52 +1,34 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:palseapp/core/constant/categories.dart';
-import 'package:palseapp/core/helper/categorie_parse.dart';
-import 'package:palseapp/core/helper/date_parse.dart';
-import 'package:palseapp/core/helper/location_parse.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/models/location_model.dart';
 
 class Advert {
   String? advertID;
-  String advertName;
+  String title;
   String description;
-  DateTime? startEventDate;
+  DateTime startEventDate;
   Categories advertType;
   String advertImage;
   List<String> likers;
-
-  LocationModel? location;
-
+  LocationModel location;
   String creatorUserID;
-  String creatorName;
-  String creatorLastName;
-  String creatorProfilePicture;
   Gender creatorGender;
-  bool creatorIsVerified;
-  bool creatorIsPremium;
-  int creatorAverageRating;
-
-  DateTime? createdAt;
+  DateTime createdAt;
 
   Advert({
     this.advertID,
-    required this.advertName,
+    required this.title,
     required this.description,
     required this.startEventDate,
     required this.advertType,
     required this.advertImage,
     required this.likers,
     required this.location,
-    this.createdAt,
-    this.creatorUserID = '',
-    this.creatorName = '',
-    this.creatorLastName = '',
-    this.creatorProfilePicture = '',
-    this.creatorGender = Gender.others,
-    this.creatorIsVerified = false,
-    this.creatorIsPremium = false,
-    this.creatorAverageRating = 0,
+    required this.createdAt,
+    required this.creatorUserID,
+    required this.creatorGender,
   });
 
   factory Advert.fromJson(Map<String, dynamic> json, String advertID) {
@@ -56,29 +38,24 @@ class Advert {
     try {
       return Advert(
         advertID: advertID,
-        advertName: json['advertName'] ?? '',
-        description: json['description'] ?? json['advertContext'] ?? '',
+        title: json['title'] ?? '',
+        description: json['description'] ?? '',
         creatorUserID: json['creatorUserID'] ?? '',
-        startEventDate: parseDateTime(json['startEventDate'] ?? json['advertDate'], json['advertTime']),
-        advertType: parseCategoryType(json['advertType']) ?? Categories.diger,
+        startEventDate: (json['startEventDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
+        advertType: Categories.values.byName(json['advertType'] ?? 'diger'),
         advertImage: json['advertImage'] ?? '',
         likers: json['likers'] != null ? List<String>.from(json['likers']) : [],
-        location: parseAdvertLocation(json),
+        location: LocationModel.fromFirestore(json['location']),
         createdAt: (json['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-
-        // Yeni alanlar için null kontrolü
-        creatorLastName: json['creatorLastName'] ?? '',
-        creatorName: json['creatorName'] ?? '',
-        creatorProfilePicture: json['creatorProfilePicture'] ?? '',
         creatorGender: normalizedGender, // Normalize edilmiş gender değerini kullan
-        creatorIsVerified: json['creatorIsVerified'] ?? false,
-        creatorIsPremium: json['creatorIsPremium'] ?? false,
       );
     } catch (e) {
       debugPrint('İlan oluşturulurken hata: $e');
       return Advert(
+        createdAt: DateTime.now(),
+        creatorGender: Gender.others,
         advertID: advertID,
-        advertName: '',
+        title: '',
         description: '',
         creatorUserID: '',
         startEventDate: DateTime.now(),
@@ -92,51 +69,39 @@ class Advert {
 
   Map<String, dynamic> toJson() {
     return {
-      'advertName': advertName,
+      'title': title,
       'description': description,
       'creatorUserID': creatorUserID,
-      'startEventDate': startEventDate != null ? Timestamp.fromDate(startEventDate!) : null,
-      'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : null,
+      'startEventDate': Timestamp.fromDate(startEventDate),
+      'createdAt': Timestamp.fromDate(createdAt),
       'advertType': advertType.name,
       'advertImage': advertImage,
       'likers': likers,
-      'location': location?.toJson(),
-      'creatorLastName': creatorLastName,
-      'creatorName': creatorName,
-      'creatorProfilePicture': creatorProfilePicture,
+      'location': location.toJson(),
       'creatorGender': creatorGender.name.toLowerCase(),
-      'creatorIsVerified': creatorIsVerified,
-      'creatorIsPremium': creatorIsPremium,
     };
   }
 
   Advert copyWith({
     String? advertID,
-    String? advertName,
+    String? title,
     String? description,
     String? advertImage,
     String? creatorUserID,
-    String? creatorName,
-    String? creatorProfilePicture,
-    bool? creatorIsVerified,
-    bool? creatorIsPremium,
-    double? creatorAverageRating,
     Categories? advertType,
     DateTime? createdAt,
+    Gender? creatorGender,
     DateTime? startEventDate,
     LocationModel? location,
     List<String>? likers,
   }) {
     return Advert(
       advertID: advertID ?? this.advertID,
-      advertName: advertName ?? this.advertName,
+      title: title ?? this.title,
       description: description ?? this.description,
       advertImage: advertImage ?? this.advertImage,
       creatorUserID: creatorUserID ?? this.creatorUserID,
-      creatorName: creatorName ?? this.creatorName,
-      creatorProfilePicture: creatorProfilePicture ?? this.creatorProfilePicture,
-      creatorIsVerified: creatorIsVerified ?? this.creatorIsVerified,
-      creatorIsPremium: creatorIsPremium ?? this.creatorIsPremium,
+      creatorGender: creatorGender ?? this.creatorGender,
       advertType: advertType ?? this.advertType,
       createdAt: createdAt ?? this.createdAt,
       startEventDate: startEventDate ?? this.startEventDate,

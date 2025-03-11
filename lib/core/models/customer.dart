@@ -26,13 +26,6 @@ enum Gender {
     // Lowercase ve trim işlemi yap
     final normalized = value.toLowerCase().trim();
 
-    // Yaygın değerleri kontrol et
-    if (normalized == 'male' || normalized == 'erkek' || normalized == 'm') {
-      return Gender.male;
-    } else if (normalized == 'female' || normalized == 'kadın' || normalized == 'kadin' || normalized == 'f') {
-      return Gender.female;
-    }
-
     // Enum adını kontrol et
     try {
       return Gender.values.byName(normalized);
@@ -62,6 +55,8 @@ class Customer {
   bool? isPremium;
   Gender? gender;
   DateTime? birthday;
+  DateTime? createdAt;
+  DateTime? lastSeen;
   List<Categories>? favoriteCategories;
   List<String>? blockUsers;
   List<String>? favoriteAdverts;
@@ -90,6 +85,8 @@ class Customer {
     this.isPremium,
     this.gender,
     this.birthday,
+    this.createdAt,
+    this.lastSeen,
     this.userID,
     this.favoriteAdverts = const [],
     this.chatMap = const {},
@@ -196,6 +193,8 @@ class Customer {
         verification: parsedJson['verification'] ?? false,
         isPremium: parsedJson['isPremium'] ?? false,
         gender: normalizedGender, // Normalize edilmiş gender değerini kullan
+        createdAt: parsedJson['createdAt'] != null ? (parsedJson['createdAt'] as Timestamp).toDate() : null,
+        lastSeen: parsedJson['lastSeen'] != null ? (parsedJson['lastSeen'] as Timestamp).toDate() : null,
         birthday: parsedJson['birthday'] != null ? parseDateTime(parsedJson['birthday'], parsedJson['birthdayTime']) : null,
         chatMap: chatMap,
         profileViewers: parsedJson['profileViewers'] != null ? List<String>.from(parsedJson['profileViewers']) : [],
@@ -228,6 +227,8 @@ class Customer {
       'appIdentifier': appIdentifier ?? '',
       'languagePreference': languagePreference ?? 'tr',
       'adverts': adverts ?? [],
+      'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : Timestamp.now(),
+      'lastSeen': lastSeen != null ? Timestamp.fromDate(lastSeen!) : Timestamp.now(),
       'verification': verification ?? false,
       'isPremium': isPremium ?? false,
       'blockUsers': blockUsers ?? [],
@@ -260,6 +261,8 @@ class Customer {
     bool? isPremium,
     Gender? gender,
     DateTime? birthday,
+    DateTime? createdAt,
+    DateTime? lastSeen,
     List<Categories>? favoriteCategories,
     List<String>? blockUsers,
     List<String>? favoriteAdverts,
@@ -283,6 +286,8 @@ class Customer {
       isPremium: isPremium ?? this.isPremium,
       gender: gender ?? this.gender,
       birthday: birthday ?? this.birthday,
+      createdAt: createdAt ?? this.createdAt,
+      lastSeen: lastSeen ?? this.lastSeen,
       userID: userID ?? this.userID,
       chatMap: chatMap,
       profileViewers: profileViewers ?? this.profileViewers,

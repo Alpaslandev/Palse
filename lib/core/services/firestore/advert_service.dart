@@ -22,7 +22,9 @@ class AdvertService {
       final upperCity = city;
       debugPrint('Aranan şehir: $upperCity, limit: $limit');
 
-      var query = _firestore.collection('events').where('city', isEqualTo: upperCity).limit(limit);
+      // Yeni veri yapısına göre sorgu güncellendi
+      // Artık city doğrudan belgede değil, location.city içinde
+      var query = _firestore.collection('events').where('location.city', isEqualTo: upperCity).limit(limit);
 
       // Eğer son döküman varsa, ondan sonrasını getir
       if (lastDocument != null) {
@@ -163,10 +165,6 @@ class AdvertService {
           });
         }
       }
-      await notificationService.sendNotification(
-        receiverId: creatorUserID,
-        notificationType: 'likeAdvert',
-      );
     } catch (e) {
       debugPrint('İlan beğenme hatası: $e');
     }
@@ -179,6 +177,15 @@ class AdvertService {
       });
     } catch (e) {
       debugPrint('İlan beğenme hatası: $e');
+    }
+  }
+
+  Future<void> deleteAdvert(String advertId) async {
+    try {
+      await _firestore.collection('events').doc(advertId).delete();
+      debugPrint('İlan başarıyla silindi');
+    } catch (e) {
+      debugPrint('İlan silme hatası: $e');
     }
   }
 }
