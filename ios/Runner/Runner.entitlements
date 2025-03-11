@@ -8,5 +8,10 @@
 	<array>
 		<string>Default</string>
 	</array>
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:orti-app-2c44b.firebaseapp.com</string>
+		<string>applinks:palse.page.link</string>
+	</array>
 </dict>
 </plist>

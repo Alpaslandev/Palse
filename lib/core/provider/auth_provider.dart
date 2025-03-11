@@ -21,10 +21,10 @@ class AuthProvider extends ChangeNotifier {
 
   // Getterlar
   bool get isLoading => _isLoading;
-  bool get isProfileSetupCompleted => _firebaseUser != null;
+  bool get isProfileSetupCompleted => _user != null;
   Customer? get user => _user;
   User? get firebaseUser => _firebaseUser;
-  bool get isAuthenticated => _user != null;
+  bool get isAuthenticated => _firebaseUser != null;
 
   StreamSubscription<DocumentSnapshot<Object?>>? _userStreamSubscription;
 
@@ -38,11 +38,13 @@ class AuthProvider extends ChangeNotifier {
     debugPrint('Initializing auth state...');
     try {
       _isLoading = true;
+      notifyListeners();
 
       // Auth state'i dinlemeye başla
       _authService.authStateChanges.listen((User? user) async {
         debugPrint('Auth State Changed: ${user?.email}');
         _firebaseUser = user;
+        notifyListeners();
 
         // await Future.delayed(const Duration(seconds: 4));
 

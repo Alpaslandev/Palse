@@ -252,7 +252,7 @@ class VerifyProfileButton extends StatelessWidget {
           ),
         ),
         onPressed: () {
-          context.pushNamed(achievementTest);
+          context.pushNamed(verified);
           // context.pushNamed(verified).then((value) {
           //   if (value == true) {
           //     ScaffoldMessenger.of(context).showSnackBar(
