@@ -100,7 +100,41 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
             body: viewModel.isLoading && viewModel.adverts.isEmpty
                 ? const Center(child: CircularProgressIndicator())
                 : viewModel.adverts.isEmpty
-                    ? Center(child: Text(context.tr('no_listings_yet')))
+                    ? viewModel.shouldShowOtherTab
+                        ? Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Card(
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      _tabController.index == 0
+                                          ? context.tr('no_listings_in_your_city')
+                                          : context.tr('no_listings_in_your_interests'),
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    TextButton(
+                                      onPressed: () {
+                                        _tabController.animateTo(2);
+                                      },
+                                      child: Text(
+                                        context.tr('click_to_see_other_listings'),
+                                        style: const TextStyle(
+                                          color: Colors.blue,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          )
+                        : Center(child: Text(context.tr('no_listings_yet')))
                     : NotificationListener<ScrollNotification>(
                         onNotification: (ScrollNotification scrollInfo) {
                           if (scrollInfo.metrics.pixels == scrollInfo.metrics.maxScrollExtent) {
@@ -122,7 +156,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                                 );
                               }
 
-                              if (!viewModel.hasMore && _tabController.index != 2) {
+                              if ((!viewModel.hasMore && _tabController.index != 2) || viewModel.shouldShowOtherTab) {
                                 return Padding(
                                   padding: const EdgeInsets.all(16.0),
                                   child: Card(
@@ -131,7 +165,11 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                                       child: Column(
                                         children: [
                                           Text(
-                                            context.tr('no_more_listings_in_category'),
+                                            viewModel.shouldShowOtherTab
+                                                ? (_tabController.index == 0
+                                                    ? context.tr('no_listings_in_your_city')
+                                                    : context.tr('no_listings_in_your_interests'))
+                                                : context.tr('no_more_listings_in_category'),
                                             textAlign: TextAlign.center,
                                             style: const TextStyle(fontSize: 16),
                                           ),

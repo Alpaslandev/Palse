@@ -43,6 +43,8 @@ const Map<String, String> tr = {
   'other': 'Diğer',
   'favorites': 'Favoriler',
   'no_listings_yet': 'Henüz ilan bulunmuyor',
+  'no_listings_in_your_city': 'Şehrinizde ilan bulunamadı',
+  'no_listings_in_your_interests': 'İlgi alanlarınızda ilan bulunamadı',
   'no_more_listings_in_category': 'Bu kategoride başka ilan bulunmamaktadır.',
   'click_to_see_other_listings': 'Diğer ilanları görmek için tıklayın',
   'create_listing': 'İlan Ver',

@@ -1,21 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:palseapp/core/constant/notifications_enum.dart';
 import 'package:palseapp/core/models/advert.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/services/firestore/advert_service.dart';
 import 'package:palseapp/core/services/firestore/customer_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:palseapp/core/services/notification_service.dart';
 
 class HomeViewModel extends ChangeNotifier {
   final AdvertService _advertService = AdvertService();
   final CustomerService _customerService = CustomerService();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final NotificationService _notificationService = NotificationService();
 
   List<Advert> _adverts = [];
   bool _isLoading = false;
   bool _hasMore = true; // Daha fazla ilan var mı?
+  bool _shouldShowOtherTab = false; // Diğer sekmesine yönlendirme yapılmalı mı?
   static const int _pageSize = 25; // Sayfa başına ilan sayısı
 
   final Map<String, Customer> _customers = {}; // Kullanıcı önbelleği
@@ -29,6 +27,7 @@ class HomeViewModel extends ChangeNotifier {
   List<Advert> get adverts => _adverts;
   bool get isLoading => _isLoading;
   bool get hasMore => _hasMore;
+  bool get shouldShowOtherTab => _shouldShowOtherTab;
   int? get filterDistance => _filterDistance;
   String? get filterGender => _filterGender;
 
@@ -40,6 +39,7 @@ class HomeViewModel extends ChangeNotifier {
     _adverts = [];
     _lastDocument = null;
     _hasMore = true;
+    _shouldShowOtherTab = false; // Flag'i sıfırla
 
     await _loadMoreAdverts(user, tabIndex);
   }
@@ -83,6 +83,15 @@ class HomeViewModel extends ChangeNotifier {
             );
           }
           break;
+        case 2: // Other sekmesi
+          newAdverts = await _advertService.fetchOtherAdverts(
+            userCity: user?.location?.city,
+            userInterests: user?.favoriteCategories,
+            lastDocument: _lastDocument,
+            limit: _pageSize,
+            userLocation: user?.location,
+          );
+          break;
         default:
           newAdverts = await _advertService.fetchAdverts(
             lastDocument: _lastDocument,
@@ -101,6 +110,17 @@ class HomeViewModel extends ChangeNotifier {
 
         // Yeni ilanları ekle
         _adverts.addAll(newAdverts);
+
+        // İlanlar bulundu, flag'i false yap
+        _shouldShowOtherTab = false;
+      } else {
+        // Eğer şehre göre veya ilgi alanlarına göre ilan bulunamadıysa ve bu ilk yüklemeyse
+        if (_adverts.isEmpty && (tabIndex == 0 || tabIndex == 1)) {
+          debugPrint('${tabIndex == 0 ? "Şehre" : "İlgi alanlarına"} göre ilan bulunamadı, diğer sekmesine yönlendirme yapılacak.');
+
+          // Flag'i true yap - Diğer sekmesine yönlendirme yapılacak
+          _shouldShowOtherTab = true;
+        }
       }
 
       // Sayfa kontrolü
@@ -180,90 +200,6 @@ class HomeViewModel extends ChangeNotifier {
   void _setLoading(bool value) {
     _isLoading = value;
     notifyListeners();
-  }
-
-  /// Events koleksiyonundaki tüm belgelerin creatorUserID'lerini kullanarak
-  /// customer koleksiyonundan profil resimlerini alıp events belgelerini günceller
-  Future<void> updateEventsWithCreatorProfilePictures() async {
-    // Firestore instance'ını al
-    final FirebaseFirestore firestore = FirebaseFirestore.instance;
-
-    try {
-      // Tüm events belgelerini al
-      final QuerySnapshot eventsSnapshot = await firestore.collection('events').get();
-
-      // Batch işlemi başlat
-      WriteBatch batch = firestore.batch();
-      int operationCount = 0;
-      const int BATCH_LIMIT = 500; // Firestore batch işlemi limiti
-
-      // Her bir event belgesi için işlem yap
-      for (final DocumentSnapshot eventDoc in eventsSnapshot.docs) {
-        // Event belgesinden creatorUserID'yi al
-        final Map<String, dynamic>? eventData = eventDoc.data() as Map<String, dynamic>?;
-
-        if (eventData == null || !eventData.containsKey('creatorUserID')) {
-          print('Event ${eventDoc.id} için creatorUserID bulunamadı, atlanıyor.');
-          continue;
-        }
-
-        final String? creatorUserID = eventData['creatorUserID'] as String?;
-
-        // Eğer creatorUserID null ise, bu belgeyi atla
-        if (creatorUserID == null || creatorUserID.isEmpty) {
-          print('Event ${eventDoc.id} için geçerli bir creatorUserID bulunamadı, atlanıyor.');
-          continue;
-        }
-
-        // Customer koleksiyonundan ilgili kullanıcıyı bul
-        final DocumentSnapshot customerDoc = await firestore.collection('customers').doc(creatorUserID).get();
-
-        // Eğer customer belgesi yoksa veya profilePictureUrl yoksa, atla
-        if (!customerDoc.exists) {
-          print('Customer $creatorUserID bulunamadı, atlanıyor.');
-          continue;
-        }
-
-        final Map<String, dynamic>? customerData = customerDoc.data() as Map<String, dynamic>?;
-
-        if (customerData == null || !customerData.containsKey('profilePictureUrl')) {
-          print('Customer $creatorUserID için profilePictureUrl bulunamadı, atlanıyor.');
-          continue;
-        }
-
-        final String? profilePictureUrl = customerData['profilePictureUrl'] as String?;
-
-        if (profilePictureUrl == null || profilePictureUrl.isEmpty) {
-          print('Customer $creatorUserID için geçerli bir profilePictureUrl bulunamadı, atlanıyor.');
-          continue;
-        }
-
-        // Event belgesini güncelle
-        batch.update(eventDoc.reference, {'creatorProfilePicture': profilePictureUrl});
-
-        // İşlem sayacını artır
-        operationCount++;
-
-        // Eğer batch limiti doluysa, commit yap ve yeni batch başlat
-        if (operationCount >= BATCH_LIMIT) {
-          await batch.commit();
-          print('$operationCount belge güncellendi, yeni batch başlatılıyor...');
-          batch = firestore.batch();
-          operationCount = 0;
-        }
-      }
-
-      // Kalan işlemleri commit et
-      if (operationCount > 0) {
-        await batch.commit();
-        print('Son $operationCount belge güncellendi.');
-      }
-
-      print('Tüm events belgeleri başarıyla güncellendi! 🎉');
-    } catch (error) {
-      print('Güncelleme işlemi sırasında hata oluştu: $error');
-      rethrow; // Hatayı yukarı ilet
-    }
   }
 
   @override
