@@ -74,6 +74,7 @@ class UserInfoStep extends StatelessWidget {
               ),
               child: TextFormField(
                 controller: viewModel.firstNameController,
+                textCapitalization: TextCapitalization.words,
                 decoration: InputDecoration(
                   hintText: 'Adınızı girin',
                   border: OutlineInputBorder(
@@ -149,6 +150,7 @@ class UserInfoStep extends StatelessWidget {
               ),
               child: TextFormField(
                 controller: viewModel.lastNameController,
+                textCapitalization: TextCapitalization.words,
                 decoration: InputDecoration(
                   hintText: 'Soyadınızı girin',
                   border: OutlineInputBorder(
