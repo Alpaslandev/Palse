@@ -403,6 +403,10 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Tema renklerini al
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return PopScope<Object?>(
       // Kod gönderildikten sonra geri dönüşü engelle
       canPop: _currentStep == 0 || _verificationId == null,
@@ -412,8 +416,8 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
           title: const Text('Telefon Doğrulama'),
           centerTitle: true,
           elevation: 0,
-          backgroundColor: Theme.of(context).colorScheme.primary,
-          foregroundColor: Theme.of(context).colorScheme.onPrimary,
+          backgroundColor: colorScheme.primary,
+          foregroundColor: colorScheme.onPrimary,
           // Kod gönderildikten sonra geri butonu devre dışı bırak
           automaticallyImplyLeading: _currentStep == 0,
         ),
@@ -423,8 +427,8 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Theme.of(context).colorScheme.primary.withOpacity(0.05),
-                Theme.of(context).colorScheme.background,
+                colorScheme.primary.withOpacity(0.05),
+                colorScheme.background,
               ],
             ),
           ),
@@ -433,7 +437,7 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
             child: Column(
               children: [
                 Expanded(
-                  child: _currentStep == 0 ? _buildPhoneNumberStep() : _buildVerificationCodeStep(),
+                  child: _currentStep == 0 ? _buildPhoneNumberStep(theme) : _buildVerificationCodeStep(theme),
                 ),
               ],
             ),
@@ -444,7 +448,9 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
   }
 
   // Telefon numarası adımı
-  Widget _buildPhoneNumberStep() {
+  Widget _buildPhoneNumberStep(ThemeData theme) {
+    final colorScheme = theme.colorScheme;
+
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -454,24 +460,24 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
           Icon(
             Icons.phone_android,
             size: 80,
-            color: Theme.of(context).colorScheme.primary,
+            color: colorScheme.primary,
           ),
           const SizedBox(height: 24),
           // Başlık
           Text(
             'Telefon Numaranızı Doğrulayın',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
           // Alt başlık
           Text(
             'Hesabınızı güvence altına almak için telefon numaranızı doğrulayın',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey[600],
-                ),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.textTheme.bodySmall?.color,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 32),
@@ -496,7 +502,8 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       filled: true,
-                      fillColor: Colors.grey[50],
+                      // Theme'dan dolgu rengini al
+                      fillColor: theme.inputDecorationTheme.fillColor,
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 16,
@@ -509,9 +516,9 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
                     },
                   ),
                   const SizedBox(height: 8),
-                  const Text(
+                  Text(
                     'Lütfen ülke kodu ile birlikte girin (örn: +90 5XX XXX XX XX)',
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                    style: theme.textTheme.labelSmall,
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton(
@@ -521,8 +528,8 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                      backgroundColor: colorScheme.primary,
+                      foregroundColor: colorScheme.onPrimary,
                     ),
                     child: _isLoading
                         ? Row(
@@ -533,7 +540,7 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
                                 height: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color: Theme.of(context).colorScheme.onPrimary,
+                                  color: colorScheme.onPrimary,
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -557,12 +564,12 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.orange.shade50,
+              color: colorScheme.errorContainer,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.orange.shade200),
+              border: Border.all(color: theme.dividerColor),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.orange.shade100.withOpacity(0.5),
+                  color: colorScheme.shadow.withOpacity(0.1),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -573,29 +580,29 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
               children: [
                 Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.info_outline,
-                      color: Colors.orange,
+                      color: colorScheme.error,
                     ),
                     const SizedBox(width: 8),
                     Text(
                       'Bilgi',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.orange[800],
-                          ),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.error,
+                      ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 8),
-                const Text(
+                Text(
                   'SMS kodunun gelmesi biraz zaman alabilir. Lütfen en az 2 dakika bekleyin.',
-                  style: TextStyle(fontSize: 14),
+                  style: theme.textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 4),
-                const Text(
+                Text(
                   'Kod gelmediyse numaranızı kontrol edip tekrar deneyin.',
-                  style: TextStyle(fontSize: 14),
+                  style: theme.textTheme.bodyMedium,
                 ),
               ],
             ),
@@ -606,7 +613,9 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
   }
 
   // Doğrulama kodu adımı
-  Widget _buildVerificationCodeStep() {
+  Widget _buildVerificationCodeStep(ThemeData theme) {
+    final colorScheme = theme.colorScheme;
+
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -616,24 +625,24 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
           Icon(
             Icons.sms,
             size: 80,
-            color: Theme.of(context).colorScheme.primary,
+            color: colorScheme.primary,
           ),
           const SizedBox(height: 24),
           // Başlık
           Text(
             'Doğrulama Kodunu Girin',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
           // Alt başlık
           Text(
             'Telefonunuza gönderilen 6 haneli kodu girin',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey[600],
-                ),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.textTheme.bodySmall?.color,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
@@ -641,12 +650,12 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
           Container(
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
             decoration: BoxDecoration(
-              color: Colors.grey[100],
+              color: theme.inputDecorationTheme.fillColor,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
               'Kod $_formattedPhoneNumber numarasına gönderildi',
-              style: const TextStyle(fontSize: 14),
+              style: theme.textTheme.bodyMedium,
               textAlign: TextAlign.center,
             ),
           ),
@@ -673,7 +682,7 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       filled: true,
-                      fillColor: Colors.grey[50],
+                      fillColor: theme.inputDecorationTheme.fillColor,
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 16,
@@ -682,10 +691,11 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
                     keyboardType: TextInputType.number,
                     maxLength: 6,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 20,
                       letterSpacing: 8,
                       fontWeight: FontWeight.bold,
+                      color: theme.textTheme.bodyLarge?.color,
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -696,8 +706,8 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                      backgroundColor: colorScheme.primary,
+                      foregroundColor: colorScheme.onPrimary,
                     ),
                     child: _isLoading
                         ? Row(
@@ -708,7 +718,7 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
                                 height: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color: Theme.of(context).colorScheme.onPrimary,
+                                  color: colorScheme.onPrimary,
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -738,12 +748,12 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.blue.shade50,
+              color: colorScheme.tertiaryContainer,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.blue.shade200),
+              border: Border.all(color: theme.dividerColor),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.blue.shade100.withOpacity(0.5),
+                  color: colorScheme.shadow.withOpacity(0.1),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -754,29 +764,29 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
               children: [
                 Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.info_outline,
-                      color: Colors.blue,
+                      color: colorScheme.tertiary,
                     ),
                     const SizedBox(width: 8),
                     Text(
                       'Önemli',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.blue[800],
-                          ),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.tertiary,
+                      ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 8),
-                const Text(
+                Text(
                   'Doğrulama işlemi devam ederken lütfen uygulamadan çıkmayın.',
-                  style: TextStyle(fontSize: 14),
+                  style: theme.textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 4),
-                const Text(
+                Text(
                   'Kod gelmediyse "Kodu Tekrar Gönder" butonuna tıklayabilirsiniz.',
-                  style: TextStyle(fontSize: 14),
+                  style: theme.textTheme.bodyMedium,
                 ),
               ],
             ),

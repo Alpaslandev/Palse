@@ -10,6 +10,31 @@ class AppTheme {
   static const Color warningColor = Color(0xFFFFC107); // Uyarı sarısı
   static const Color errorColor = Color(0xFFE53935); // Hata kırmızısı
 
+  // Bilgi kartları için renkler
+  static const Color infoColor = Color(0xFF2196F3); // Bilgi mavi
+
+  // Açık tema için bilgi kartı renkleri
+  static const Color lightInfoBackgroundColor = Color(0xFFE3F2FD); // Mavi bilgi arkaplan
+  static const Color lightInfoBorderColor = Color(0xFFBBDEFB); // Mavi bilgi kenarlık
+  static const Color lightWarningBackgroundColor = Color(0xFFFFF8E1); // Turuncu uyarı arkaplan
+  static const Color lightWarningBorderColor = Color(0xFFFFE0B2); // Turuncu uyarı kenarlık
+
+  // Koyu tema için bilgi kartı renkleri
+  static const Color darkInfoBackgroundColor = Color(0xFF0D47A1); // Koyu mavi bilgi arkaplan
+  static const Color darkInfoBorderColor = Color(0xFF1565C0); // Koyu mavi bilgi kenarlık
+  static const Color darkWarningBackgroundColor = Color(0xFF4E342E); // Koyu kahverengi uyarı arkaplan
+  static const Color darkWarningBorderColor = Color(0xFF6D4C41); // Koyu kahverengi uyarı kenarlık
+
+  // Form renkler - Açık tema
+  static const Color lightInputFillColor = Color(0xFFF5F5F5); // Form dolgu rengi
+  static const Color lightHintTextColor = Color(0xFF9E9E9E); // İpucu metin rengi
+  static const Color lightBorderColor = Color(0xFFE0E0E0); // Kenarlık rengi
+
+  // Form renkler - Koyu tema
+  static const Color darkInputFillColor = Color(0xFF2C2C2C); // Form dolgu rengi
+  static const Color darkHintTextColor = Color(0xFF757575); // İpucu metin rengi
+  static const Color darkBorderColor = Color(0xFF424242); // Kenarlık rengi
+
   // Açık tema renkleri
   static const Color lightTextColor = Color(0xFF212121); // Metin rengi
   static const Color lightBackgroundColor = Color(0xFFFFFFFF); // Arka plan rengi
@@ -17,6 +42,7 @@ class AppTheme {
   static const Color lightCardColor = Color(0xFFFFFFFF); // Kart rengi
   static const Color lightDividerColor = Color(0xFFE0E0E0); // Ayırıcı rengi
   static const Color lightIconColor = Color(0xFF616161); // İkon rengi
+  static const Color lightSubtitleColor = Color(0xFF757575); // Alt başlık rengi
 
   // Koyu tema renkleri
   static const Color darkTextColor = Color(0xFFEEEEEE); // Metin rengi
@@ -26,6 +52,7 @@ class AppTheme {
   static const Color darkDividerColor = Color(0xFF424242); // Ayırıcı rengi
   static const Color darkIconColor = Color(0xFFBDBDBD); // İkon rengi
   static const Color darkChipColor = Color(0xFF252525); // Chip rengi
+  static const Color darkSubtitleColor = Color(0xFFAAAAAA); // Alt başlık rengi
 
   // Açık tema
   static ThemeData get theme => _createTheme(
@@ -36,6 +63,14 @@ class AppTheme {
         cardColor: lightCardColor,
         dividerColor: lightDividerColor,
         iconColor: lightIconColor,
+        subtitleColor: lightSubtitleColor,
+        inputFillColor: lightInputFillColor,
+        hintTextColor: lightHintTextColor,
+        borderColor: lightBorderColor,
+        infoBackgroundColor: lightInfoBackgroundColor,
+        infoBorderColor: lightInfoBorderColor,
+        warningBackgroundColor: lightWarningBackgroundColor,
+        warningBorderColor: lightWarningBorderColor,
       );
 
   // Koyu tema
@@ -47,6 +82,14 @@ class AppTheme {
         cardColor: darkCardColor,
         dividerColor: darkDividerColor,
         iconColor: darkIconColor,
+        subtitleColor: darkSubtitleColor,
+        inputFillColor: darkInputFillColor,
+        hintTextColor: darkHintTextColor,
+        borderColor: darkBorderColor,
+        infoBackgroundColor: darkInfoBackgroundColor,
+        infoBorderColor: darkInfoBorderColor,
+        warningBackgroundColor: darkWarningBackgroundColor,
+        warningBorderColor: darkWarningBorderColor,
       );
 
   // Ortak tema oluşturma fonksiyonu
@@ -58,6 +101,14 @@ class AppTheme {
     required Color cardColor,
     required Color dividerColor,
     required Color iconColor,
+    required Color subtitleColor,
+    required Color inputFillColor,
+    required Color hintTextColor,
+    required Color borderColor,
+    required Color infoBackgroundColor,
+    required Color infoBorderColor,
+    required Color warningBackgroundColor,
+    required Color warningBorderColor,
   }) {
     final isDark = brightness == Brightness.dark;
 
@@ -73,8 +124,13 @@ class AppTheme {
         onSecondary: isDark ? darkTextColor : Colors.white,
         error: errorColor,
         onError: Colors.white,
+        background: backgroundColor,
+        onBackground: textColor,
         surface: surfaceColor,
         onSurface: textColor,
+        tertiary: infoColor,
+        tertiaryContainer: infoBackgroundColor,
+        errorContainer: warningBackgroundColor,
       ),
 
       // Temel renkler
@@ -84,7 +140,7 @@ class AppTheme {
       iconTheme: IconThemeData(color: iconColor),
 
       cardTheme: CardTheme(
-        color: backgroundColor,
+        color: cardColor,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
@@ -107,20 +163,21 @@ class AppTheme {
         titleSmall: TextStyle(color: textColor, fontWeight: FontWeight.bold),
         bodyLarge: TextStyle(color: textColor),
         bodyMedium: TextStyle(color: textColor),
-        bodySmall: TextStyle(color: textColor.withOpacity(0.8)),
+        bodySmall: TextStyle(color: subtitleColor),
+        labelSmall: TextStyle(color: subtitleColor),
       ),
 
       // Form elemanları
       inputDecorationTheme: InputDecorationTheme(
-        fillColor: cardColor,
+        fillColor: inputFillColor,
         filled: true,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8.0),
-          borderSide: BorderSide(color: isDark ? dividerColor : primaryColor.withOpacity(0.5)),
+          borderSide: BorderSide(color: isDark ? borderColor : primaryColor.withOpacity(0.5)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8.0),
-          borderSide: BorderSide(color: dividerColor),
+          borderSide: BorderSide(color: borderColor),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8.0),
@@ -133,7 +190,7 @@ class AppTheme {
         contentPadding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         labelStyle: TextStyle(color: textColor.withOpacity(0.7)),
         floatingLabelStyle: TextStyle(color: primaryColor),
-        hintStyle: TextStyle(color: textColor.withOpacity(0.5)),
+        hintStyle: TextStyle(color: hintTextColor),
       ),
 
       // Butonlar
