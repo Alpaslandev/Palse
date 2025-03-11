@@ -220,11 +220,138 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
             floatingActionButton: FloatingActionButton.extended(
               backgroundColor: AppTheme.primaryColor,
               shape: const StadiumBorder(),
-              onPressed: () => context.pushNamed(createAdvert),
+              onPressed: () {
+                // SVG önizleme dialogunu göster
+                _showSvgPreviewDialog(context);
+              },
               label: Text(context.tr('create_listing'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           );
         },
+      ),
+    );
+  }
+
+  // SVG önizleme dialogu
+  void _showSvgPreviewDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          child: Container(
+            width: MediaQuery.of(context).size.width * 0.9,
+            height: MediaQuery.of(context).size.height * 0.8,
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                Text(
+                  'SVG Dosyaları Önizleme',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: GridView.count(
+                    crossAxisCount: 2,
+                    childAspectRatio: 0.8,
+                    children: [
+                      _buildSvgItem(context, 'vector_star_empty.svg'),
+                      _buildSvgItem(context, 'vector_x2.svg'),
+                      _buildSvgItem(context, 'vectormessage.svg'),
+                      _buildSvgItem(context, 'vector_6_x2.svg'),
+                      _buildSvgItem(context, 'vector_7_x2.svg'),
+                      _buildSvgItem(context, 'vector_8_x2.svg'),
+                      _buildSvgItem(context, 'vector_9_x2.svg'),
+                      _buildSvgItem(context, 'vector_confirm.svg'),
+                      _buildSvgItem(context, 'vector_profile_confirm.svg'),
+                      _buildSvgItem(context, 'vector_2_x2.svg'),
+                      _buildSvgItem(context, 'vector_3_x2.svg'),
+                      _buildSvgItem(context, 'vector_4_x2.svg'),
+                      _buildSvgItem(context, 'vector_5_x2.svg'),
+                      _buildSvgItem(context, 'vector_5_x231.svg'),
+                      _buildSvgItem(context, 'vector4bar.svg'),
+                      _buildSvgItem(context, 'vector_10_x2.svg'),
+                      _buildSvgItem(context, 'vector_11_x2.svg'),
+                      _buildSvgItem(context, 'vector_1_x2.svg'),
+                      _buildSvgItem(context, 'vector3.0.svg'),
+                      _buildSvgItem(context, 'vector3bar.svg'),
+                      _buildSvgItem(context, 'vector1bar.svg'),
+                      _buildSvgItem(context, 'vector2.0.svg'),
+                      _buildSvgItem(context, 'stroke_1_x222.svg'),
+                      _buildSvgItem(context, 'profile.svg'),
+                      _buildSvgItem(context, 'vector1.0.svg'),
+                      _buildSvgItem(context, 'star_filled_2.svg'),
+                      _buildSvgItem(context, 'star_mini1.svg'),
+                      _buildSvgItem(context, 'star_mini_22.svg'),
+                      _buildSvgItem(context, 'stroke_11_x2.svg'),
+                      _buildSvgItem(context, 'stroke_1_x2.svg'),
+                      _buildSvgItem(context, 'show_hide_1_x2.svg'),
+                      _buildSvgItem(context, 'star_filled_1.svg'),
+                      _buildSvgItem(context, 'ringing_iconly_pro_1_x2.svg'),
+                      _buildSvgItem(context, 'ringtone_iconly_pro_1_x2.svg'),
+                      _buildSvgItem(context, 'search_iconly_pro_x2.svg'),
+                      _buildSvgItem(context, 'setting_iconly_pro_x2.svg'),
+                      _buildSvgItem(context, 'plus_4_iconly_pro_1_x2.svg'),
+                      _buildSvgItem(context, 'plus_yeni_ilan.svg'),
+                      _buildSvgItem(context, 'logout_iconly_pro_x2.svg'),
+                      _buildSvgItem(context, 'image_x2.svg'),
+                      _buildSvgItem(context, 'gem_iconly_pro_x2.svg'),
+                      _buildSvgItem(context, 'google.svg'),
+                      _buildSvgItem(context, 'home_1_x2.svg'),
+                      _buildSvgItem(context, 'docuemnt_2_lines_iconly_pro_x2.svg'),
+                      _buildSvgItem(context, 'edit_x2.svg'),
+                      _buildSvgItem(context, 'eye_iconly_pro_4_x2.svg'),
+                      _buildSvgItem(context, 'filter_x2.svg'),
+                      _buildSvgItem(context, 'ad_1_x2.svg'),
+                      _buildSvgItem(context, 'apple.svg'),
+                      _buildSvgItem(context, 'category_1_x2.svg'),
+                      _buildSvgItem(context, 'chat_iconly_pro_x2.svg'),
+                      _buildSvgItem(context, 'counter_clockwise_undo_iconly_pro_x2.svg'),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    // Orijinal işlevi çağır
+                    context.pushNamed(createAdvert);
+                  },
+                  child: Text('İlan Oluştur'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // SVG öğesi widget'ı
+  Widget _buildSvgItem(BuildContext context, String fileName) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Expanded(
+              child: SvgPicture.asset(
+                'assets/vectors/$fileName',
+                width: 48,
+                height: 48,
+                colorFilter: const ColorFilter.mode(AppTheme.primaryColor, BlendMode.srcIn),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              fileName,
+              style: const TextStyle(fontSize: 12),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
       ),
     );
   }

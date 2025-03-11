@@ -67,10 +67,10 @@ class _LandingViewState extends State<LandingView> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildNavItem(context, 0, 'assets/vectors/home_1_x2.svg', iconSize, selectedIndex),
-              _buildNavItem(context, 1, 'assets/vectors/category_1_x2.svg', iconSize, selectedIndex),
-              _buildNavItem(context, 2, 'assets/vectors/ad_1_x2.svg', iconSize, selectedIndex),
-              _buildNavItem(context, 3, 'assets/vectors/vector_5_x2.svg', iconSize, selectedIndex),
+              _buildNavItem(context, 0, 'assets/navbar_icons/home_1_x2.svg', iconSize, selectedIndex),
+              _buildNavItem(context, 1, 'assets/navbar_icons/category_1_x2.svg', iconSize, selectedIndex),
+              _buildNavItem(context, 2, 'assets/navbar_icons/ad_1_x2.svg', iconSize, selectedIndex),
+              _buildNavItem(context, 3, 'assets/navbar_icons/vector_5_x2.svg', iconSize, selectedIndex),
             ],
           ),
         ),
