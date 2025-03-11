@@ -108,6 +108,7 @@ class MyApp extends StatelessWidget {
     });
 
     return MaterialApp.router(
+      debugShowCheckedModeBanner: false,
       title: 'Palse App',
       theme: AppTheme.theme, // Aydınlık tema
       darkTheme: AppTheme.darkTheme, // Koyu tema

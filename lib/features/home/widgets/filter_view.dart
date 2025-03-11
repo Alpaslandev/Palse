@@ -22,7 +22,7 @@ class FilterView extends StatefulWidget {
 
 class _FilterViewState extends State<FilterView> {
   int? _distance;
-  String? _selectedGender;
+  Gender? _selectedGender;
   List<Categories>? _selectedCategories;
   bool _isFiltered = false;
   List<Advert> _filteredAdverts = [];
@@ -62,20 +62,12 @@ class _FilterViewState extends State<FilterView> {
       // Önce seçilen cinsiyeti normalize edelim (fromString metodu ile)
       Gender? selectedGenderEnum;
 
-      if (_selectedGender == context.tr('male')) {
-        selectedGenderEnum = Gender.male;
-      } else if (_selectedGender == context.tr('female')) {
-        selectedGenderEnum = Gender.female;
-      }
-
-      debugPrint('Seçilen cinsiyet enum: ${selectedGenderEnum?.name}');
-
       if (selectedGenderEnum != null) {
         allAdverts = allAdverts.where((advert) {
-          final ilanCinsiyet = advert.creatorGender;
-          debugPrint('İlan cinsiyeti: ${ilanCinsiyet.name} == Seçilen: ${selectedGenderEnum!.name} => ${ilanCinsiyet == selectedGenderEnum}');
+          final ilanCinsiyet = advert.creatorGender.name.toLowerCase();
+          debugPrint('İlan cinsiyeti: ${ilanCinsiyet} == Seçilen: ${selectedGenderEnum!.name} => ${ilanCinsiyet == selectedGenderEnum.name}');
 
-          return advert.creatorGender == selectedGenderEnum;
+          return advert.creatorGender.name.toLowerCase() == selectedGenderEnum.name.toLowerCase();
         }).toList();
       }
 
@@ -148,7 +140,7 @@ class _FilterViewState extends State<FilterView> {
           ),
           const SizedBox(height: 16),
           // Cinsiyet seçici
-          DropdownButtonFormField<String>(
+          DropdownButtonFormField<Gender>(
             value: _selectedGender,
             decoration: InputDecoration(
               labelText: context.tr('gender'),
@@ -156,10 +148,8 @@ class _FilterViewState extends State<FilterView> {
             ),
             items: [
               DropdownMenuItem(value: null, child: Text(context.tr('all'))),
-              DropdownMenuItem(value: context.tr('male'), child: Text(context.tr('male'))),
-              DropdownMenuItem(value: context.tr('female'), child: Text(context.tr('female'))),
-              // Diğer seçeneğini de ekleyebilirsiniz
-              // DropdownMenuItem(value: 'Diğer', child: Text('Diğer')),
+              DropdownMenuItem(value: Gender.male, child: Text(context.tr('male'))),
+              DropdownMenuItem(value: Gender.female, child: Text(context.tr('female')))
             ],
             onChanged: (value) {
               setState(() {
