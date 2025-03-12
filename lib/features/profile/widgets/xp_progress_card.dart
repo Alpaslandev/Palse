@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
+import 'package:palseapp/features/achievement/achievement_service.dart';
+import 'package:palseapp/features/achievement/user_rank.dart';
 import 'package:provider/provider.dart';
 
 class XPProgressCard extends StatelessWidget {
@@ -10,7 +12,9 @@ class XPProgressCard extends StatelessWidget {
   final VoidCallback onLeaderboardPressed;
   @override
   Widget build(BuildContext context) {
-    final customer = context.read<AuthProvider>().user!;
+    final authProvider = context.read<AuthProvider>();
+    final userId = authProvider.user!.userID!;
+    final achievementService = Provider.of<AchievementService>(context, listen: false);
 
     return Card(
       child: Padding(
@@ -19,92 +23,141 @@ class XPProgressCard extends StatelessWidget {
           spacing: 2,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('${context.tr(customer.rank.titleKey)} ${customer.rank.icon}',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                )),
-            if (customer.achievements.xpToNextRank > 0)
-              RichText(
-                text: TextSpan(
-                  style: DefaultTextStyle.of(context).style,
-                  children: [
-                    TextSpan(text: context.tr('to_next_level_part1'), style: const TextStyle(color: Colors.grey)),
-                    TextSpan(
-                      text: '${customer.achievements.xpToNextRank} XP',
-                      style: const TextStyle(color: AppTheme.primaryColor),
+            FutureBuilder<UserRank>(
+                future: achievementService.getUserRank(userId),
+                builder: (context, rankSnapshot) {
+                  if (!rankSnapshot.hasData) {
+                    return const SizedBox(height: 20);
+                  }
+
+                  final rank = rankSnapshot.data!;
+                  return Text('${achievementService.getLocalizedRankTitle(rank, context)} ${rank.icon}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ));
+                }),
+            FutureBuilder<int>(
+                future: achievementService.getXpToNextRank(userId),
+                builder: (context, xpToNextSnapshot) {
+                  if (!xpToNextSnapshot.hasData || xpToNextSnapshot.data! <= 0) {
+                    return const SizedBox(height: 4);
+                  }
+
+                  return RichText(
+                    text: TextSpan(
+                      style: DefaultTextStyle.of(context).style,
+                      children: [
+                        TextSpan(text: context.tr('to_next_level_part1'), style: const TextStyle(color: Colors.grey)),
+                        TextSpan(
+                          text: '${xpToNextSnapshot.data} XP',
+                          style: const TextStyle(color: AppTheme.primaryColor),
+                        ),
+                        TextSpan(text: context.tr('to_next_level_part2'), style: const TextStyle(color: Colors.grey)),
+                      ],
                     ),
-                    TextSpan(text: context.tr('to_next_level_part2'), style: const TextStyle(color: Colors.grey)),
-                  ],
-                ),
-              ),
-            LinearProgressIndicator(
-              value: customer.achievements.totalXp / customer.achievements.rank.maxXp,
-              backgroundColor: Colors.grey[300],
-              valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
-            ),
-            Align(
-              alignment: Alignment.bottomRight,
-              child: RichText(
-                text: TextSpan(
-                  style: DefaultTextStyle.of(context).style,
-                  children: [
-                    TextSpan(
-                      text: '${customer.achievements.totalXp}',
-                      style: const TextStyle(color: AppTheme.primaryColor),
-                    ),
-                    TextSpan(text: '/${customer.achievements.rank.maxXp + 1}'),
-                  ],
-                ),
-              ),
-            ),
+                  );
+                }),
+            FutureBuilder<double>(
+                future: achievementService.getXpToNextRankPercentage(userId),
+                builder: (context, progressSnapshot) {
+                  return LinearProgressIndicator(
+                    value: progressSnapshot.data ?? 0.0,
+                    backgroundColor: Colors.grey[300],
+                    valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
+                  );
+                }),
+            FutureBuilder<int>(
+                future: Future.wait([achievementService.getTotalXp(userId), achievementService.getXpToNextRank(userId)]).then((values) {
+                  final totalXp = values[0];
+                  final xpToNext = values[1];
+                  final maxXp = totalXp + xpToNext;
+                  return maxXp;
+                }),
+                builder: (context, maxXpSnapshot) {
+                  return FutureBuilder<int>(
+                      future: achievementService.getTotalXp(userId),
+                      builder: (context, totalXpSnapshot) {
+                        if (!totalXpSnapshot.hasData || !maxXpSnapshot.hasData) {
+                          return const SizedBox(height: 4);
+                        }
+
+                        return Align(
+                          alignment: Alignment.bottomRight,
+                          child: RichText(
+                            text: TextSpan(
+                              style: DefaultTextStyle.of(context).style,
+                              children: [
+                                TextSpan(
+                                  text: '${totalXpSnapshot.data}',
+                                  style: const TextStyle(color: AppTheme.primaryColor),
+                                ),
+                                TextSpan(text: '/${maxXpSnapshot.data}'),
+                              ],
+                            ),
+                          ),
+                        );
+                      });
+                }),
             const SizedBox(height: 8),
-            RichText(
-              text: TextSpan(
-                style: DefaultTextStyle.of(context).style,
-                children: [
-                  TextSpan(text: context.tr('to_next_premium_part1'), style: const TextStyle(color: Colors.grey)),
-                  TextSpan(
-                    text: '${customer.achievements.xpToNextPremium} XP',
-                    style: const TextStyle(color: AppTheme.primaryColor),
-                  ),
-                  TextSpan(text: context.tr('to_next_premium_part2'), style: const TextStyle(color: Colors.grey)),
-                ],
-              ),
-            ),
-            LinearProgressIndicator(
-              value: customer.achievements.totalXp / customer.achievements.xpToNextPremium,
-              backgroundColor: Colors.grey[300],
-              valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
-            ),
-            Align(
-              alignment: Alignment.bottomRight,
-              child: RichText(
-                text: TextSpan(
-                  style: DefaultTextStyle.of(context).style,
-                  children: [
-                    TextSpan(
-                      text: '${customer.achievements.totalXp}',
-                      style: const TextStyle(color: AppTheme.primaryColor),
+            FutureBuilder<int>(
+                future: achievementService.getXpToNextPremium(userId),
+                builder: (context, xpToNextPremiumSnapshot) {
+                  if (!xpToNextPremiumSnapshot.hasData) {
+                    return const SizedBox(height: 4);
+                  }
+
+                  return RichText(
+                    text: TextSpan(
+                      style: DefaultTextStyle.of(context).style,
+                      children: [
+                        TextSpan(text: context.tr('to_next_premium_part1'), style: const TextStyle(color: Colors.grey)),
+                        TextSpan(
+                          text: '${xpToNextPremiumSnapshot.data} XP',
+                          style: const TextStyle(color: AppTheme.primaryColor),
+                        ),
+                        TextSpan(text: context.tr('to_next_premium_part2'), style: const TextStyle(color: Colors.grey)),
+                      ],
                     ),
-                    TextSpan(text: '/${customer.achievements.xpToNextPremium}'),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                  );
+                }),
+            FutureBuilder<double>(
+                future: Future.wait([achievementService.getTotalXp(userId), achievementService.getXpToNextPremium(userId)]).then((values) {
+                  final totalXp = values[0];
+                  final xpToNext = values[1];
+                  if (xpToNext <= 0) return 1.0;
+                  return totalXp / (totalXp + xpToNext);
+                }),
+                builder: (context, progressSnapshot) {
+                  return LinearProgressIndicator(
+                    value: progressSnapshot.data ?? 0.0,
+                    backgroundColor: Colors.grey[300],
+                    valueColor: const AlwaysStoppedAnimation<Color>(Colors.amber),
+                  );
+                }),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                FutureBuilder<int>(
+                    future: achievementService.getEarnedPremiumRewardCount(userId),
+                    builder: (context, premiumCountSnapshot) {
+                      return Text(
+                        '${context.tr('premium_rewards')}: ${premiumCountSnapshot.data ?? 0}',
+                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                      );
+                    }),
+                TextButton.icon(
+                  onPressed: onLeaderboardPressed,
+                  icon: const Icon(Icons.leaderboard, size: 16),
+                  label: Text(context.tr('leaderboard')),
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    minimumSize: const Size(0, 0),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                 ),
-                onPressed: onLeaderboardPressed,
-                child: Text(context.tr('leaderboard')),
-              ),
-            )
+              ],
+            ),
           ],
         ),
       ),

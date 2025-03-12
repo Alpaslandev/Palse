@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
+import 'package:palseapp/features/achievement/achievement_service.dart';
 import 'package:provider/provider.dart';
 
 class LeaderBoardUser {
@@ -111,7 +112,11 @@ class LeaderBoard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text('${context.tr('your_rank')}: ${index + 1}.', style: const TextStyle(color: Colors.white)),
-            _buildListTileTrailing(user.user?.achievements.totalXp ?? 0, false),
+            FutureBuilder<int>(
+                future: Provider.of<AchievementService>(context, listen: false).getTotalXp(user.user!.userID!),
+                builder: (context, snapshot) {
+                  return _buildListTileTrailing(snapshot.data ?? 0, false);
+                }),
           ],
         ),
       ),

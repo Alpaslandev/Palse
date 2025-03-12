@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/models/chat_model.dart';
-import 'package:palseapp/core/services/achievement_service.dart';
+import 'package:palseapp/features/achievement/achievement_service.dart';
 import 'package:palseapp/features/achievement/achievements.dart';
 import 'package:palseapp/features/messages/widgets/message_app_bar.dart';
 import 'package:provider/provider.dart';
@@ -111,7 +111,7 @@ class _MessagesViewState extends State<MessagesView> {
     final achievementService = AchievementService();
     achievementService
         .processMessageRewards(
-            user: authProvider.user!, chatId: widget.chatId, isFirstMessageFromUs: isFirstFromUs, isFirstMessageFromOther: isFirstFromOther)
+            userId: authProvider.user!.userID!, chatId: widget.chatId, isFirstMessageFromUs: isFirstFromUs, isFirstMessageFromOther: isFirstFromOther)
         .then((_) {
       debugPrint('✅ XP kontrolleri tamamlandı.');
     });

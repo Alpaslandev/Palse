@@ -9,7 +9,8 @@ import 'package:palseapp/features/achievement/achievement_test_page.dart';
 import 'package:palseapp/features/achievement/achievements.dart';
 import 'package:palseapp/features/profile/widgets/leader_board.dart';
 import 'package:palseapp/features/profile/widgets/xp_progress_card.dart';
-import 'package:palseapp/core/services/achievement_service.dart';
+import 'package:palseapp/features/achievement/achievement_manager.dart';
+import 'package:palseapp/features/achievement/xp_events.dart';
 import 'package:provider/provider.dart';
 import 'package:palseapp/core/services/shared_pref_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -39,10 +40,12 @@ class _ProfileViewState extends State<ProfileView> {
       final user = authProvider.user;
 
       if (user != null) {
-        final achievementService = Provider.of<AchievementService>(context, listen: false);
+        final achievementManager = AchievementManager();
 
         // Günlük görevleri kontrol et ve gerekirse sıfırla
-        await achievementService.checkAndResetDailyTasksAtMidnight(user);
+        if (user.userID != null) {
+          await achievementManager.resetDailyTasks(user.userID!);
+        }
 
         // Kullanıcının tamamlanan görevlerini local storage'dan yükle
         if (user.userID != null) {
@@ -122,6 +125,11 @@ class _ProfileViewState extends State<ProfileView> {
 
                 // XP Sistemi butonu
                 const XPSystemButton(),
+                ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const AchievementTestPage()));
+                    },
+                    child: Text(context.tr('xp_system')))
               ],
             ),
           ),
@@ -242,12 +250,17 @@ class _DailyTaskCardState extends State<DailyTaskCard> {
     final user = authProvider.user;
 
     if (user?.userID != null) {
-      final tasksStatus = await SharedPrefService.getDailyTasksStatus(user!.userID!);
+      final achievementManager = AchievementManager();
+
+      // Görevlerin tamamlanma durumlarını kontrol et
+      final isDailyLoginCompleted = !(await achievementManager.canCompleteTask(user!.userID!, XpEvent.dailyLogin));
+      final isDailyCreateListingCompleted = !(await achievementManager.canCompleteTask(user.userID!, XpEvent.dailyCreateListing));
+      final isDailySendMessageCompleted = !(await achievementManager.canCompleteTask(user.userID!, XpEvent.dailySendMessage));
 
       setState(() {
-        _isDailyLoginCompleted = tasksStatus.containsKey(XpEvent.dailyLogin.name);
-        _isDailyCreateListingCompleted = tasksStatus.containsKey(XpEvent.dailyCreateListing.name);
-        _isDailySendMessageCompleted = tasksStatus.containsKey(XpEvent.dailySendMessage.name);
+        _isDailyLoginCompleted = isDailyLoginCompleted;
+        _isDailyCreateListingCompleted = isDailyCreateListingCompleted;
+        _isDailySendMessageCompleted = isDailySendMessageCompleted;
       });
     }
   }
@@ -258,7 +271,7 @@ class _DailyTaskCardState extends State<DailyTaskCard> {
     final user = authProvider.user;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final achievementService = Provider.of<AchievementService>(context, listen: false);
+    final achievementManager = AchievementManager();
 
     // Toplam XP hesapla (tamamlanan görevler için)
     int totalDailyXp = 0;
@@ -269,8 +282,8 @@ class _DailyTaskCardState extends State<DailyTaskCard> {
     // Tüm görevlerin tamamlanıp tamamlanmadığını kontrol et
     final bool allTasksCompleted = _isDailyLoginCompleted && _isDailyCreateListingCompleted && _isDailySendMessageCompleted;
 
-    // Bir sonraki yenilemeye kalan süreyi al
-    final String timeUntilReset = achievementService.getFormattedTimeUntilNextReset(isTest: _isTestMode);
+    // Bir sonraki yenilemeye kalan süreyi al - bu metod artık yok, basit bir metin kullanacağız
+    final String timeUntilReset = "24 saat";
 
     return Container(
       decoration: BoxDecoration(
@@ -302,16 +315,17 @@ class _DailyTaskCardState extends State<DailyTaskCard> {
                       icon: const Icon(Icons.refresh, color: Colors.white),
                       onPressed: () async {
                         // Test için dünün tarihini ayarla
-                        final testDate = DateTime.now().subtract(const Duration(days: 1));
-                        final achievementService = Provider.of<AchievementService>(context, listen: false);
+                        final achievementManager = AchievementManager();
 
                         // Test modunu aktifleştir
                         setState(() {
                           _isTestMode = true;
                         });
 
-                        // Görevleri sıfırla ve güncellenmiş kullanıcıyı al
-                        final updatedUser = await achievementService.testDailyTaskReset(user, testDate: testDate);
+                        // Görevleri sıfırla
+                        if (user.userID != null) {
+                          await achievementManager.resetDailyTasks(user.userID!);
+                        }
 
                         // Görev durumlarını yeniden yükle
                         await _loadDailyTasksStatus();
@@ -363,7 +377,7 @@ class _DailyTaskCardState extends State<DailyTaskCard> {
           // 1. Günlük Giriş
           _buildTaskItem(
             context: context,
-            text: context.tr('daily_task_login'),
+            text: context.tr('daily_login_description'),
             isCompleted: _isDailyLoginCompleted,
             xpAmount: XpEvent.dailyLogin.xpAmount,
             index: 1,
@@ -372,7 +386,7 @@ class _DailyTaskCardState extends State<DailyTaskCard> {
           // 2. İlan Oluşturma
           _buildTaskItem(
             context: context,
-            text: context.tr('daily_task_create_listing'),
+            text: context.tr('daily_create_listing_description'),
             isCompleted: _isDailyCreateListingCompleted,
             xpAmount: XpEvent.dailyCreateListing.xpAmount,
             index: 2,
@@ -381,7 +395,7 @@ class _DailyTaskCardState extends State<DailyTaskCard> {
           // 3. Mesaj Gönderme
           _buildTaskItem(
             context: context,
-            text: context.tr('daily_task_send_message'),
+            text: context.tr('daily_send_message_description'),
             isCompleted: _isDailySendMessageCompleted,
             xpAmount: XpEvent.dailySendMessage.xpAmount,
             index: 3,

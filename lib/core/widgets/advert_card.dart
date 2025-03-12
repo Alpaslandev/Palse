@@ -10,6 +10,8 @@ import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/widgets/circle_profile_picture.dart';
 import 'package:palseapp/core/services/chat_service.dart';
+import 'package:palseapp/features/achievement/achievement_manager.dart';
+import 'package:palseapp/features/achievement/user_rank.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -172,14 +174,20 @@ class AdvertCard extends StatelessWidget {
                       const SizedBox(height: 4),
 
                       // 2. Satır: Kullanıcı rütbesi
-                      Text(
-                        "${customer.rank.icon} ${context.tr(customer.rank.titleKey)}",
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w400,
-                          fontSize: 11,
-                          color: Colors.grey,
-                        ),
-                      ),
+                      Builder(builder: (context) {
+                        // Kullanıcının XP değerini al
+                        final userXp = customer.totalXp;
+                        final rank = AchievementManager().getUserRank(userXp);
+
+                        return Text(
+                          "${rank.icon} ${AchievementManager().getLocalizedRankTitle(rank, context)}",
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w400,
+                            fontSize: 11,
+                            color: Colors.grey,
+                          ),
+                        );
+                      }),
                       const SizedBox(height: 4),
 
                       // 3. Satır: Etkinlik türü ve tarih

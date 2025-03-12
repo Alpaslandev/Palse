@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
-import 'package:palseapp/core/services/achievement_service.dart';
+import 'package:palseapp/features/achievement/achievement_service.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
 import 'package:palseapp/features/achievement/achievements.dart';
 import 'package:palseapp/features/achievement/premium_rewards.dart';
@@ -52,9 +52,7 @@ class XpEventsView extends StatelessWidget {
 
   Widget _xpAndLevel(AuthProvider authProvider, BuildContext context, AchievementService achievementService) {
     // Kullanıcının unvanını hesapla
-    final userRank = achievementService.getUserRank(authProvider.user!.totalXp);
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final userId = authProvider.user!.userID!;
 
     return Card(
       elevation: 4,
@@ -64,62 +62,84 @@ class XpEventsView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Container(
-                  width: 50,
-                  height: 50,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: userRank.getRankColor(),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Text(
-                    userRank.icon,
-                    style: const TextStyle(fontSize: 24),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            FutureBuilder<UserRank>(
+                future: achievementService.getUserRank(userId),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  final userRank = snapshot.data!;
+
+                  return Row(
                     children: [
-                      Text(
-                        'Unvan: ${userRank.getLocalizedTitle(context)}',
-                        style: theme.textTheme.titleLarge,
+                      Container(
+                        width: 50,
+                        height: 50,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: userRank.color,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          userRank.icon,
+                          style: const TextStyle(fontSize: 24),
+                        ),
                       ),
-                      Text(
-                        'Toplam XP: ${authProvider.user!.totalXp}',
-                        style: theme.textTheme.titleMedium,
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Unvan: ${achievementService.getLocalizedRankTitle(userRank, context)}',
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
+                            FutureBuilder<int>(
+                                future: achievementService.getTotalXp(userId),
+                                builder: (context, xpSnapshot) {
+                                  return Text(
+                                    'Toplam XP: ${xpSnapshot.data ?? 0}',
+                                    style: Theme.of(context).textTheme.titleMedium,
+                                  );
+                                }),
+                          ],
+                        ),
                       ),
                     ],
-                  ),
-                ),
-              ],
-            ),
+                  );
+                }),
             const SizedBox(height: 16),
             Text(
               'Seviye İlerlemesi:',
-              style: TextStyle(color: theme.colorScheme.onSurface),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
             ),
             const SizedBox(height: 4),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: LinearProgressIndicator(
-                value: achievementService.getXpToNextRankPercentage(authProvider.user!.totalXp),
-                minHeight: 10,
-                backgroundColor: theme.colorScheme.surfaceVariant,
-                color: userRank.getRankColor(),
-              ),
-            ),
+            FutureBuilder<double>(
+                future: achievementService.getXpToNextRankPercentage(userId),
+                builder: (context, progressSnapshot) {
+                  return ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: LinearProgressIndicator(
+                      value: progressSnapshot.data ?? 0.0,
+                      minHeight: 10,
+                      backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                    ),
+                  );
+                }),
             const SizedBox(height: 8),
-            Text(
-              'Bir sonraki seviyeye: ${achievementService.getXpToNextRank(authProvider.user!.totalXp)} XP',
-              style: TextStyle(color: theme.colorScheme.onSurface),
-            ),
+            FutureBuilder<int>(
+                future: achievementService.getXpToNextRank(userId),
+                builder: (context, xpToNextSnapshot) {
+                  return Text(
+                    'Bir sonraki seviyeye: ${xpToNextSnapshot.data ?? 0} XP',
+                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                  );
+                }),
             Divider(
               height: 24,
-              color: theme.dividerColor,
+              color: Theme.of(context).dividerColor,
             ),
             Row(
               children: [
@@ -129,17 +149,22 @@ class XpEventsView extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Premium Ödüller: ${achievementService.getEarnedPremiumRewardCount(authProvider.user!.totalXp)}',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.onSurface,
-                        ),
-                      ),
-                      Text(
-                        'Bir sonraki premium ödüle: ${achievementService.getXpToNextPremium(authProvider.user!.totalXp)} XP',
-                        style: TextStyle(color: theme.colorScheme.onSurface),
-                      ),
+                      FutureBuilder<int>(
+                          future: achievementService.getEarnedPremiumRewardCount(userId),
+                          builder: (context, premiumSnapshot) {
+                            return Text(
+                              'Kazanılan Premium Ödüller: ${premiumSnapshot.data ?? 0}',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            );
+                          }),
+                      FutureBuilder<int>(
+                          future: achievementService.getXpToNextPremium(userId),
+                          builder: (context, nextPremiumSnapshot) {
+                            return Text(
+                              'Bir sonraki premium ödüle: ${nextPremiumSnapshot.data ?? 0} XP',
+                              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                            );
+                          }),
                     ],
                   ),
                 ),
@@ -147,8 +172,8 @@ class XpEventsView extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Premium Eşikler: ${PremiumRewards.getPremiumThresholds(50000).join(", ")}',
-              style: theme.textTheme.bodySmall,
+              'Premium Eşikler: ${PremiumRewards.xpThresholds.join(", ")}',
+              style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
         ),
@@ -265,59 +290,64 @@ class XpEventsView extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             ...group.events.map((event) {
-              // Görevin kaç kez tamamlandığı bilgisini al
-              final completionCount = achievementService.getTaskCompletionCount(authProvider.user!, event);
+              // Görevin kaç kez tamamlandığını kontrol et
+              return FutureBuilder<int>(
+                  future: achievementService.getTaskCompletionCount(authProvider.user!.userID!, event),
+                  builder: (context, snapshot) {
+                    final completionCount = snapshot.data ?? 0;
 
-              // Bu görevden toplam ne kadar XP kazanıldığını hesapla
-              final totalXpFromEvent = event.xpAmount * completionCount;
+                    // Bu görevden toplam ne kadar XP kazanıldığını hesapla
+                    final totalXpFromEvent = event.xpAmount * completionCount;
 
-              final isCompleted = completionCount > 0;
+                    final isCompleted = completionCount > 0;
 
-              return ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: Text(
-                  '•',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.onSurface,
-                  ),
-                ),
-                title: Text(
-                  context.tr(event.descriptionKey),
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: isCompleted ? colorScheme.onSurface : colorScheme.onSurface.withOpacity(0.6),
-                    decoration: isCompleted && !event.isRepeatable ? TextDecoration.lineThrough : TextDecoration.none,
-                  ),
-                ),
-                // Görev tamamlanma sayısı ve toplam kazanılan XP
-                subtitle: completionCount > 0
-                    ? Text(
-                        '${completionCount}x • ${totalXpFromEvent} XP ${context.tr('total')}',
+                    return ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: Text(
+                        '•',
                         style: TextStyle(
-                          fontSize: 12,
-                          color: colorScheme.onSurfaceVariant,
+                          fontSize: 24,
+                          color: isCompleted ? colorScheme.onSurface : colorScheme.onSurface.withOpacity(0.6),
                         ),
-                      )
-                    : null,
-                // Her görevin sağ tarafında XP değeri
-                trailing: Container(
-                  width: 70,
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: isCompleted && !event.isRepeatable ? theme.disabledColor : colorScheme.primary,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    '+${event.xpAmount} XP',
-                    style: TextStyle(
-                      color: isCompleted && !event.isRepeatable ? Colors.white70 : Colors.white,
-                    ),
-                  ),
-                ),
-              );
-            }),
+                      ),
+                      title: Text(
+                        achievementService.getLocalizedTaskDescription(event, context),
+                        style: TextStyle(
+                          color: isCompleted ? colorScheme.onSurface : colorScheme.onSurface.withOpacity(0.6),
+                          decoration: isCompleted && !event.isRepeatable ? TextDecoration.lineThrough : TextDecoration.none,
+                        ),
+                      ),
+                      // Görev tamamlanma sayısı ve toplam kazanılan XP
+                      subtitle: completionCount > 0
+                          ? Text(
+                              '${completionCount}x • ${totalXpFromEvent} XP ${context.tr('total')}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            )
+                          : null,
+                      // Her görevin sağ tarafında XP değeri
+                      trailing: Container(
+                        width: 70,
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: isCompleted && !event.isRepeatable ? theme.disabledColor : colorScheme.primary,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          '+${event.xpAmount} XP',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    );
+                  });
+            }).toList(),
             const SizedBox(height: 8),
           ],
         ),

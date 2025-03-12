@@ -11,7 +11,7 @@ import 'package:palseapp/core/provider/ads_provider.dart';
 import 'package:palseapp/core/provider/locale_provider.dart';
 import 'package:palseapp/core/provider/theme_provider.dart';
 import 'package:palseapp/core/routes/app_router.dart';
-import 'package:palseapp/core/services/achievement_service.dart';
+import 'package:palseapp/features/achievement/achievement_service.dart';
 import 'package:palseapp/core/services/notification_service.dart';
 import 'package:palseapp/core/services/shared_pref_service.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
