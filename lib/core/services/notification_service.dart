@@ -1,7 +1,6 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:palseapp/core/constant/notifications_enum.dart';
 import 'package:palseapp/core/routes/app_router.dart';
 import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/services/shared_pref_service.dart';

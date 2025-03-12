@@ -179,7 +179,7 @@ class AdvertService {
       // Kullanıcının şehrinde ve ilgi alanlarında olmayan ilanları filtrele
       List<Advert> otherAdverts = allAdverts.where((advert) {
         // Kullanıcının şehrinde değilse ve ilgi alanlarında değilse göster
-        bool isNotInUserCity = userCity == null || userCity.isEmpty || advert.location?.city != userCity;
+        bool isNotInUserCity = userCity == null || userCity.isEmpty || advert.location.city != userCity;
         bool isNotInUserInterests = userInterests == null || userInterests.isEmpty || !userInterests.contains(advert.advertType);
 
         return isNotInUserCity && isNotInUserInterests;
@@ -209,10 +209,6 @@ class AdvertService {
   void _sortAdvertsByDistance(List<Advert> adverts, LocationModel userLocation) {
     adverts.sort((a, b) {
       // Eğer konum bilgisi yoksa en sona koy
-      if (a.location == null) return 1;
-      if (b.location == null) return -1;
-
-      // Mesafeleri hesapla
       int distanceA = userLocation.distanceTo(a.location);
       int distanceB = userLocation.distanceTo(b.location);
 

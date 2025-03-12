@@ -2,19 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:palseapp/features/achievement/achievements.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:palseapp/features/achievement/achievement_manager.dart';
 import 'dart:convert';
 
 /// XP sistemini test etmek için kullanılan sayfa
 class AchievementTestPage extends StatefulWidget {
-  const AchievementTestPage({Key? key}) : super(key: key);
+  const AchievementTestPage({super.key});
 
   @override
   State<AchievementTestPage> createState() => _AchievementTestPageState();
 }
 
 class _AchievementTestPageState extends State<AchievementTestPage> {
-  final AchievementManager _achievementManager = AchievementManager();
   final AchievementService _achievementService = AchievementService();
   Map<String, dynamic> _debugInfo = {};
   bool _isLoading = false;
@@ -34,7 +32,7 @@ class _AchievementTestPageState extends State<AchievementTestPage> {
     try {
       final userId = context.read<AuthProvider>().user?.userID;
       if (userId != null) {
-        final debugInfo = await _achievementManager.checkDailyTasksStatus(userId);
+        final debugInfo = await _achievementService.checkDailyTasksStatus(userId);
         setState(() {
           _debugInfo = debugInfo;
         });
@@ -57,7 +55,7 @@ class _AchievementTestPageState extends State<AchievementTestPage> {
     try {
       final userId = context.read<AuthProvider>().user?.userID;
       if (userId != null) {
-        await _achievementManager.resetDailyTasks(userId);
+        await _achievementService.resetDailyTasks(userId);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Günlük görevler sıfırlandı!'),
@@ -84,7 +82,7 @@ class _AchievementTestPageState extends State<AchievementTestPage> {
     try {
       final userId = context.read<AuthProvider>().user?.userID;
       if (userId != null) {
-        await _achievementManager.completeTaskForTesting(userId, event);
+        await _achievementService.completeTaskForTesting(userId, event);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('${event.name} görevi test için tamamlandı!'),
@@ -111,7 +109,7 @@ class _AchievementTestPageState extends State<AchievementTestPage> {
     try {
       final userId = context.read<AuthProvider>().user?.userID;
       if (userId != null) {
-        await _achievementManager.setDailyTaskAsExpired(userId);
+        await _achievementService.setDailyTaskAsExpired(userId);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Sıfırlama zamanı dün olarak ayarlandı!'),
@@ -129,6 +127,116 @@ class _AchievementTestPageState extends State<AchievementTestPage> {
     }
   }
 
+  // Tüm görevleri sıfırlar
+  Future<void> _resetAllTasks() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final userId = context.read<AuthProvider>().user?.userID;
+      if (userId != null) {
+        await _achievementService.resetAllTasks(userId);
+        await _loadDebugInfo();
+      }
+    } catch (e) {
+      debugPrint('Tüm görevler sıfırlanırken hata: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  // XP'yi sıfırlar
+  Future<void> _resetAllXp() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final userId = context.read<AuthProvider>().user?.userID;
+      if (userId != null) {
+        // Onay isteyelim
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('XP Sıfırlama'),
+            content: const Text(
+                'Bu işlem tüm XP\'nizi hem yerel hem de Firestore veritabanında sıfırlayacaktır. Bu işlem geri alınamaz. Devam etmek istiyor musunuz?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('İptal'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Evet, Sıfırla'),
+              ),
+            ],
+          ),
+        );
+
+        if (confirmed == true) {
+          await _achievementService.resetAllXp(userId);
+          await _loadDebugInfo();
+        }
+      }
+    } catch (e) {
+      debugPrint('XP sıfırlanırken hata: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  // Fabrika ayarlarına döndürür (Tam Sıfırlama)
+  Future<void> _factoryReset() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final userId = context.read<AuthProvider>().user?.userID;
+      if (userId != null) {
+        // Onay isteyelim
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('UYARI: Fabrika Ayarlarına Dönüş'),
+            content: const Text(
+                'Bu işlem tüm görevleri ve XP\'yi sıfırlayacaktır. Bu işlem geri alınamaz ve her şey sıfırdan başlayacaktır. Devam etmek istiyor musunuz?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('İptal'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Evet, Tam Sıfırla'),
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.red,
+                ),
+              ),
+            ],
+          ),
+        );
+
+        if (confirmed == true) {
+          await _achievementService.factoryReset(userId);
+          await _loadDebugInfo();
+        }
+      }
+    } catch (e) {
+      debugPrint('Fabrika ayarlarına dönerken hata: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
   // XP kazandır
   Future<void> _earnXp(XpEvent event) async {
     setState(() {
@@ -138,7 +246,7 @@ class _AchievementTestPageState extends State<AchievementTestPage> {
     try {
       final userId = context.read<AuthProvider>().user?.userID;
       if (userId != null) {
-        final newXp = await _achievementManager.earnXpForEvent(userId, event);
+        final newXp = await _achievementService.earnXpForEvent(userId, event);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('${event.xpAmount} XP kazanıldı! Toplam XP: $newXp'),
@@ -256,7 +364,7 @@ class _AchievementTestPageState extends State<AchievementTestPage> {
                           ),
                           const SizedBox(height: 16),
 
-                          // Günlük görevleri sıfırla
+                          // İLK SATIR: Günlük görevleri sıfırla ve zamanı ayarla
                           Row(
                             children: [
                               Expanded(
@@ -285,71 +393,102 @@ class _AchievementTestPageState extends State<AchievementTestPage> {
                             ],
                           ),
 
-                          const SizedBox(height: 16),
-                          const Text('Görevleri Tamamla (Test İçin):'),
                           const SizedBox(height: 8),
 
-                          // Görev tamamlama düğmeleri
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
+                          // İKİNCİ SATIR: Yeni sıfırlama butonları
+                          Row(
                             children: [
-                              ElevatedButton(
-                                onPressed: () => _completeTask(XpEvent.dailyLogin),
-                                child: const Text('Günlük Giriş Tamamla'),
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  icon: const Icon(Icons.delete_sweep),
+                                  label: const Text('Tüm Görevleri Sıfırla'),
+                                  onPressed: _resetAllTasks,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.amber,
+                                    foregroundColor: Colors.white,
+                                  ),
+                                ),
                               ),
-                              ElevatedButton(
-                                onPressed: () => _completeTask(XpEvent.dailyCreateListing),
-                                child: const Text('İlan Oluşturma Tamamla'),
-                              ),
-                              ElevatedButton(
-                                onPressed: () => _completeTask(XpEvent.dailySendMessage),
-                                child: const Text('Mesaj Gönderme Tamamla'),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  icon: const Icon(Icons.fitness_center),
+                                  label: const Text('XP\'yi Sıfırla'),
+                                  onPressed: _resetAllXp,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.purple,
+                                    foregroundColor: Colors.white,
+                                  ),
+                                ),
                               ),
                             ],
                           ),
 
-                          const SizedBox(height: 16),
-                          const Text('XP Kazan (Görev Kontrolü İle):'),
                           const SizedBox(height: 8),
 
-                          // XP kazanma düğmeleri
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: [
-                              ElevatedButton(
-                                onPressed: () => _earnXp(XpEvent.dailyLogin),
-                                child: Text('Günlük Giriş (+${XpEvent.dailyLogin.xpAmount} XP)'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.purple,
-                                  foregroundColor: Colors.white,
-                                ),
+                          // ÜÇÜNCÜ SATIR: Fabrika ayarları
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              icon: const Icon(Icons.warning),
+                              label: const Text('TAM SIFIRLAMA (Fabrika Ayarları)'),
+                              onPressed: _factoryReset,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red,
+                                foregroundColor: Colors.white,
                               ),
-                              ElevatedButton(
-                                onPressed: () => _earnXp(XpEvent.dailyCreateListing),
-                                child: Text('İlan Oluşturma (+${XpEvent.dailyCreateListing.xpAmount} XP)'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.purple,
-                                  foregroundColor: Colors.white,
-                                ),
-                              ),
-                              ElevatedButton(
-                                onPressed: () => _earnXp(XpEvent.dailySendMessage),
-                                child: Text('Mesaj Gönderme (+${XpEvent.dailySendMessage.xpAmount} XP)'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.purple,
-                                  foregroundColor: Colors.white,
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
+
+                          const SizedBox(height: 24),
+                          // Tüm görev tiplerini gruplar halinde göster
+
+                          // 1. Tek Seferlik Görevler
+                          _buildTaskGroupSection(
+                              context: context,
+                              title: 'Tek Seferlik Görevler',
+                              emoji: '🏆',
+                              description: 'Bu görevler sadece bir kez tamamlanabilir',
+                              tasks: [
+                                XpEvent.firstListing,
+                                XpEvent.firstMessage,
+                              ]),
+
+                          const SizedBox(height: 16),
+
+                          // 2. Tekrarlanabilir Görevler
+                          _buildTaskGroupSection(
+                              context: context,
+                              title: 'Tekrarlanabilir Görevler',
+                              emoji: '🔄',
+                              description: 'Bu görevleri istediğiniz kadar tekrarlayabilirsiniz',
+                              tasks: [
+                                XpEvent.createListing,
+                                XpEvent.sendMessage,
+                                XpEvent.receiveMessage,
+                                XpEvent.writeComment,
+                                XpEvent.receiveComment,
+                              ]),
+
+                          const SizedBox(height: 16),
+
+                          // 3. Günlük Görevler
+                          _buildTaskGroupSection(
+                              context: context,
+                              title: 'Günlük Görevler',
+                              emoji: '📆',
+                              description: 'Bu görevler her gün bir kez tamamlanabilir',
+                              tasks: [
+                                XpEvent.dailyLogin,
+                                XpEvent.dailyCreateListing,
+                                XpEvent.dailySendMessage,
+                              ]),
                         ],
                       ),
                     ),
                   ),
 
-                  // Tamamlanmış görevler
+                  // Tamamlanan görevler
                   if (_debugInfo.containsKey('completed_tasks'))
                     Card(
                       child: Padding(
@@ -380,5 +519,148 @@ class _AchievementTestPageState extends State<AchievementTestPage> {
         child: const Icon(Icons.refresh),
       ),
     );
+  }
+
+  // Görev grubunu oluşturan yardımcı metot
+  Widget _buildTaskGroupSection({
+    required BuildContext context,
+    required String title,
+    required String emoji,
+    required String description,
+    required List<XpEvent> tasks,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Bölüm başlığı
+        Row(
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 24)),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+
+        // Açıklama
+        Padding(
+          padding: const EdgeInsets.only(left: 32.0, top: 4, bottom: 8),
+          child: Text(
+            description,
+            style: TextStyle(color: Theme.of(context).hintColor, fontSize: 12, fontStyle: FontStyle.italic),
+          ),
+        ),
+
+        // Görevler listesi
+        ...tasks.map((task) => _buildTaskItem(context, task)).toList(),
+      ],
+    );
+  }
+
+  // Tek bir görev öğesini oluşturan yardımcı metot
+  Widget _buildTaskItem(BuildContext context, XpEvent task) {
+    final canCompleteTask = _debugInfo.containsKey('${task.name}') ? _debugInfo['${task.name}']['completable'] : true;
+
+    final completionCount = _debugInfo.containsKey('${task.name}') ? _debugInfo['${task.name}']['completion_count'] ?? 0 : 0;
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 16.0, bottom: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _getTaskDisplayName(task),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: canCompleteTask ? Theme.of(context).colorScheme.primary : Theme.of(context).disabledColor,
+                  ),
+                ),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.purple.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        '+${task.xpAmount} XP',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.purple,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Tamamlanma: $completionCount kez',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).hintColor,
+                      ),
+                    ),
+                    if (task.isDaily)
+                      Text(
+                        canCompleteTask ? ' (Yapılabilir)' : ' (Tamamlandı)',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: canCompleteTask ? Colors.green : Colors.red,
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          // Tamamla butonu
+          ElevatedButton(
+            onPressed: () => _earnXp(task),
+            child: const Text('Tamamla'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: canCompleteTask ? Colors.green : Colors.grey,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Görev ismini daha okunabilir formata dönüştüren yardımcı metot
+  String _getTaskDisplayName(XpEvent task) {
+    switch (task) {
+      case XpEvent.firstListing:
+        return 'İlk İlan Oluşturma';
+      case XpEvent.firstMessage:
+        return 'İlk Mesaj Gönderme';
+      case XpEvent.createListing:
+        return 'İlan Oluşturma';
+      case XpEvent.sendMessage:
+        return 'Mesaj Gönderme';
+      case XpEvent.receiveMessage:
+        return 'Mesaj Alma';
+      case XpEvent.writeComment:
+        return 'Yorum Yazma';
+      case XpEvent.receiveComment:
+        return 'Yorum Alma';
+      case XpEvent.dailyLogin:
+        return 'Günlük Giriş';
+      case XpEvent.dailyCreateListing:
+        return 'Günlük İlan Oluşturma';
+      case XpEvent.dailySendMessage:
+        return 'Günlük Mesaj Gönderme';
+      default:
+        return task.name;
+    }
   }
 }

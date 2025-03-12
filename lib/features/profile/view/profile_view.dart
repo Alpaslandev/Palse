@@ -9,10 +9,7 @@ import 'package:palseapp/features/achievement/achievement_test_page.dart';
 import 'package:palseapp/features/achievement/achievements.dart';
 import 'package:palseapp/features/profile/widgets/leader_board.dart';
 import 'package:palseapp/features/profile/widgets/xp_progress_card.dart';
-import 'package:palseapp/features/achievement/achievement_manager.dart';
-import 'package:palseapp/features/achievement/xp_events.dart';
 import 'package:provider/provider.dart';
-import 'package:palseapp/core/services/shared_pref_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
@@ -39,26 +36,34 @@ class _ProfileViewState extends State<ProfileView> {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final user = authProvider.user;
 
-      if (user != null) {
-        final achievementManager = AchievementManager();
+      if (user != null && user.userID != null) {
+        final achievementService = AchievementService();
 
-        // Günlük görevleri kontrol et ve gerekirse sıfırla
-        if (user.userID != null) {
-          await achievementManager.resetDailyTasks(user.userID!);
+        // Günlük görevlerin durumunu kontrol et
+        final dailyStatus = await achievementService.checkDailyTasksStatus(user.userID!);
+
+        // 24 saat geçmiş ve görevlerin sıfırlanma zamanı gelmişse, sıfırla
+        final bool isResetRequired =
+            dailyStatus['time_until_reset'] == 'Sıfırlama zamanı yok' || dailyStatus['time_until_reset'].toString().contains('-');
+
+        // Sadece sıfırlama zamanı geldiyse ve tüm görevler tamamlanmışsa sıfırla
+        if (isResetRequired && dailyStatus['all_daily_tasks_completed'] == true) {
+          debugPrint('📅 Tüm günlük görevler tamamlanmış ve 24 saat geçmiş, görevler sıfırlanıyor...');
+          await achievementService.resetDailyTasks(user.userID!);
+        } else {
+          debugPrint(
+              '📅 Günlük görevler sıfırlanmadı: Sıfırlama gerekli mi? $isResetRequired, Tüm görevler tamamlandı mı? ${dailyStatus['all_daily_tasks_completed']}');
         }
 
         // Kullanıcının tamamlanan görevlerini local storage'dan yükle
-        if (user.userID != null) {
-          // Tamamlanan görevleri local storage'dan al
-          final completedTasks = await _getCompletedTasksFromLocalStorage(user.userID!);
+        final completedTasks = await _getCompletedTasksFromLocalStorage(user.userID!);
 
-          // Kullanıcı modelini güncelle
-          if (completedTasks.isNotEmpty) {
-            final updatedUser = user.copyWith(completedTasks: completedTasks);
-            // AuthProvider'da kullanıcı modelini güncelle
-            authProvider.updateUser(updatedUser);
-            debugPrint('Tamamlanan görevler local storage\'dan yüklendi: ${completedTasks.length} görev');
-          }
+        // Kullanıcı modelini güncelle
+        if (completedTasks.isNotEmpty) {
+          final updatedUser = user.copyWith(completedTasks: completedTasks);
+          // AuthProvider'da kullanıcı modelini güncelle
+          authProvider.updateUser(updatedUser);
+          debugPrint('Tamamlanan görevler local storage\'dan yüklendi: ${completedTasks.length} görev');
         }
 
         debugPrint('🔄 Günlük görevler kontrol edildi');
@@ -134,6 +139,81 @@ class _ProfileViewState extends State<ProfileView> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  // Günlük görevleri sıfırlar
+  Future<void> _resetDailyTasks() async {
+    final user = context.read<AuthProvider>().user;
+    if (user != null && user.userID != null) {
+      final achievementService = AchievementService();
+      await achievementService.resetDailyTasks(user.userID!);
+      // Başarılı mesajı gösterir
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Günlük görevler sıfırlandı!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+  }
+
+  // Günlük görevlerin durumunu kontrol eder
+  Future<Map<String, bool>> _getDailyTasksStatus() async {
+    final user = context.read<AuthProvider>().user;
+    if (user == null || user.userID == null) {
+      return {
+        'dailyLogin': false,
+        'dailyCreateListing': false,
+        'dailySendMessage': false,
+      };
+    }
+
+    final achievementService = AchievementService();
+    final isDailyLoginCompleted = !(await achievementService.canCompleteTask(user!.userID!, XpEvent.dailyLogin));
+    final isDailyCreateListingCompleted = !(await achievementService.canCompleteTask(user.userID!, XpEvent.dailyCreateListing));
+    final isDailySendMessageCompleted = !(await achievementService.canCompleteTask(user.userID!, XpEvent.dailySendMessage));
+
+    return {
+      'dailyLogin': isDailyLoginCompleted,
+      'dailyCreateListing': isDailyCreateListingCompleted,
+      'dailySendMessage': isDailySendMessageCompleted,
+    };
+  }
+
+  // Test için günlük görevleri sıfırlar ve mesaj gösterir
+  void _showResetDailyTasksDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Günlük Görevleri Sıfırla'),
+        content: const Text('Bu işlem tüm günlük görevleri sıfırlayacak ve yeniden yapılabilir hale getirecek. Devam etmek istiyor musunuz?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('İptal'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              final user = context.read<AuthProvider>().user;
+              if (user != null && user.userID != null) {
+                final achievementService = AchievementService();
+                await achievementService.resetDailyTasks(user.userID!);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Günlük görevler sıfırlandı! Yeniden yapılabilir.'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+                // Sayfayı yenile
+                setState(() {});
+              }
+            },
+            child: const Text('Evet, Sıfırla'),
+          ),
+        ],
       ),
     );
   }
@@ -250,12 +330,12 @@ class _DailyTaskCardState extends State<DailyTaskCard> {
     final user = authProvider.user;
 
     if (user?.userID != null) {
-      final achievementManager = AchievementManager();
+      final achievementService = AchievementService();
 
       // Görevlerin tamamlanma durumlarını kontrol et
-      final isDailyLoginCompleted = !(await achievementManager.canCompleteTask(user!.userID!, XpEvent.dailyLogin));
-      final isDailyCreateListingCompleted = !(await achievementManager.canCompleteTask(user.userID!, XpEvent.dailyCreateListing));
-      final isDailySendMessageCompleted = !(await achievementManager.canCompleteTask(user.userID!, XpEvent.dailySendMessage));
+      final isDailyLoginCompleted = !(await achievementService.canCompleteTask(user!.userID!, XpEvent.dailyLogin));
+      final isDailyCreateListingCompleted = !(await achievementService.canCompleteTask(user.userID!, XpEvent.dailyCreateListing));
+      final isDailySendMessageCompleted = !(await achievementService.canCompleteTask(user.userID!, XpEvent.dailySendMessage));
 
       setState(() {
         _isDailyLoginCompleted = isDailyLoginCompleted;
@@ -271,7 +351,7 @@ class _DailyTaskCardState extends State<DailyTaskCard> {
     final user = authProvider.user;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final achievementManager = AchievementManager();
+    final achievementService = AchievementService();
 
     // Toplam XP hesapla (tamamlanan görevler için)
     int totalDailyXp = 0;
@@ -315,7 +395,7 @@ class _DailyTaskCardState extends State<DailyTaskCard> {
                       icon: const Icon(Icons.refresh, color: Colors.white),
                       onPressed: () async {
                         // Test için dünün tarihini ayarla
-                        final achievementManager = AchievementManager();
+                        final achievementService = AchievementService();
 
                         // Test modunu aktifleştir
                         setState(() {
@@ -324,7 +404,7 @@ class _DailyTaskCardState extends State<DailyTaskCard> {
 
                         // Görevleri sıfırla
                         if (user.userID != null) {
-                          await achievementManager.resetDailyTasks(user.userID!);
+                          await achievementService.resetDailyTasks(user.userID!);
                         }
 
                         // Görev durumlarını yeniden yükle

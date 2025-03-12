@@ -8,7 +8,6 @@ import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/models/comment_model.dart';
 import 'package:palseapp/core/models/location_model.dart';
 import 'package:palseapp/core/models/chat_model.dart';
-import 'package:palseapp/features/achievement/achievements.dart';
 
 enum Gender {
   male(icon: 'assets/images/male.png', textKey: 'gender_male'),
@@ -68,7 +67,6 @@ class Customer {
 
   final int totalXp;
   final Map<String, int> completedTasks;
-  final DateTime? lastDailyTaskDate;
 
   Customer({
     this.profilePictureUrl,
@@ -95,7 +93,6 @@ class Customer {
     this.location,
     this.totalXp = 0,
     this.completedTasks = const {},
-    this.lastDailyTaskDate,
   }) : appIdentifier = 'Customer App';
 
   String fullName() => '$firstName $lastName';
@@ -178,8 +175,6 @@ class Customer {
         location: parsedJson['location'] != null ? parseCustomerLocation(parsedJson) : parseCustomerLocation(parsedJson),
         totalXp: parsedJson['totalXp'] ?? 0,
         completedTasks: parsedJson['completedTasks'] != null ? Map<String, int>.from(parsedJson['completedTasks']) : {},
-        lastDailyTaskDate:
-            parsedJson['lastDailyTaskDate'] != null ? parseDateTime(parsedJson['lastDailyTaskDate'], parsedJson['lastDailyTaskDateTime']) : null,
       );
     } catch (e) {
       debugPrint('Customer.fromJson error: $e');
@@ -218,7 +213,6 @@ class Customer {
       'comments': comments?.map((comment) => comment.toJson()).toList() ?? [],
       'totalXp': totalXp,
       'completedTasks': completedTasks,
-      'lastDailyTaskDate': lastDailyTaskDate != null ? Timestamp.fromDate(lastDailyTaskDate!) : null,
     };
   }
 
@@ -274,7 +268,6 @@ class Customer {
       lastName: lastName ?? this.lastName,
       totalXp: totalXp ?? this.totalXp,
       completedTasks: completedTasks ?? this.completedTasks,
-      lastDailyTaskDate: lastDailyTaskDate ?? this.lastDailyTaskDate,
     );
   }
 }

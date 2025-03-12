@@ -11,6 +11,7 @@ import 'package:palseapp/core/services/location_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:palseapp/features/achievement/achievement_service.dart';
 import 'package:palseapp/features/achievement/xp_events.dart';
+import 'package:palseapp/core/widgets/scaffold_mess.dart';
 
 class CreateAdvertViewModel extends ChangeNotifier {
   final LocationService locationService;
@@ -111,7 +112,13 @@ class CreateAdvertViewModel extends ChangeNotifier {
       await FirebaseFirestore.instance.collection('customers').doc(authProvider.user!.userID).update({
         'adverts': FieldValue.arrayUnion([docRef.id]), // Döküman ID'sini kullan
       });
-      AchievementService().earnXp(userId: authProvider.user!.userID!, event: XpEvent.createListing);
+      // İlan oluşturma işleminde
+      final achievementService = AchievementService();
+      final earnedXp = await achievementService.handleListingCreation(authProvider.user!.userID!);
+      // XP kazanıldığında bildirim gösterme
+      if (earnedXp > 0) {
+        ScaffoldMess.showSuccessSnackBar("Tebrikler! İlan oluşturarak $earnedXp XP kazandınız.");
+      }
     } catch (e) {
       debugPrint('Error creating advert: $e');
     } finally {

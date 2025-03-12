@@ -68,7 +68,7 @@ class XPProgressCard extends StatelessWidget {
                   );
                 }),
             FutureBuilder<int>(
-                future: Future.wait([achievementService.getTotalXp(userId), achievementService.getXpToNextRank(userId)]).then((values) {
+                future: Future.wait([achievementService.getUserXp(userId), achievementService.getXpToNextRank(userId)]).then((values) {
                   final totalXp = values[0];
                   final xpToNext = values[1];
                   final maxXp = totalXp + xpToNext;
@@ -76,7 +76,7 @@ class XPProgressCard extends StatelessWidget {
                 }),
                 builder: (context, maxXpSnapshot) {
                   return FutureBuilder<int>(
-                      future: achievementService.getTotalXp(userId),
+                      future: achievementService.getUserXp(userId),
                       builder: (context, totalXpSnapshot) {
                         if (!totalXpSnapshot.hasData || !maxXpSnapshot.hasData) {
                           return const SizedBox(height: 4);
@@ -122,7 +122,7 @@ class XPProgressCard extends StatelessWidget {
                   );
                 }),
             FutureBuilder<double>(
-                future: Future.wait([achievementService.getTotalXp(userId), achievementService.getXpToNextPremium(userId)]).then((values) {
+                future: Future.wait([achievementService.getUserXp(userId), achievementService.getXpToNextPremium(userId)]).then((values) {
                   final totalXp = values[0];
                   final xpToNext = values[1];
                   if (xpToNext <= 0) return 1.0;

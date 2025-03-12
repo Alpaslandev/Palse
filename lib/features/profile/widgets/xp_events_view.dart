@@ -96,7 +96,7 @@ class XpEventsView extends StatelessWidget {
                               style: Theme.of(context).textTheme.titleLarge,
                             ),
                             FutureBuilder<int>(
-                                future: achievementService.getTotalXp(userId),
+                                future: achievementService.getUserXp(userId),
                                 builder: (context, xpSnapshot) {
                                   return Text(
                                     'Toplam XP: ${xpSnapshot.data ?? 0}',

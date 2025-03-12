@@ -6,10 +6,9 @@ import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/services/chat_service.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
 import 'package:palseapp/core/widgets/advert_card.dart';
-import 'package:palseapp/features/achievement/achievement_manager.dart';
-import 'package:palseapp/features/achievement/user_rank.dart';
 import 'package:palseapp/features/friend_profile/friend_profile_view_model.dart';
 import 'package:provider/provider.dart';
+import 'package:palseapp/features/achievement/achievement_service.dart';
 
 class FriendProfileView extends StatelessWidget {
   const FriendProfileView({super.key, required this.customerID});
@@ -91,20 +90,20 @@ class FriendProfileView extends StatelessWidget {
 
   Widget _subHeader(FriendProfileViewModel viewModel, BuildContext context) {
     final authProvider = context.read<AuthProvider>();
-    final achievementManager = AchievementManager();
+    final achievementService = AchievementService();
 
     if (viewModel.customer == null) {
       return const SizedBox.shrink();
     }
 
     final xp = viewModel.customer!.totalXp;
-    final rank = achievementManager.getUserRank(xp);
+    final rank = achievementService.getUserRankFromXp(xp);
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          '${rank.icon} ${achievementManager.getLocalizedRankTitle(rank, context)} ($xp XP)',
+          '${rank.icon} ${achievementService.getLocalizedRankTitle(rank, context)} ($xp XP)',
           style: TextStyle(fontSize: 11, color: AppTheme.primaryColor, fontWeight: FontWeight.bold),
         ),
         Text(viewModel.customer?.location?.displayStringWithDistance(authProvider.user!.location!) ?? '',

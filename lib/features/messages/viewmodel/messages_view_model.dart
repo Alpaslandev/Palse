@@ -7,6 +7,7 @@ import 'package:palseapp/core/models/chat_model.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/services/chat_service.dart';
 import 'package:palseapp/core/services/firestore/customer_service.dart';
+import 'package:palseapp/features/achievement/achievement_service.dart';
 
 class MessagesViewModel extends ChangeNotifier {
   final ChatService _chatService = ChatService();
@@ -78,6 +79,13 @@ class MessagesViewModel extends ChangeNotifier {
         receiverId,
         senderName,
       );
+
+      // Mesaj gönderildiğinde XP ödülü
+      final achievementService = AchievementService();
+      final earnedXp = await achievementService.handleMessageSent(senderId, chatId: chatId);
+      if (earnedXp > 0) {
+        debugPrint('✅ Mesaj gönderme ödülü kazanıldı! XP: $earnedXp');
+      }
 
       // Mesaj gönderildikten sonra alıntıyı temizle
       setQuotedMessage(null);

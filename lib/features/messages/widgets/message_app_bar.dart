@@ -5,7 +5,7 @@ import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
 import 'package:palseapp/core/widgets/circle_profile_picture.dart';
-import 'package:palseapp/features/achievement/achievement_manager.dart';
+import 'package:palseapp/features/achievement/achievement_service.dart';
 import 'package:palseapp/features/messages/viewmodel/messages_view_model.dart';
 
 class MessageAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -79,14 +79,14 @@ class MessageAppBar extends StatelessWidget implements PreferredSizeWidget {
                     Builder(builder: (context) {
                       // Kullanıcının XP değerini al
                       final xp = user?.totalXp ?? 0;
-                      final rank = AchievementManager().getUserRank(xp);
+                      final rank = AchievementService().getUserRankFromXp(xp);
 
                       return Row(
                         children: [
                           Icon(Icons.workspace_premium, color: Colors.yellow, size: 14),
                           const SizedBox(width: 4),
                           Text(
-                            '${rank.icon} ${AchievementManager().getLocalizedRankTitle(rank, context)} ($xp XP)',
+                            '${rank.icon} ${AchievementService().getLocalizedRankTitle(rank, context)} ($xp XP)',
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 12,

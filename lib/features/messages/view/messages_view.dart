@@ -103,18 +103,29 @@ class _MessagesViewState extends State<MessagesView> {
     debugPrint('- Karşı taraftan gelen mesaj sayısı: $messagesFromOther');
     debugPrint('- Bizden giden mesaj sayısı: $messagesFromUs');
 
-    // İlk mesaj durumlarını kontrol et
-    final isFirstFromUs = _isFirstMessageFromUs(messages);
-    final isFirstFromOther = _isFirstMessageFromOtherUser(messages);
-
-    // Ödül işleme
+    final userId = authProvider.user!.userID!;
+    final chatId = widget.chatId;
     final achievementService = AchievementService();
-    achievementService
-        .processMessageRewards(
-            userId: authProvider.user!.userID!, chatId: widget.chatId, isFirstMessageFromUs: isFirstFromUs, isFirstMessageFromOther: isFirstFromOther)
-        .then((_) {
-      debugPrint('✅ XP kontrolleri tamamlandı.');
-    });
+
+    // Bizden giden mesaj varsa mesaj gönderme ödüllerini kontrol et
+    if (messagesFromUs > 0) {
+      achievementService.handleMessageSent(userId, chatId: chatId).then((earnedXp) {
+        if (earnedXp > 0) {
+          debugPrint('✅ Mesaj gönderme ödülü XP: $earnedXp');
+        }
+      });
+    }
+
+    // Karşıdan gelen mesaj varsa mesaj alma ödüllerini kontrol et
+    if (messagesFromOther > 0) {
+      achievementService.handleMessageReceived(userId, chatId: chatId).then((earnedXp) {
+        if (earnedXp > 0) {
+          debugPrint('✅ Mesaj alma ödülü XP: $earnedXp');
+        }
+      });
+    }
+
+    debugPrint('✅ XP kontrolleri tamamlandı.');
   }
 
   @override

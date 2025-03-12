@@ -10,8 +10,7 @@ import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/widgets/circle_profile_picture.dart';
 import 'package:palseapp/core/services/chat_service.dart';
-import 'package:palseapp/features/achievement/achievement_manager.dart';
-import 'package:palseapp/features/achievement/user_rank.dart';
+import 'package:palseapp/features/achievement/achievement_service.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -174,20 +173,35 @@ class AdvertCard extends StatelessWidget {
                       const SizedBox(height: 4),
 
                       // 2. Satır: Kullanıcı rütbesi
-                      Builder(builder: (context) {
-                        // Kullanıcının XP değerini al
-                        final userXp = customer.totalXp;
-                        final rank = AchievementManager().getUserRank(userXp);
-
-                        return Text(
-                          "${rank.icon} ${AchievementManager().getLocalizedRankTitle(rank, context)}",
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w400,
-                            fontSize: 11,
-                            color: Colors.grey,
+                      // Kullanıcı rankı
+                      if (customer.totalXp > 0)
+                        Material(
+                          color: Colors.transparent,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // Kullanıcı rankını göster
+                                Builder(builder: (context) {
+                                  final rank = AchievementService().getUserRankFromXp(customer.totalXp);
+                                  return Text(
+                                    "${rank.icon} ${AchievementService().getLocalizedRankTitle(rank, context)}",
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.blue,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  );
+                                }),
+                              ],
+                            ),
                           ),
-                        );
-                      }),
+                        ),
                       const SizedBox(height: 4),
 
                       // 3. Satır: Etkinlik türü ve tarih
@@ -242,7 +256,7 @@ class AdvertCard extends StatelessWidget {
                           child: Icon(Icons.calendar_month_outlined, size: 12, color: Colors.blue),
                         ),
                         TextSpan(
-                          text: ' ${DateFormat('dd/MM/yyyy').format(advert.startEventDate)} - ${DateFormat('HH:mm').format(advert.startEventDate!)}',
+                          text: ' ${DateFormat('dd/MM/yyyy').format(advert.startEventDate)} - ${DateFormat('HH:mm').format(advert.startEventDate)}',
                           style: const TextStyle(fontSize: 9, color: Colors.grey),
                         ),
                       ],

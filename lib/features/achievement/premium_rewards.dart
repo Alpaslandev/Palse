@@ -2,11 +2,11 @@
 class PremiumRewards {
   /// XP eşik değerleri - bu değerlere ulaşıldığında premium ödüller kazanılır
   static const List<int> xpThresholds = [
-    500, // İlk premium ödül
-    1500, // İkinci premium ödül
-    3000, // Üçüncü premium ödül
-    5000, // Dördüncü premium ödül
-    10000, // Beşinci premium ödül
+    3000, // İlk premium ödül
+    6000, // İkinci premium ödül
+    12000, // Üçüncü premium ödül
+    24000, // Dördüncü premium ödül
+    48000, // Beşinci premium ödül
   ];
 
   /// Belirli bir XP değerine göre kazanılan premium ödül sayısını hesaplar

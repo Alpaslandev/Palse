@@ -113,7 +113,7 @@ class LeaderBoard extends StatelessWidget {
           children: [
             Text('${context.tr('your_rank')}: ${index + 1}.', style: const TextStyle(color: Colors.white)),
             FutureBuilder<int>(
-                future: Provider.of<AchievementService>(context, listen: false).getTotalXp(user.user!.userID!),
+                future: Provider.of<AchievementService>(context, listen: false).getUserXp(user.user!.userID!),
                 builder: (context, snapshot) {
                   return _buildListTileTrailing(snapshot.data ?? 0, false);
                 }),
