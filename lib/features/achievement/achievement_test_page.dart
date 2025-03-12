@@ -3,7 +3,6 @@ import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/services/achievement_service.dart';
 import 'package:palseapp/features/achievement/achievements.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
-import 'package:palseapp/features/achievement/premium_rewards.dart';
 import 'package:provider/provider.dart';
 
 /// XP sistemini test etmek için kullanılan sayfa
@@ -15,6 +14,47 @@ class AchievementTestPage extends StatefulWidget {
 }
 
 class _AchievementTestPageState extends State<AchievementTestPage> {
+  // XP sıfırlama işlemi
+  Future<void> _resetAllXp(AuthProvider authProvider) async {
+    if (authProvider.user?.userID == null) return;
+
+    // Toplam XP'yi sıfırla
+    await AchievementSystem.saveTotalXp(authProvider.user!.userID!, 0);
+
+    // Tamamlanan görevleri sıfırla
+    await AchievementSystem.saveCompletedTasks(authProvider.user!.userID!, {});
+
+    // Günlük görevlerin son tarihini sıfırla
+    await AchievementSystem.saveLastDailyTaskDate(authProvider.user!.userID!, null);
+
+    // Kullanıcıyı güncelle
+    final updatedUser = authProvider.user!.copyWith(
+      totalXp: 0,
+      completedTasks: {},
+      lastDailyTaskDate: null,
+    );
+
+    // AuthProvider'a güncellemeyi bildir
+    authProvider.updateUser(updatedUser);
+
+    // Ekranı yenile
+    setState(() {});
+  }
+
+  // Görev tamamlama işlemi
+  Future<void> _completeTask(String taskName, AuthProvider authProvider, AchievementService achievementService) async {
+    if (authProvider.user == null) return;
+
+    // XP kazan
+    final updatedUser = await achievementService.earnXp(user: authProvider.user!, taskName: taskName);
+
+    // AuthProvider'a güncellemeyi bildir
+    authProvider.updateUser(updatedUser);
+
+    // Ekranı yenile
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     // AuthProvider'ı kullan
@@ -30,31 +70,44 @@ class _AchievementTestPageState extends State<AchievementTestPage> {
       );
     }
 
-    final groupedEvents = _getGroupedEvents();
+    // Tüm görev gruplarını al
+    final taskGroups = achievementService.getAllTaskGroups();
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('XP Sistemi Test'),
+        title: Text(context.tr('xp_system_test')),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () => _resetAllXp(authProvider),
-            tooltip: 'XP Sıfırla',
+            tooltip: context.tr('reset_xp'),
           ),
         ],
       ),
       body: Column(
         children: [
           // Kullanıcı XP ve seviye bilgileri
-          _xpAndLevel(authProvider, context),
+          _buildUserXpCard(authProvider, achievementService, context),
 
-          // Görevlerin listesi
+          // Görev grupları
           Expanded(
-            child: ListView(
+            child: ListView.builder(
+              itemCount: taskGroups.length,
               padding: const EdgeInsets.all(16),
-              children: [
-                for (final entry in groupedEvents.entries) _buildEventGroup(entry.key, entry.value, authProvider),
-              ],
+              itemBuilder: (context, index) {
+                final groupKey = taskGroups.keys.elementAt(index);
+                final tasks = taskGroups[groupKey] ?? [];
+                final emoji = achievementService.getGroupEmoji(groupKey);
+
+                return _buildTaskGroupCard(
+                  context: context,
+                  groupKey: groupKey,
+                  tasks: tasks,
+                  emoji: emoji,
+                  authProvider: authProvider,
+                  achievementService: achievementService,
+                );
+              },
             ),
           ),
         ],
@@ -62,8 +115,12 @@ class _AchievementTestPageState extends State<AchievementTestPage> {
     );
   }
 
-  Widget _xpAndLevel(AuthProvider authProvider, BuildContext context) {
-    final achievementService = Provider.of<AchievementService>(context);
+  // Kullanıcı XP kartı
+  Widget _buildUserXpCard(AuthProvider authProvider, AchievementService achievementService, BuildContext context) {
+    final user = authProvider.user!;
+    final rank = achievementService.getUserRank(user.totalXp);
+    final Color rankColor = (rank['color'] as Color?) ?? Colors.blue;
+
     return Card(
       margin: const EdgeInsets.all(16),
       elevation: 4,
@@ -80,11 +137,11 @@ class _AchievementTestPageState extends State<AchievementTestPage> {
                   height: 50,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: achievementService.getUserRank(authProvider.user!.totalXp).getRankColor(),
+                    color: rankColor,
                     shape: BoxShape.circle,
                   ),
                   child: Text(
-                    achievementService.getUserRank(authProvider.user!.totalXp).icon,
+                    rank['icon'] as String? ?? '🌟',
                     style: const TextStyle(fontSize: 24),
                   ),
                 ),
@@ -94,11 +151,11 @@ class _AchievementTestPageState extends State<AchievementTestPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Unvan: ${achievementService.getUserRank(authProvider.user!.totalXp).getLocalizedTitle(context)}',
+                        '${context.tr('rank')}: ${context.tr(rank['titleKey'] as String? ?? 'rank_beginner')}',
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                       Text(
-                        'Toplam XP: ${authProvider.user!.totalXp}',
+                        '${context.tr('total_xp')}: ${user.totalXp}',
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ],
@@ -107,206 +164,135 @@ class _AchievementTestPageState extends State<AchievementTestPage> {
               ],
             ),
             const SizedBox(height: 16),
-            const Text('Seviye İlerlemesi:'),
+            Text(context.tr('level_progress')),
             const SizedBox(height: 4),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: LinearProgressIndicator(
-                value: achievementService.getXpToNextRankPercentage(authProvider.user!.totalXp),
-                minHeight: 10,
-                backgroundColor: Colors.grey.shade200,
-                color: achievementService.getUserRank(authProvider.user!.totalXp).getRankColor(),
+            LinearProgressIndicator(
+              value: achievementService.getRankProgressPercentage(user.totalXp),
+              backgroundColor: Colors.grey[300],
+              valueColor: AlwaysStoppedAnimation<Color>(rankColor),
+            ),
+            const SizedBox(height: 4),
+            Align(
+              alignment: Alignment.centerRight,
+              child: RichText(
+                text: TextSpan(
+                  style: DefaultTextStyle.of(context).style,
+                  children: [
+                    const TextSpan(text: 'XP: '),
+                    TextSpan(
+                      text: '${user.totalXp}',
+                      style: TextStyle(color: rankColor, fontWeight: FontWeight.bold),
+                    ),
+                    TextSpan(
+                      text: ' / ${achievementService.getXpToNextRank(user.totalXp) + user.totalXp}',
+                    ),
+                  ],
+                ),
               ),
             ),
-            const SizedBox(height: 8),
-            Text('Bir sonraki seviyeye: ${AchievementService().getXpToNextRank(authProvider.user!.totalXp)} XP'),
-            const Divider(height: 24),
-            Row(
-              children: [
-                const Icon(Icons.star, color: Colors.amber),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Premium Ödüller: ${AchievementService().getEarnedPremiumRewardCount(authProvider.user!.totalXp)}',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      Text('Bir sonraki premium ödüle: ${AchievementService().getXpToNextPremium(authProvider.user!.totalXp)} XP'),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Premium Eşikler: ${PremiumRewards.getPremiumThresholds(50000).join(", ")}',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
+            const SizedBox(height: 16),
+            Text('${context.tr('premium_rewards')}: ${achievementService.getPremiumRewardsCount(user.totalXp)}'),
+            const SizedBox(height: 4),
+            Text('${context.tr('next_premium_in')}: ${achievementService.getXpToNextPremium(user.totalXp)} XP'),
           ],
         ),
       ),
     );
   }
 
-  // Tüm XP'yi sıfırlama dialog'u
-  void _resetAllXp(AuthProvider authProvider) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('XP Sıfırla'),
-          content: const Text('Henüz bu işlev desteklenmiyor. Yeni sürümde eklenecektir.'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                AchievementService().resetUserXp(authProvider.user!.userID!);
-                Navigator.pop(context);
-              },
-              child: const Text('Tamam'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // Görevleri gruplarına göre düzenle
-  Map<XpEventGroup, List<XpEvent>> _getGroupedEvents() {
-    final map = <XpEventGroup, List<XpEvent>>{};
-
-    for (final group in XpEventGroup.values) {
-      map[group] = group.events;
-    }
-
-    return map;
-  }
-
-  // Görev grubu widget'ı
-  Widget _buildEventGroup(XpEventGroup group, List<XpEvent> events, AuthProvider authProvider) {
+  // Görev grubu kartı
+  Widget _buildTaskGroupCard({
+    required BuildContext context,
+    required String groupKey,
+    required List<String> tasks,
+    required String emoji,
+    required AuthProvider authProvider,
+    required AchievementService achievementService,
+  }) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
       elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Grup başlığı
             Row(
               children: [
                 Text(
-                  group.emoji,
+                  emoji,
                   style: const TextStyle(fontSize: 24),
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  group.getLocalizedTitle(context),
+                  context.tr(groupKey),
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            for (final event in events) _buildEventButton(event, authProvider),
+            const SizedBox(height: 16),
+
+            // Görevler
+            ...tasks
+                .map((taskName) => _buildTaskButton(
+                      context: context,
+                      taskName: taskName,
+                      xpAmount: achievementService.getTaskXpValue(taskName),
+                      authProvider: authProvider,
+                      achievementService: achievementService,
+                    ))
+                .toList(),
           ],
         ),
       ),
     );
   }
 
-  // Görev butonu widget'ı
-  Widget _buildEventButton(XpEvent event, AuthProvider authProvider) {
-    final achievementService = Provider.of<AchievementService>(context);
-    final isCompleted = achievementService.isTaskCompleted(authProvider.user!, event);
-    final completionCount = achievementService.getTaskCompletionCount(authProvider.user!, event);
-    final isDailyTask = event.isDaily;
+  // Görev butonu
+  Widget _buildTaskButton({
+    required BuildContext context,
+    required String taskName,
+    required int xpAmount,
+    required AuthProvider authProvider,
+    required AchievementService achievementService,
+  }) {
+    return FutureBuilder<bool>(
+      future: achievementService.isTaskCompleted(authProvider.user!, taskName),
+      builder: (context, snapshot) {
+        final isCompleted = snapshot.data ?? false;
 
-    // Butonun rengini belirleme
-    Color buttonColor = isDailyTask
-        ? isCompleted
-            ? Colors.orange.shade200 // Tamamlanmış günlük görev
-            : Colors.orange // Tamamlanmamış günlük görev
-        : isCompleted && !event.isRepeatable
-            ? Colors.grey.shade400 // Tamamlanmış tekrarlanamaz görev
-            : _getEventGroupColor(event); // Diğer görevler için grup rengini kullan
-
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      elevation: 0,
-      color: isCompleted ? Colors.grey.shade100 : Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: BorderSide(
-          color: isCompleted ? Colors.grey.shade300 : Colors.grey.shade200,
-          width: 1,
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: Row(
-          children: [
-            Icon(
-              isCompleted ? Icons.check_circle : Icons.circle_outlined,
-              color: isCompleted ? Colors.green : Colors.grey,
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              foregroundColor: isCompleted ? Colors.white : null,
+              backgroundColor: isCompleted ? Colors.green : null,
+              minimumSize: const Size(double.infinity, 44),
             ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    context.tr(event.descriptionKey),
-                    style: TextStyle(
-                      fontWeight: isCompleted ? FontWeight.normal : FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    '${event.xpAmount} XP · Tamamlama: $completionCount',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            ElevatedButton(
-              onPressed: isCompleted && !event.isRepeatable
-                  ? null // Tamamlanmış ve tekrarlanamaz görevleri devre dışı bırak
-                  : () => achievementService.earnXp(user: authProvider.user!, event: event),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: buttonColor,
-                disabledBackgroundColor: Colors.grey.shade300,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
+            onPressed: isCompleted
+                ? null // Tamamlanmışsa devre dışı bırak (zaten rengi yeşil)
+                : () => _completeTask(taskName, authProvider, achievementService),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(context.tr(taskName)),
                 ),
-              ),
-              child: Text(
-                isCompleted && !event.isRepeatable ? 'Tamamlandı' : 'Tamamla',
-                style: TextStyle(
-                  color: isCompleted && !event.isRepeatable ? Colors.grey.shade700 : Colors.white,
+                Row(
+                  children: [
+                    Text('+$xpAmount XP'),
+                    if (isCompleted) const Icon(Icons.check, color: Colors.white),
+                  ],
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
-  }
-
-  // Görev grubunun rengini döndüren yardımcı metod
-  Color _getEventGroupColor(XpEvent event) {
-    if (!event.isRepeatable) {
-      return Colors.purple; // Hoş geldin ödülleri için mor
-    } else if (event == XpEvent.createListing || event == XpEvent.receiveMessage) {
-      return Colors.blue.shade700; // İlan verme için mavi
-    } else if (event == XpEvent.sendMessage) {
-      return Colors.green.shade600; // Mesajlaşma için yeşil
-    } else if (event == XpEvent.writeComment || event == XpEvent.receiveComment) {
-      return Colors.teal.shade600; // Yorumlar için teal
-    }
-    return Colors.indigo; // Varsayılan
   }
 }

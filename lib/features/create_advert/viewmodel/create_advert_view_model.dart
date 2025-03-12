@@ -7,11 +7,8 @@ import 'package:palseapp/core/models/advert.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/models/location_model.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
-import 'package:palseapp/core/services/achievement_service.dart';
 import 'package:palseapp/core/services/location_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
-import '../../achievement/achievements.dart';
 
 class CreateAdvertViewModel extends ChangeNotifier {
   final LocationService locationService;

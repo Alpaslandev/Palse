@@ -200,4 +200,63 @@ class SharedPrefService {
   static void dispose() {
     _notificationCountController.close();
   }
+
+  // Günlük görev durumlarını kaydet
+  static Future<bool> saveDailyTasksStatus(String userId, Map<String, dynamic> tasksStatus) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final key = 'daily_tasks_status_$userId';
+      return await prefs.setString(key, jsonEncode(tasksStatus));
+    } catch (e) {
+      debugPrint('Günlük görev durumları kaydedilirken hata: $e');
+      return false;
+    }
+  }
+
+  // Günlük görev durumlarını getir
+  static Future<Map<String, dynamic>> getDailyTasksStatus(String userId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final key = 'daily_tasks_status_$userId';
+      final tasksStatusJson = prefs.getString(key);
+      if (tasksStatusJson == null) {
+        return {};
+      }
+      return jsonDecode(tasksStatusJson) as Map<String, dynamic>;
+    } catch (e) {
+      debugPrint('Günlük görev durumları getirilirken hata: $e');
+      return {};
+    }
+  }
+
+  // Günlük görevlerin son tarihini kaydet
+  static Future<bool> saveDailyTasksLastDate(String userId, DateTime? lastDate) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final key = 'daily_tasks_last_date_$userId';
+      if (lastDate == null) {
+        return await prefs.remove(key);
+      }
+      return await prefs.setString(key, lastDate.toIso8601String());
+    } catch (e) {
+      debugPrint('Günlük görevlerin son tarihi kaydedilirken hata: $e');
+      return false;
+    }
+  }
+
+  // Günlük görevlerin son tarihini getir
+  static Future<DateTime?> getDailyTasksLastDate(String userId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final key = 'daily_tasks_last_date_$userId';
+      final lastDateStr = prefs.getString(key);
+      if (lastDateStr == null) {
+        return null;
+      }
+      return DateTime.parse(lastDateStr);
+    } catch (e) {
+      debugPrint('Günlük görevlerin son tarihi getirilirken hata: $e');
+      return null;
+    }
+  }
 }

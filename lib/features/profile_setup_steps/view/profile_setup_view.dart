@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/features/profile_setup_steps/steps/birthday_gender_step.dart';
 import 'package:palseapp/features/profile_setup_steps/steps/favorite_category_step.dart';
@@ -29,7 +30,7 @@ class ProfileSetupView extends StatelessWidget {
                   Image.asset('assets/images/dostum_olsana.png', width: 40, height: 40),
                   const SizedBox(width: 8),
                   Text(
-                    'Profil Oluştur',
+                    context.tr('profile_setup'),
                     style: TextStyle(
                       color: Theme.of(context).primaryColor,
                       fontWeight: FontWeight.bold,
@@ -46,7 +47,7 @@ class ProfileSetupView extends StatelessWidget {
                       Row(
                         children: [
                           Text(
-                            'Adım ${viewModel.currentStep + 1}/6',
+                            context.tr('profile_setup_step').replaceAll('{step}', '${viewModel.currentStep + 1}'),
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
@@ -133,7 +134,7 @@ class ProfileSetupView extends StatelessWidget {
               ElevatedButton.icon(
                 onPressed: viewModel.previousStep,
                 icon: const Icon(Icons.arrow_back_rounded),
-                label: const Text('Geri'),
+                label: Text(context.tr('profile_setup_back')),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
                   foregroundColor: Theme.of(context).primaryColor,
@@ -152,7 +153,7 @@ class ProfileSetupView extends StatelessWidget {
             ElevatedButton.icon(
               onPressed: () => _handleNavigation(context, viewModel),
               label: Text(
-                viewModel.isLastStep ? 'Tamamla' : 'İleri',
+                viewModel.isLastStep ? context.tr('profile_setup_finish') : context.tr('profile_setup_next'),
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
@@ -178,31 +179,31 @@ class ProfileSetupView extends StatelessWidget {
   void _handleNavigation(BuildContext context, ProfileSetupViewModel viewModel) {
     // İlk adımda ad ve soyad validasyonu yap
     if (viewModel.currentStep == 0 && !viewModel.isUserInfoStepValid()) {
-      _showErrorSnackBar(context, 'Lütfen ad ve soyadınızı doğru şekilde girin (en az 3 karakter)');
+      _showErrorSnackBar(context, context.tr('profile_setup_error_name'));
       return;
     }
 
     // İkinci adımda doğum tarihi ve cinsiyet validasyonu yap
     if (viewModel.currentStep == 1 && !viewModel.isBirthdayGenderStepValid()) {
-      _showErrorSnackBar(context, 'Lütfen doğum tarihinizi ve cinsiyetinizi seçin');
+      _showErrorSnackBar(context, context.tr('profile_setup_error_birthday_gender'));
       return;
     }
 
     // Üçüncü adımda konum validasyonu yap
     if (viewModel.currentStep == 2 && !viewModel.isLocationStepValid()) {
-      _showErrorSnackBar(context, 'Lütfen bir konum seçin veya mevcut konumunuzu kullanın');
+      _showErrorSnackBar(context, context.tr('profile_setup_error_location'));
       return;
     }
 
     // Dördüncü adımda takma ad validasyonu yap
     if (viewModel.currentStep == 3 && !viewModel.isNicknameStepValid()) {
-      _showErrorSnackBar(context, 'Lütfen geçerli bir takma ad girin (en az 3 karakter)');
+      _showErrorSnackBar(context, context.tr('profile_setup_error_nickname'));
       return;
     }
 
     // Son adımda favori kategoriler validasyonu yap
     if (viewModel.currentStep == 5 && !viewModel.isFavoriteCategoryStepValid()) {
-      _showErrorSnackBar(context, 'Lütfen en az 3 kategori seçin');
+      _showErrorSnackBar(context, context.tr('profile_setup_error_categories'));
       return;
     }
 

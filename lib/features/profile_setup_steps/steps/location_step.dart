@@ -4,6 +4,7 @@ import 'package:palseapp/features/profile_setup_steps/viewmodel/profile_setup_vi
 import 'package:provider/provider.dart';
 import 'package:palseapp/core/services/location_service.dart';
 import 'package:palseapp/core/utils/debouncer.dart';
+import 'package:palseapp/core/localization/app_localizations.dart';
 
 class LocationStep extends StatefulWidget {
   const LocationStep({super.key, required this.viewModel});
@@ -44,7 +45,7 @@ class _LocationStepState extends State<LocationStep> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Konumunuzu Belirtin',
+                    context.tr('location_title'),
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: Theme.of(context).primaryColor,
@@ -55,7 +56,7 @@ class _LocationStepState extends State<LocationStep> {
                     children: [
                       Expanded(
                         child: Text(
-                          'Şehir, ilçe adını yazın veya mevcut konumunuzu kullanın',
+                          context.tr('location_description'),
                           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w500,
                               ),
@@ -68,9 +69,9 @@ class _LocationStepState extends State<LocationStep> {
                             color: Colors.red.shade100,
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Text(
-                            'Zorunlu',
-                            style: TextStyle(
+                          child: Text(
+                            context.tr('location_required'),
+                            style: const TextStyle(
                               color: Colors.red,
                               fontWeight: FontWeight.bold,
                               fontSize: 12,
@@ -103,7 +104,7 @@ class _LocationStepState extends State<LocationStep> {
                     Icon(Icons.info_outline, color: Colors.red.shade400, size: 16),
                     const SizedBox(width: 4),
                     Text(
-                      'Lütfen bir konum seçin',
+                      context.tr('location_please_select'),
                       style: TextStyle(color: Colors.red.shade700, fontSize: 12),
                     ),
                   ],
@@ -140,9 +141,9 @@ class _LocationStepState extends State<LocationStep> {
                       children: [
                         const Icon(Icons.check_circle, color: Colors.green),
                         const SizedBox(width: 8),
-                        const Text(
-                          'Seçilen Konum:',
-                          style: TextStyle(
+                        Text(
+                          context.tr('location_selected'),
+                          style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Colors.green,
                           ),
@@ -171,7 +172,10 @@ class _LocationStepState extends State<LocationStep> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'Koordinatlar: ${widget.viewModel.customer.location?.geoPoint?.latitude.toStringAsFixed(4) ?? ''}, ${widget.viewModel.customer.location?.geoPoint?.longitude.toStringAsFixed(4) ?? ''}',
+                            context
+                                .tr('location_coordinates')
+                                .replaceAll('{lat}', widget.viewModel.customer.location?.geoPoint?.latitude.toStringAsFixed(4) ?? '')
+                                .replaceAll('{lng}', widget.viewModel.customer.location?.geoPoint?.longitude.toStringAsFixed(4) ?? ''),
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.grey.shade700,
@@ -208,8 +212,8 @@ class _LocationStepState extends State<LocationStep> {
         controller: widget.viewModel.cityController,
         textCapitalization: TextCapitalization.words, // Her kelimenin ilk harfi büyük
         decoration: InputDecoration(
-          labelText: 'Konum Ara',
-          hintText: 'Şehir veya ilçe adı girin',
+          labelText: context.tr('location_search_label'),
+          hintText: context.tr('location_search_hint_detailed'),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(
@@ -292,9 +296,9 @@ class _LocationStepState extends State<LocationStep> {
               color: isLocationSelected ? Colors.green : Theme.of(context).primaryColor,
             ),
             const SizedBox(width: 12),
-            const Text(
-              'Mevcut Konumumu Kullan',
-              style: TextStyle(
+            Text(
+              context.tr('location_current'),
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
               ),
@@ -355,7 +359,7 @@ class _LocationStepState extends State<LocationStep> {
             children: [
               const Icon(Icons.error_outline, color: Colors.white),
               const SizedBox(width: 8),
-              Expanded(child: Text('Konum alınamadı: ${e.toString()}')),
+              Expanded(child: Text(context.tr('location_error_getting').replaceAll('{error}', e.toString()))),
             ],
           ),
           backgroundColor: Colors.red.shade700,
@@ -395,7 +399,7 @@ class _LocationStepState extends State<LocationStep> {
               children: [
                 const Icon(Icons.error_outline, color: Colors.white),
                 const SizedBox(width: 8),
-                Expanded(child: Text('Hata: ${e.toString()}')),
+                Expanded(child: Text(context.tr('location_error_general').replaceAll('{error}', e.toString()))),
               ],
             ),
             backgroundColor: Colors.red.shade700,

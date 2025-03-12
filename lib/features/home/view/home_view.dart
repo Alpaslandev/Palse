@@ -222,7 +222,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
               shape: const StadiumBorder(),
               onPressed: () {
                 // SVG önizleme dialogunu göster
-                _showSvgPreviewDialog(context);
+                context.pushNamed(createAdvert);
               },
               label: Text(context.tr('create_listing'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             ),

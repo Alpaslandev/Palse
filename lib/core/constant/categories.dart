@@ -1,45 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:palseapp/core/localization/app_localizations.dart';
 
-// Uygulama kategorilerini ve ikonlarını tutan enum
+// Uygulama kategorilerini ve emojilerini tutan enum
 enum Categories {
-  kahveSohbet(icon: Icons.coffee, textKey: 'category_coffee_chat'),
-  kitapBulusma(icon: Icons.book, textKey: 'category_book_meetings'),
-  dilKultur(icon: Icons.language, textKey: 'category_language_culture'),
-  spor(icon: Icons.sports, textKey: 'category_sports'),
-  halisaha(icon: Icons.sports_soccer, textKey: 'category_football'),
-  doga(icon: Icons.nature_people, textKey: 'category_nature'),
-  fitness(icon: Icons.fitness_center, textKey: 'category_fitness'),
-  sanatTarih(icon: Icons.museum, textKey: 'category_art_history'),
-  filmDizi(icon: Icons.movie, textKey: 'category_movies_series'),
-  dans(icon: Icons.music_note, textKey: 'category_dance'),
-  muzik(icon: Icons.audiotrack, textKey: 'category_music'),
-  konser(icon: Icons.queue_music, textKey: 'category_concerts'),
-  parti(icon: Icons.celebration, textKey: 'category_party'),
-  mutfak(icon: Icons.restaurant, textKey: 'category_culinary'),
-  egitim(icon: Icons.school, textKey: 'category_education'),
-  arastirma(icon: Icons.search, textKey: 'category_research'),
-  videoOyun(icon: Icons.sports_esports, textKey: 'category_video_games'),
-  elSanatlari(icon: Icons.brush, textKey: 'category_crafts'),
-  yazilim(icon: Icons.code, textKey: 'category_coding'),
-  yoga(icon: Icons.self_improvement, textKey: 'category_yoga'),
-  fotograf(icon: Icons.camera_alt, textKey: 'category_photography'),
-  evcilHayvan(icon: Icons.pets, textKey: 'category_pets'),
-  motosiklet(icon: Icons.two_wheeler, textKey: 'category_motorcycle'),
-  araba(icon: Icons.directions_car, textKey: 'category_cars'),
-  moda(icon: Icons.shopping_bag, textKey: 'category_fashion'),
-  cevrimici(icon: Icons.computer, textKey: 'category_online'),
-  oyunTurnuva(icon: Icons.gamepad, textKey: 'category_game_tournaments'),
-  seyahat(icon: Icons.flight, textKey: 'category_travel'),
-  odaPaylas(icon: Icons.house, textKey: 'category_room_sharing'),
-  arabaKiralama(icon: Icons.car_rental, textKey: 'category_car_rental'),
-  esyaAlimSatim(icon: Icons.shopping_cart, textKey: 'category_items_trade'),
-  diger(icon: Icons.more_horiz, textKey: 'category_other');
+  kahveSohbet(emoji: "☕", textKey: 'category_coffee_chat'),
+  kitapBulusma(emoji: "📚", textKey: 'category_book_meetings'),
+  dilKultur(emoji: "🌍", textKey: 'category_language_culture'),
+  spor(emoji: "🏃", textKey: 'category_sports'),
+  halisaha(emoji: "⚽", textKey: 'category_football'),
+  doga(emoji: "🌳", textKey: 'category_nature'),
+  fitness(emoji: "🏋️", textKey: 'category_fitness'),
+  sanatTarih(emoji: "🏛️", textKey: 'category_art_history'),
+  filmDizi(emoji: "🎬", textKey: 'category_movies_series'),
+  dans(emoji: "💃", textKey: 'category_dance'),
+  muzik(emoji: "🎵", textKey: 'category_music'),
+  konser(emoji: "🎤", textKey: 'category_concerts'),
+  parti(emoji: "🎉", textKey: 'category_party'),
+  mutfak(emoji: "🍽️", textKey: 'category_culinary'),
+  egitim(emoji: "📚", textKey: 'category_education'),
+  arastirma(emoji: "🔍", textKey: 'category_research'),
+  videoOyun(emoji: "🎮", textKey: 'category_video_games'),
+  elSanatlari(emoji: "🧶", textKey: 'category_crafts'),
+  yazilim(emoji: "💻", textKey: 'category_coding'),
+  yoga(emoji: "🧘", textKey: 'category_yoga'),
+  fotograf(emoji: "📷", textKey: 'category_photography'),
+  evcilHayvan(emoji: "🐾", textKey: 'category_pets'),
+  motosiklet(emoji: "🏍️", textKey: 'category_motorcycle'),
+  araba(emoji: "🚗", textKey: 'category_cars'),
+  moda(emoji: "👗", textKey: 'category_fashion'),
+  cevrimici(emoji: "💻", textKey: 'category_online'),
+  oyunTurnuva(emoji: "🎲", textKey: 'category_game_tournaments'),
+  seyahat(emoji: "✈️", textKey: 'category_travel'),
+  odaPaylas(emoji: "🏠", textKey: 'category_room_sharing'),
+  arabaKiralama(emoji: "🚙", textKey: 'category_car_rental'),
+  esyaAlimSatim(emoji: "🛒", textKey: 'category_items_trade'),
+  diger(emoji: "⋯", textKey: 'category_other');
 
-  final IconData icon;
+  final String emoji;
   final String textKey;
 
-  const Categories({required this.icon, required this.textKey});
+  const Categories({required this.emoji, required this.textKey});
 
   // Çevirilmiş metni döndüren getter
   String getText(BuildContext context) {

@@ -57,7 +57,6 @@ class XpEventsView extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Card(
-      margin: const EdgeInsets.all(16),
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
@@ -109,7 +108,7 @@ class XpEventsView extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: achievementService.getXpToNextRankPercentage(authProvider.user!.totalXp),
                 minHeight: 10,
-                backgroundColor: theme.brightness == Brightness.light ? Colors.grey.shade200 : theme.colorScheme.surfaceVariant,
+                backgroundColor: theme.colorScheme.surfaceVariant,
                 color: userRank.getRankColor(),
               ),
             ),

@@ -134,30 +134,6 @@ class Customer {
     return age;
   }
 
-  // Kullanıcının unvanını döndüren getter
-  UserRank get rank => UserRank.fromXp(totalXp);
-
-  // UserAchievements nesnesini döndüren getter
-  UserAchievements get achievements => UserAchievements(
-        totalXp: totalXp,
-        completedTasks: _parseCompletedTasks(),
-        lastDailyTaskDate: lastDailyTaskDate,
-      );
-
-  // String->XpEvent dönüşümü yapan yardımcı metod
-  Map<XpEvent, int> _parseCompletedTasks() {
-    final result = <XpEvent, int>{};
-    completedTasks.forEach((key, value) {
-      try {
-        final event = XpEvent.values.firstWhere((e) => e.name == key);
-        result[event] = value;
-      } catch (e) {
-        print('Bilinmeyen XpEvent: $key');
-      }
-    });
-    return result;
-  }
-
   factory Customer.fromJson(Map<String, dynamic> parsedJson, String userID) {
     final chatMapJson = parsedJson['chatMap'] as Map<String, dynamic>? ?? {};
     final chatMap = <String, Chat>{};

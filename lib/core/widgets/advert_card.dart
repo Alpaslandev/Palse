@@ -46,6 +46,7 @@ class AdvertCard extends StatelessWidget {
     final currentCustomer = context.read<AuthProvider>().user!;
     final chatsService = ChatService();
     return Card(
+      color: Colors.transparent,
       margin: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -61,6 +62,7 @@ class AdvertCard extends StatelessWidget {
 
           // Butonlar
           if (!isFriendProfile) _buildActionButtons(context, currentCustomer, chatsService),
+          const SizedBox(height: 20),
         ],
       ),
     );
@@ -189,7 +191,7 @@ class AdvertCard extends StatelessWidget {
                             style: const TextStyle(fontSize: 12),
                           ),
                           Text(
-                            DateFormat('dd/MM/yyyy').format(advert.createdAt!),
+                            DateFormat('dd/MM/yyyy').format(advert.createdAt),
                             style: const TextStyle(fontSize: 12, color: Colors.grey),
                           ),
                         ],
@@ -215,7 +217,7 @@ class AdvertCard extends StatelessWidget {
                             child: Icon(Icons.location_on_outlined, size: 12, color: Colors.blue),
                           ),
                           TextSpan(
-                            text: ' ${advert.location?.displayStringWithDistance(currentCustomer.location!)}',
+                            text: ' ${advert.location.displayStringWithDistance(currentCustomer.location!)}',
                             style: const TextStyle(fontSize: 9, color: Colors.grey),
                           ),
                         ],
@@ -232,7 +234,7 @@ class AdvertCard extends StatelessWidget {
                           child: Icon(Icons.calendar_month_outlined, size: 12, color: Colors.blue),
                         ),
                         TextSpan(
-                          text: ' ${DateFormat('dd/MM/yyyy').format(advert.startEventDate!)} - ${DateFormat('HH:mm').format(advert.startEventDate!)}',
+                          text: ' ${DateFormat('dd/MM/yyyy').format(advert.startEventDate)} - ${DateFormat('HH:mm').format(advert.startEventDate!)}',
                           style: const TextStyle(fontSize: 9, color: Colors.grey),
                         ),
                       ],

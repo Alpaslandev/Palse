@@ -47,29 +47,6 @@ class SettingsView extends StatelessWidget {
             onTap: () => context.pushNamed(editProfile, extra: authProvider.user),
           ),
           _SectionTitle(title: context.tr('application')),
-          _SettingsTile(
-            icon: Icons.notifications_outlined,
-            title: context.tr('notification'),
-            onTap: () => context.pushNamed(editNotification),
-          ),
-          _SettingsTile(
-            icon: Icons.emoji_events_outlined,
-            title: 'XP Test Sayfası',
-            subtitle: 'XP ve görev sistemini test etmek için',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const AchievementTestPage()),
-              );
-            },
-          ),
-          // Firestore yedekleme seçeneği
-          _SettingsTile(
-            icon: Icons.backup_outlined,
-            title: 'Firestore Yedekleme',
-            subtitle: 'Koleksiyonları yedeklemek için',
-            onTap: () => context.pushNamed(firestoreBackup),
-          ),
           // Tema seçim seçeneği
           SwitchListTile(
             title: Text(context.tr('dark_theme')),

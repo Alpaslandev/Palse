@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/features/profile_setup_steps/viewmodel/profile_setup_view_model.dart';
 
@@ -36,7 +37,7 @@ class BirthdayGenderStep extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Sizi tanıyalım',
+                    context.tr('birthday_gender_title'),
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: Theme.of(context).primaryColor,
@@ -55,7 +56,7 @@ class BirthdayGenderStep extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      'Doğum Tarihiniz',
+                      context.tr('birthday_gender_birthday'),
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
@@ -68,9 +69,9 @@ class BirthdayGenderStep extends StatelessWidget {
                           color: Colors.red.shade100,
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Text(
-                          'Zorunlu',
-                          style: TextStyle(
+                        child: Text(
+                          context.tr('birthday_gender_required'),
+                          style: const TextStyle(
                             color: Colors.red,
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
@@ -117,7 +118,7 @@ class BirthdayGenderStep extends StatelessWidget {
                               ? DateFormat('dd MMMM yyyy', 'tr').format(
                                   viewModel.customer.birthday!,
                                 )
-                              : 'Doğum tarihinizi seçin',
+                              : context.tr('birthday_gender_select_date'),
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
@@ -137,7 +138,7 @@ class BirthdayGenderStep extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.only(top: 8.0, left: 16),
                     child: Text(
-                      'Lütfen doğum tarihinizi seçin',
+                      context.tr('birthday_gender_select_birth_date'),
                       style: TextStyle(
                         color: Colors.red.shade700,
                         fontSize: 12,
@@ -156,7 +157,7 @@ class BirthdayGenderStep extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      'Cinsiyetiniz',
+                      context.tr('birthday_gender_gender'),
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
@@ -169,9 +170,9 @@ class BirthdayGenderStep extends StatelessWidget {
                           color: Colors.red.shade100,
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Text(
-                          'Zorunlu',
-                          style: TextStyle(
+                        child: Text(
+                          context.tr('birthday_gender_required'),
+                          style: const TextStyle(
                             color: Colors.red,
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
@@ -194,7 +195,7 @@ class BirthdayGenderStep extends StatelessWidget {
                           context,
                           Gender.male,
                           Icons.male,
-                          'Erkek',
+                          context.tr('birthday_gender_male'),
                           Colors.blue.shade50,
                           Colors.blue,
                         ),
@@ -205,7 +206,7 @@ class BirthdayGenderStep extends StatelessWidget {
                           context,
                           Gender.female,
                           Icons.female,
-                          'Kadın',
+                          context.tr('birthday_gender_female'),
                           Colors.pink.shade50,
                           Colors.pink,
                         ),
@@ -216,7 +217,7 @@ class BirthdayGenderStep extends StatelessWidget {
                           context,
                           Gender.others,
                           Icons.transgender,
-                          'Diğer',
+                          context.tr('birthday_gender_other'),
                           Colors.purple.shade50,
                           Colors.purple,
                         ),
@@ -228,7 +229,7 @@ class BirthdayGenderStep extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.only(top: 8.0, left: 16),
                     child: Text(
-                      'Lütfen cinsiyetinizi seçin',
+                      context.tr('birthday_gender_select_gender'),
                       style: TextStyle(
                         color: Colors.red.shade700,
                         fontSize: 12,
@@ -257,16 +258,16 @@ class BirthdayGenderStep extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Harika!',
-                            style: TextStyle(
+                          Text(
+                            context.tr('birthday_gender_awesome'),
+                            style: const TextStyle(
                               color: Colors.green,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Temel bilgileriniz tamamlandı, şimdi diğer adımlara geçebilirsiniz.',
+                            context.tr('birthday_gender_basics_completed'),
                             style: TextStyle(
                               color: Colors.green.shade800,
                               fontWeight: FontWeight.w500,
@@ -295,7 +296,7 @@ class BirthdayGenderStep extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Bilgi',
+                            context.tr('birthday_gender_info'),
                             style: TextStyle(
                               color: Colors.blue.shade700,
                               fontWeight: FontWeight.bold,
@@ -303,7 +304,7 @@ class BirthdayGenderStep extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Doğum tarihiniz ve cinsiyetiniz size uygun etkinlikleri önerirken kullanılacaktır.',
+                            context.tr('birthday_gender_info_text'),
                             style: TextStyle(
                               color: Colors.blue.shade800,
                               fontWeight: FontWeight.w500,

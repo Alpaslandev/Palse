@@ -67,12 +67,14 @@ class _CategoriesViewState extends State<CategoriesView> {
                 runSpacing: 8,
                 children: selectedCategories
                     .map((category) => Chip(
-                          avatar: Icon(
-                            category.icon,
+                          avatar: Text(
+                            category.emoji,
+                            style: const TextStyle(fontSize: 16),
                           ),
                           backgroundColor: AppTheme.primaryColor,
                           label: Text(
                             category.getText(context),
+                            style: const TextStyle(color: Colors.white),
                           ),
                           onDeleted: () {
                             setState(() {
@@ -80,6 +82,7 @@ class _CategoriesViewState extends State<CategoriesView> {
                               changed = true;
                             });
                           },
+                          deleteIconColor: Colors.white,
                         ))
                     .toList(),
               ),
@@ -95,7 +98,10 @@ class _CategoriesViewState extends State<CategoriesView> {
               runSpacing: 8,
               children: unselectedCategories // Sadece seçili olmayan kategorileri göster
                   .map((category) => FilterChip(
-                        avatar: Icon(category.icon, color: Colors.black),
+                        avatar: Text(
+                          category.emoji,
+                          style: const TextStyle(fontSize: 16),
+                        ),
                         label: Text(category.getText(context), style: const TextStyle(color: Colors.black)),
                         selected: false,
                         backgroundColor: Colors.white,

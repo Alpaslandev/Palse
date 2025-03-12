@@ -4,16 +4,85 @@ import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
-import 'package:palseapp/core/utils/app_theme.dart';
 import 'package:palseapp/core/widgets/circle_profile_picture.dart';
 import 'package:palseapp/features/achievement/achievement_test_page.dart';
 import 'package:palseapp/features/achievement/achievements.dart';
 import 'package:palseapp/features/profile/widgets/leader_board.dart';
 import 'package:palseapp/features/profile/widgets/xp_progress_card.dart';
+import 'package:palseapp/core/services/achievement_service.dart';
 import 'package:provider/provider.dart';
+import 'package:palseapp/core/services/shared_pref_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
-class ProfileView extends StatelessWidget {
+class ProfileView extends StatefulWidget {
   const ProfileView({super.key});
+
+  @override
+  State<ProfileView> createState() => _ProfileViewState();
+}
+
+class _ProfileViewState extends State<ProfileView> {
+  @override
+  void initState() {
+    super.initState();
+    // Profil ekranı açıldığında günlük görevleri kontrol et
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkDailyTasks();
+    });
+  }
+
+  // Günlük görevleri kontrol etme fonksiyonu
+  Future<void> _checkDailyTasks() async {
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final user = authProvider.user;
+
+      if (user != null) {
+        final achievementService = Provider.of<AchievementService>(context, listen: false);
+
+        // Günlük görevleri kontrol et ve gerekirse sıfırla
+        await achievementService.checkAndResetDailyTasksAtMidnight(user);
+
+        // Kullanıcının tamamlanan görevlerini local storage'dan yükle
+        if (user.userID != null) {
+          // Tamamlanan görevleri local storage'dan al
+          final completedTasks = await _getCompletedTasksFromLocalStorage(user.userID!);
+
+          // Kullanıcı modelini güncelle
+          if (completedTasks.isNotEmpty) {
+            final updatedUser = user.copyWith(completedTasks: completedTasks);
+            // AuthProvider'da kullanıcı modelini güncelle
+            authProvider.updateUser(updatedUser);
+            debugPrint('Tamamlanan görevler local storage\'dan yüklendi: ${completedTasks.length} görev');
+          }
+        }
+
+        debugPrint('🔄 Günlük görevler kontrol edildi');
+      }
+    } catch (e) {
+      debugPrint('Günlük görev kontrolü sırasında hata: $e');
+    }
+  }
+
+  // Tamamlanan görevleri local storage'dan getir
+  Future<Map<String, int>> _getCompletedTasksFromLocalStorage(String userId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final key = 'completed_tasks_$userId';
+      final tasksJson = prefs.getString(key);
+      if (tasksJson == null) {
+        return {};
+      }
+
+      final Map<String, dynamic> decodedTasks = jsonDecode(tasksJson);
+      // String anahtarları ve int değerleri olan bir Map'e dönüştür
+      return decodedTasks.map((key, value) => MapEntry(key, value as int));
+    } catch (e) {
+      debugPrint('Tamamlanan görevler getirilirken hata: $e');
+      return {};
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -148,18 +217,60 @@ Widget _ratingCard(Customer customer, BuildContext context) {
 }
 
 // Günlük görev kartı
-class DailyTaskCard extends StatelessWidget {
+class DailyTaskCard extends StatefulWidget {
   const DailyTaskCard({super.key});
+
+  @override
+  State<DailyTaskCard> createState() => _DailyTaskCardState();
+}
+
+class _DailyTaskCardState extends State<DailyTaskCard> {
+  bool _isTestMode = false;
+  bool _isDailyLoginCompleted = false;
+  bool _isDailyCreateListingCompleted = false;
+  bool _isDailySendMessageCompleted = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDailyTasksStatus();
+  }
+
+  // Günlük görev durumlarını yükle
+  Future<void> _loadDailyTasksStatus() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final user = authProvider.user;
+
+    if (user?.userID != null) {
+      final tasksStatus = await SharedPrefService.getDailyTasksStatus(user!.userID!);
+
+      setState(() {
+        _isDailyLoginCompleted = tasksStatus.containsKey(XpEvent.dailyLogin.name);
+        _isDailyCreateListingCompleted = tasksStatus.containsKey(XpEvent.dailyCreateListing.name);
+        _isDailySendMessageCompleted = tasksStatus.containsKey(XpEvent.dailySendMessage.name);
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
-    final userAchievements = authProvider.user?.achievements;
+    final user = authProvider.user;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final achievementService = Provider.of<AchievementService>(context, listen: false);
 
-    // Günlük görevin tamamlanıp tamamlanmadığını kontrol et
-    final bool isDailyTaskCompleted = userAchievements?.lastDailyTaskDate != null;
+    // Toplam XP hesapla (tamamlanan görevler için)
+    int totalDailyXp = 0;
+    if (_isDailyLoginCompleted) totalDailyXp += XpEvent.dailyLogin.xpAmount;
+    if (_isDailyCreateListingCompleted) totalDailyXp += XpEvent.dailyCreateListing.xpAmount;
+    if (_isDailySendMessageCompleted) totalDailyXp += XpEvent.dailySendMessage.xpAmount;
+
+    // Tüm görevlerin tamamlanıp tamamlanmadığını kontrol et
+    final bool allTasksCompleted = _isDailyLoginCompleted && _isDailyCreateListingCompleted && _isDailySendMessageCompleted;
+
+    // Bir sonraki yenilemeye kalan süreyi al
+    final String timeUntilReset = achievementService.getFormattedTimeUntilNextReset(isTest: _isTestMode);
 
     return Container(
       decoration: BoxDecoration(
@@ -176,72 +287,181 @@ class DailyTaskCard extends StatelessWidget {
               Row(
                 children: [
                   Text(
-                    context.tr('daily_task'),
+                    context.tr('daily_tasks'),
                     style: const TextStyle(color: Colors.white, fontSize: 16),
                   ),
                   const SizedBox(width: 4),
                   const Icon(Icons.bolt, color: Colors.yellow),
                 ],
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Text(
-                  '+100 XP',
-                  style: TextStyle(color: Colors.white),
-                ),
+              Row(
+                children: [
+                  // Test butonu
+                  if (user != null)
+                    IconButton(
+                      icon: const Icon(Icons.refresh, color: Colors.white),
+                      onPressed: () async {
+                        // Test için dünün tarihini ayarla
+                        final testDate = DateTime.now().subtract(const Duration(days: 1));
+                        final achievementService = Provider.of<AchievementService>(context, listen: false);
+
+                        // Test modunu aktifleştir
+                        setState(() {
+                          _isTestMode = true;
+                        });
+
+                        // Görevleri sıfırla ve güncellenmiş kullanıcıyı al
+                        final updatedUser = await achievementService.testDailyTaskReset(user, testDate: testDate);
+
+                        // Görev durumlarını yeniden yükle
+                        await _loadDailyTasksStatus();
+
+                        // Bildirim göster
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Günlük görevler sıfırlandı! Yeni görevleri tamamlayabilirsiniz.'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                      },
+                    ),
+                  // XP göstergesi
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '+${XpEvent.dailyLogin.xpAmount + XpEvent.dailyCreateListing.xpAmount + XpEvent.dailySendMessage.xpAmount} XP',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          Text(
-            '1. ${context.tr('daily_task_step1')}',
-            style: TextStyle(
-              color: Colors.white,
-              decoration: isDailyTaskCompleted ? TextDecoration.lineThrough : null,
+
+          // Bir sonraki yenilemeye kalan süre
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: Row(
+              children: [
+                Icon(Icons.access_time, color: Colors.white.withOpacity(0.7), size: 16),
+                const SizedBox(width: 4),
+                Text(
+                  '${context.tr('next_reset')}: $timeUntilReset',
+                  style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 12),
+                ),
+              ],
             ),
           ),
+
+          const SizedBox(height: 8),
+
+          // Günlük görevleri listele
+          // 1. Günlük Giriş
+          _buildTaskItem(
+            context: context,
+            text: context.tr('daily_task_login'),
+            isCompleted: _isDailyLoginCompleted,
+            xpAmount: XpEvent.dailyLogin.xpAmount,
+            index: 1,
+          ),
+
+          // 2. İlan Oluşturma
+          _buildTaskItem(
+            context: context,
+            text: context.tr('daily_task_create_listing'),
+            isCompleted: _isDailyCreateListingCompleted,
+            xpAmount: XpEvent.dailyCreateListing.xpAmount,
+            index: 2,
+          ),
+
+          // 3. Mesaj Gönderme
+          _buildTaskItem(
+            context: context,
+            text: context.tr('daily_task_send_message'),
+            isCompleted: _isDailySendMessageCompleted,
+            xpAmount: XpEvent.dailySendMessage.xpAmount,
+            index: 3,
+          ),
+
+          const SizedBox(height: 12),
+
+          // Tamamlanan görevler için özet
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                context.tr('completed_tasks') +
+                    ' ${(_isDailyLoginCompleted ? 1 : 0) + (_isDailyCreateListingCompleted ? 1 : 0) + (_isDailySendMessageCompleted ? 1 : 0)}/3',
+                style: const TextStyle(color: Colors.white),
+              ),
+              Text(
+                '${totalDailyXp}/${XpEvent.dailyLogin.xpAmount + XpEvent.dailyCreateListing.xpAmount + XpEvent.dailySendMessage.xpAmount} XP',
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Görev öğesi oluşturmak için yardımcı metod
+  Widget _buildTaskItem({
+    required BuildContext context,
+    required String text,
+    required bool isCompleted,
+    required int xpAmount,
+    required int index,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Row(
+        children: [
+          // Görev numarası
           Text(
-            '2. ${context.tr('daily_task_step2')}',
+            '$index.',
             style: TextStyle(
               color: Colors.white,
-              decoration: isDailyTaskCompleted ? TextDecoration.lineThrough : null,
+              fontWeight: FontWeight.bold,
+              decoration: isCompleted ? TextDecoration.lineThrough : null,
             ),
           ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton(
-              onPressed: isDailyTaskCompleted
-                  ? null // Görev tamamlandıysa buton devre dışı
-                  : () async {
-                      // Görevi tamamla butonuna basıldığında
-                      if (userAchievements != null) {
-                        // Günlük görevi tamamla ve XP kazan (XpEvent.dailyTaskListingAndMessage görevi için)
-                        final updatedAchievements = userAchievements.earnXp(XpEvent.dailyTaskCreateListingAndMessage);
+          const SizedBox(width: 8),
 
-                        // Kullanıcı bilgilerini güncelle
-                        //   await authProvider.updateUserAchievements(updatedAchievements);
-
-                        // Başarılı mesajı göster
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(context.tr('daily_task_completed')),
-                              backgroundColor: Colors.green,
-                            ),
-                          );
-                        }
-                      }
-                    },
-              child: Text(
-                isDailyTaskCompleted ? context.tr('task_completed') : context.tr('complete_task'),
+          // Görev metni
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                color: Colors.white,
+                decoration: isCompleted ? TextDecoration.lineThrough : null,
               ),
             ),
           ),
+
+          // XP miktarı
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              '+$xpAmount XP',
+              style: const TextStyle(color: Colors.white, fontSize: 12),
+            ),
+          ),
+
+          // Tik işareti (tamamlanmışsa)
+          if (isCompleted)
+            const Padding(
+              padding: EdgeInsets.only(left: 8.0),
+              child: Icon(Icons.check_circle, color: Colors.greenAccent, size: 18),
+            ),
         ],
       ),
     );

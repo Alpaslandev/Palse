@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:palseapp/features/profile_setup_steps/viewmodel/profile_setup_view_model.dart';
 import 'dart:io';
+import 'package:palseapp/core/localization/app_localizations.dart';
 
 class ProfilePictureStep extends StatelessWidget {
   const ProfilePictureStep({super.key, required this.viewModel});
@@ -31,7 +32,7 @@ class ProfilePictureStep extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Neredeyse Bitti!',
+                    context.tr('profile_picture_almost_done'),
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: Theme.of(context).primaryColor,
@@ -39,7 +40,7 @@ class ProfilePictureStep extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Seni tanımak için bir fotoğraf eklemek ister misin?',
+                    context.tr('profile_picture_add_photo'),
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w500,
                         ),
@@ -72,7 +73,7 @@ class ProfilePictureStep extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Profil fotoğrafı olan kullanıcılar %70 daha fazla etkileşim alıyor!',
+                      context.tr('profile_picture_tip'),
                       style: TextStyle(
                         color: Theme.of(context).primaryColor,
                         fontWeight: FontWeight.w500,
@@ -117,9 +118,9 @@ class ProfilePictureStep extends StatelessWidget {
                                   color: Theme.of(context).primaryColor,
                                 ),
                                 const SizedBox(height: 8),
-                                const Text(
-                                  'Fotoğraf Ekle',
-                                  style: TextStyle(
+                                Text(
+                                  context.tr('profile_picture_add'),
+                                  style: const TextStyle(
                                     fontWeight: FontWeight.w500,
                                     color: Colors.black54,
                                   ),
@@ -165,10 +166,10 @@ class ProfilePictureStep extends StatelessWidget {
                   children: [
                     const Icon(Icons.check_circle, color: Colors.green),
                     const SizedBox(width: 12),
-                    const Expanded(
+                    Expanded(
                       child: Text(
-                        'Harika görünüyor! Fotoğrafını değiştirmek istersen tekrar dokunabilirsin.',
-                        style: TextStyle(
+                        context.tr('profile_picture_looks_great'),
+                        style: const TextStyle(
                           color: Colors.green,
                           fontWeight: FontWeight.w500,
                         ),
@@ -179,7 +180,7 @@ class ProfilePictureStep extends StatelessWidget {
               )
             else
               Text(
-                'Bu adımı atlayabilirsin, daha sonra profil ayarlarından ekleyebilirsin',
+                context.tr('profile_picture_skip_info'),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.grey.shade700,

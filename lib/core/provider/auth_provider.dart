@@ -40,7 +40,6 @@ class AuthProvider extends ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
-      // Auth state'i dinlemeye başla
       _authService.authStateChanges.listen((User? user) async {
         debugPrint('Auth State Changed: ${user?.email}');
         _firebaseUser = user;
@@ -200,6 +199,13 @@ class AuthProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  // Kullanıcı modelini güncelle
+  void updateUser(Customer updatedUser) {
+    _user = updatedUser;
+    notifyListeners();
+    debugPrint('Kullanıcı modeli güncellendi: ${updatedUser.userID}');
   }
 
   // Dispose metodu

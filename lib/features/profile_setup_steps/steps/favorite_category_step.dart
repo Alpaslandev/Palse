@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:palseapp/core/constant/categories.dart';
 import 'package:palseapp/features/profile_setup_steps/viewmodel/profile_setup_view_model.dart';
+import 'package:palseapp/core/localization/app_localizations.dart';
 
 class FavoriteCategoryStep extends StatelessWidget {
   const FavoriteCategoryStep({super.key, required this.viewModel});
@@ -34,7 +35,7 @@ class FavoriteCategoryStep extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Son olarak',
+                    context.tr('categories_finally'),
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: Theme.of(context).primaryColor,
@@ -42,7 +43,7 @@ class FavoriteCategoryStep extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'ilgi alanlarınızı seçiniz',
+                    context.tr('categories_select_interests'),
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -72,7 +73,7 @@ class FavoriteCategoryStep extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      areCategoriesValid ? 'Harika! Yeterli kategori seçtiniz' : 'En az 3 kategori seçmeniz gerekiyor',
+                      areCategoriesValid ? context.tr('categories_great') : context.tr('categories_min_required'),
                       style: TextStyle(
                         fontWeight: FontWeight.w500,
                         color: areCategoriesValid ? Colors.green.shade700 : Colors.orange.shade800,
@@ -101,7 +102,7 @@ class FavoriteCategoryStep extends StatelessWidget {
 
             // Kategoriler başlığı
             Text(
-              'Kategoriler',
+              context.tr('categories_list_title'),
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -149,6 +150,12 @@ class FavoriteCategoryStep extends StatelessWidget {
                                 size: 24,
                               ),
                               const SizedBox(width: 12),
+                              // Emoji gösterimi
+                              Text(
+                                category.emoji,
+                                style: const TextStyle(fontSize: 20),
+                              ),
+                              const SizedBox(width: 6),
                               Expanded(
                                 child: Text(
                                   category.getText(context),
@@ -157,6 +164,7 @@ class FavoriteCategoryStep extends StatelessWidget {
                                     fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                                     fontSize: 16,
                                   ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ],

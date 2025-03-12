@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:palseapp/features/profile_setup_steps/viewmodel/profile_setup_view_model.dart';
 import 'package:provider/provider.dart';
+import 'package:palseapp/core/localization/app_localizations.dart';
 
 class NicknameStep extends StatelessWidget {
   final ProfileSetupViewModel viewModel;
@@ -33,7 +34,7 @@ class NicknameStep extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Çok az kaldı...',
+                    context.tr('nickname_almost_done'),
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: Theme.of(context).primaryColor,
@@ -44,7 +45,7 @@ class NicknameStep extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          'Havalı bir kullanıcı adına ne dersin?',
+                          context.tr('nickname_choose_cool'),
                           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),
@@ -57,9 +58,9 @@ class NicknameStep extends StatelessWidget {
                             color: Colors.red.shade100,
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Text(
-                            'Zorunlu',
-                            style: TextStyle(
+                          child: Text(
+                            context.tr('nickname_required'),
+                            style: const TextStyle(
                               color: Colors.red,
                               fontWeight: FontWeight.bold,
                               fontSize: 12,
@@ -87,7 +88,7 @@ class NicknameStep extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Bu isim profilinizde görünecektir',
+                      context.tr('nickname_profile_info'),
                       style: TextStyle(
                         color: Theme.of(context).primaryColor,
                         fontWeight: FontWeight.w500,
@@ -116,8 +117,8 @@ class NicknameStep extends StatelessWidget {
                 controller: viewModel.nicknameController,
                 textCapitalization: TextCapitalization.words,
                 decoration: InputDecoration(
-                  labelText: 'Takma Ad',
-                  hintText: 'En az 3 karakter giriniz',
+                  labelText: context.tr('nickname_label'),
+                  hintText: context.tr('nickname_hint'),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
@@ -145,17 +146,17 @@ class NicknameStep extends StatelessWidget {
                   ),
                   suffixIcon: isNicknameValid ? const Icon(Icons.check_circle, color: Colors.green) : null,
                   helperText: '',
-                  errorText: !isNicknameValid ? 'Takma ad en az 3 karakter olmalıdır' : null,
+                  errorText: !isNicknameValid ? context.tr('nickname_min_length_error') : null,
                   fillColor: Colors.white,
                   filled: true,
                 ),
                 onChanged: (value) => context.read<ProfileSetupViewModel>().updateNickname(value),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Lütfen bir takma ad girin';
+                    return context.tr('nickname_please_enter');
                   }
                   if (value.length < 3) {
-                    return 'Takma ad en az 3 karakter olmalıdır';
+                    return context.tr('nickname_min_length_error');
                   }
                   return null;
                 },
@@ -186,9 +187,9 @@ class NicknameStep extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'Harika bir seçim!',
-                              style: TextStyle(
+                            Text(
+                              context.tr('nickname_great_choice'),
+                              style: const TextStyle(
                                 color: Colors.green,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -226,9 +227,9 @@ class NicknameStep extends StatelessWidget {
                     children: [
                       Icon(Icons.lightbulb_outline, color: Colors.amber.shade800),
                       const SizedBox(width: 8),
-                      const Text(
-                        'Eğlenceli ve özgün bir isim seçin!',
-                        style: TextStyle(
+                      Text(
+                        context.tr('nickname_tip'),
+                        style: const TextStyle(
                           fontWeight: FontWeight.w500,
                           color: Colors.black87,
                         ),

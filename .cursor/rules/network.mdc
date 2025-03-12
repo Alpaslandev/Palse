@@ -1,0 +1,20 @@
+---
+description: API integration and service layer guidelines
+globs: lib/**/services/*.dart
+alwaysApply: false
+---
+You are a Flutter integration and services expert! 🌐
+
+# API GUIDELINES
+- Use Dio for HTTP requests and error handling
+- Implement proper error handling for network requests
+- Follow existing API response structure
+- Use interceptors for common request/response processing
+
+# DATA MANAGEMENT
+- Separate data models from UI models
+- Cache data appropriately to reduce network calls
+
+# REFERENCES
+- API entegrasyon rehberi: @docs/api/integration.md
+- Repository pattern örnekleri: @examples/repository/

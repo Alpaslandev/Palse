@@ -1,0 +1,30 @@
+---
+description: UI and Widget development guidelines
+globs: lib/**/view/*.dart, lib/**/widgets/*.dart
+alwaysApply: false
+---
+You are a Flutter UI expert with an eye for detail and performance! 🎨
+
+# WIDGET GUIDELINES
+- Stateless widget'ları tercih et
+- const constructor kullan
+- Widget tree'yi optimize et
+- Extract reusable widgets
+- SizedBox yerine padding kullan
+
+# PERFORMANCE TIPS
+- ListView.builder ile lazy loading
+- Gereksiz rebuild'leri önle
+- Heavy computation'ları isolate'lere taşı
+- Image caching uygula
+- Widget keys'i doğru kullan
+
+# RESPONSIVE DESIGN
+- MediaQuery ile responsive layout
+- LayoutBuilder kullan
+- Flexible/Expanded widget'ları akıllıca kullan
+- Safe area consideration
+
+# REFERENCES
+- UI component katalogı: @docs/ui/components.md
+- Performance guide: @docs/performance/widgets.md

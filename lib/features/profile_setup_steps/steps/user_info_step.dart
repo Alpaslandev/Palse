@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/features/profile_setup_steps/viewmodel/profile_setup_view_model.dart';
 
 class UserInfoStep extends StatelessWidget {
@@ -34,7 +35,7 @@ class UserInfoStep extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Hoşgeldin!',
+                    context.tr('user_info_welcome'),
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: Theme.of(context).primaryColor,
@@ -42,7 +43,7 @@ class UserInfoStep extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Deneyimini hazırlamak için birkaç bilgi girmeni rica ediyoruz.',
+                    context.tr('user_info_description'),
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w500,
                         ),
@@ -51,156 +52,28 @@ class UserInfoStep extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 32),
-
-            // İsim giriş alanı
-            Text(
-              'Adınız',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-            const SizedBox(height: 8),
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              decoration: BoxDecoration(
-                boxShadow: [
-                  BoxShadow(
-                    color: isFirstNameValid ? Colors.green.withOpacity(0.2) : Colors.grey.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: TextFormField(
-                controller: viewModel.firstNameController,
-                textCapitalization: TextCapitalization.words,
-                decoration: InputDecoration(
-                  hintText: 'Adınızı girin',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: !isFirstNameValid && viewModel.firstNameController.text.isNotEmpty ? Colors.red : Colors.grey.shade300,
-                      width: 1.5,
-                    ),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: !isFirstNameValid && viewModel.firstNameController.text.isNotEmpty ? Colors.red : Colors.grey.shade300,
-                      width: 1.5,
-                    ),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: isFirstNameValid ? Colors.green : Theme.of(context).primaryColor,
-                      width: 2.0,
-                    ),
-                  ),
-                  prefixIcon: Icon(
-                    Icons.person_outline,
-                    color: isFirstNameValid && viewModel.firstNameController.text.isNotEmpty ? Colors.green : null,
-                  ),
-                  suffixIcon:
-                      isFirstNameValid && viewModel.firstNameController.text.isNotEmpty ? const Icon(Icons.check_circle, color: Colors.green) : null,
-                  helperText: '',
-                  errorText: !isFirstNameValid && viewModel.firstNameController.text.isNotEmpty ? 'Ad en az 3 karakter olmalıdır' : null,
-                  fillColor: Colors.white,
-                  filled: true,
-                ),
-                onChanged: viewModel.updateFirstName,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Lütfen adınızı girin';
-                  }
-                  if (value.length < 3) {
-                    return 'Ad en az 3 karakter olmalıdır';
-                  }
-                  return null;
-                },
-                autovalidateMode: AutovalidateMode.onUserInteraction,
-                style: TextStyle(
-                  fontWeight: FontWeight.w500,
-                  color: isFirstNameValid ? Colors.black87 : Colors.black54,
-                ),
-              ),
-            ),
-
             const SizedBox(height: 24),
 
-            // Soyad giriş alanı
-            Text(
-              'Soyadınız',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+            // İsim giriş alanı
+            _buildTextFieldWithValidation(
+              context,
+              controller: viewModel.firstNameController,
+              labelText: context.tr('user_info_first_name'),
+              hintText: context.tr('user_info_first_name_hint'),
+              isValid: isFirstNameValid,
+              onChanged: viewModel.updateFirstName,
             ),
-            const SizedBox(height: 8),
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              decoration: BoxDecoration(
-                boxShadow: [
-                  BoxShadow(
-                    color: isLastNameValid ? Colors.green.withOpacity(0.2) : Colors.grey.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: TextFormField(
-                controller: viewModel.lastNameController,
-                textCapitalization: TextCapitalization.words,
-                decoration: InputDecoration(
-                  hintText: 'Soyadınızı girin',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: !isLastNameValid && viewModel.lastNameController.text.isNotEmpty ? Colors.red : Colors.grey.shade300,
-                      width: 1.5,
-                    ),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: !isLastNameValid && viewModel.lastNameController.text.isNotEmpty ? Colors.red : Colors.grey.shade300,
-                      width: 1.5,
-                    ),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: isLastNameValid ? Colors.green : Theme.of(context).primaryColor,
-                      width: 2.0,
-                    ),
-                  ),
-                  prefixIcon: Icon(
-                    Icons.people_outline,
-                    color: isLastNameValid && viewModel.lastNameController.text.isNotEmpty ? Colors.green : null,
-                  ),
-                  suffixIcon:
-                      isLastNameValid && viewModel.lastNameController.text.isNotEmpty ? const Icon(Icons.check_circle, color: Colors.green) : null,
-                  helperText: '',
-                  errorText: !isLastNameValid && viewModel.lastNameController.text.isNotEmpty ? 'Soyad en az 3 karakter olmalıdır' : null,
-                  fillColor: Colors.white,
-                  filled: true,
-                ),
-                onChanged: viewModel.updateLastName,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Lütfen soyadınızı girin';
-                  }
-                  if (value.length < 3) {
-                    return 'Soyad en az 3 karakter olmalıdır';
-                  }
-                  return null;
-                },
-                autovalidateMode: AutovalidateMode.onUserInteraction,
-                style: TextStyle(
-                  fontWeight: FontWeight.w500,
-                  color: isLastNameValid ? Colors.black87 : Colors.black54,
-                ),
-              ),
+
+            const SizedBox(height: 16),
+
+            // Soyisim giriş alanı
+            _buildTextFieldWithValidation(
+              context,
+              controller: viewModel.lastNameController,
+              labelText: context.tr('user_info_last_name'),
+              hintText: context.tr('user_info_last_name_hint'),
+              isValid: isLastNameValid,
+              onChanged: viewModel.updateLastName,
             ),
 
             const SizedBox(height: 32),
@@ -222,16 +95,19 @@ class UserInfoStep extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Mükemmel!',
-                            style: TextStyle(
+                          Text(
+                            context.tr('user_info_perfect'),
+                            style: const TextStyle(
                               color: Colors.green,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Merhaba ${viewModel.firstNameController.text} ${viewModel.lastNameController.text}, şimdi diğer adımlara geçebilirsin.',
+                            context
+                                .tr('user_info_hello')
+                                .replaceAll('{firstName}', viewModel.firstNameController.text)
+                                .replaceAll('{lastName}', viewModel.lastNameController.text),
                             style: TextStyle(
                               color: Colors.green.shade800,
                               fontWeight: FontWeight.w500,
@@ -260,7 +136,7 @@ class UserInfoStep extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Bilgi',
+                            context.tr('user_info_info'),
                             style: TextStyle(
                               color: Colors.blue.shade700,
                               fontWeight: FontWeight.bold,
@@ -268,7 +144,7 @@ class UserInfoStep extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Lütfen adınızı ve soyadınızı girin. Bu bilgiler profilinizde görünecektir.',
+                            context.tr('user_info_please_enter'),
                             style: TextStyle(
                               color: Colors.blue.shade800,
                               fontWeight: FontWeight.w500,
@@ -286,6 +162,78 @@ class UserInfoStep extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildTextFieldWithValidation(
+    BuildContext context, {
+    required TextEditingController controller,
+    required String labelText,
+    required String hintText,
+    required bool isValid,
+    required Function(String) onChanged,
+    bool obscureText = false,
+    TextInputType keyboardType = TextInputType.text,
+    String? errorText,
+  }) {
+    // TextField'ı bir InputDecoration ile döndür
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Etiket
+        Text(
+          labelText,
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+        ),
+        const SizedBox(height: 8),
+        // TextField
+        TextField(
+          controller: controller,
+          obscureText: obscureText,
+          keyboardType: keyboardType,
+          decoration: InputDecoration(
+            hintText: hintText,
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: controller.text.isNotEmpty ? (isValid ? Colors.green : Colors.red) : Colors.grey.shade300,
+                width: 1.0,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: controller.text.isNotEmpty ? (isValid ? Colors.green : Colors.red) : Colors.grey.shade300,
+                width: 1.0,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: controller.text.isNotEmpty ? (isValid ? Colors.green : Colors.red) : Theme.of(context).primaryColor,
+                width: 2.0,
+              ),
+            ),
+            errorText: controller.text.isNotEmpty && !isValid ? errorText : null,
+            suffixIcon: controller.text.isNotEmpty
+                ? Icon(
+                    isValid ? Icons.check_circle : Icons.cancel,
+                    color: isValid ? Colors.green : Colors.red,
+                  )
+                : null,
+          ),
+          onChanged: onChanged,
+          style: const TextStyle(fontSize: 16),
+        ),
+      ],
     );
   }
 }
