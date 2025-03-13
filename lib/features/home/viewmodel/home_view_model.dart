@@ -94,6 +94,23 @@ class HomeViewModel extends ChangeNotifier {
           );
       }
 
+      // Kullanıcının kendi ilanlarını ve engellediği kişilerin ilanlarını filtrele
+      if (user != null) {
+        newAdverts = newAdverts.where((advert) {
+          // Kullanıcının kendi ilanlarını filtrele
+          if (advert.creatorUserID == user.userID) {
+            return false;
+          }
+
+          // Kullanıcının engellediği kişilerin ilanlarını filtrele
+          if (user.blockUsers != null && user.blockUsers!.contains(advert.creatorUserID)) {
+            return false;
+          }
+
+          return true;
+        }).toList();
+      }
+
       if (newAdverts.isNotEmpty) {
         // Son dökümanı güncelle - DÜZELTME BURADA
         _lastDocument = await _firestore

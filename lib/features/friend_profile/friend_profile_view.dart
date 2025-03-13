@@ -7,6 +7,7 @@ import 'package:palseapp/core/services/chat_service.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
 import 'package:palseapp/core/widgets/advert_card.dart';
 import 'package:palseapp/core/widgets/circle_profile_picture.dart';
+import 'package:palseapp/core/widgets/scaffold_mess.dart';
 import 'package:palseapp/features/friend_profile/friend_profile_view_model.dart';
 import 'package:provider/provider.dart';
 import 'package:palseapp/features/achievement/achievement_service.dart';
@@ -187,9 +188,16 @@ class FriendProfileView extends StatelessWidget {
 
                 // Eğer açıklama varsa rapor et
                 if (reportReason != null && reportReason!.isNotEmpty && context.mounted) {
-                  await viewModel.reportUser(reportReason!);
-                  if (context.mounted) {
-                    context.go('/home');
+                  try {
+                    await viewModel.reportUser(reportReason!);
+                    if (context.mounted) {
+                      ScaffoldMess.showSuccessSnackBar(context.tr('report_sent'));
+                      context.go('/home');
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMess.showErrorSnackBar(context.tr('error_occurred'));
+                    }
                   }
                 }
               },
@@ -198,14 +206,26 @@ class FriendProfileView extends StatelessWidget {
           PopupMenuItem(
             value: 'block',
             child: ListTile(
-              leading: const Icon(Icons.block, color: Colors.red),
-              title: Text(context.tr('block_user')),
+              leading: Icon(viewModel.isUserBlocked() ? Icons.person_add : Icons.block, color: Colors.red),
+              title: Text(viewModel.isUserBlocked() ? context.tr('unblock_user') : context.tr('block_user')),
               onTap: () async {
                 context.pop();
 
-                await viewModel.blockUser();
-                if (context.mounted) {
-                  context.go('/home');
+                try {
+                  await viewModel.toggleBlockUser();
+
+                  if (context.mounted) {
+                    if (viewModel.isUserBlocked()) {
+                      ScaffoldMess.showSuccessSnackBar(context.tr('user_blocked'));
+                      context.go('/home');
+                    } else {
+                      ScaffoldMess.showSuccessSnackBar(context.tr('user_unblocked'));
+                    }
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMess.showErrorSnackBar(context.tr('error_occurred'));
+                  }
                 }
               },
             ),

@@ -401,24 +401,27 @@ class AdvertCard extends StatelessWidget {
                       isLiked ? Icons.favorite : Icons.favorite_border,
                       onLikeTap ?? () {},
                       showCount: true,
+                      compactMode: true,
                     ),
                   ),
-                if (!isMyLikes) const SizedBox(width: 8),
+                if (!isMyLikes) const SizedBox(width: 4),
                 Expanded(
                   flex: 3,
                   child: _buildButton(
                     context.tr('message'),
                     Icons.message_outlined,
                     () => _handleMessageTap(context, currentCustomer, chatsService),
+                    compactMode: true,
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 4),
                 // Şikayet butonu sağ tarafta kompakt
                 _buildButton(
                   '',
                   Icons.info_outline,
                   () => _showReportBottomSheet(context),
                   isReport: true,
+                  compactMode: true,
                 ),
               ],
             ),
@@ -488,6 +491,7 @@ class AdvertCard extends StatelessWidget {
     bool showCount = false,
     bool isDelete = false,
     bool isReport = false,
+    bool compactMode = false,
   }) {
     // Buton rengi belirleme
     Color iconColor = Colors.black;
@@ -496,6 +500,27 @@ class AdvertCard extends StatelessWidget {
     } else if (isReport) {
       iconColor = Colors.grey;
     }
+
+    // Şikayet butonu için özel tasarım
+    if (isReport) {
+      return Container(
+        height: 40,
+        width: 40,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: Colors.grey),
+          borderRadius: const BorderRadius.all(Radius.circular(50)),
+        ),
+        child: IconButton(
+          padding: EdgeInsets.zero,
+          icon: Icon(icon, color: iconColor, size: 20),
+          onPressed: onPressed,
+        ),
+      );
+    }
+
+    // Yazı boyutunu kompakt mod için küçült
+    final double fontSize = compactMode ? 11.0 : 12.0;
 
     return Container(
       height: 40,
@@ -506,22 +531,26 @@ class AdvertCard extends StatelessWidget {
       ),
       child: TextButton.icon(
         onPressed: onPressed,
+        style: TextButton.styleFrom(
+          padding: compactMode ? const EdgeInsets.symmetric(horizontal: 6) : const EdgeInsets.symmetric(horizontal: 8),
+        ),
         icon: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: iconColor),
-            if (showCount) // Sadece showCount true ise sayıyı göster
+            Icon(icon, color: iconColor, size: compactMode ? 18 : 20),
+            if (showCount)
               Padding(
                 padding: const EdgeInsets.only(left: 2),
                 child: Text(
                   advert.likers.length.toString(),
-                  style: const TextStyle(color: Colors.black),
+                  style: TextStyle(color: Colors.black, fontSize: fontSize),
                 ),
               ),
           ],
         ),
         label: RichText(
           text: TextSpan(
-            style: const TextStyle(color: Colors.black),
+            style: TextStyle(color: Colors.black, fontSize: fontSize),
             children: [
               const TextSpan(
                 text: '| ',

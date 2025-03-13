@@ -38,11 +38,55 @@ class FriendProfileViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> blockUser() async {
+  // Kullanıcının engellenip engellenmediğini kontrol et
+  bool isUserBlocked() {
+    final currentUser = authProvider.user;
+    if (currentUser == null || currentUser.blockUsers == null) return false;
+
+    return currentUser.blockUsers!.contains(customerID);
+  }
+
+  // Kullanıcıyı engelle veya engeli kaldır
+  Future<void> toggleBlockUser() async {
     try {
-      await reportService.blockUser(customerID);
+      final currentUser = authProvider.user;
+      if (currentUser == null) return;
+
+      if (isUserBlocked()) {
+        // Engeli kaldır
+        await reportService.unblockUser(customerID);
+
+        // Kullanıcı modelini güncelle
+        if (currentUser.blockUsers != null) {
+          final updatedBlockList = List<String>.from(currentUser.blockUsers!);
+          updatedBlockList.remove(customerID);
+
+          final updatedUser = currentUser.copyWith(
+            blockUsers: updatedBlockList,
+          );
+
+          authProvider.updateUser(updatedUser);
+        }
+      } else {
+        // Kullanıcıyı engelle
+        await reportService.blockUser(customerID);
+
+        // Kullanıcı modelini güncelle
+        final updatedBlockList = currentUser.blockUsers != null ? List<String>.from(currentUser.blockUsers!) : <String>[];
+
+        updatedBlockList.add(customerID);
+
+        final updatedUser = currentUser.copyWith(
+          blockUsers: updatedBlockList,
+        );
+
+        authProvider.updateUser(updatedUser);
+      }
+
+      notifyListeners();
     } catch (e) {
-      debugPrint('Kullanıcı bloklanırken hata: ${e.toString()}');
+      debugPrint('Kullanıcı engelleme/engel kaldırma işleminde hata: ${e.toString()}');
+      rethrow;
     }
   }
 
@@ -58,6 +102,7 @@ class FriendProfileViewModel extends ChangeNotifier {
       await reportService.createReport(report);
     } catch (e) {
       debugPrint('Kullanıcı raporlanırken hata: ${e.toString()}');
+      rethrow;
     }
   }
 

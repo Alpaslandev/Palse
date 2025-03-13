@@ -11,6 +11,14 @@ import 'package:palseapp/core/widgets/advert_card.dart';
 import 'package:palseapp/core/widgets/premium_overlay.dart';
 import 'package:provider/provider.dart';
 
+// List extension for firstOrNull
+extension ListExtension<T> on List<T>? {
+  T? get firstOrNull {
+    if (this == null || this!.isEmpty) return null;
+    return this!.first;
+  }
+}
+
 class FilterView extends StatefulWidget {
   const FilterView({
     super.key,
@@ -43,14 +51,36 @@ class _FilterViewState extends State<FilterView> {
     final advertService = AdvertService();
     List<Advert> allAdverts = await advertService.fetchAdverts(limit: 100);
 
+    // Kullanıcının kendi ilanlarını ve engellediği kişilerin ilanlarını filtrele
+    if (_currentUser != null) {
+      allAdverts = allAdverts.where((advert) {
+        // Kullanıcının kendi ilanlarını filtrele
+        if (advert.creatorUserID == _currentUser!.userID) {
+          return false;
+        }
+
+        // Kullanıcının engellediği kişilerin ilanlarını filtrele
+        if (_currentUser!.blockUsers != null && _currentUser!.blockUsers!.contains(advert.creatorUserID)) {
+          return false;
+        }
+
+        return true;
+      }).toList();
+    }
+
     // Mesafe filtrelemesi
-    if (_distance != null && _distance! > 0) {
+    if (_distance != null && _distance! > 0 && _currentUser?.location != null) {
       allAdverts = allAdverts.where((advert) {
         // Kullanıcının konumu ile ilanın konumu arasındaki mesafeyi hesapla
-        if (_currentUser?.location == null) return false;
+        if (_currentUser?.location == null || advert.location == null) return false;
 
-        int distance = _currentUser!.location!.distanceTo(advert.location);
-        return distance <= _distance!;
+        try {
+          int distance = _currentUser!.location!.distanceTo(advert.location);
+          return distance <= _distance!;
+        } catch (e) {
+          debugPrint('Mesafe hesaplama hatası: $e');
+          return false;
+        }
       }).toList();
     }
 
@@ -63,7 +93,7 @@ class _FilterViewState extends State<FilterView> {
       debugPrint('Filtreleme sonucu kalan ilan sayısı: ${allAdverts.length}');
     }
 
-    if (_selectedCategories != null) {
+    if (_selectedCategories != null && _selectedCategories!.isNotEmpty) {
       debugPrint('Seçilen kategoriler: ${_selectedCategories!.map((e) => e.name).toList()}');
 
       allAdverts = allAdverts.where((advert) {
@@ -78,21 +108,25 @@ class _FilterViewState extends State<FilterView> {
 
     // Konuma göre sıralama - yakından uzağa
     if (_currentUser?.location != null) {
-      allAdverts.sort((a, b) {
-        // Eğer konum bilgisi yoksa en sona koy
-        if (a.location == null) return 1;
-        if (b.location == null) return -1;
+      try {
+        allAdverts.sort((a, b) {
+          // Eğer konum bilgisi yoksa en sona koy
+          if (a.location == null) return 1;
+          if (b.location == null) return -1;
 
-        // Mesafeleri hesapla
-        int distanceA = _currentUser!.location!.distanceTo(a.location);
-        int distanceB = _currentUser!.location!.distanceTo(b.location);
+          // Mesafeleri hesapla
+          int distanceA = _currentUser!.location!.distanceTo(a.location);
+          int distanceB = _currentUser!.location!.distanceTo(b.location);
 
-        // Yakından uzağa sırala
-        return distanceA.compareTo(distanceB);
-      });
+          // Yakından uzağa sırala
+          return distanceA.compareTo(distanceB);
+        });
 
-      debugPrint(
-          'İlanlar konuma göre sıralandı. İlk 3 ilan mesafeleri: ${allAdverts.take(3).map((e) => _currentUser!.location!.distanceTo(e.location)).toList()}');
+        debugPrint(
+            'İlanlar konuma göre sıralandı. İlk 3 ilan mesafeleri: ${allAdverts.take(3).map((e) => _currentUser!.location!.distanceTo(e.location)).toList()}');
+      } catch (e) {
+        debugPrint('Sıralama hatası: $e');
+      }
     }
 
     setState(() {
@@ -116,7 +150,7 @@ class _FilterViewState extends State<FilterView> {
               ? PremiumOverlay(
                   child: _filterView(context),
                 )
-              : _filteredList(adverts: _filteredAdverts, currentCustomer: _currentUser!, currentUser: _currentUser!, context: context),
+              : _filteredList(adverts: _filteredAdverts, context: context),
     );
   }
 
@@ -166,23 +200,24 @@ class _FilterViewState extends State<FilterView> {
           ),
           const SizedBox(height: 16),
           // Kategori seçici
-          DropdownButtonFormField<Categories>(
-            value: _selectedCategories?.first,
+          DropdownButtonFormField<Categories?>(
+            value: _selectedCategories?.firstOrNull,
             decoration: InputDecoration(
               labelText: context.tr('category'),
+              border: const OutlineInputBorder(),
             ),
             items: [
+              DropdownMenuItem<Categories?>(value: null, child: Text(context.tr('all'))),
               ...Categories.values.map((category) {
-                return DropdownMenuItem<Categories>(
+                return DropdownMenuItem<Categories?>(
                   value: category,
                   child: Text(category.getText(context)),
                 );
               }),
-              DropdownMenuItem<Categories>(value: null, child: Text(context.tr('all'))),
             ],
             onChanged: (value) {
               setState(() {
-                _selectedCategories = [value!];
+                _selectedCategories = value != null ? [value] : null;
               });
             },
           ),
@@ -198,8 +233,7 @@ class _FilterViewState extends State<FilterView> {
     );
   }
 
-  Widget _filteredList(
-      {required List<Advert> adverts, required Customer currentCustomer, required Customer currentUser, required BuildContext context}) {
+  Widget _filteredList({required List<Advert> adverts, required BuildContext context}) {
     return ListView.builder(
       itemCount: adverts.length,
       itemBuilder: (context, index) {
@@ -207,6 +241,23 @@ class _FilterViewState extends State<FilterView> {
         // Mesafeyi göstermek için AdvertCard'a mesafe bilgisini ekleyebiliriz
         return AdvertCard(
           advert: advert,
+          isLiked: _currentUser != null ? advert.likers.contains(_currentUser?.userID) : false,
+          onLikeTap: _currentUser != null
+              ? () async {
+                  final userId = _currentUser?.userID;
+                  if (userId == null) return;
+
+                  final advertService = AdvertService();
+                  if (advert.likers.contains(userId)) {
+                    await advertService.unlikeAdvert(advert.advertID ?? '', userId);
+                  } else {
+                    await advertService.likeAdvert(advert.advertID ?? '', userId, advert.creatorUserID);
+                  }
+
+                  // Filtreleri yeniden uygula
+                  _applyFilters();
+                }
+              : null,
         );
       },
     );

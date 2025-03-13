@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:palseapp/core/models/comment_model.dart';
 import 'package:palseapp/core/widgets/circle_profile_picture.dart';
+import 'package:palseapp/core/localization/app_localizations.dart';
 
 // Yorum kartı widget'ı
 class CommentCard extends StatelessWidget {
@@ -62,7 +63,7 @@ class CommentCard extends StatelessWidget {
                       onDeleteTap();
                     } else if (value == 'report') {
                       debugPrint('Yorum şikayet etme işlemi');
-                      onReportTap();
+                      _showReportConfirmation(context);
                     }
                   },
                   itemBuilder: (BuildContext context) => [
@@ -71,23 +72,25 @@ class CommentCard extends StatelessWidget {
                       PopupMenuItem<String>(
                         value: 'delete',
                         child: Row(
-                          children: const [
-                            Icon(Icons.delete, color: Colors.red),
-                            SizedBox(width: 8),
-                            Text('Yorumu Sil'),
+                          children: [
+                            const Icon(Icons.delete, color: Colors.red),
+                            const SizedBox(width: 8),
+                            Text(context.tr('delete')),
                           ],
                         ),
                       ),
-                    PopupMenuItem<String>(
-                      value: 'report',
-                      child: Row(
-                        children: const [
-                          Icon(Icons.report, color: Colors.orange),
-                          SizedBox(width: 8),
-                          Text('Yorumu Şikayet Et'),
-                        ],
+                    // Kendi yorumunu şikayet edemez
+                    if (comment.commenterID != currentUserId)
+                      PopupMenuItem<String>(
+                        value: 'report',
+                        child: Row(
+                          children: [
+                            const Icon(Icons.report, color: Colors.orange),
+                            const SizedBox(width: 8),
+                            Text(context.tr('report_abuse')),
+                          ],
+                        ),
                       ),
-                    ),
                   ],
                 ),
               ],
@@ -113,6 +116,33 @@ class CommentCard extends StatelessWidget {
             ],
           ],
         ),
+      ),
+    );
+  }
+
+  // Şikayet onayı için dialog göster
+  void _showReportConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(context.tr('report_abuse')),
+        content: Text(context.tr('please_explain_reason')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(context.tr('cancel')),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              onReportTap();
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red,
+            ),
+            child: Text(context.tr('submit')),
+          ),
+        ],
       ),
     );
   }

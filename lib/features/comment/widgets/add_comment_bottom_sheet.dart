@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:palseapp/core/localization/app_localizations.dart'; // Localization için import
 
 // Yorum ekleme bottom sheet widget'ı
 class AddCommentBottomSheet extends StatefulWidget {
@@ -19,7 +20,7 @@ class _AddCommentBottomSheetState extends State<AddCommentBottomSheet> {
     if (selectedRating == 0) {
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Lütfen bir puan seçin')),
+        SnackBar(content: Text(context.tr('please_select_rating'))),
       );
       return;
     }
@@ -27,7 +28,7 @@ class _AddCommentBottomSheetState extends State<AddCommentBottomSheet> {
     if (commentController.text.isEmpty) {
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Lütfen bir yorum yazın')),
+        SnackBar(content: Text(context.tr('please_write_comment'))),
       );
       return;
     }
@@ -52,9 +53,9 @@ class _AddCommentBottomSheetState extends State<AddCommentBottomSheet> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              'Profil Değerlendirmesi',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Text(
+              context.tr('profile_evaluation'),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             Row(
@@ -83,8 +84,8 @@ class _AddCommentBottomSheetState extends State<AddCommentBottomSheet> {
               onChanged: (text) {
                 if (text.length > maxLength) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('En fazla 50 karakter girebilirsiniz!'),
+                    SnackBar(
+                      content: Text(context.tr('max_50_characters')),
                       backgroundColor: Colors.red,
                     ),
                   );
@@ -92,7 +93,7 @@ class _AddCommentBottomSheetState extends State<AddCommentBottomSheet> {
                 setState(() {});
               },
               decoration: InputDecoration(
-                hintText: 'Yorumunuzu yazın...',
+                hintText: context.tr('write_your_comment'),
                 border: const OutlineInputBorder(),
                 counterText: '${commentController.text.length}/$maxLength',
               ),
@@ -104,7 +105,7 @@ class _AddCommentBottomSheetState extends State<AddCommentBottomSheet> {
                 foregroundColor: Colors.white,
               ),
               onPressed: _submitComment,
-              child: const Text('Paylaş'),
+              child: Text(context.tr('share')),
             ),
             const SizedBox(height: 32),
           ],

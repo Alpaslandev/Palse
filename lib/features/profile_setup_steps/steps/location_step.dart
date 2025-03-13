@@ -6,6 +6,7 @@ import 'package:palseapp/core/services/location_service.dart';
 import 'package:palseapp/core/utils/debouncer.dart';
 import 'package:palseapp/core/localization/app_localizations.dart';
 
+// Konum adımı
 class LocationStep extends StatefulWidget {
   const LocationStep({super.key, required this.viewModel});
   final ProfileSetupViewModel viewModel;
@@ -36,7 +37,7 @@ class _LocationStepState extends State<LocationStep> {
               decoration: BoxDecoration(
                 border: Border(
                   bottom: BorderSide(
-                    color: Colors.grey.shade200,
+                    color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade700 : Colors.grey.shade200,
                     width: 1.0,
                   ),
                 ),
@@ -66,13 +67,13 @@ class _LocationStepState extends State<LocationStep> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: Colors.red.shade100,
+                            color: Theme.of(context).brightness == Brightness.dark ? Colors.red.shade900.withOpacity(0.3) : Colors.red.shade100,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
                             context.tr('location_required'),
-                            style: const TextStyle(
-                              color: Colors.red,
+                            style: TextStyle(
+                              color: Theme.of(context).brightness == Brightness.dark ? Colors.red.shade300 : Colors.red,
                               fontWeight: FontWeight.bold,
                               fontSize: 12,
                             ),
@@ -123,9 +124,11 @@ class _LocationStepState extends State<LocationStep> {
                 margin: const EdgeInsets.only(top: 16),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.green.shade50,
+                  color: Theme.of(context).brightness == Brightness.dark ? Colors.green.shade900.withOpacity(0.2) : Colors.green.shade50,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.green.shade200),
+                  border: Border.all(
+                    color: Theme.of(context).brightness == Brightness.dark ? Colors.green.shade700 : Colors.green.shade200,
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.green.withOpacity(0.1),
@@ -158,8 +161,9 @@ class _LocationStepState extends State<LocationStep> {
                         Expanded(
                           child: Text(
                             widget.viewModel.cityController.text,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.w500,
+                              color: Theme.of(context).textTheme.bodyLarge?.color,
                             ),
                           ),
                         ),
@@ -178,7 +182,7 @@ class _LocationStepState extends State<LocationStep> {
                                 .replaceAll('{lng}', widget.viewModel.customer.location?.geoPoint?.longitude.toStringAsFixed(4) ?? ''),
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey.shade700,
+                              color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade400 : Colors.grey.shade700,
                             ),
                           ),
                         ),
@@ -217,14 +221,22 @@ class _LocationStepState extends State<LocationStep> {
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(
-              color: !isLocationSelected ? Colors.red : Colors.grey.shade300,
+              color: !isLocationSelected
+                  ? Colors.red
+                  : Theme.of(context).brightness == Brightness.dark
+                      ? Colors.grey.shade700
+                      : Colors.grey.shade300,
               width: 1.5,
             ),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(
-              color: !isLocationSelected ? Colors.red : Colors.grey.shade300,
+              color: !isLocationSelected
+                  ? Colors.red
+                  : Theme.of(context).brightness == Brightness.dark
+                      ? Colors.grey.shade700
+                      : Colors.grey.shade300,
               width: 1.5,
             ),
           ),
@@ -259,10 +271,13 @@ class _LocationStepState extends State<LocationStep> {
                     });
                   },
                 ),
-          fillColor: Colors.white,
+          fillColor: Theme.of(context).inputDecorationTheme.fillColor,
           filled: true,
         ),
         onChanged: (value) => _searchLocation(value),
+        style: TextStyle(
+          color: Theme.of(context).textTheme.bodyLarge?.color,
+        ),
       ),
     );
   }
@@ -275,10 +290,14 @@ class _LocationStepState extends State<LocationStep> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).inputDecorationTheme.fillColor,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isLocationSelected ? Colors.green : Colors.grey.shade300,
+            color: isLocationSelected
+                ? Colors.green
+                : Theme.of(context).brightness == Brightness.dark
+                    ? Colors.grey.shade700
+                    : Colors.grey.shade300,
             width: 1.5,
           ),
           boxShadow: [
@@ -298,13 +317,18 @@ class _LocationStepState extends State<LocationStep> {
             const SizedBox(width: 12),
             Text(
               context.tr('location_current'),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
             ),
             const Spacer(),
-            Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey.shade600),
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade400 : Colors.grey.shade600,
+            ),
           ],
         ),
       ),
@@ -318,6 +342,7 @@ class _LocationStepState extends State<LocationStep> {
 
     return Card(
       elevation: 4,
+      color: Theme.of(context).cardColor,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
@@ -326,13 +351,27 @@ class _LocationStepState extends State<LocationStep> {
         shrinkWrap: true,
         padding: EdgeInsets.zero,
         itemCount: _suggestions.length,
-        separatorBuilder: (context, index) => Divider(height: 1, color: Colors.grey.shade200),
+        separatorBuilder: (context, index) => Divider(
+          height: 1,
+          color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade800 : Colors.grey.shade200,
+        ),
         itemBuilder: (context, index) {
           final suggestion = _suggestions[index];
           return ListTile(
-            leading: const Icon(Icons.location_on),
-            title: Text('${suggestion.city}, ${suggestion.district}'),
-            subtitle: Text(suggestion.displayName ?? '', style: Theme.of(context).textTheme.bodySmall),
+            leading: Icon(
+              Icons.location_on,
+              color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade400 : null,
+            ),
+            title: Text(
+              '${suggestion.city}, ${suggestion.district}',
+              style: TextStyle(
+                color: Theme.of(context).textTheme.bodyLarge?.color,
+              ),
+            ),
+            subtitle: Text(
+              suggestion.displayName ?? '',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
             onTap: () => _selectLocation(suggestion),
           );
         },
@@ -362,7 +401,7 @@ class _LocationStepState extends State<LocationStep> {
               Expanded(child: Text(context.tr('location_error_getting').replaceAll('{error}', e.toString()))),
             ],
           ),
-          backgroundColor: Colors.red.shade700,
+          backgroundColor: Theme.of(context).colorScheme.error,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           margin: const EdgeInsets.all(10),
@@ -402,7 +441,7 @@ class _LocationStepState extends State<LocationStep> {
                 Expanded(child: Text(context.tr('location_error_general').replaceAll('{error}', e.toString()))),
               ],
             ),
-            backgroundColor: Colors.red.shade700,
+            backgroundColor: Theme.of(context).colorScheme.error,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             margin: const EdgeInsets.all(10),

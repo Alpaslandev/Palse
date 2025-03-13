@@ -25,7 +25,7 @@ class NicknameStep extends StatelessWidget {
               decoration: BoxDecoration(
                 border: Border(
                   bottom: BorderSide(
-                    color: Colors.grey.shade200,
+                    color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade700 : Colors.grey.shade200,
                     width: 1.0,
                   ),
                 ),
@@ -55,13 +55,13 @@ class NicknameStep extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: Colors.red.shade100,
+                            color: Theme.of(context).brightness == Brightness.dark ? Colors.red.shade900.withOpacity(0.3) : Colors.red.shade100,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
                             context.tr('nickname_required'),
-                            style: const TextStyle(
-                              color: Colors.red,
+                            style: TextStyle(
+                              color: Theme.of(context).brightness == Brightness.dark ? Colors.red.shade300 : Colors.red,
                               fontWeight: FontWeight.bold,
                               fontSize: 12,
                             ),
@@ -79,7 +79,7 @@ class NicknameStep extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.blue.shade50,
+                color: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).primaryColor.withOpacity(0.2) : Colors.blue.shade50,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
@@ -122,14 +122,22 @@ class NicknameStep extends StatelessWidget {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
-                      color: !isNicknameValid ? Colors.red : Colors.grey.shade300,
+                      color: !isNicknameValid
+                          ? Colors.red
+                          : Theme.of(context).brightness == Brightness.dark
+                              ? Colors.grey.shade700
+                              : Colors.grey.shade300,
                       width: 1.5,
                     ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
-                      color: !isNicknameValid ? Colors.red : Colors.grey.shade300,
+                      color: !isNicknameValid
+                          ? Colors.red
+                          : Theme.of(context).brightness == Brightness.dark
+                              ? Colors.grey.shade700
+                              : Colors.grey.shade300,
                       width: 1.5,
                     ),
                   ),
@@ -147,7 +155,7 @@ class NicknameStep extends StatelessWidget {
                   suffixIcon: isNicknameValid ? const Icon(Icons.check_circle, color: Colors.green) : null,
                   helperText: '',
                   errorText: !isNicknameValid ? context.tr('nickname_min_length_error') : null,
-                  fillColor: Colors.white,
+                  fillColor: Theme.of(context).inputDecorationTheme.fillColor,
                   filled: true,
                 ),
                 onChanged: (value) => context.read<ProfileSetupViewModel>().updateNickname(value),
@@ -163,7 +171,7 @@ class NicknameStep extends StatelessWidget {
                 autovalidateMode: AutovalidateMode.onUserInteraction,
                 style: TextStyle(
                   fontWeight: FontWeight.w500,
-                  color: isNicknameValid ? Colors.black87 : Colors.black54,
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
                 ),
               ),
             ),
@@ -175,9 +183,11 @@ class NicknameStep extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.green.shade50,
+                    color: Theme.of(context).brightness == Brightness.dark ? Colors.green.shade900.withOpacity(0.2) : Colors.green.shade50,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.green.shade200),
+                    border: Border.all(
+                      color: Theme.of(context).brightness == Brightness.dark ? Colors.green.shade700 : Colors.green.shade200,
+                    ),
                   ),
                   child: Row(
                     children: [
@@ -198,7 +208,7 @@ class NicknameStep extends StatelessWidget {
                             Text(
                               '${viewModel.customer.nickname}',
                               style: TextStyle(
-                                color: Colors.green.shade800,
+                                color: Theme.of(context).brightness == Brightness.dark ? Colors.green.shade300 : Colors.green.shade800,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -218,20 +228,25 @@ class NicknameStep extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.amber.shade50,
+                    color: Theme.of(context).brightness == Brightness.dark ? Colors.amber.shade900.withOpacity(0.2) : Colors.amber.shade50,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.amber.shade200),
+                    border: Border.all(
+                      color: Theme.of(context).brightness == Brightness.dark ? Colors.amber.shade700 : Colors.amber.shade200,
+                    ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.lightbulb_outline, color: Colors.amber.shade800),
+                      Icon(
+                        Icons.lightbulb_outline,
+                        color: Theme.of(context).brightness == Brightness.dark ? Colors.amber.shade300 : Colors.amber.shade800,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         context.tr('nickname_tip'),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.w500,
-                          color: Colors.black87,
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
                         ),
                       ),
                     ],

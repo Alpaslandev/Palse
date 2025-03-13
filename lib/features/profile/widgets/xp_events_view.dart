@@ -92,14 +92,14 @@ class XpEventsView extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Unvan: ${achievementService.getLocalizedRankTitle(userRank, context)}',
+                              '${context.tr('rank')}: ${achievementService.getLocalizedRankTitle(userRank, context)}',
                               style: Theme.of(context).textTheme.titleLarge,
                             ),
                             FutureBuilder<int>(
                                 future: achievementService.getUserXp(userId),
                                 builder: (context, xpSnapshot) {
                                   return Text(
-                                    'Toplam XP: ${xpSnapshot.data ?? 0}',
+                                    '${context.tr('total_xp')}: ${xpSnapshot.data ?? 0}',
                                     style: Theme.of(context).textTheme.titleMedium,
                                   );
                                 }),
@@ -111,7 +111,7 @@ class XpEventsView extends StatelessWidget {
                 }),
             const SizedBox(height: 16),
             Text(
-              'Seviye İlerlemesi:',
+              context.tr('level_progress'),
               style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
             ),
             const SizedBox(height: 4),
@@ -133,7 +133,7 @@ class XpEventsView extends StatelessWidget {
                 future: achievementService.getXpToNextRank(userId),
                 builder: (context, xpToNextSnapshot) {
                   return Text(
-                    'Bir sonraki seviyeye: ${xpToNextSnapshot.data ?? 0} XP',
+                    '${context.tr('to_next_level')}: ${xpToNextSnapshot.data ?? 0} XP',
                     style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                   );
                 }),
@@ -153,7 +153,7 @@ class XpEventsView extends StatelessWidget {
                           future: achievementService.getEarnedPremiumRewardCount(userId),
                           builder: (context, premiumSnapshot) {
                             return Text(
-                              'Kazanılan Premium Ödüller: ${premiumSnapshot.data ?? 0}',
+                              '${context.tr('earned_premium_rewards')}: ${premiumSnapshot.data ?? 0}',
                               style: Theme.of(context).textTheme.titleMedium,
                             );
                           }),
@@ -161,7 +161,7 @@ class XpEventsView extends StatelessWidget {
                           future: achievementService.getXpToNextPremium(userId),
                           builder: (context, nextPremiumSnapshot) {
                             return Text(
-                              'Bir sonraki premium ödüle: ${nextPremiumSnapshot.data ?? 0} XP',
+                              '${context.tr('to_next_premium')}: ${nextPremiumSnapshot.data ?? 0} XP',
                               style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                             );
                           }),
@@ -172,7 +172,7 @@ class XpEventsView extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Premium Eşikler: ${PremiumRewards.xpThresholds.join(", ")}',
+              '${context.tr('premium_thresholds')}: ${PremiumRewards.xpThresholds.join(", ")}',
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ],

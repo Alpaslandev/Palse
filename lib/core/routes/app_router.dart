@@ -286,21 +286,32 @@ class AppRouter {
     debugPrint('Is Loading: ${_authProvider.isLoading}');
     debugPrint('Is Authenticated: ${_authProvider.isAuthenticated}');
     debugPrint('Is Profile Setup Completed: ${_authProvider.isProfileSetupCompleted}');
+    debugPrint('Is Firestore Data Loaded: ${_authProvider.isFirestoreDataLoaded}');
 
     final isSplashScreen = state.matchedLocation == '/$splash';
     final isAuthRoute = state.matchedLocation.startsWith('/$login');
     final isUserSetupRoute = state.matchedLocation.startsWith('/$profileSetup');
 
-    // Loading durumunda redirect yok
-    if (_authProvider.isLoading) return null;
+    // Loading durumunda redirect yok - Firestore verilerinin yüklenmesini bekle
+    if (_authProvider.isLoading) {
+      debugPrint('Hala yükleniyor, yönlendirme yapılmıyor');
+      return null;
+    }
 
     final isAuthenticated = _authProvider.isAuthenticated;
     final isProfileSetup = _authProvider.isProfileSetupCompleted;
 
     // Splash screen özel durumu
     if (isSplashScreen) {
-      if (!isAuthenticated) return '/$login';
-      if (isAuthenticated && !isProfileSetup) return '/$profileSetup';
+      if (!isAuthenticated) {
+        debugPrint('Splash -> Login yönlendirmesi');
+        return '/$login';
+      }
+      if (isAuthenticated && !isProfileSetup) {
+        debugPrint('Splash -> Profile Setup yönlendirmesi');
+        return '/$profileSetup';
+      }
+      debugPrint('Splash -> Home yönlendirmesi');
       return '/$home';
     }
 
@@ -309,6 +320,7 @@ class AppRouter {
       // Eğer zaten auth route'daysa, orada kal
       if (isAuthRoute) return null;
       // Değilse login'e yönlendir
+      debugPrint('Kullanıcı giriş yapmamış -> Login yönlendirmesi');
       return '/$login';
     }
 
@@ -317,13 +329,17 @@ class AppRouter {
       // Eğer zaten profil kurulum sayfasındaysa, orada kal
       if (isUserSetupRoute) return null;
       // Değilse profil kurulum sayfasına yönlendir
+      debugPrint('Kullanıcı giriş yapmış ama profil kurulumu tamamlanmamış -> Profile Setup yönlendirmesi');
       return '/$profileSetup';
     }
 
     // 3. Kullanıcı giriş yapmış ve profil kurulumu tamamlanmışsa
     if (isAuthenticated && isProfileSetup) {
       // Eğer auth route veya profil kurulum sayfasındaysa, ana sayfaya yönlendir
-      if (isAuthRoute || isUserSetupRoute || isSplashScreen) return '/$home';
+      if (isAuthRoute || isUserSetupRoute || isSplashScreen) {
+        debugPrint('Kullanıcı giriş yapmış ve profil kurulumu tamamlanmış -> Home yönlendirmesi');
+        return '/$home';
+      }
     }
 
     return null;

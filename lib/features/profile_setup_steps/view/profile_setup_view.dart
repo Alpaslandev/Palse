@@ -10,6 +10,7 @@ import 'package:palseapp/features/profile_setup_steps/steps/user_info_step.dart'
 import 'package:palseapp/features/profile_setup_steps/viewmodel/profile_setup_view_model.dart';
 import 'package:provider/provider.dart';
 
+// Profil kurulum ekranı
 class ProfileSetupView extends StatelessWidget {
   const ProfileSetupView({super.key});
 
@@ -23,7 +24,8 @@ class ProfileSetupView extends StatelessWidget {
           return Scaffold(
             resizeToAvoidBottomInset: false,
             appBar: AppBar(
-              backgroundColor: Colors.white,
+              // Dark mode uyumlu AppBar
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
               elevation: 0,
               title: Row(
                 children: [
@@ -48,9 +50,10 @@ class ProfileSetupView extends StatelessWidget {
                         children: [
                           Text(
                             context.tr('profile_setup_step').replaceAll('{step}', '${viewModel.currentStep + 1}'),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
+                              color: Theme.of(context).textTheme.bodyLarge?.color,
                             ),
                           ),
                           const Spacer(),
@@ -69,7 +72,7 @@ class ProfileSetupView extends StatelessWidget {
                         borderRadius: BorderRadius.circular(10),
                         child: LinearProgressIndicator(
                           value: (viewModel.currentStep + 1) / 6,
-                          backgroundColor: Colors.grey[200],
+                          backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.grey[800] : Colors.grey[200],
                           valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor),
                           minHeight: 8,
                         ),
@@ -80,15 +83,16 @@ class ProfileSetupView extends StatelessWidget {
               ),
             ),
             body: authProvider.isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? Center(child: CircularProgressIndicator(color: Theme.of(context).primaryColor))
                 : Container(
+                    // Dark mode uyumlu gradient
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          Colors.white,
-                          Colors.grey.shade50,
+                          Theme.of(context).scaffoldBackgroundColor,
+                          Theme.of(context).brightness == Brightness.dark ? Theme.of(context).colorScheme.surface : Colors.grey.shade50,
                         ],
                       ),
                     ),
@@ -112,14 +116,16 @@ class ProfileSetupView extends StatelessWidget {
     );
   }
 
+  // Alt navigasyon çubuğunu oluşturur
   Widget _buildNavigationBar(BuildContext context, ProfileSetupViewModel viewModel) {
+    // Dark mode uyumlu bottom navigation bar
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).scaffoldBackgroundColor,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Theme.of(context).brightness == Brightness.dark ? Colors.black.withOpacity(0.2) : Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, -5),
           ),
@@ -129,14 +135,14 @@ class ProfileSetupView extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Geri butonu
+            // Geri butonu - Dark mode uyumlu
             if (viewModel.currentStep > 0)
               ElevatedButton.icon(
                 onPressed: viewModel.previousStep,
                 icon: const Icon(Icons.arrow_back_rounded),
                 label: Text(context.tr('profile_setup_back')),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
+                  backgroundColor: Theme.of(context).brightness == Brightness.dark ? Theme.of(context).colorScheme.surface : Colors.white,
                   foregroundColor: Theme.of(context).primaryColor,
                   elevation: 0,
                   side: BorderSide(color: Theme.of(context).primaryColor),
@@ -176,6 +182,7 @@ class ProfileSetupView extends StatelessWidget {
     );
   }
 
+  // Navigasyon işlemlerini yönetir
   void _handleNavigation(BuildContext context, ProfileSetupViewModel viewModel) {
     // İlk adımda ad ve soyad validasyonu yap
     if (viewModel.currentStep == 0 && !viewModel.isUserInfoStepValid()) {
@@ -211,7 +218,9 @@ class ProfileSetupView extends StatelessWidget {
     viewModel.isLastStep ? viewModel.completeProfileSetup() : viewModel.nextStep();
   }
 
+  // Hata mesajı gösterir
   void _showErrorSnackBar(BuildContext context, String message) {
+    // Dark mode uyumlu SnackBar
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -221,7 +230,7 @@ class ProfileSetupView extends StatelessWidget {
             Expanded(child: Text(message)),
           ],
         ),
-        backgroundColor: Colors.red.shade700,
+        backgroundColor: Theme.of(context).colorScheme.error,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         margin: const EdgeInsets.all(10),

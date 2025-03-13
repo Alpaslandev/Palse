@@ -3,8 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/models/chat_model.dart';
+import 'package:palseapp/core/models/customer.dart';
+import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
+import 'package:palseapp/core/services/firestore/report_service.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
+import 'package:palseapp/core/widgets/scaffold_mess.dart';
 import 'package:palseapp/features/messages/viewmodel/messages_view_model.dart';
 import 'package:provider/provider.dart';
 
@@ -45,13 +49,101 @@ class MessageInput extends StatelessWidget {
     return isUrl(text) && imageExtensions.any((ext) => lowerText.endsWith(ext));
   }
 
+  // Kullanıcının engellenip engellenmediğini kontrol et
+  bool isUserBlocked(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final currentUser = authProvider.user;
+
+    if (currentUser == null || currentUser.blockUsers == null) {
+      return false;
+    }
+
+    return currentUser.blockUsers!.contains(otherUserId);
+  }
+
+  // Kullanıcının engelini kaldır
+  Future<void> unblockUser(BuildContext context) async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final currentUser = authProvider.user;
+
+    if (currentUser == null) return;
+
+    try {
+      final reportService = ReportService();
+      await reportService.unblockUser(otherUserId);
+
+      // Kullanıcı modelini güncelle
+      if (currentUser.blockUsers != null) {
+        final updatedBlockList = List<String>.from(currentUser.blockUsers!);
+        updatedBlockList.remove(otherUserId);
+
+        final updatedUser = currentUser.copyWith(
+          blockUsers: updatedBlockList,
+        );
+
+        authProvider.updateUser(updatedUser);
+
+        ScaffoldMess.showSuccessSnackBar(context.tr('user_unblocked'));
+      }
+    } catch (e) {
+      debugPrint('Kullanıcı engeli kaldırılırken hata: ${e.toString()}');
+      ScaffoldMess.showErrorSnackBar(context.tr('error_occurred'));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final isBlocked = isUserBlocked(context);
 
     return Consumer<MessagesViewModel>(
       builder: (context, viewModel, child) {
+        // Kullanıcı engellenmişse engel bilgisi göster
+        if (isBlocked) {
+          return SafeArea(
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: theme.scaffoldBackgroundColor,
+                boxShadow: [
+                  BoxShadow(
+                    color: theme.shadowColor.withOpacity(0.1),
+                    spreadRadius: 1,
+                    blurRadius: 1,
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.block, color: Colors.red),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          context.tr('user_blocked_message'),
+                          style: TextStyle(color: theme.colorScheme.onSurface),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    onPressed: () => unblockUser(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: theme.colorScheme.primary,
+                      foregroundColor: theme.colorScheme.onPrimary,
+                    ),
+                    child: Text(context.tr('unblock_user')),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
         return SafeArea(
           child: GestureDetector(
             // Mesaj giriş alanına dokunulduğunda olayın üst widget'lara yayılmasını engelle

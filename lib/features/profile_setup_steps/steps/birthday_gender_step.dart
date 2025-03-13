@@ -4,6 +4,7 @@ import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/features/profile_setup_steps/viewmodel/profile_setup_view_model.dart';
 
+// Doğum tarihi ve cinsiyet adımı
 class BirthdayGenderStep extends StatelessWidget {
   final ProfileSetupViewModel viewModel;
 
@@ -28,7 +29,7 @@ class BirthdayGenderStep extends StatelessWidget {
               decoration: BoxDecoration(
                 border: Border(
                   bottom: BorderSide(
-                    color: Colors.grey.shade200,
+                    color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade700 : Colors.grey.shade200,
                     width: 1.0,
                   ),
                 ),
@@ -66,13 +67,13 @@ class BirthdayGenderStep extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.red.shade100,
+                          color: Theme.of(context).brightness == Brightness.dark ? Colors.red.shade900.withOpacity(0.3) : Colors.red.shade100,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           context.tr('birthday_gender_required'),
-                          style: const TextStyle(
-                            color: Colors.red,
+                          style: TextStyle(
+                            color: Theme.of(context).brightness == Brightness.dark ? Colors.red.shade300 : Colors.red,
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
                           ),
@@ -88,14 +89,16 @@ class BirthdayGenderStep extends StatelessWidget {
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).inputDecorationTheme.fillColor,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: !isBirthdayValid
                             ? Colors.red
                             : isBirthdayValid
                                 ? Colors.green
-                                : Colors.grey.shade300,
+                                : Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.grey.shade700
+                                    : Colors.grey.shade300,
                         width: 1.5,
                       ),
                       boxShadow: [
@@ -122,14 +125,14 @@ class BirthdayGenderStep extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
-                            color: viewModel.customer.birthday != null ? Colors.black87 : Colors.grey.shade600,
+                            color: viewModel.customer.birthday != null ? Theme.of(context).textTheme.bodyLarge?.color : Theme.of(context).hintColor,
                           ),
                         ),
                         const Spacer(),
                         if (isBirthdayValid)
                           const Icon(Icons.check_circle, color: Colors.green)
                         else
-                          Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey.shade600),
+                          Icon(Icons.arrow_forward_ios, size: 16, color: Theme.of(context).hintColor),
                       ],
                     ),
                   ),
@@ -167,13 +170,13 @@ class BirthdayGenderStep extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.red.shade100,
+                          color: Theme.of(context).brightness == Brightness.dark ? Colors.red.shade900.withOpacity(0.3) : Colors.red.shade100,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           context.tr('birthday_gender_required'),
-                          style: const TextStyle(
-                            color: Colors.red,
+                          style: TextStyle(
+                            color: Theme.of(context).brightness == Brightness.dark ? Colors.red.shade300 : Colors.red,
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
                           ),
@@ -196,7 +199,7 @@ class BirthdayGenderStep extends StatelessWidget {
                           Gender.male,
                           Icons.male,
                           context.tr('birthday_gender_male'),
-                          Colors.blue.shade50,
+                          Theme.of(context).brightness == Brightness.dark ? Colors.blue.shade900.withOpacity(0.3) : Colors.blue.shade50,
                           Colors.blue,
                         ),
                       ),
@@ -207,7 +210,7 @@ class BirthdayGenderStep extends StatelessWidget {
                           Gender.female,
                           Icons.female,
                           context.tr('birthday_gender_female'),
-                          Colors.pink.shade50,
+                          Theme.of(context).brightness == Brightness.dark ? Colors.pink.shade900.withOpacity(0.3) : Colors.pink.shade50,
                           Colors.pink,
                         ),
                       ),
@@ -218,7 +221,7 @@ class BirthdayGenderStep extends StatelessWidget {
                           Gender.others,
                           Icons.transgender,
                           context.tr('birthday_gender_other'),
-                          Colors.purple.shade50,
+                          Theme.of(context).brightness == Brightness.dark ? Colors.purple.shade900.withOpacity(0.3) : Colors.purple.shade50,
                           Colors.purple,
                         ),
                       ),
@@ -246,9 +249,11 @@ class BirthdayGenderStep extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.green.shade50,
+                  color: Theme.of(context).brightness == Brightness.dark ? Colors.green.shade900.withOpacity(0.2) : Colors.green.shade50,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.green.shade200),
+                  border: Border.all(
+                    color: Theme.of(context).brightness == Brightness.dark ? Colors.green.shade700 : Colors.green.shade200,
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -269,7 +274,7 @@ class BirthdayGenderStep extends StatelessWidget {
                           Text(
                             context.tr('birthday_gender_basics_completed'),
                             style: TextStyle(
-                              color: Colors.green.shade800,
+                              color: Theme.of(context).brightness == Brightness.dark ? Colors.green.shade300 : Colors.green.shade800,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -283,13 +288,18 @@ class BirthdayGenderStep extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
+                  color: Theme.of(context).brightness == Brightness.dark ? Colors.blue.shade900.withOpacity(0.2) : Colors.blue.shade50,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.blue.shade200),
+                  border: Border.all(
+                    color: Theme.of(context).brightness == Brightness.dark ? Colors.blue.shade700 : Colors.blue.shade200,
+                  ),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.info_outline, color: Colors.blue.shade700),
+                    Icon(
+                      Icons.info_outline,
+                      color: Theme.of(context).brightness == Brightness.dark ? Colors.blue.shade300 : Colors.blue.shade700,
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -298,7 +308,7 @@ class BirthdayGenderStep extends StatelessWidget {
                           Text(
                             context.tr('birthday_gender_info'),
                             style: TextStyle(
-                              color: Colors.blue.shade700,
+                              color: Theme.of(context).brightness == Brightness.dark ? Colors.blue.shade300 : Colors.blue.shade700,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -306,7 +316,7 @@ class BirthdayGenderStep extends StatelessWidget {
                           Text(
                             context.tr('birthday_gender_info_text'),
                             style: TextStyle(
-                              color: Colors.blue.shade800,
+                              color: Theme.of(context).brightness == Brightness.dark ? Colors.blue.shade200 : Colors.blue.shade800,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -343,10 +353,14 @@ class BirthdayGenderStep extends StatelessWidget {
         duration: const Duration(milliseconds: 300),
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: isSelected ? backgroundColor : Colors.white,
+          color: isSelected ? backgroundColor : Theme.of(context).inputDecorationTheme.fillColor,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? iconColor : Colors.grey.shade300,
+            color: isSelected
+                ? iconColor
+                : Theme.of(context).brightness == Brightness.dark
+                    ? Colors.grey.shade700
+                    : Colors.grey.shade300,
             width: isSelected ? 2 : 1,
           ),
           boxShadow: [
@@ -362,14 +376,22 @@ class BirthdayGenderStep extends StatelessWidget {
           children: [
             Icon(
               icon,
-              color: isSelected ? iconColor : Colors.grey.shade600,
+              color: isSelected
+                  ? iconColor
+                  : Theme.of(context).brightness == Brightness.dark
+                      ? Colors.grey.shade400
+                      : Colors.grey.shade600,
               size: 32,
             ),
             const SizedBox(height: 8),
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? iconColor : Colors.grey.shade800,
+                color: isSelected
+                    ? iconColor
+                    : Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey.shade300
+                        : Colors.grey.shade800,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),
             ),
@@ -399,7 +421,7 @@ class BirthdayGenderStep extends StatelessWidget {
             colorScheme: ColorScheme.light(
               primary: Theme.of(context).primaryColor,
               onPrimary: Colors.white,
-              onSurface: Colors.black,
+              onSurface: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
             ),
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(

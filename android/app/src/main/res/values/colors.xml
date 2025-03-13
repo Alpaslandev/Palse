@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Uygulama renkleri -->
+<resources>
+    <!-- Bildirim rengi -->
+    <color name="notification_color">#4CAF50</color>
+</resources> 

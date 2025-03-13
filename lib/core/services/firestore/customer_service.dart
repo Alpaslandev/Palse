@@ -232,4 +232,39 @@ class CustomerService {
       throw Exception('Kullanıcı silinemedi: $e');
     }
   }
+
+  // Kullanıcının sohbetini siler
+  Future<void> deleteChat(String userId, String otherUserId) async {
+    try {
+      // Kullanıcı belgesini al
+      final userDoc = await _firestore.collection('customers').doc(userId).get();
+      if (!userDoc.exists) {
+        throw Exception('Kullanıcı bulunamadı');
+      }
+
+      // chatMap'i al
+      final userData = userDoc.data();
+      if (userData == null || userData['chatMap'] == null) {
+        throw Exception('Sohbet bilgisi bulunamadı');
+      }
+
+      // chatMap'ten ilgili sohbeti çıkar
+      final Map<String, dynamic> chatMap = Map<String, dynamic>.from(userData['chatMap']);
+
+      // Doğrudan key (otherUserId) kullanarak sohbeti sil
+      if (chatMap.containsKey(otherUserId)) {
+        chatMap.remove(otherUserId);
+
+        // Firestore'u güncelle
+        await _firestore.collection('customers').doc(userId).update({'chatMap': chatMap});
+
+        debugPrint('Sohbet başarıyla silindi: $otherUserId');
+      } else {
+        debugPrint('Silinecek sohbet bulunamadı: $otherUserId');
+      }
+    } catch (e) {
+      debugPrint('Sohbet silinirken hata oluştu: $e');
+      throw Exception('Sohbet silinemedi: $e');
+    }
+  }
 }

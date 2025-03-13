@@ -18,9 +18,8 @@ class LeaderBoard extends StatelessWidget {
   const LeaderBoard({super.key});
 
   Future<List<LeaderBoardUser>> getLeaderBoard() async {
-    final response =
-        await FirebaseFirestore.instance.collection('customers').where('totalXp', isGreaterThan: 0).orderBy('totalXp', descending: true).get();
-    return response.docs.map((doc) => LeaderBoardUser(nickname: doc['nickname'], xp: doc['totalXp'], userId: doc.id)).toList();
+    final response = await FirebaseFirestore.instance.collection('customers').where('totalXp').orderBy('totalXp', descending: true).get();
+    return response.docs.map((doc) => LeaderBoardUser(nickname: doc['firstName'], xp: doc['totalXp'], userId: doc.id)).toList();
   }
 
   @override

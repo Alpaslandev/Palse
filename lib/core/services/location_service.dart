@@ -75,7 +75,6 @@ class LocationService {
         'format': 'json',
         'addressdetails': 1,
         'limit': 5,
-        'countrycodes': 'TR',
       });
 
       debugPrint('API yanıtı alındı: ${response.statusCode}');

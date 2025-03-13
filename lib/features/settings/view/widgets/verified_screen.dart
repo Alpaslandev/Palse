@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:palseapp/core/services/firestore/customer_service.dart';
+import 'package:palseapp/core/localization/app_localizations.dart'; // Localization için import
 
 class VerifiedScreen extends StatefulWidget {
   const VerifiedScreen({super.key});
@@ -49,7 +50,7 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
       Future.microtask(() {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Önce oturum açmanız gerekiyor')),
+          SnackBar(content: Text(context.tr('login_required'))),
         );
       });
     }
@@ -140,21 +141,21 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
       _isLoading = false;
     });
 
-    String errorMessage = 'Doğrulama hatası oluştu';
+    String errorMessage = context.tr('verification_error');
 
     // Hata kodlarına göre daha anlamlı mesajlar
     if (e.code == 'invalid-phone-number') {
-      errorMessage = 'Geçersiz telefon numarası formatı';
+      errorMessage = context.tr('invalid_phone_format');
     } else if (e.code == 'too-many-requests') {
-      errorMessage = 'Çok fazla istek gönderildi. Lütfen daha sonra tekrar deneyin';
+      errorMessage = context.tr('too_many_requests');
     } else if (e.code == 'quota-exceeded') {
-      errorMessage = 'SMS kotası aşıldı. Lütfen daha sonra tekrar deneyin';
+      errorMessage = context.tr('quota_exceeded');
     } else if (e.code == 'captcha-check-failed') {
-      errorMessage = 'Captcha doğrulaması başarısız oldu. Tekrar deneyin';
+      errorMessage = context.tr('captcha_failed');
     } else if (e.code == 'app-not-authorized') {
-      errorMessage = 'Uygulama Firebase Authentication kullanmaya yetkili değil';
+      errorMessage = context.tr('app_not_authorized');
     } else {
-      errorMessage = 'Hata: ${e.message}';
+      errorMessage = '${context.tr('error_prefix')}${e.message}';
     }
 
     if (mounted) {
@@ -163,7 +164,7 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
           content: Text(errorMessage),
           duration: const Duration(seconds: 5),
           action: SnackBarAction(
-            label: 'ANLADIM',
+            label: context.tr('understood'),
             onPressed: () {},
           ),
         ),
@@ -193,7 +194,7 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Doğrulama kodu gönderildi')),
+        SnackBar(content: Text(context.tr('code_sent'))),
       );
     }
   }
@@ -216,7 +217,7 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
 
     if (_smsController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Lütfen doğrulama kodunu girin')),
+        SnackBar(content: Text(context.tr('please_enter_code'))),
       );
       return;
     }
@@ -230,7 +231,7 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
     try {
       // VerificationId kontrolü
       if (_verificationId == null) {
-        throw Exception('Doğrulama ID\'si bulunamadı. Lütfen tekrar deneyin.');
+        throw Exception(context.tr('verification_id_not_found'));
       }
 
       // SMS kodu ile credential oluştur
@@ -251,7 +252,7 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
     try {
       // Kullanıcı var mı kontrol et
       if (_auth.currentUser == null) {
-        throw Exception('Kullanıcı oturumu bulunamadı');
+        throw Exception(context.tr('user_session_not_found'));
       }
 
       // Mevcut kullanıcıya phone number ekle
@@ -271,7 +272,7 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
       debugPrint('Telefon numarası doğrulandı ve kullanıcıya bağlandı');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Telefon numarası başarıyla doğrulandı')),
+          SnackBar(content: Text(context.tr('phone_verified_success'))),
         );
 
         // Başarılı olduğunda önceki sayfaya dön
@@ -305,7 +306,7 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
       // Kullanıcıya bilgi ver
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Telefon numarası zaten doğrulanmış')),
+          SnackBar(content: Text(context.tr('phone_already_verified'))),
         );
         // Başarılı olduğunda önceki sayfaya dön
         Navigator.pop(context);
@@ -325,7 +326,7 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Hata: $errorMessage')),
+        SnackBar(content: Text('${context.tr('error_prefix')}$errorMessage')),
       );
     }
   }
@@ -333,7 +334,7 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
   // Telefon numarası formatını kontrol et
   String? _validatePhoneNumber(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Lütfen telefon numaranızı girin';
+      return context.tr('please_enter_phone');
     }
 
     // Boşlukları kaldır
@@ -343,13 +344,13 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
     final validChars = RegExp(r'[0-9+ ]');
     for (int i = 0; i < cleanValue.length; i++) {
       if (!validChars.hasMatch(cleanValue[i])) {
-        return 'Geçersiz karakterler içeriyor (sadece rakam, + ve boşluk kullanın)';
+        return context.tr('invalid_characters');
       }
     }
 
     // Minimum uzunluk kontrolü
     if (cleanValue.replaceAll(' ', '').length < 10) {
-      return 'Telefon numarası çok kısa';
+      return context.tr('phone_too_short');
     }
 
     return null;
@@ -392,9 +393,9 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
       // Eğer kod gönderilmişse ve ikinci adımdaysak geri dönüşü engelle
       if (_currentStep == 1 && _verificationId != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Doğrulama işlemi devam ediyor. Lütfen kodu girin veya işlemi tamamlayın.'),
-            duration: Duration(seconds: 3),
+          SnackBar(
+            content: Text(context.tr('verification_in_progress_enter_code')),
+            duration: const Duration(seconds: 3),
           ),
         );
       }
@@ -413,7 +414,7 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
       onPopInvokedWithResult: _handlePopInvokedWithResult,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Telefon Doğrulama'),
+          title: Text(context.tr('phone_verification')),
           centerTitle: true,
           elevation: 0,
           backgroundColor: colorScheme.primary,
@@ -465,7 +466,7 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
           const SizedBox(height: 24),
           // Başlık
           Text(
-            'Telefon Numaranızı Doğrulayın',
+            context.tr('verify_your_phone'),
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -474,7 +475,7 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
           const SizedBox(height: 8),
           // Alt başlık
           Text(
-            'Hesabınızı güvence altına almak için telefon numaranızı doğrulayın',
+            context.tr('verify_phone_subtitle'),
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.textTheme.bodySmall?.color,
             ),
@@ -495,8 +496,8 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
                   TextFormField(
                     controller: _phoneController,
                     decoration: InputDecoration(
-                      labelText: 'Telefon Numarası',
-                      hintText: '+90 5XX XXX XX XX',
+                      labelText: context.tr('phone_number'),
+                      hintText: context.tr('phone_number_hint'),
                       prefixIcon: const Icon(Icons.phone),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -517,7 +518,7 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Lütfen ülke kodu ile birlikte girin (örn: +90 5XX XXX XX XX)',
+                    context.tr('phone_number_info'),
                     style: theme.textTheme.labelSmall,
                   ),
                   const SizedBox(height: 24),
@@ -544,15 +545,15 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
                                 ),
                               ),
                               const SizedBox(width: 12),
-                              const Text(
-                                'Gönderiliyor...',
-                                style: TextStyle(fontSize: 16),
+                              Text(
+                                context.tr('sending'),
+                                style: const TextStyle(fontSize: 16),
                               ),
                             ],
                           )
-                        : const Text(
-                            'Doğrulama Kodu Gönder',
-                            style: TextStyle(fontSize: 16),
+                        : Text(
+                            context.tr('send_verification_code'),
+                            style: const TextStyle(fontSize: 16),
                           ),
                   ),
                 ],
@@ -586,7 +587,7 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'Bilgi',
+                      context.tr('info'),
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: colorScheme.error,
@@ -596,12 +597,12 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'SMS kodunun gelmesi biraz zaman alabilir. Lütfen en az 2 dakika bekleyin.',
+                  context.tr('sms_delay_info'),
                   style: theme.textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Kod gelmediyse numaranızı kontrol edip tekrar deneyin.',
+                  context.tr('check_number_retry'),
                   style: theme.textTheme.bodyMedium,
                 ),
               ],
@@ -630,7 +631,7 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
           const SizedBox(height: 24),
           // Başlık
           Text(
-            'Doğrulama Kodunu Girin',
+            context.tr('enter_verification_code'),
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -639,7 +640,7 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
           const SizedBox(height: 8),
           // Alt başlık
           Text(
-            'Telefonunuza gönderilen 6 haneli kodu girin',
+            context.tr('enter_6_digit_code'),
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.textTheme.bodySmall?.color,
             ),
@@ -654,7 +655,7 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
-              'Kod $_formattedPhoneNumber numarasına gönderildi',
+              context.tr('code_sent_to').replaceAll('{phoneNumber}', _formattedPhoneNumber),
               style: theme.textTheme.bodyMedium,
               textAlign: TextAlign.center,
             ),
@@ -675,8 +676,8 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
                     controller: _smsController,
                     focusNode: _smsFocusNode,
                     decoration: InputDecoration(
-                      labelText: 'Doğrulama Kodu',
-                      hintText: '6 haneli kod',
+                      labelText: context.tr('verification_code'),
+                      hintText: context.tr('verification_code_hint'),
                       prefixIcon: const Icon(Icons.sms),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -722,22 +723,22 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
                                 ),
                               ),
                               const SizedBox(width: 12),
-                              const Text(
-                                'Doğrulanıyor...',
-                                style: TextStyle(fontSize: 16),
+                              Text(
+                                context.tr('verifying'),
+                                style: const TextStyle(fontSize: 16),
                               ),
                             ],
                           )
-                        : const Text(
-                            'Doğrula',
-                            style: TextStyle(fontSize: 16),
+                        : Text(
+                            context.tr('verify'),
+                            style: const TextStyle(fontSize: 16),
                           ),
                   ),
                   const SizedBox(height: 16),
                   TextButton.icon(
                     onPressed: _isLoading ? null : _resendVerificationCode,
                     icon: const Icon(Icons.refresh),
-                    label: const Text('Kodu Tekrar Gönder'),
+                    label: Text(context.tr('resend_code')),
                   ),
                 ],
               ),
@@ -770,7 +771,7 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'Önemli',
+                      context.tr('important'),
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: colorScheme.tertiary,
@@ -780,12 +781,12 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Doğrulama işlemi devam ederken lütfen uygulamadan çıkmayın.',
+                  context.tr('verification_in_progress'),
                   style: theme.textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Kod gelmediyse "Kodu Tekrar Gönder" butonuna tıklayabilirsiniz.',
+                  context.tr('resend_code_info'),
                   style: theme.textTheme.bodyMedium,
                 ),
               ],

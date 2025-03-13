@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:palseapp/core/localization/app_localizations.dart'; // Localization için import
 
 // Yorum olmadığında gösterilecek boş durum widget'ı
 class EmptyCommentView extends StatelessWidget {
@@ -6,15 +7,15 @@ class EmptyCommentView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.comment_outlined, size: 64, color: Colors.grey),
-          SizedBox(height: 16),
+          const Icon(Icons.comment_outlined, size: 64, color: Colors.grey),
+          const SizedBox(height: 16),
           Text(
-            'Henüz yorum yapılmamış',
-            style: TextStyle(fontSize: 16, color: Colors.grey),
+            context.tr('no_comments_yet'),
+            style: const TextStyle(fontSize: 16, color: Colors.grey),
           ),
         ],
       ),

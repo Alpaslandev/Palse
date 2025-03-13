@@ -13,23 +13,25 @@ import 'package:palseapp/core/services/notification_service.dart';
 import 'package:palseapp/core/services/chat_service.dart';
 
 // Auth durumunu yöneten provider sınıfı
-class AuthProvider extends ChangeNotifier {
+class AuthProvider extends ChangeNotifier implements Listenable {
   final AuthService _authService = AuthService();
   final CustomerService _userService = CustomerService();
   final NotificationService _notificationService = NotificationService();
   final AdvertService _advertService = AdvertService();
 
   bool _isLoading = true;
+  bool _isFirestoreDataLoaded = false; // Firestore verilerinin yüklenme durumunu takip eden flag
   User? _firebaseUser;
   Customer? _user;
   bool _isFirstTime = true;
 
   // Getterlar
-  bool get isLoading => _isLoading;
-  bool get isProfileSetupCompleted => _user != null;
+  bool get isLoading => _isLoading || (_firebaseUser != null && !_isFirestoreDataLoaded);
+  bool get isProfileSetupCompleted => _user != null && _isFirestoreDataLoaded;
   Customer? get user => _user;
   User? get firebaseUser => _firebaseUser;
   bool get isAuthenticated => _firebaseUser != null;
+  bool get isFirestoreDataLoaded => _isFirestoreDataLoaded;
 
   StreamSubscription<DocumentSnapshot<Object?>>? _userStreamSubscription;
 
@@ -43,11 +45,19 @@ class AuthProvider extends ChangeNotifier {
     debugPrint('Initializing auth state...');
     try {
       _isLoading = true;
+      _isFirestoreDataLoaded = false; // Başlangıçta false olarak ayarla
       notifyListeners();
 
       _authService.authStateChanges.listen((User? user) async {
         debugPrint('Auth State Changed: ${user?.email}');
         _firebaseUser = user;
+
+        if (user == null) {
+          _isFirestoreDataLoaded = true; // Kullanıcı yoksa veri yükleme tamamlandı sayılır
+        } else {
+          _isFirestoreDataLoaded = false; // Kullanıcı varsa veri yükleme başlıyor
+        }
+
         notifyListeners();
 
         // await Future.delayed(const Duration(seconds: 4));
@@ -85,6 +95,8 @@ class AuthProvider extends ChangeNotifier {
         final bool isPremiumChanged = _user?.isPremium != newUser.isPremium;
 
         _user = newUser;
+        _isFirestoreDataLoaded = true; // Firestore verisi yüklendi
+
         if (_isFirstTime) {
           _isFirstTime = false;
           _notificationService.saveUserToken(userId);
@@ -93,6 +105,7 @@ class AuthProvider extends ChangeNotifier {
         }
 
         debugPrint('User data: ${_user?.toJson()}');
+        debugPrint('Firestore data loaded: $_isFirestoreDataLoaded');
 
         // Sadece isPremium değişmişse bildirim gönder
         if (isPremiumChanged) {
@@ -105,12 +118,14 @@ class AuthProvider extends ChangeNotifier {
       } else {
         debugPrint('User data not found');
         _user = null;
+        _isFirestoreDataLoaded = true; // Veri bulunamadı ama yükleme işlemi tamamlandı
         notifyListeners();
       }
       debugPrint('User data updated: ${_user?.userID}');
     }, onError: (error) {
       debugPrint('User stream error: $error');
       _isLoading = false;
+      _isFirestoreDataLoaded = true; // Hata durumunda da yükleme işlemi tamamlandı sayılır
       notifyListeners();
     });
   }
@@ -119,6 +134,7 @@ class AuthProvider extends ChangeNotifier {
   Future<void> loginWithEmail(String email, String password) async {
     try {
       _isLoading = true;
+      _isFirestoreDataLoaded = false; // Giriş yaparken false olarak ayarla
       notifyListeners();
 
       // Login işlemi
@@ -141,6 +157,7 @@ class AuthProvider extends ChangeNotifier {
   Future<void> signUpWithEmailAndPassword(String email, String password) async {
     try {
       _isLoading = true;
+      _isFirestoreDataLoaded = false; // Kayıt yaparken false olarak ayarla
       notifyListeners();
 
       final user = await _authService.signUpWithEmailAndPassword(email, password);
@@ -159,6 +176,7 @@ class AuthProvider extends ChangeNotifier {
   Future<void> loginWithGoogle() async {
     try {
       _isLoading = true;
+      _isFirestoreDataLoaded = false; // Google ile giriş yaparken false olarak ayarla
       notifyListeners();
 
       final user = await _authService.signInWithGoogle();
@@ -179,6 +197,7 @@ class AuthProvider extends ChangeNotifier {
   Future<void> loginWithApple() async {
     try {
       _isLoading = true;
+      _isFirestoreDataLoaded = false; // Apple ile giriş yaparken false olarak ayarla
       notifyListeners();
 
       final user = await _authService.signInWithApple();
@@ -193,6 +212,7 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> deleteAccount() async {
     _isLoading = true;
+    _isFirestoreDataLoaded = false;
     await _userStreamSubscription?.cancel();
     _userStreamSubscription = null;
     notifyListeners();
@@ -210,6 +230,7 @@ class AuthProvider extends ChangeNotifier {
       rethrow;
     } finally {
       _isLoading = false;
+      _isFirestoreDataLoaded = true;
       notifyListeners();
     }
   }
@@ -218,6 +239,7 @@ class AuthProvider extends ChangeNotifier {
   Future<void> logout() async {
     try {
       _isLoading = true;
+      _isFirestoreDataLoaded = false;
       notifyListeners();
       await _authService.signOut();
       await _userService.resetFcmToken(user!.userID!);
@@ -226,6 +248,7 @@ class AuthProvider extends ChangeNotifier {
       rethrow;
     } finally {
       _isLoading = false;
+      _isFirestoreDataLoaded = true;
       notifyListeners();
     }
   }
@@ -233,6 +256,7 @@ class AuthProvider extends ChangeNotifier {
   // Kullanıcı modelini güncelle
   void updateUser(Customer updatedUser) {
     _user = updatedUser;
+    _isFirestoreDataLoaded = true;
     notifyListeners();
     debugPrint('Kullanıcı modeli güncellendi: ${updatedUser.userID}');
   }

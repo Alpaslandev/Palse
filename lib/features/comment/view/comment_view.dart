@@ -27,7 +27,7 @@ class CommentView extends StatelessWidget {
   }
 
   Widget _buildScaffold(BuildContext context, CommentViewModel viewModel, Customer currentUser) {
-    debugPrint('viewModel.comments: ${viewModel.comments}');
+    debugPrint(context.tr('viewmodel_comments_debug') + ': ${viewModel.comments}');
     bool isMe = currentUser.userID == customer.userID;
     return Scaffold(
       appBar: AppBar(
@@ -51,7 +51,9 @@ class CommentView extends StatelessWidget {
         currentUserId: currentUser.userID ?? '',
         profileOwnerId: customer.userID ?? '',
         onDeleteTap: () => viewModel.deleteComment(viewModel.comments[index]),
-        onReportTap: () => viewModel.reportComment(viewModel.comments[index], currentUser.userID ?? ''),
+        onReportTap: () async {
+          await viewModel.reportComment(viewModel.comments[index], currentUser.userID ?? '');
+        },
       ),
     );
   }
@@ -86,12 +88,12 @@ class CommentView extends StatelessWidget {
         commenterProfilePictureUrl: currentUser.profilePictureUrl ?? '',
         commentDate: DateTime.now(),
       );
-      debugPrint('Alınan yorum: ${comment.toString()}');
+      debugPrint(context.tr('received_comment_debug') + ': ${comment.toString()}');
 
       // Kullanıcı ID'sini de geçirerek yorum ekleme işlemini başlat
       viewModel.addComment(comment, currentUser.userID ?? '');
     } else {
-      debugPrint('Yorum eklenmedi');
+      debugPrint(context.tr('comment_not_added_debug'));
     }
   }
 }

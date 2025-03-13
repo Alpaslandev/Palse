@@ -96,10 +96,14 @@ class CommentViewModel extends ChangeNotifier {
         reportedUserId: _friendCustomer.userID!,
         reporterUserId: currentUserId,
         reportType: ReportType.inappropriateComment.name,
-        description: 'Yorum içerik ihlali',
+        description: 'Yorum içerik ihlali: "${comment.comment}"',
         createdAt: DateTime.now().toIso8601String(),
       ));
+
+      ScaffoldMess.showSuccessSnackBar(LocaleManager.translate('comment_reported_success'));
+      debugPrint('Yorum başarıyla şikayet edildi: ${comment.comment}');
     } catch (e) {
+      ScaffoldMess.showErrorSnackBar(LocaleManager.translate('comment_report_error'));
       debugPrint('Yorum şikayet etme hatası: $e');
     } finally {
       _isLoading = false;

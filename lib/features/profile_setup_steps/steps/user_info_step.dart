@@ -26,7 +26,7 @@ class UserInfoStep extends StatelessWidget {
               decoration: BoxDecoration(
                 border: Border(
                   bottom: BorderSide(
-                    color: Colors.grey.shade200,
+                    color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade700 : Colors.grey.shade200,
                     width: 1.0,
                   ),
                 ),
@@ -83,9 +83,11 @@ class UserInfoStep extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.green.shade50,
+                  color: Theme.of(context).brightness == Brightness.dark ? Colors.green.shade900.withOpacity(0.2) : Colors.green.shade50,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.green.shade200),
+                  border: Border.all(
+                    color: Theme.of(context).brightness == Brightness.dark ? Colors.green.shade700 : Colors.green.shade200,
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -109,7 +111,7 @@ class UserInfoStep extends StatelessWidget {
                                 .replaceAll('{firstName}', viewModel.firstNameController.text)
                                 .replaceAll('{lastName}', viewModel.lastNameController.text),
                             style: TextStyle(
-                              color: Colors.green.shade800,
+                              color: Theme.of(context).brightness == Brightness.dark ? Colors.green.shade300 : Colors.green.shade800,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -123,13 +125,18 @@ class UserInfoStep extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
+                  color: Theme.of(context).brightness == Brightness.dark ? Colors.blue.shade900.withOpacity(0.2) : Colors.blue.shade50,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.blue.shade200),
+                  border: Border.all(
+                    color: Theme.of(context).brightness == Brightness.dark ? Colors.blue.shade700 : Colors.blue.shade200,
+                  ),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.info_outline, color: Colors.blue.shade700),
+                    Icon(
+                      Icons.info_outline,
+                      color: Theme.of(context).brightness == Brightness.dark ? Colors.blue.shade300 : Colors.blue.shade700,
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -138,7 +145,7 @@ class UserInfoStep extends StatelessWidget {
                           Text(
                             context.tr('user_info_info'),
                             style: TextStyle(
-                              color: Colors.blue.shade700,
+                              color: Theme.of(context).brightness == Brightness.dark ? Colors.blue.shade300 : Colors.blue.shade700,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -146,7 +153,7 @@ class UserInfoStep extends StatelessWidget {
                           Text(
                             context.tr('user_info_please_enter'),
                             style: TextStyle(
-                              color: Colors.blue.shade800,
+                              color: Theme.of(context).brightness == Brightness.dark ? Colors.blue.shade200 : Colors.blue.shade800,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -196,7 +203,7 @@ class UserInfoStep extends StatelessWidget {
           decoration: InputDecoration(
             hintText: hintText,
             filled: true,
-            fillColor: Colors.white,
+            fillColor: Theme.of(context).inputDecorationTheme.fillColor,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 14,
@@ -204,14 +211,22 @@ class UserInfoStep extends StatelessWidget {
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: controller.text.isNotEmpty ? (isValid ? Colors.green : Colors.red) : Colors.grey.shade300,
+                color: controller.text.isNotEmpty
+                    ? (isValid ? Colors.green : Colors.red)
+                    : Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey.shade700
+                        : Colors.grey.shade300,
                 width: 1.0,
               ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: controller.text.isNotEmpty ? (isValid ? Colors.green : Colors.red) : Colors.grey.shade300,
+                color: controller.text.isNotEmpty
+                    ? (isValid ? Colors.green : Colors.red)
+                    : Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey.shade700
+                        : Colors.grey.shade300,
                 width: 1.0,
               ),
             ),
@@ -231,7 +246,10 @@ class UserInfoStep extends StatelessWidget {
                 : null,
           ),
           onChanged: onChanged,
-          style: const TextStyle(fontSize: 16),
+          style: TextStyle(
+            fontSize: 16,
+            color: Theme.of(context).textTheme.bodyLarge?.color,
+          ),
         ),
       ],
     );
