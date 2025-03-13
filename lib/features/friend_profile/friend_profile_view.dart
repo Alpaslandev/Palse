@@ -6,6 +6,7 @@ import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/services/chat_service.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
 import 'package:palseapp/core/widgets/advert_card.dart';
+import 'package:palseapp/core/widgets/circle_profile_picture.dart';
 import 'package:palseapp/features/friend_profile/friend_profile_view_model.dart';
 import 'package:provider/provider.dart';
 import 'package:palseapp/features/achievement/achievement_service.dart';
@@ -129,8 +130,8 @@ class FriendProfileView extends StatelessWidget {
         ],
       ),
       subtitle: Text(viewModel.customer?.nickname ?? ''),
-      leading: CircleAvatar(
-        backgroundImage: NetworkImage(viewModel.customer?.profilePictureUrl ?? ""),
+      leading: CircleProfilePicture(
+        imageUrl: viewModel.customer?.profilePictureUrl ?? '',
       ),
       trailing: PopupMenuButton(
         icon: const Icon(Icons.more_vert),
@@ -140,6 +141,58 @@ class FriendProfileView extends StatelessWidget {
             child: ListTile(
               leading: const Icon(Icons.report, color: Colors.red),
               title: Text(context.tr('report_abuse')),
+              onTap: () async {
+                context.pop();
+
+                // Rapor açıklaması için dialog göster
+                final TextEditingController reportController = TextEditingController();
+                String? reportReason;
+
+                if (context.mounted) {
+                  await showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: Text(context.tr('report_abuse')),
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(context.tr('please_explain_reason')),
+                          const SizedBox(height: 16),
+                          TextField(
+                            controller: reportController,
+                            maxLines: 3,
+                            decoration: InputDecoration(
+                              hintText: context.tr('report_reason_hint'),
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ],
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => context.pop(),
+                          child: Text(context.tr('cancel')),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            reportReason = reportController.text;
+                            context.pop();
+                          },
+                          child: Text(context.tr('submit')),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                // Eğer açıklama varsa rapor et
+                if (reportReason != null && reportReason!.isNotEmpty && context.mounted) {
+                  await viewModel.reportUser(reportReason!);
+                  if (context.mounted) {
+                    context.go('/home');
+                  }
+                }
+              },
             ),
           ),
           PopupMenuItem(
@@ -147,6 +200,14 @@ class FriendProfileView extends StatelessWidget {
             child: ListTile(
               leading: const Icon(Icons.block, color: Colors.red),
               title: Text(context.tr('block_user')),
+              onTap: () async {
+                context.pop();
+
+                await viewModel.blockUser();
+                if (context.mounted) {
+                  context.go('/home');
+                }
+              },
             ),
           ),
         ],

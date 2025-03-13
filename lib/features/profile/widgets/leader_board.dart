@@ -18,8 +18,9 @@ class LeaderBoard extends StatelessWidget {
   const LeaderBoard({super.key});
 
   Future<List<LeaderBoardUser>> getLeaderBoard() async {
-    final response = await FirebaseFirestore.instance.collection('leaderBoard').orderBy('xp', descending: true).get();
-    return response.docs.map((doc) => LeaderBoardUser(nickname: doc['nickname'], xp: doc['xp'], userId: doc.id)).toList();
+    final response =
+        await FirebaseFirestore.instance.collection('customers').where('totalXp', isGreaterThan: 0).orderBy('totalXp', descending: true).get();
+    return response.docs.map((doc) => LeaderBoardUser(nickname: doc['nickname'], xp: doc['totalXp'], userId: doc.id)).toList();
   }
 
   @override
@@ -73,7 +74,7 @@ class LeaderBoard extends StatelessWidget {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              tileColor: Colors.grey.shade200,
+                              tileColor: Theme.of(context).colorScheme.surface,
                               title: Text(item.nickname),
                               trailing: _buildListTileTrailing(item.xp, isFirstThree),
                               leading: Text(

@@ -56,6 +56,7 @@ class NotificationService {
           title: message.notification?.title ?? '',
         );
         debugPrint('Bildirim kaydedildi');
+        return;
       }
 
       if (_context == null) return;
@@ -65,6 +66,9 @@ class NotificationService {
       final senderId = data['senderId'];
       final receiverId = data['receiverId'];
 
+      if (AppRouter.router.routeInformationProvider.value.uri.path.contains('chats/$chatId')) {
+        return;
+      }
       ScaffoldMessenger.of(_context!).showMaterialBanner(
         MaterialBanner(
           backgroundColor: Colors.white,
@@ -107,7 +111,7 @@ class NotificationService {
       );
 
       // 4 saniye sonra otomatik kapat
-      Future.delayed(const Duration(seconds: 400), () {
+      Future.delayed(const Duration(seconds: 4), () {
         if (_context != null) {
           ScaffoldMessenger.of(_context!).hideCurrentMaterialBanner();
         }

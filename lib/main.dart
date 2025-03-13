@@ -78,6 +78,9 @@ void main() async {
   final adsProvider = AdsProvider();
   await SharedPrefService.init();
 
+  // Achievement servisini başlat (günlük görevleri kontrol et)
+  await AchievementService().init();
+
   runApp(
     MultiProvider(
       providers: [

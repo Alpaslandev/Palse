@@ -21,13 +21,43 @@ class ProfileView extends StatefulWidget {
 }
 
 class _ProfileViewState extends State<ProfileView> {
+  // Daha önce uygulamaya giriş yapılıp yapılmadığını kontrol eden değişken
+  bool _checkedDailyLoginReward = false;
+
   @override
   void initState() {
     super.initState();
-    // Profil ekranı açıldığında günlük görevleri kontrol et
+    // Profil ekranına girildiğinde günlük giriş ödülünü kontrol et
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkDailyTasks();
+      _checkAndRewardDailyLogin();
     });
+  }
+
+  // Günlük giriş ödülünü kontrol eden ve veren metod
+  Future<void> _checkAndRewardDailyLogin() async {
+    // Eğer daha önce kontrol edildiyse tekrar kontrol etme
+    if (_checkedDailyLoginReward) return;
+
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final user = authProvider.user;
+
+    if (user != null && user.userID != null) {
+      final achievementService = AchievementService();
+
+      // Yeni metodu kullan - tarih bazlı kontrol yapan
+      final rewardGiven = await achievementService.checkDailyLoginReward(user.userID!);
+
+      // Sadece durum göstergesi olarak flag'i güncelle
+      setState(() {
+        _checkedDailyLoginReward = true;
+      });
+
+      // Eğer ödül verildiyse günlük görev kartını yeniden yükleyelim
+      if (rewardGiven) {
+        debugPrint('✅ Günlük giriş ödülü verildi, görevi yeniden yüklüyoruz');
+        await _checkDailyTasks();
+      }
+    }
   }
 
   // Günlük görevleri kontrol etme fonksiyonu
@@ -38,22 +68,6 @@ class _ProfileViewState extends State<ProfileView> {
 
       if (user != null && user.userID != null) {
         final achievementService = AchievementService();
-
-        // Günlük görevlerin durumunu kontrol et
-        final dailyStatus = await achievementService.checkDailyTasksStatus(user.userID!);
-
-        // 24 saat geçmiş ve görevlerin sıfırlanma zamanı gelmişse, sıfırla
-        final bool isResetRequired =
-            dailyStatus['time_until_reset'] == 'Sıfırlama zamanı yok' || dailyStatus['time_until_reset'].toString().contains('-');
-
-        // Sadece sıfırlama zamanı geldiyse ve tüm görevler tamamlanmışsa sıfırla
-        if (isResetRequired && dailyStatus['all_daily_tasks_completed'] == true) {
-          debugPrint('📅 Tüm günlük görevler tamamlanmış ve 24 saat geçmiş, görevler sıfırlanıyor...');
-          await achievementService.resetDailyTasks(user.userID!);
-        } else {
-          debugPrint(
-              '📅 Günlük görevler sıfırlanmadı: Sıfırlama gerekli mi? $isResetRequired, Tüm görevler tamamlandı mı? ${dailyStatus['all_daily_tasks_completed']}');
-        }
 
         // Kullanıcının tamamlanan görevlerini local storage'dan yükle
         final completedTasks = await _getCompletedTasksFromLocalStorage(user.userID!);
@@ -66,10 +80,10 @@ class _ProfileViewState extends State<ProfileView> {
           debugPrint('Tamamlanan görevler local storage\'dan yüklendi: ${completedTasks.length} görev');
         }
 
-        debugPrint('🔄 Günlük görevler kontrol edildi');
+        debugPrint('🔄 Kullanıcı görev bilgileri güncellendi');
       }
     } catch (e) {
-      debugPrint('Günlük görev kontrolü sırasında hata: $e');
+      debugPrint('Kullanıcı görev bilgileri güncellenirken hata: $e');
     }
   }
 
@@ -130,90 +144,10 @@ class _ProfileViewState extends State<ProfileView> {
 
                 // XP Sistemi butonu
                 const XPSystemButton(),
-                ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => const AchievementTestPage()));
-                    },
-                    child: Text(context.tr('xp_system')))
               ],
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  // Günlük görevleri sıfırlar
-  Future<void> _resetDailyTasks() async {
-    final user = context.read<AuthProvider>().user;
-    if (user != null && user.userID != null) {
-      final achievementService = AchievementService();
-      await achievementService.resetDailyTasks(user.userID!);
-      // Başarılı mesajı gösterir
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Günlük görevler sıfırlandı!'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    }
-  }
-
-  // Günlük görevlerin durumunu kontrol eder
-  Future<Map<String, bool>> _getDailyTasksStatus() async {
-    final user = context.read<AuthProvider>().user;
-    if (user == null || user.userID == null) {
-      return {
-        'dailyLogin': false,
-        'dailyCreateListing': false,
-        'dailySendMessage': false,
-      };
-    }
-
-    final achievementService = AchievementService();
-    final isDailyLoginCompleted = !(await achievementService.canCompleteTask(user!.userID!, XpEvent.dailyLogin));
-    final isDailyCreateListingCompleted = !(await achievementService.canCompleteTask(user.userID!, XpEvent.dailyCreateListing));
-    final isDailySendMessageCompleted = !(await achievementService.canCompleteTask(user.userID!, XpEvent.dailySendMessage));
-
-    return {
-      'dailyLogin': isDailyLoginCompleted,
-      'dailyCreateListing': isDailyCreateListingCompleted,
-      'dailySendMessage': isDailySendMessageCompleted,
-    };
-  }
-
-  // Test için günlük görevleri sıfırlar ve mesaj gösterir
-  void _showResetDailyTasksDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Günlük Görevleri Sıfırla'),
-        content: const Text('Bu işlem tüm günlük görevleri sıfırlayacak ve yeniden yapılabilir hale getirecek. Devam etmek istiyor musunuz?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('İptal'),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              final user = context.read<AuthProvider>().user;
-              if (user != null && user.userID != null) {
-                final achievementService = AchievementService();
-                await achievementService.resetDailyTasks(user.userID!);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Günlük görevler sıfırlandı! Yeniden yapılabilir.'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-                // Sayfayı yenile
-                setState(() {});
-              }
-            },
-            child: const Text('Evet, Sıfırla'),
-          ),
-        ],
       ),
     );
   }
@@ -238,29 +172,27 @@ Widget profileHeader(BuildContext context, AuthProvider authProvider) {
             children: [
               Text(
                 '${authProvider.user?.fullName()} (${authProvider.user?.getAge()})',
-                style: theme.textTheme.titleLarge,
+                style: theme.textTheme.titleMedium,
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(width: 2),
-              if (authProvider.user?.isPremium == false) const Icon(Icons.verified, color: Colors.yellow, size: 16),
-              if (authProvider.user?.verification == false) Icon(Icons.verified, color: colorScheme.primary, size: 16),
+              if (authProvider.user?.isPremium == true) const Icon(Icons.verified, color: Colors.yellow, size: 16),
+              if (authProvider.user?.verification == true) Icon(Icons.verified, color: colorScheme.primary, size: 16),
+              IconButton(
+                icon: Icon(Icons.settings_outlined, color: colorScheme.onSurface),
+                onPressed: () {
+                  context.pushNamed(settings);
+                },
+              ),
             ],
           ),
-          if (authProvider.user?.nickname != null)
-            Text(
-              '@${authProvider.user?.nickname}',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
+          Text(
+            '@${authProvider.user?.nickname}',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant,
             ),
+          ),
         ],
-      ),
-      const Spacer(),
-      IconButton(
-        icon: Icon(Icons.settings_outlined, color: colorScheme.onSurface),
-        onPressed: () {
-          context.pushNamed(settings);
-        },
       ),
     ],
   );
@@ -332,16 +264,25 @@ class _DailyTaskCardState extends State<DailyTaskCard> {
     if (user?.userID != null) {
       final achievementService = AchievementService();
 
-      // Görevlerin tamamlanma durumlarını kontrol et
-      final isDailyLoginCompleted = !(await achievementService.canCompleteTask(user!.userID!, XpEvent.dailyLogin));
-      final isDailyCreateListingCompleted = !(await achievementService.canCompleteTask(user.userID!, XpEvent.dailyCreateListing));
-      final isDailySendMessageCompleted = !(await achievementService.canCompleteTask(user.userID!, XpEvent.dailySendMessage));
+      try {
+        // Görevlerin tamamlanma durumlarını kontrol et
+        final isDailyLoginCompleted = !(await achievementService.canCompleteTask(user!.userID!, XpEvent.dailyLogin));
+        final isDailyCreateListingCompleted = !(await achievementService.canCompleteTask(user.userID!, XpEvent.dailyCreateListing));
+        final isDailySendMessageCompleted = !(await achievementService.canCompleteTask(user.userID!, XpEvent.dailySendMessage));
 
-      setState(() {
-        _isDailyLoginCompleted = isDailyLoginCompleted;
-        _isDailyCreateListingCompleted = isDailyCreateListingCompleted;
-        _isDailySendMessageCompleted = isDailySendMessageCompleted;
-      });
+        // Widget hala monte edilmişse state'i güncelle
+        if (mounted) {
+          setState(() {
+            _isDailyLoginCompleted = isDailyLoginCompleted;
+            _isDailyCreateListingCompleted = isDailyCreateListingCompleted;
+            _isDailySendMessageCompleted = isDailySendMessageCompleted;
+          });
+        }
+
+        debugPrint('✅ Günlük görev durumları başarıyla yüklendi');
+      } catch (e) {
+        debugPrint('⚠️ Günlük görev durumları yüklenirken hata: $e');
+      }
     }
   }
 
@@ -351,7 +292,6 @@ class _DailyTaskCardState extends State<DailyTaskCard> {
     final user = authProvider.user;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final achievementService = AchievementService();
 
     // Toplam XP hesapla (tamamlanan görevler için)
     int totalDailyXp = 0;
@@ -359,11 +299,8 @@ class _DailyTaskCardState extends State<DailyTaskCard> {
     if (_isDailyCreateListingCompleted) totalDailyXp += XpEvent.dailyCreateListing.xpAmount;
     if (_isDailySendMessageCompleted) totalDailyXp += XpEvent.dailySendMessage.xpAmount;
 
-    // Tüm görevlerin tamamlanıp tamamlanmadığını kontrol et
-    final bool allTasksCompleted = _isDailyLoginCompleted && _isDailyCreateListingCompleted && _isDailySendMessageCompleted;
-
     // Bir sonraki yenilemeye kalan süreyi al - bu metod artık yok, basit bir metin kullanacağız
-    final String timeUntilReset = "24 saat";
+    final String timeUntilReset = context.tr('daily_task_next_reset_time');
 
     return Container(
       decoration: BoxDecoration(
@@ -387,51 +324,16 @@ class _DailyTaskCardState extends State<DailyTaskCard> {
                   const Icon(Icons.bolt, color: Colors.yellow),
                 ],
               ),
-              Row(
-                children: [
-                  // Test butonu
-                  if (user != null)
-                    IconButton(
-                      icon: const Icon(Icons.refresh, color: Colors.white),
-                      onPressed: () async {
-                        // Test için dünün tarihini ayarla
-                        final achievementService = AchievementService();
-
-                        // Test modunu aktifleştir
-                        setState(() {
-                          _isTestMode = true;
-                        });
-
-                        // Görevleri sıfırla
-                        if (user.userID != null) {
-                          await achievementService.resetDailyTasks(user.userID!);
-                        }
-
-                        // Görev durumlarını yeniden yükle
-                        await _loadDailyTasksStatus();
-
-                        // Bildirim göster
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Günlük görevler sıfırlandı! Yeni görevleri tamamlayabilirsiniz.'),
-                            backgroundColor: Colors.green,
-                          ),
-                        );
-                      },
-                    ),
-                  // XP göstergesi
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '+${XpEvent.dailyLogin.xpAmount + XpEvent.dailyCreateListing.xpAmount + XpEvent.dailySendMessage.xpAmount} XP',
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ],
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '+${XpEvent.dailyLogin.xpAmount + XpEvent.dailyCreateListing.xpAmount + XpEvent.dailySendMessage.xpAmount} XP',
+                  style: const TextStyle(color: Colors.white),
+                ),
               ),
             ],
           ),

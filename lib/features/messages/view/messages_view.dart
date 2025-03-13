@@ -80,12 +80,7 @@ class _MessagesViewState extends State<MessagesView> {
   }
 
   // İlk mesaj için XP ödülü ver
-  void _checkAndRewardFirstMessage(List<Message> messages) {
-    if (_hasCheckedFirstMessage) {
-      debugPrint('🔄 Bu sohbet için daha önce XP kontrolü yapılmış, tekrar kontrol edilmiyor.');
-      return;
-    }
-
+  void _checkAndRewardFirstMessage(List<Message> messages) async {
     // Hemen flag'i true yap ki birden fazla kontrol olmasın
     _hasCheckedFirstMessage = true;
     debugPrint('🔒 XP kontrolü kilitleniyor - yeni kontroller engelleniyor');
@@ -96,36 +91,23 @@ class _MessagesViewState extends State<MessagesView> {
       return;
     }
 
-    // Debug için mesaj sayılarını yazdır
-    final messagesFromOther = messages.where((msg) => msg.senderId == widget.otherUserId).length;
-    final messagesFromUs = messages.where((msg) => msg.senderId == widget.currentUserId).length;
-    debugPrint('📊 Mesaj İstatistikleri:');
-    debugPrint('- Karşı taraftan gelen mesaj sayısı: $messagesFromOther');
-    debugPrint('- Bizden giden mesaj sayısı: $messagesFromUs');
+    // Mesaj durumunu analiz et
+    final messagesFromOther = messages.where((msg) => msg.senderId == widget.otherUserId).isNotEmpty;
+    final messagesFromUs = messages.where((msg) => msg.senderId == widget.currentUserId).isNotEmpty;
+
+    debugPrint('📊 Mesaj Durumu:');
+    debugPrint('- Karşı taraftan mesaj var mı: $messagesFromOther');
+    debugPrint('- Bizden mesaj var mı: $messagesFromUs');
 
     final userId = authProvider.user!.userID!;
     final chatId = widget.chatId;
     final achievementService = AchievementService();
 
-    // Bizden giden mesaj varsa mesaj gönderme ödüllerini kontrol et
-    if (messagesFromUs > 0) {
-      achievementService.handleMessageSent(userId, chatId: chatId).then((earnedXp) {
-        if (earnedXp > 0) {
-          debugPrint('✅ Mesaj gönderme ödülü XP: $earnedXp');
-        }
-      });
-    }
+    // Doğrudan yeni işleme metodunu kullan - sohbet bazlı daha güvenli kontrol
+    await achievementService.processMessageRewards(
+        userId: userId, chatId: chatId, isFirstMessageFromUs: messagesFromUs, isFirstMessageFromOther: messagesFromOther);
 
-    // Karşıdan gelen mesaj varsa mesaj alma ödüllerini kontrol et
-    if (messagesFromOther > 0) {
-      achievementService.handleMessageReceived(userId, chatId: chatId).then((earnedXp) {
-        if (earnedXp > 0) {
-          debugPrint('✅ Mesaj alma ödülü XP: $earnedXp');
-        }
-      });
-    }
-
-    debugPrint('✅ XP kontrolleri tamamlandı.');
+    debugPrint('✅ Mesaj ödülleri kontrol edildi');
   }
 
   @override

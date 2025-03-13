@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/models/location_model.dart';
+import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/services/cloud_storage.dart';
 import 'package:palseapp/core/services/firestore/customer_service.dart';
@@ -26,8 +27,17 @@ class EditProfileView extends StatefulWidget {
 class _EditProfileViewState extends State<EditProfileView> {
   final CloudStorageService _cloudStorageService = CloudStorageService();
 
+  bool _isLoading = false;
+
+  setLoading(bool value) {
+    setState(() {
+      _isLoading = value;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
     return ChangeNotifierProvider(
       create: (context) => EditProfileViewModel(user: widget.user, customerService: CustomerService()),
       child: Consumer<EditProfileViewModel>(
@@ -197,6 +207,39 @@ class _EditProfileViewState extends State<EditProfileView> {
                         keyboardType: TextInputType.name,
                         readOnly: true,
                         prefixIcon: Icons.female,
+                      ),
+                      TextButton(
+                        onPressed: _isLoading
+                            ? null
+                            : () async {
+                                // Hesap silmeden önce onay dialogu göster
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: Text(context.tr('delete_account')),
+                                    content: Text(context.tr('delete_account_confirmation')),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        child: Text(context.tr('cancel')),
+                                      ),
+                                      TextButton(
+                                        onPressed: () async {
+                                          Navigator.pop(context); // Dialog'u kapat
+                                          setLoading(true);
+                                          await authProvider.deleteAccount();
+                                          setLoading(false);
+                                        },
+                                        child: Text(
+                                          context.tr('delete'),
+                                          style: const TextStyle(color: Colors.red),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                        child: Text(context.tr('delete_account'), style: const TextStyle(color: Colors.red)),
                       ),
                     ],
                   ),

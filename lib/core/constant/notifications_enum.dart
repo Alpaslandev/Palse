@@ -4,6 +4,7 @@ import 'package:palseapp/core/localization/app_localizations.dart';
 enum NotificationsEnum {
   likeAdvert(title: 'İlan Beğenildi!', description: 'Bir ilanı beğendiniz, hemen görüntüle'),
   comment(title: 'Yorum Eklendi!', description: 'Bir yorum eklendiniz, hemen görüntüle'),
+  commentReceived(title: 'Yeni Yorum Aldınız!', description: 'Profilinize yeni bir yorum eklendi ve XP kazandınız!'),
   dailyTask(title: 'Bugün Palse\'de XP kazanma zamanı!', description: 'Bir ilan oluştur ve bir mesaj gönder, +100 XP senin olsun! 🎯'),
 
   dailyTaskCompleted(title: 'Günlük Görevler Tamamlandı!', description: 'Günlük görevlerin tamamlandı! Hemen görüntüle'),

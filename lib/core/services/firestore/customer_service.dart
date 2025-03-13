@@ -174,6 +174,14 @@ class CustomerService {
     }
   }
 
+  Future<void> resetFcmToken(String userId) async {
+    try {
+      await _firestore.collection('customers').doc(userId).update({'fcmToken': null});
+    } catch (e) {
+      debugPrint('Kullanıcı görünümü güncellenirken hata: $e');
+    }
+  }
+
   Future<void> addComment(String userId, Comment comment) async {
     try {
       await _firestore.collection('customers').doc(userId).update({
@@ -214,5 +222,14 @@ class CustomerService {
   /// Kullanıcı bilgilerini günceller
   Future<void> updateUser(String uuid, Customer user) async {
     await _firestore.collection('customers').doc(uuid).update(user.toJson());
+  }
+
+  Future<void> deleteAccount(String uuid) async {
+    try {
+      await _firestore.collection('customers').doc(uuid).delete();
+    } catch (e) {
+      debugPrint('Kullanıcı silinirken hata oluştu: $e');
+      throw Exception('Kullanıcı silinemedi: $e');
+    }
   }
 }

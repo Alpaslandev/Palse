@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/models/location_model.dart';
 import 'package:palseapp/core/services/location_service.dart';
 import 'package:palseapp/core/utils/debouncer.dart';
@@ -32,7 +33,7 @@ class _LocationSheetState extends State<LocationSheet> {
               }
             },
             icon: const Icon(Icons.my_location),
-            label: const Text('Mevcut Konumumu Kullan'),
+            label: Text(context.tr('location_use_current')),
             style: ElevatedButton.styleFrom(
               minimumSize: const Size(double.infinity, 50),
             ),
@@ -45,7 +46,7 @@ class _LocationSheetState extends State<LocationSheet> {
           TextField(
             controller: _searchController,
             decoration: InputDecoration(
-              labelText: 'Şehir, İlçe Ara',
+              labelText: context.tr('location_search_city_district'),
               prefixIcon: const Icon(Icons.search),
               suffixIcon: _isLoading
                   ? const SizedBox(

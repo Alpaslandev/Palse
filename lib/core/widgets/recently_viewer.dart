@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
+import 'package:palseapp/core/widgets/circle_profile_picture.dart';
 import 'package:provider/provider.dart';
 
 class RecentlyViewer extends StatelessWidget {
@@ -24,12 +25,9 @@ class RecentlyViewer extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             // Profil Resmi ve Temel Bilgiler
-            CircleAvatar(
+            CircleProfilePicture(
               radius: 30,
-              backgroundImage: CachedNetworkImageProvider(
-                customer.profilePictureUrl ?? '',
-                errorListener: (error) => Icon(Icons.error),
-              ),
+              imageUrl: customer.profilePictureUrl ?? '',
             ),
             const SizedBox(height: 8),
             Text(

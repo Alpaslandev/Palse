@@ -192,4 +192,89 @@ class ChatService {
     StackTrace: ${stackTrace ?? 'Yok'}
     ''');
   }
+
+  Future<void> deleteChat(String chatId) async {
+    try {
+      // Önce sohbet belgesini al ve katılımcıları öğren
+      final chatDoc = await _db.collection('chats').doc(chatId).get();
+
+      if (!chatDoc.exists) {
+        debugPrint('Silinecek sohbet bulunamadı: $chatId');
+        return;
+      }
+
+      // Katılımcıları al
+      final participants = List<String>.from(chatDoc.data()?['participants'] ?? []);
+
+      if (participants.isEmpty) {
+        debugPrint('Sohbette katılımcı bulunamadı: $chatId');
+        await _db.collection('chats').doc(chatId).delete();
+        return;
+      }
+
+      // Mesajları batch işlemi ile sil
+      await _deleteMessagesInBatches(chatId);
+
+      // Batch işlemi başlat
+      final batch = _db.batch();
+
+      // Sohbeti sil
+      batch.delete(_db.collection('chats').doc(chatId));
+
+      // Her katılımcının chatMap'inden diğer katılımcıları sil
+      for (String userId in participants) {
+        // Bu kullanıcının sohbet ettiği diğer kullanıcıları bul
+        for (String otherUserId in participants) {
+          if (userId != otherUserId) {
+            // Kullanıcının chatMap'inden diğer kullanıcıyı sil
+            batch.update(_db.collection('customers').doc(userId), {'chatMap.$otherUserId': FieldValue.delete()});
+          }
+        }
+      }
+
+      // Batch işlemini uygula
+      await batch.commit();
+      debugPrint('Sohbet, mesajlar ve ilgili chatMap kayıtları silindi: $chatId');
+    } catch (e) {
+      _logError('deleteChat', e, stackTrace: StackTrace.current);
+      rethrow;
+    }
+  }
+
+  // Mesajları batch işlemi ile silmek için yardımcı metod
+  Future<void> _deleteMessagesInBatches(String chatId) async {
+    final messagesRef = _db.collection('chats').doc(chatId).collection('messages');
+    bool hasMoreMessages = true;
+
+    // Firestore'da bir batch işlemi en fazla 500 belge işleyebilir
+    const batchSize = 500;
+
+    while (hasMoreMessages) {
+      // Silinecek mesajları al (en fazla batchSize kadar)
+      final messagesSnapshot = await messagesRef.limit(batchSize).get();
+
+      if (messagesSnapshot.docs.isEmpty) {
+        hasMoreMessages = false;
+        continue;
+      }
+
+      // Batch işlemi başlat
+      final batch = _db.batch();
+
+      // Mesajları batch işlemine ekle
+      for (var doc in messagesSnapshot.docs) {
+        batch.delete(doc.reference);
+      }
+
+      // Batch işlemini uygula
+      await batch.commit();
+
+      // Eğer dönen belge sayısı batchSize'dan az ise, tüm mesajlar silinmiştir
+      if (messagesSnapshot.docs.length < batchSize) {
+        hasMoreMessages = false;
+      }
+
+      debugPrint('${messagesSnapshot.docs.length} mesaj silindi');
+    }
+  }
 }

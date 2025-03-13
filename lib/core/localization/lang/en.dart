@@ -178,6 +178,7 @@ const Map<String, String> en = {
   'send_message': 'Send Message',
   'report_abuse': 'Report Abuse',
   'comments': 'Comments',
+  'add_comment': 'Add Comment',
   'advert_deleted_successfully': 'Listing successfully deleted',
   // Create Advert
   'create_advert': 'Create Advert',
@@ -252,15 +253,26 @@ const Map<String, String> en = {
   'receive_comment_description': 'Receive a comment on your profile',
   'daily_task_listing_and_message_description': 'Create a listing and send a message',
   'daily_login_description': 'Daily app login',
+  'daily_create_listing_description': 'Create a listing',
+  'daily_send_message_description': 'Send a message',
   'no_daily_task_yet': 'No daily task yet',
   'daily_task_completed': 'Daily task completed! You earned +100 XP',
   'task_completed': 'Task Completed',
   'next_reset': 'Next reset',
+  'completed_tasks': 'Completed tasks',
   'daily_task_login': 'Log in to the app',
   'daily_task_create_listing': 'Create a listing',
   'daily_task_send_message': 'Send a message',
   'notification_daily_tasks_reset_title': 'Daily Tasks Reset',
   'notification_daily_tasks_reset_body': 'New daily tasks are ready! Complete them and earn XP.',
+  'notification_xp_reset_title': 'XP Reset',
+  'notification_xp_reset_body': 'Your XP has been reset. You can start earning XP again.',
+
+  // Reward Notifications
+  'comment_reward_earned': 'You earned +{xp} XP for writing a comment!',
+  'comment_error': 'An error occurred while adding the comment',
+  'comment_received_title': 'New Comment Received!',
+  'comment_received_body': '{commenter} commented on your profile and you earned +{xp} XP!',
 
   // Language Settings
   'language_settings': 'Language Settings',
@@ -298,7 +310,8 @@ const Map<String, String> en = {
   'phone_verification_success': 'Phone number successfully verified',
   'photo_upload_error': 'Photo upload error',
   'profile_updated_successfully': 'Profile updated successfully',
-
+  'delete_account': 'Delete Account',
+  'delete_account_confirmation': 'Are you sure you want to delete your account? This action cannot be undone.',
   // Leaderboard
   'leaderboard': 'Leaderboard',
   'your_rank': 'Your Rank',
@@ -336,8 +349,6 @@ const Map<String, String> en = {
   'notification_next_premium_body': 'Only {xp} XP left for the next premium reward! Create an ad and send a message!',
   'notification_daily_task_reset_title': 'Daily Tasks Reset',
   'notification_daily_task_reset_body': 'Daily tasks have been reset. You can start earning XP by completing new tasks.',
-  'notification_xp_reset_title': 'XP Reset',
-  'notification_xp_reset_body': 'Your XP has been reset. You can start earning XP again.',
 
   // Categories - Enum translations
   'category_coffee_chat': 'Coffee & Chat',
@@ -384,4 +395,12 @@ const Map<String, String> en = {
   'rank_connector': 'Connection Master',
   'rank_leader': 'Event Leader',
   'rank_master': 'Social Master',
+
+  // Location Page
+  'location_search_city_district': 'Search City, District',
+  'location_use_current': 'Use My Current Location',
+
+  // Profile - Daily Task
+  'daily_task_next_reset_time': '24 hours',
+  'daily_tasks_reset_success': 'Daily tasks reset! You can now complete new tasks.',
 };

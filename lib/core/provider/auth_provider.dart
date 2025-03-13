@@ -3,17 +3,23 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:palseapp/core/models/advert.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/services/auth/auth_service.dart';
+import 'package:palseapp/core/services/cloud_storage.dart';
+import 'package:palseapp/core/services/firestore/advert_service.dart';
 import 'package:palseapp/core/services/firestore/customer_service.dart';
 import 'package:palseapp/core/services/notification_service.dart';
+import 'package:palseapp/core/services/chat_service.dart';
 
 // Auth durumunu yöneten provider sınıfı
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService = AuthService();
   final CustomerService _userService = CustomerService();
   final NotificationService _notificationService = NotificationService();
-
+  final AdvertService _advertService = AdvertService();
+  final CloudStorageService _cloudStorageService = CloudStorageService();
+  final ChatService _chatService = ChatService();
   bool _isLoading = true;
   User? _firebaseUser;
   Customer? _user;
@@ -186,12 +192,36 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> deleteAccount() async {
+    _isLoading = true;
+    await _userStreamSubscription?.cancel();
+    _userStreamSubscription = null;
+    notifyListeners();
+
+    try {
+      if (user != null && user!.adverts != null) {
+        for (var advert in user!.adverts!) {
+          await _advertService.deleteAdvert(advert);
+        }
+      }
+      await _userService.deleteAccount(user!.userID!);
+      await _authService.signOut();
+    } catch (e) {
+      debugPrint('Kullanıcı silinirken hata oluştu: $e');
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   // Çıkış yap
   Future<void> logout() async {
     try {
       _isLoading = true;
       notifyListeners();
       await _authService.signOut();
+      await _userService.resetFcmToken(user!.userID!);
     } catch (e) {
       debugPrint('Logout error: $e');
       rethrow;

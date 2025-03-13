@@ -7,6 +7,7 @@ import 'package:palseapp/features/comment/widgets/add_comment_bottom_sheet.dart'
 import 'package:palseapp/features/comment/widgets/comment_card.dart';
 import 'package:palseapp/features/comment/widgets/empty_comment_view.dart';
 import 'package:provider/provider.dart';
+import 'package:palseapp/core/localization/app_localizations.dart';
 
 // Ana yorum görünümü
 class CommentView extends StatelessWidget {
@@ -30,14 +31,14 @@ class CommentView extends StatelessWidget {
     bool isMe = currentUser.userID == customer.userID;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Yorumlar'),
+        title: Text(context.tr('comments')),
       ),
-      body: _buildBody(viewModel),
+      body: _buildBody(context, viewModel),
       bottomNavigationBar: isMe ? null : _buildBottomBar(context, viewModel, currentUser),
     );
   }
 
-  Widget _buildBody(CommentViewModel viewModel) {
+  Widget _buildBody(BuildContext context, CommentViewModel viewModel) {
     if (viewModel.comments.isEmpty) {
       return const EmptyCommentView();
     }
@@ -59,7 +60,7 @@ class CommentView extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: ElevatedButton(
           onPressed: () => _showAddCommentSheet(context, viewModel, currentUser),
-          child: const Text('Yorum Ekle'),
+          child: Text(context.tr('add_comment')),
         ),
       ),
     );
@@ -84,7 +85,9 @@ class CommentView extends StatelessWidget {
         commentDate: DateTime.now(),
       );
       debugPrint('Alınan yorum: ${comment.toString()}');
-      viewModel.addComment(comment);
+
+      // Kullanıcı ID'sini de geçirerek yorum ekleme işlemini başlat
+      viewModel.addComment(comment, currentUser.userID ?? '');
     } else {
       debugPrint('Yorum eklenmedi');
     }

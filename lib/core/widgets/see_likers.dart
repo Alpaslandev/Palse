@@ -1,9 +1,9 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/services/firestore/customer_service.dart';
+import 'package:palseapp/core/widgets/circle_profile_picture.dart';
 import 'package:palseapp/core/widgets/premium_overlay.dart';
 
 class SeeLikersView extends StatelessWidget {
@@ -53,10 +53,8 @@ class SeeLikersView extends StatelessWidget {
 
                             final user = snapshot.data!;
                             return ListTile(
-                              leading: CircleAvatar(
-                                backgroundImage: CachedNetworkImageProvider(
-                                  user.profilePictureUrl ?? '',
-                                ),
+                              leading: CircleProfilePicture(
+                                imageUrl: user.profilePictureUrl ?? '',
                               ),
                               title: Text('${user.firstName} ${user.lastName}'),
                               subtitle: Text(user.nickname ?? ''),

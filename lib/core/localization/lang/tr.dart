@@ -168,6 +168,7 @@ const Map<String, String> tr = {
   'send_message': 'Mesaj Gönder',
   'report_abuse': 'Kötüye Kullanım Bildir',
   'comments': 'Yorumlar',
+  'add_comment': 'Yorum Ekle',
   'advert_deleted_successfully': 'İlan başarıyla silindi',
 
   // Etkinlik Oluşturma
@@ -246,6 +247,8 @@ const Map<String, String> tr = {
   'receive_comment_description': 'Profiline yorum alma',
   'daily_task_listing_and_message_description': 'Bir ilan oluştur ve bir mesaj gönder',
   'daily_login_description': 'Uygulamaya günlük giriş',
+  'daily_create_listing_description': 'Bir ilan oluştur',
+  'daily_send_message_description': 'Bir mesaj gönder',
   'no_daily_task_yet': 'Henüz günlük görevin yok',
   'daily_task_completed': 'Günlük görev tamamlandı! +100 XP kazandın',
   'task_completed': 'Görev Tamamlandı',
@@ -256,6 +259,12 @@ const Map<String, String> tr = {
   'daily_task_send_message': 'Bir mesaj gönder',
   'notification_daily_tasks_reset_title': 'Günlük Görevler Yenilendi',
   'notification_daily_tasks_reset_body': 'Yeni günlük görevler hazır! Hemen tamamla ve XP kazan.',
+
+  // Ödül Bildirimleri
+  'comment_reward_earned': 'Yorum yazdığın için +{xp} XP kazandın!',
+  'comment_error': 'Yorum eklenirken bir hata oluştu',
+  'comment_received_title': 'Yeni Yorum Aldın!',
+  'comment_received_body': '{commenter} profiline yorum yazdı ve +{xp} XP kazandın!',
 
   // Dil Ayarları
   'language_settings': 'Dil Ayarları',
@@ -275,7 +284,8 @@ const Map<String, String> tr = {
   'privacy_policy': 'Gizlilik Politikası',
   'about_us': 'Hakkımızda',
   'app_version': 'Uygulama Versiyonu',
-
+  'delete_account': 'Hesabımı Sil',
+  'delete_account_confirmation': 'Hesabınızı silmek istediğinize emin misiniz? Bu işlem geri alınamaz.',
   // Başarı Bildirimleri
   'notification_task_completed_title': 'Yeni Görev Tamamlandı!',
   'notification_task_completed_body': '{task} görevini tamamladınız ve {xp} XP kazandınız.',
@@ -387,4 +397,12 @@ const Map<String, String> tr = {
   'rank_connector': 'Bağlantı Ustası',
   'rank_leader': ' Etkinlik Lideri',
   'rank_master': 'Sosyal Usta',
+
+  // Konum Sayfası
+  'location_search_city_district': 'Şehir, İlçe Ara',
+  'location_use_current': 'Mevcut Konumumu Kullan',
+
+  // Profil - Günlük Görev
+  'daily_task_next_reset_time': '24 saat',
+  'daily_tasks_reset_success': 'Günlük görevler sıfırlandı! Yeni görevleri tamamlayabilirsiniz.',
 };
