@@ -18,8 +18,7 @@ class AuthProvider extends ChangeNotifier {
   final CustomerService _userService = CustomerService();
   final NotificationService _notificationService = NotificationService();
   final AdvertService _advertService = AdvertService();
-  final CloudStorageService _cloudStorageService = CloudStorageService();
-  final ChatService _chatService = ChatService();
+
   bool _isLoading = true;
   User? _firebaseUser;
   Customer? _user;

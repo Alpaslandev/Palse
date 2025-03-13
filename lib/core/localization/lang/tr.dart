@@ -405,4 +405,10 @@ const Map<String, String> tr = {
   // Profil - Günlük Görev
   'daily_task_next_reset_time': '24 saat',
   'daily_tasks_reset_success': 'Günlük görevler sıfırlandı! Yeni görevleri tamamlayabilirsiniz.',
+
+  // Rapor Etme
+  'please_explain_reason': 'Lütfen şikayet nedeninizi açıklayın',
+  'report_reason_hint': 'Şikayet nedeninizi buraya yazın...',
+  'submit': 'Gönder',
+  'cancel': 'İptal',
 };

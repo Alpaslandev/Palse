@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:palseapp/core/models/comment_model.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/services/firestore/customer_service.dart';
+import 'package:palseapp/core/services/firestore/report_service.dart';
 import 'package:palseapp/features/achievement/achievement_service.dart';
 import 'package:palseapp/core/widgets/scaffold_mess.dart';
 import 'package:palseapp/core/localization/locale_manager.dart';
@@ -11,6 +12,7 @@ import 'package:palseapp/core/services/shared_pref_service.dart';
 class CommentViewModel extends ChangeNotifier {
   final CustomerService _customerService = CustomerService();
   final AchievementService _achievementService = AchievementService();
+  final ReportService _reportService = ReportService();
   final Customer _friendCustomer;
   bool _isLoading = false;
 
@@ -86,11 +88,17 @@ class CommentViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> reportComment(Comment comment) async {
+  Future<void> reportComment(Comment comment, String currentUserId) async {
     _isLoading = true;
     notifyListeners();
     try {
-      await _customerService.reportComment(_friendCustomer.userID!, comment);
+      await _reportService.createReport(Report(
+        reportedUserId: _friendCustomer.userID!,
+        reporterUserId: currentUserId,
+        reportType: ReportType.inappropriateComment.name,
+        description: 'Yorum içerik ihlali',
+        createdAt: DateTime.now().toIso8601String(),
+      ));
     } catch (e) {
       debugPrint('Yorum şikayet etme hatası: $e');
     } finally {

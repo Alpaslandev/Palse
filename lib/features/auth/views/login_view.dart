@@ -262,7 +262,7 @@ class _LoginViewState extends State<LoginView> {
                                       ? null
                                       : () async {
                                           try {
-                                            await authProvider.loginWithGoogle();
+                                            await authProvider.loginWithApple();
                                             if (!context.mounted) return;
                                             ScaffoldMessenger.of(context).showSnackBar(
                                               SnackBar(content: Text(context.tr('login_successful'))),

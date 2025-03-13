@@ -33,12 +33,12 @@ class CommentView extends StatelessWidget {
       appBar: AppBar(
         title: Text(context.tr('comments')),
       ),
-      body: _buildBody(context, viewModel),
+      body: _buildBody(context, viewModel, currentUser),
       bottomNavigationBar: isMe ? null : _buildBottomBar(context, viewModel, currentUser),
     );
   }
 
-  Widget _buildBody(BuildContext context, CommentViewModel viewModel) {
+  Widget _buildBody(BuildContext context, CommentViewModel viewModel, Customer currentUser) {
     if (viewModel.comments.isEmpty) {
       return const EmptyCommentView();
     }
@@ -48,8 +48,10 @@ class CommentView extends StatelessWidget {
       itemCount: viewModel.comments.length,
       itemBuilder: (context, index) => CommentCard(
         comment: viewModel.comments[index],
+        currentUserId: currentUser.userID ?? '',
+        profileOwnerId: customer.userID ?? '',
         onDeleteTap: () => viewModel.deleteComment(viewModel.comments[index]),
-        onReportTap: () => viewModel.reportComment(viewModel.comments[index]),
+        onReportTap: () => viewModel.reportComment(viewModel.comments[index], currentUser.userID ?? ''),
       ),
     );
   }

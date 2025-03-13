@@ -5,12 +5,16 @@ import 'package:palseapp/core/widgets/circle_profile_picture.dart';
 // Yorum kartı widget'ı
 class CommentCard extends StatelessWidget {
   final Comment comment;
+  final String currentUserId;
+  final String profileOwnerId;
   final VoidCallback onDeleteTap;
   final VoidCallback onReportTap;
 
   const CommentCard({
     super.key,
     required this.comment,
+    required this.currentUserId,
+    required this.profileOwnerId,
     required this.onDeleteTap,
     required this.onReportTap,
   });
@@ -62,16 +66,18 @@ class CommentCard extends StatelessWidget {
                     }
                   },
                   itemBuilder: (BuildContext context) => [
-                    PopupMenuItem<String>(
-                      value: 'delete',
-                      child: Row(
-                        children: const [
-                          Icon(Icons.delete, color: Colors.red),
-                          SizedBox(width: 8),
-                          Text('Yorumu Sil'),
-                        ],
+                    // Yorumu yapan kişi veya yorumun yapıldığı profil sahibi ise silme butonu gösterilir
+                    if (comment.commenterID == currentUserId || profileOwnerId == currentUserId)
+                      PopupMenuItem<String>(
+                        value: 'delete',
+                        child: Row(
+                          children: const [
+                            Icon(Icons.delete, color: Colors.red),
+                            SizedBox(width: 8),
+                            Text('Yorumu Sil'),
+                          ],
+                        ),
                       ),
-                    ),
                     PopupMenuItem<String>(
                       value: 'report',
                       child: Row(

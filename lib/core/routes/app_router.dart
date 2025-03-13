@@ -30,7 +30,6 @@ import 'package:palseapp/features/settings/view/settings_view.dart';
 import 'package:palseapp/features/settings/view/widgets/verified_screen.dart';
 import 'package:palseapp/features/splash/splash_view.dart';
 import 'package:palseapp/features/subscription/view/paywall_screen.dart';
-import 'package:palseapp/backup_example.dart';
 
 // Router sınıfını oluştur
 class AppRouter {
@@ -189,12 +188,6 @@ class AppRouter {
               );
             },
           ),
-        ),
-        GoRoute(
-          path: "/$firestoreBackup",
-          name: firestoreBackup,
-          parentNavigatorKey: rootNavigatorKey,
-          builder: (context, state) => const FirestoreBackupExample(),
         ),
         ShellRoute(
           navigatorKey: _shellNavigatorKey,

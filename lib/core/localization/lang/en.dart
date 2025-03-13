@@ -252,7 +252,7 @@ const Map<String, String> en = {
   'write_comment_description': 'Write a comment to someone',
   'receive_comment_description': 'Receive a comment on your profile',
   'daily_task_listing_and_message_description': 'Create a listing and send a message',
-  'daily_login_description': 'Daily app login',
+  'daily_login_description': 'Daily login to the app',
   'daily_create_listing_description': 'Create a listing',
   'daily_send_message_description': 'Send a message',
   'no_daily_task_yet': 'No daily task yet',
@@ -403,4 +403,10 @@ const Map<String, String> en = {
   // Profile - Daily Task
   'daily_task_next_reset_time': '24 hours',
   'daily_tasks_reset_success': 'Daily tasks reset! You can now complete new tasks.',
+
+  // Reporting
+  'please_explain_reason': 'Please explain your reason for reporting',
+  'report_reason_hint': 'Type your report reason here...',
+  'submit': 'Submit',
+  'cancel': 'Cancel',
 };
