@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:palseapp/core/services/firestore/customer_service.dart';
 import 'package:palseapp/core/localization/app_localizations.dart'; // Localization için import
+import 'package:intl_phone_number_field/intl_phone_number_field.dart';
+import 'package:flutter_multi_formatter/flutter_multi_formatter.dart'; // Formatter için import
 
 class VerifiedScreen extends StatefulWidget {
   const VerifiedScreen({super.key});
@@ -40,6 +42,15 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
   // SMS kodu girişi için FocusNode
   final FocusNode _smsFocusNode = FocusNode();
 
+  // Telefon numarası için IntPhoneNumber
+  IntPhoneNumber _phoneNumber = IntPhoneNumber(code: "TR", dial_code: "+90", number: "");
+
+  // Form key doğrulama için
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  // Telefon numarası geçerli mi?
+  bool _isPhoneValid = false;
+
   @override
   void initState() {
     super.initState();
@@ -66,35 +77,36 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
   }
 
   // Telefon numarasını formatla
-  String _formatPhoneNumber(String rawPhoneNumber) {
+  String _formatPhoneNumber(IntPhoneNumber phoneNumber) {
     // Telefon numarasını formatlayalım
-    String phoneNumber = rawPhoneNumber.trim();
+    if (phoneNumber.rawNumber.isEmpty) {
+      return "";
+    }
 
-    // Tüm boşlukları ve artı işaretlerini kaldıralım
-    phoneNumber = phoneNumber.replaceAll(' ', '').replaceAll('+', '');
-
-    // Tek bir artı işareti ekleyelim başına
-    phoneNumber = '+$phoneNumber';
-
-    return phoneNumber;
+    // rawDialCode ve rawNumber'ı birleştirerek tam telefon numarasını oluştur
+    // + işareti olmadan alan kodu ve numarayı birleştir
+    return phoneNumber.rawDialCode + phoneNumber.rawNumber;
   }
 
   // Telefon numarası doğrulama işlemi
   Future<void> _verifyPhoneNumber() async {
-    // Debug mesajı ekleyelim
-    debugPrint('Telefon doğrulama başlatılıyor: ${_phoneController.text}');
+    // Form doğrulamasını kontrol et
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
 
-    // Geçerli bir numara kontrolü yapalım
-    String? validationError = _validatePhoneNumber(_phoneController.text);
-    if (validationError != null) {
+    if (!_isPhoneValid) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(validationError)),
+        SnackBar(content: Text(context.tr('please_enter_phone'))),
       );
       return;
     }
 
-    // Telefon numarasını formatlayalım
-    _formattedPhoneNumber = _formatPhoneNumber(_phoneController.text);
+    // Debug mesajı ekleyelim
+    debugPrint('Telefon doğrulama başlatılıyor: ${_phoneNumber.rawFullNumber}');
+
+    // Telefon numarasını formatlayalım - + işareti ile başlayacak şekilde
+    _formattedPhoneNumber = "+" + _formatPhoneNumber(_phoneNumber);
     debugPrint('Formatlanmış telefon numarası: $_formattedPhoneNumber');
 
     if (!mounted) return;
@@ -331,28 +343,32 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
     }
   }
 
-  // Telefon numarası formatını kontrol et
-  String? _validatePhoneNumber(String? value) {
-    if (value == null || value.isEmpty) {
+  // Telefon numarası formatını kontrol et - artık pakete bırakıyoruz
+  String? _validatePhoneNumber(IntPhoneNumber number) {
+    if (number.number.isEmpty) {
+      _isPhoneValid = false;
       return context.tr('please_enter_phone');
     }
 
-    // Boşlukları kaldır
-    String cleanValue = value.trim();
+    // IntPhoneNumber'ın alanlarını kontrol edelim
+    debugPrint('Validasyon - Numara: ${number.number}');
+    debugPrint('Validasyon - Alan Kodu: ${number.dial_code}');
+    debugPrint('Validasyon - Ülke Kodu: ${number.code}');
+    debugPrint('Validasyon - Raw Number: ${number.rawNumber}');
 
-    // Sadece rakam ve + işareti kontrolü (daha esnek)
-    final validChars = RegExp(r'[0-9+ ]');
-    for (int i = 0; i < cleanValue.length; i++) {
-      if (!validChars.hasMatch(cleanValue[i])) {
-        return context.tr('invalid_characters');
-      }
+    // Eğer numara gerçekten boşsa
+    if (number.rawNumber.isEmpty) {
+      _isPhoneValid = false;
+      return context.tr('please_enter_phone');
     }
 
-    // Minimum uzunluk kontrolü
-    if (cleanValue.replaceAll(' ', '').length < 10) {
+    // Minimum uzunluk kontrolü (ülkeye göre değişebilir, genel olarak 7-10 arası)
+    if (number.rawNumber.length < 7) {
+      _isPhoneValid = false;
       return context.tr('phone_too_short');
     }
 
+    _isPhoneValid = true;
     return null;
   }
 
@@ -366,7 +382,7 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
 
     // Telefon numarası kontrolü
     if (_formattedPhoneNumber.isEmpty) {
-      _formattedPhoneNumber = _formatPhoneNumber(_phoneController.text);
+      _formattedPhoneNumber = "+" + _formatPhoneNumber(_phoneNumber);
     }
 
     debugPrint('Yeniden kod gönderiliyor: $_formattedPhoneNumber');
@@ -490,73 +506,115 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
             ),
             child: Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  TextFormField(
-                    controller: _phoneController,
-                    decoration: InputDecoration(
-                      labelText: context.tr('phone_number'),
-                      hintText: context.tr('phone_number_hint'),
-                      prefixIcon: const Icon(Icons.phone),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+              child: Form(
+                key: _formKey,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // TextFormField yerine InternationalPhoneNumberInput kullanıyoruz
+                    InternationalPhoneNumberInput(
+                      height: 60,
+                      controller: _phoneController,
+                      initCountry: CountryCodeModel(name: "Turkey", dial_code: "+90", code: "TR"),
+                      onInputChanged: (phone) {
+                        setState(() {
+                          _phoneNumber = phone;
+                          // Validator'ı çağır
+                          _validatePhoneNumber(phone);
+                        });
+                        debugPrint('Telefon: ${phone.rawFullNumber}');
+                        debugPrint('Alan Kodu: ${phone.rawDialCode}');
+                        debugPrint('Numara: ${phone.rawNumber}');
+                      },
+                      formatter: MaskedInputFormatter('### ### ## ##'),
+                      validator: _validatePhoneNumber,
+                      phoneConfig: PhoneConfig(
+                        focusedColor: colorScheme.primary,
+                        enabledColor: colorScheme.primary,
+                        errorColor: colorScheme.error,
+                        radius: 12,
+                        hintText: context.tr('phone_number_hint'),
+                        borderWidth: 2,
+                        backgroundColor: theme.inputDecorationTheme.fillColor,
+                        textStyle: theme.textTheme.bodyLarge!,
+                        hintStyle: TextStyle(
+                          color: theme.hintColor,
+                          fontSize: 16,
+                        ),
+                        errorStyle: TextStyle(
+                          color: colorScheme.error,
+                          fontSize: 12,
+                        ),
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                        popUpErrorText: true,
                       ),
-                      filled: true,
-                      // Theme'dan dolgu rengini al
-                      fillColor: theme.inputDecorationTheme.fillColor,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
+                      countryConfig: CountryConfig(
+                        decoration: BoxDecoration(
+                          border: Border.all(width: 2, color: colorScheme.primary.withOpacity(0.5)),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        textStyle: theme.textTheme.bodyLarge!,
+                      ),
+                      dialogConfig: DialogConfig(
+                        backgroundColor: theme.scaffoldBackgroundColor,
+                        searchBoxBackgroundColor: theme.inputDecorationTheme.fillColor!,
+                        searchBoxIconColor: colorScheme.primary,
+                        topBarColor: colorScheme.primary,
+                        selectedItemColor: colorScheme.primaryContainer,
+                        textStyle: theme.textTheme.bodyMedium,
+                        searchBoxTextStyle: theme.textTheme.bodyMedium,
+                        titleStyle: theme.textTheme.titleLarge,
+                        searchBoxHintStyle: TextStyle(
+                          color: theme.hintColor,
+                          fontSize: 14,
+                        ),
                       ),
                     ),
-                    keyboardType: TextInputType.phone,
-                    validator: _validatePhoneNumber,
-                    onChanged: (value) {
-                      setState(() {});
-                    },
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    context.tr('phone_number_info'),
-                    style: theme.textTheme.labelSmall,
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: _isLoading ? null : _verifyPhoneNumber,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      backgroundColor: colorScheme.primary,
-                      foregroundColor: colorScheme.onPrimary,
+                    const SizedBox(height: 8),
+                    Text(
+                      context.tr('phone_number_info'),
+                      style: theme.textTheme.labelSmall,
                     ),
-                    child: _isLoading
-                        ? Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: colorScheme.onPrimary,
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: _isLoading ? null : (_isPhoneValid ? _verifyPhoneNumber : null),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        backgroundColor: colorScheme.primary,
+                        foregroundColor: colorScheme.onPrimary,
+                        disabledBackgroundColor: colorScheme.primary.withOpacity(0.5),
+                        disabledForegroundColor: colorScheme.onPrimary.withOpacity(0.7),
+                      ),
+                      child: _isLoading
+                          ? Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: colorScheme.onPrimary,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                context.tr('sending'),
-                                style: const TextStyle(fontSize: 16),
-                              ),
-                            ],
-                          )
-                        : Text(
-                            context.tr('send_verification_code'),
-                            style: const TextStyle(fontSize: 16),
-                          ),
-                  ),
-                ],
+                                const SizedBox(width: 12),
+                                Text(
+                                  context.tr('sending'),
+                                  style: const TextStyle(fontSize: 16),
+                                ),
+                              ],
+                            )
+                          : Text(
+                              context.tr('send_verification_code'),
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
