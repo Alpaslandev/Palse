@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -26,6 +27,9 @@ import 'package:palseapp/core/widgets/scaffold_mess.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+  ]);
 
   // Firebase'i güvenli şekilde başlat
   try {
@@ -57,7 +61,8 @@ void main() async {
   final notificationService = NotificationService();
   await notificationService.initialize();
 
-  AppRouter.initialize(authProvider);
+  final adsProvider = AdsProvider();
+  AppRouter.initialize(authProvider, adsProvider);
 
   // Locale provider'ı başlat
   final localeProvider = LocaleProvider();
@@ -76,7 +81,6 @@ void main() async {
 
   final subscriptionProvider = SubscriptionProvider();
   final themeProvider = ThemeProvider();
-  final adsProvider = AdsProvider();
   await SharedPrefService.init();
 
   // Achievement servisini başlat (günlük görevleri kontrol et)

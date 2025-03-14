@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
+import 'package:palseapp/core/provider/ads_provider.dart';
 import 'package:palseapp/core/widgets/faq_page.dart';
 import 'package:palseapp/core/widgets/landing_view.dart';
 import 'package:palseapp/core/widgets/notification_view.dart';
@@ -31,6 +32,245 @@ import 'package:palseapp/features/settings/view/widgets/verified_screen.dart';
 import 'package:palseapp/features/splash/splash_view.dart';
 import 'package:palseapp/features/subscription/view/paywall_screen.dart';
 
+// Navigasyon gözlemcisi sınıfı
+class _NavigationObserver extends NavigatorObserver {
+  final AdsProvider adsProvider;
+  final String splashPath;
+  final String loginPath;
+  final String profileSetupPath;
+
+  // Reklam gösterilmeyecek sayfalar
+  final List<String> _excludedRoutes = [
+    splash,
+    login,
+    profileSetup,
+    paywall, // Ödeme sayfasında reklam gösterme
+    settings, // Ayarlar sayfasında reklam gösterme
+    notification, // Bildirim sayfasında reklam gösterme
+    messages, // Mesajlar sayfasında reklam gösterme
+    chats, // Sohbetler sayfasında reklam gösterme
+  ];
+
+  // Her zaman reklam gösterilecek sayfalar (önemli içerik sayfaları)
+  final List<String> _priorityRoutes = [
+    friendProfile, // Arkadaş profili sayfasında her zaman reklam göster
+    myAdverts, // İlanlarım sayfasında her zaman reklam göster
+    categories, // Kategoriler sayfasında her zaman reklam göster
+  ];
+
+  _NavigationObserver(this.adsProvider, this.splashPath, this.loginPath, this.profileSetupPath);
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    super.didPush(route, previousRoute);
+    try {
+      debugPrint('🔍 NAVIGASYON: didPush - ${_getRouteInfo(route)}');
+      if (previousRoute != null) {
+        debugPrint('🔍 NAVIGASYON: önceki sayfa - ${_getRouteInfo(previousRoute)}');
+      }
+      _maybeShowAd(route, previousRoute);
+    } catch (e) {
+      debugPrint('❌ NAVIGASYON HATASI (didPush): $e');
+    }
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    super.didPop(route, previousRoute);
+    try {
+      debugPrint('🔍 NAVIGASYON: didPop - ${_getRouteInfo(route)}');
+      if (previousRoute != null) {
+        debugPrint('🔍 NAVIGASYON: geri dönülen sayfa - ${_getRouteInfo(previousRoute)}');
+        // Geri dönüşlerde reklam göstermeyi devre dışı bırakıyoruz
+        // Eğer geri dönüşlerde de reklam göstermek isterseniz, aşağıdaki satırı aktif edebilirsiniz
+        // _maybeShowAd(previousRoute, route);
+      }
+    } catch (e) {
+      debugPrint('❌ NAVIGASYON HATASI (didPop): $e');
+    }
+  }
+
+  @override
+  void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    super.didRemove(route, previousRoute);
+    try {
+      debugPrint('🔍 NAVIGASYON: didRemove - ${_getRouteInfo(route)}');
+      if (previousRoute != null) {
+        debugPrint('🔍 NAVIGASYON: aktif sayfa - ${_getRouteInfo(previousRoute)}');
+      }
+    } catch (e) {
+      debugPrint('❌ NAVIGASYON HATASI (didRemove): $e');
+    }
+  }
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
+    super.didReplace(newRoute: newRoute, oldRoute: oldRoute);
+    try {
+      if (newRoute != null) {
+        debugPrint('🔍 NAVIGASYON: didReplace - ${_getRouteInfo(newRoute)}');
+        if (oldRoute != null) {
+          debugPrint('🔍 NAVIGASYON: eski sayfa - ${_getRouteInfo(oldRoute)}');
+        }
+        _maybeShowAd(newRoute, oldRoute);
+      }
+    } catch (e) {
+      debugPrint('❌ NAVIGASYON HATASI (didReplace): $e');
+    }
+  }
+
+  // Rota bilgilerini string olarak döndüren yardımcı metod
+  String _getRouteInfo(Route<dynamic> route) {
+    final name = route.settings.name ?? 'isimsiz';
+    final arguments = route.settings.arguments != null ? '(argümanlar var)' : '(argüman yok)';
+    return '$name $arguments';
+  }
+
+  // Reklam gösterme mantığı
+  void _maybeShowAd(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    try {
+      // Rota adını al (eğer varsa)
+      final String? routeName = route.settings.name;
+      if (routeName == null) {
+        debugPrint('🚫 Reklam gösterilmedi: Rota adı bulunamadı');
+        return;
+      }
+
+      debugPrint('🔍 Rota adı: $routeName');
+
+      // Chat ve mesaj sayfaları için özel kontrol
+      if (_isChatOrMessageRoute(routeName)) {
+        debugPrint('🚫 Reklam gösterilmedi: Chat veya mesaj sayfası');
+        return;
+      }
+
+      // Derin URL yolları için kontrol (örn: "/chats/abc123?otherId=xyz")
+      final bool isDeepUrl = routeName.contains('?') || (routeName.contains('/') && routeName.lastIndexOf('/') > 0);
+      if (isDeepUrl) {
+        debugPrint('🔍 Derin URL yolu tespit edildi: $routeName');
+
+        // Derin URL yollarında reklam göstermeyi atla
+        // Bu, chat gibi alt sayfalarda sorun yaşamamak için
+        if (routeName.contains('/chats/') || routeName.contains('/messages/')) {
+          debugPrint('🚫 Reklam gösterilmedi: Derin chat/mesaj URL yolu');
+          return;
+        }
+      }
+
+      // Rota adından sayfa adını çıkar (örn: "/home" -> "home")
+      final String pageName = _extractPageName(routeName);
+      debugPrint('🔍 Sayfa adı: $pageName');
+
+      // Hariç tutulan sayfalarda reklam gösterme
+      if (_excludedRoutes.contains(pageName)) {
+        debugPrint('🚫 Reklam gösterilmedi: "$pageName" sayfası hariç tutulan sayfalar listesinde');
+        return;
+      }
+
+      // Önceki sayfadan aynı sayfaya geçişlerde reklam gösterme
+      if (previousRoute != null && previousRoute.settings.name != null) {
+        final previousPageName = _extractPageName(previousRoute.settings.name!);
+        debugPrint('🔍 Önceki sayfa adı: $previousPageName');
+
+        if (previousPageName == pageName) {
+          debugPrint('🚫 Reklam gösterilmedi: Aynı sayfaya geçiş yapıldı ($pageName)');
+          return;
+        }
+
+        // Chat sayfasından mesaj sayfasına geçişlerde reklam gösterme
+        if (_isChatRelatedTransition(previousPageName, pageName)) {
+          debugPrint('🚫 Reklam gösterilmedi: Chat ile ilgili geçiş ($previousPageName -> $pageName)');
+          return;
+        }
+      }
+
+      // Öncelikli sayfalarda her zaman reklam göster
+      if (_priorityRoutes.contains(pageName)) {
+        debugPrint('🎯 Reklam gösteriliyor: "$pageName" öncelikli sayfa');
+        _safeShowAd();
+        return;
+      }
+
+      // Diğer sayfalarda normal reklam gösterme mantığı ile devam et
+      debugPrint('🔄 Reklam gösterme denemesi: "$pageName" sayfası için normal reklam mantığı');
+      _safeShowAd();
+    } catch (e) {
+      debugPrint('❌ Reklam gösterme hatası: $e');
+    }
+  }
+
+  // Chat veya mesaj sayfası olup olmadığını kontrol eden yardımcı metod
+  bool _isChatOrMessageRoute(String routeName) {
+    // Tam eşleşme kontrolü
+    if (routeName == "/$chats" || routeName == "/$messages") {
+      return true;
+    }
+
+    // Alt sayfa kontrolü
+    if (routeName.startsWith("/$chats/") || routeName.contains("/$messages/") || routeName.contains("?otherId=")) {
+      return true;
+    }
+
+    return false;
+  }
+
+  // Chat ile ilgili geçiş olup olmadığını kontrol eden yardımcı metod
+  bool _isChatRelatedTransition(String previousPage, String currentPage) {
+    // Chat sayfasından mesaj sayfasına veya tersi
+    if ((previousPage == chats && currentPage == messages) || (previousPage == messages && currentPage == chats)) {
+      return true;
+    }
+
+    return false;
+  }
+
+  // Güvenli reklam gösterme metodu
+  void _safeShowAd() {
+    try {
+      final result = adsProvider.showInterstitialAd();
+      result.then((shown) {
+        if (shown) {
+          debugPrint('✅ Reklam gösterildi');
+        } else {
+          debugPrint('❌ Reklam gösterilemedi: Muhtemelen zaman aralığı dolmadı veya reklam hazır değil');
+        }
+      }).catchError((error) {
+        debugPrint('❌ Reklam gösterme hatası: $error');
+      });
+    } catch (e) {
+      debugPrint('❌ Reklam gösterme hatası: $e');
+    }
+  }
+
+  // URL'den sayfa adını çıkaran yardımcı metod
+  String _extractPageName(String routeName) {
+    try {
+      // Başındaki "/" karakterini kaldır
+      if (routeName.startsWith('/')) {
+        routeName = routeName.substring(1);
+      }
+
+      // Parametreleri kaldır (örn: "messages/123?otherId=456" -> "messages")
+      int paramIndex = routeName.indexOf('/');
+      if (paramIndex > 0) {
+        routeName = routeName.substring(0, paramIndex);
+      }
+
+      // Query parametrelerini kaldır (örn: "messages?otherId=456" -> "messages")
+      paramIndex = routeName.indexOf('?');
+      if (paramIndex > 0) {
+        routeName = routeName.substring(0, paramIndex);
+      }
+
+      return routeName;
+    } catch (e) {
+      debugPrint('❌ Sayfa adı çıkarma hatası: $e, orijinal rota: $routeName');
+      // Hata durumunda orijinal rotayı döndür
+      return routeName;
+    }
+  }
+}
+
 // Router sınıfını oluştur
 class AppRouter {
   // NavigatorKey'i public yapalım
@@ -39,13 +279,15 @@ class AppRouter {
 
   // Tek bir AuthProvider instance'ı tutacağız
   static late final AuthProvider _authProvider;
+  static late final AdsProvider _adsProvider;
 
   // Router instance'ı oluştur
   static late final GoRouter router;
 
   // Router'ı initialize et
-  static void initialize(AuthProvider authProvider) {
+  static void initialize(AuthProvider authProvider, AdsProvider adsProvider) {
     _authProvider = authProvider;
+    _adsProvider = adsProvider;
 
     router = GoRouter(
       navigatorKey: rootNavigatorKey,
@@ -54,6 +296,45 @@ class AppRouter {
       refreshListenable: _authProvider,
       redirect: _handleRedirect,
       extraCodec: CustomGoRouterCodec(),
+      observers: [
+        _NavigationObserver(_adsProvider, "/$splash", "/$login", "/$profileSetup"),
+      ],
+      errorBuilder: (context, state) {
+        debugPrint('❌ ROUTER HATASI: ${state.error}');
+        debugPrint('❌ ROUTER HATASI URI: ${state.uri}');
+
+        Future.delayed(const Duration(milliseconds: 100), () {
+          if (context.mounted) {
+            GoRouter.of(context).go('/$home');
+          }
+        });
+
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Sayfa Bulunamadı'),
+          ),
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                const SizedBox(height: 16),
+                const Text(
+                  'Sayfa bulunamadı',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Text('İstenen sayfa: ${state.uri.path}'),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () => GoRouter.of(context).go('/$home'),
+                  child: const Text('Ana Sayfaya Dön'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
       routes: [
         GoRoute(
           path: "/$splash",
@@ -281,68 +562,88 @@ class AppRouter {
   }
 
   static String? _handleRedirect(BuildContext context, GoRouterState state) {
-    debugPrint('Redirect Check:');
-    debugPrint('Current Location: ${state.matchedLocation}');
-    debugPrint('Is Loading: ${_authProvider.isLoading}');
-    debugPrint('Is Authenticated: ${_authProvider.isAuthenticated}');
-    debugPrint('Is Profile Setup Completed: ${_authProvider.isProfileSetupCompleted}');
-    debugPrint('Is Firestore Data Loaded: ${_authProvider.isFirestoreDataLoaded}');
+    try {
+      debugPrint('🔄 YÖNLENDİRME KONTROLÜ:');
+      debugPrint('📍 Mevcut Konum: ${state.matchedLocation}');
+      debugPrint('📍 URI: ${state.uri}');
+      debugPrint('📍 Tam URI: ${state.uri.toString()}');
+      debugPrint('📍 Path Parametreleri: ${state.pathParameters}');
+      debugPrint('📍 Query Parametreleri: ${state.uri.queryParameters}');
+      debugPrint('📍 Extra: ${state.extra != null ? 'Var' : 'Yok'}');
 
-    final isSplashScreen = state.matchedLocation == '/$splash';
-    final isAuthRoute = state.matchedLocation.startsWith('/$login');
-    final isUserSetupRoute = state.matchedLocation.startsWith('/$profileSetup');
+      debugPrint('👤 Kullanıcı Durumu:');
+      debugPrint('👤 Yükleniyor: ${_authProvider.isLoading}');
+      debugPrint('👤 Giriş Yapılmış: ${_authProvider.isAuthenticated}');
+      debugPrint('👤 Profil Kurulumu Tamamlanmış: ${_authProvider.isProfileSetupCompleted}');
+      debugPrint('👤 Firestore Verileri Yüklenmiş: ${_authProvider.isFirestoreDataLoaded}');
 
-    // Loading durumunda redirect yok - Firestore verilerinin yüklenmesini bekle
-    if (_authProvider.isLoading) {
-      debugPrint('Hala yükleniyor, yönlendirme yapılmıyor');
-      return null;
-    }
+      final isSplashScreen = state.matchedLocation == '/$splash';
+      final isAuthRoute = state.matchedLocation.startsWith('/$login');
+      final isUserSetupRoute = state.matchedLocation.startsWith('/$profileSetup');
 
-    final isAuthenticated = _authProvider.isAuthenticated;
-    final isProfileSetup = _authProvider.isProfileSetupCompleted;
-
-    // Splash screen özel durumu
-    if (isSplashScreen) {
-      if (!isAuthenticated) {
-        debugPrint('Splash -> Login yönlendirmesi');
-        return '/$login';
+      // Loading durumunda redirect yok - Firestore verilerinin yüklenmesini bekle
+      if (_authProvider.isLoading) {
+        debugPrint('⏳ Hala yükleniyor, yönlendirme yapılmıyor');
+        return null;
       }
-      if (isAuthenticated && !isProfileSetup) {
-        debugPrint('Splash -> Profile Setup yönlendirmesi');
-        return '/$profileSetup';
-      }
-      debugPrint('Splash -> Home yönlendirmesi');
-      return '/$home';
-    }
 
-    // 1. Kullanıcı giriş yapmamışsa
-    if (!isAuthenticated) {
-      // Eğer zaten auth route'daysa, orada kal
-      if (isAuthRoute) return null;
-      // Değilse login'e yönlendir
-      debugPrint('Kullanıcı giriş yapmamış -> Login yönlendirmesi');
-      return '/$login';
-    }
+      final isAuthenticated = _authProvider.isAuthenticated;
+      final isProfileSetup = _authProvider.isProfileSetupCompleted;
 
-    // 2. Kullanıcı giriş yapmış ama profil kurulumu tamamlanmamışsa
-    if (isAuthenticated && !isProfileSetup) {
-      // Eğer zaten profil kurulum sayfasındaysa, orada kal
-      if (isUserSetupRoute) return null;
-      // Değilse profil kurulum sayfasına yönlendir
-      debugPrint('Kullanıcı giriş yapmış ama profil kurulumu tamamlanmamış -> Profile Setup yönlendirmesi');
-      return '/$profileSetup';
-    }
-
-    // 3. Kullanıcı giriş yapmış ve profil kurulumu tamamlanmışsa
-    if (isAuthenticated && isProfileSetup) {
-      // Eğer auth route veya profil kurulum sayfasındaysa, ana sayfaya yönlendir
-      if (isAuthRoute || isUserSetupRoute || isSplashScreen) {
-        debugPrint('Kullanıcı giriş yapmış ve profil kurulumu tamamlanmış -> Home yönlendirmesi');
+      // Splash screen özel durumu
+      if (isSplashScreen) {
+        if (!isAuthenticated) {
+          debugPrint('🔀 Splash -> Login yönlendirmesi');
+          return '/$login';
+        }
+        if (isAuthenticated && !isProfileSetup) {
+          debugPrint('🔀 Splash -> Profile Setup yönlendirmesi');
+          return '/$profileSetup';
+        }
+        debugPrint('🔀 Splash -> Home yönlendirmesi');
         return '/$home';
       }
-    }
 
-    return null;
+      // 1. Kullanıcı giriş yapmamışsa
+      if (!isAuthenticated) {
+        // Eğer zaten auth route'daysa, orada kal
+        if (isAuthRoute) {
+          debugPrint('🔒 Kullanıcı zaten login sayfasında, yönlendirme yok');
+          return null;
+        }
+        // Değilse login'e yönlendir
+        debugPrint('🔒 Kullanıcı giriş yapmamış -> Login yönlendirmesi');
+        return '/$login';
+      }
+
+      // 2. Kullanıcı giriş yapmış ama profil kurulumu tamamlanmamışsa
+      if (isAuthenticated && !isProfileSetup) {
+        // Eğer zaten profil kurulum sayfasındaysa, orada kal
+        if (isUserSetupRoute) {
+          debugPrint('👤 Kullanıcı zaten profil kurulum sayfasında, yönlendirme yok');
+          return null;
+        }
+        // Değilse profil kurulum sayfasına yönlendir
+        debugPrint('👤 Kullanıcı giriş yapmış ama profil kurulumu tamamlanmamış -> Profile Setup yönlendirmesi');
+        return '/$profileSetup';
+      }
+
+      // 3. Kullanıcı giriş yapmış ve profil kurulumu tamamlanmışsa
+      if (isAuthenticated && isProfileSetup) {
+        // Eğer auth route veya profil kurulum sayfasındaysa, ana sayfaya yönlendir
+        if (isAuthRoute || isUserSetupRoute || isSplashScreen) {
+          debugPrint('🏠 Kullanıcı giriş yapmış ve profil kurulumu tamamlanmış -> Home yönlendirmesi');
+          return '/$home';
+        }
+      }
+
+      debugPrint('✅ Yönlendirme yok, normal navigasyona devam ediliyor');
+      return null;
+    } catch (e) {
+      debugPrint('❌ YÖNLENDİRME HATASI: $e');
+      // Hata durumunda yönlendirme yapma
+      return null;
+    }
   }
 
   // Private constructor ile instance oluşturmayı engelle

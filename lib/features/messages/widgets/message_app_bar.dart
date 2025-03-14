@@ -11,11 +11,13 @@ import 'package:palseapp/features/messages/viewmodel/messages_view_model.dart';
 class MessageAppBar extends StatelessWidget implements PreferredSizeWidget {
   final MessagesViewModel vm;
   final String otherUserId;
+  final List<Widget>? actions;
 
   const MessageAppBar({
     super.key,
     required this.vm,
     required this.otherUserId,
+    this.actions,
   });
 
   @override
@@ -32,6 +34,7 @@ class MessageAppBar extends StatelessWidget implements PreferredSizeWidget {
         icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
         onPressed: () => Navigator.pop(context),
       ),
+      actions: actions,
       titleSpacing: 0,
       title: StreamBuilder<Customer?>(
         stream: vm.getUserInfo(otherUserId),

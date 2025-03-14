@@ -1,0 +1,1 @@
+/Users/okanerdincarslan/AndroidStudioProjects/palseapp/build/app/intermediates/cxx/RelWithDebInfo/3y4f5821/obj/x86

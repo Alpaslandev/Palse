@@ -143,10 +143,19 @@ class _CreateAdvertViewState extends State<CreateAdvertView> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (viewModel.advertImage != null)
-              Image.asset(
-                viewModel.advertImage!.path,
-                height: 200,
-                fit: BoxFit.cover,
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: viewModel.advertImage!.path.startsWith('assets/')
+                    ? Image.asset(
+                        viewModel.advertImage!.path,
+                        height: 200,
+                        fit: BoxFit.cover,
+                      )
+                    : Image.file(
+                        viewModel.advertImage!,
+                        height: 200,
+                        fit: BoxFit.cover,
+                      ),
               ),
             const SizedBox(height: 16),
             ElevatedButton.icon(

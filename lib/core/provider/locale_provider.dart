@@ -2,8 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LocaleProvider extends ChangeNotifier {
-  Locale _locale = const Locale('tr', 'TR'); // Varsayılan olarak Türkçe
+  // Varsayılan olarak cihaz dili, desteklenmiyorsa İngilizce
+  Locale _locale = const Locale('en', 'US');
   static const String _localeKey = 'locale';
+
+  // Desteklenen diller listesi
+  static const List<Locale> supportedLocales = [
+    Locale('tr', 'TR'),
+    Locale('en', 'US'),
+  ];
 
   Locale get locale => _locale;
 
@@ -13,13 +20,33 @@ class LocaleProvider extends ChangeNotifier {
     final savedLocale = prefs.getString(_localeKey);
 
     if (savedLocale != null) {
+      // Kaydedilmiş dil varsa onu kullan
       final parts = savedLocale.split('_');
       if (parts.length == 2) {
         _locale = Locale(parts[0], parts[1]);
       }
+    } else {
+      // Kaydedilmiş dil yoksa cihaz dilini kontrol et
+      final deviceLocale = WidgetsBinding.instance.window.locale;
+
+      // Cihaz dili destekleniyorsa onu kullan
+      if (isLocaleSupported(deviceLocale)) {
+        _locale = deviceLocale;
+      } else {
+        // Desteklenmiyorsa İngilizce kullan
+        _locale = const Locale('en', 'US');
+      }
+
+      // Seçilen dili kaydet
+      await prefs.setString(_localeKey, '${_locale.languageCode}_${_locale.countryCode}');
     }
 
     notifyListeners();
+  }
+
+  // Verilen dilin desteklenip desteklenmediğini kontrol et
+  bool isLocaleSupported(Locale locale) {
+    return supportedLocales.any((supportedLocale) => supportedLocale.languageCode == locale.languageCode);
   }
 
   // Dili değiştir

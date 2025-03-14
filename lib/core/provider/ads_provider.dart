@@ -8,7 +8,6 @@ class AdsProvider extends ChangeNotifier {
 
   // Gerçek ortam için reklam ID'leri (sonradan değiştirilecek)
   static const String _interstitialAdUnitId = kDebugMode ? _testInterstitialAdUnitId : 'ca-app-pub-4607763683457173/8618320377';
-
   static const String _rewardedAdUnitId = kDebugMode ? _testRewardedAdUnitId : 'ca-app-pub-4607763683457173/9060091931';
 
   // Geçiş reklamı için değişkenler
@@ -18,6 +17,10 @@ class AdsProvider extends ChangeNotifier {
   // Ödüllü reklam için değişkenler
   RewardedAd? _rewardedAd;
   bool _isRewardedAdReady = false;
+
+  // Reklam gösterim zaman kontrolü için değişken
+  DateTime? _lastInterstitialAdShow;
+  static const int _minimumSecondsBetweenAds = 120; // İki reklam arası minimum süre
 
   bool get isInterstitialAdReady => _isInterstitialAdReady;
   bool get isRewardedAdReady => _isRewardedAdReady;
@@ -113,6 +116,17 @@ class AdsProvider extends ChangeNotifier {
 
   // Geçiş reklamını göster
   Future<bool> showInterstitialAd() async {
+    // Reklam gösterim zaman kontrolü
+    if (_lastInterstitialAdShow != null) {
+      final difference = DateTime.now().difference(_lastInterstitialAdShow!);
+      if (difference.inSeconds < _minimumSecondsBetweenAds) {
+        if (kDebugMode) {
+          print('Son reklam gösteriminden bu yana $_minimumSecondsBetweenAds saniye geçmedi');
+        }
+        return false;
+      }
+    }
+
     if (!_isInterstitialAdReady || _interstitialAd == null) {
       // Reklam hazır değilse yüklemeyi dene ve false döndür
       _loadInterstitialAd();
@@ -121,6 +135,7 @@ class AdsProvider extends ChangeNotifier {
 
     // Reklamı göster
     await _interstitialAd!.show();
+    _lastInterstitialAdShow = DateTime.now(); // Son gösterim zamanını güncelle
     _isInterstitialAdReady = false;
     notifyListeners();
     return true;

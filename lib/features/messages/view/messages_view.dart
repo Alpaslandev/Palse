@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/models/chat_model.dart';
+import 'package:palseapp/core/services/firestore/report_service.dart';
+import 'package:palseapp/core/widgets/scaffold_mess.dart';
 import 'package:palseapp/features/achievement/achievement_service.dart';
 import 'package:palseapp/features/achievement/achievements.dart';
 import 'package:palseapp/features/messages/widgets/message_app_bar.dart';
@@ -112,10 +114,15 @@ class _MessagesViewState extends State<MessagesView> {
 
   @override
   Widget build(BuildContext context) {
-    final user = Provider.of<AuthProvider>(context, listen: false).user;
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final user = authProvider.user;
     final senderName = user?.firstName ?? '';
     final isPremium = user?.isPremium ?? false;
     final theme = Theme.of(context);
+
+    // Kullanıcının engellediği kişilerin listesi
+    final blockedUsers = user?.blockUsers ?? [];
+    final isUserBlocked = blockedUsers.contains(widget.otherUserId);
 
     return ChangeNotifierProvider.value(
       value: _viewModel,
@@ -128,6 +135,42 @@ class _MessagesViewState extends State<MessagesView> {
             appBar: MessageAppBar(
               vm: vm,
               otherUserId: widget.otherUserId,
+              // Engelleme butonu için ekstra parametre
+              actions: [
+                PopupMenuButton<String>(
+                  onSelected: (value) async {
+                    if (value == 'block') {
+                      _blockUser(context, authProvider);
+                    } else if (value == 'unblock') {
+                      _unblockUser(context, authProvider);
+                    }
+                  },
+                  itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                    if (!isUserBlocked)
+                      PopupMenuItem<String>(
+                        value: 'block',
+                        child: Row(
+                          children: [
+                            Icon(Icons.block, color: Colors.orange),
+                            SizedBox(width: 8),
+                            Text(context.tr('block_user')),
+                          ],
+                        ),
+                      )
+                    else
+                      PopupMenuItem<String>(
+                        value: 'unblock',
+                        child: Row(
+                          children: [
+                            Icon(Icons.person_add, color: Colors.green),
+                            SizedBox(width: 8),
+                            Text(context.tr('unblock_user')),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ],
             ),
             body: Column(
               children: [
@@ -158,25 +201,32 @@ class _MessagesViewState extends State<MessagesView> {
 
                         final messages = snapshot.data ?? [];
 
-                        // İlk mesaj kontrolü ve ödül verme
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          if (!_hasCheckedFirstMessage && messages.isNotEmpty) {
-                            debugPrint('🔍 İlk kez mesaj kontrolü yapılıyor...');
-                            _checkAndRewardFirstMessage(messages);
-                          }
-                        });
+                        // Kullanıcı engellenmiş ise, sadece kendi mesajlarımızı göster
+                        // Filtrelemeyi burada yapıyoruz ki, okundu işaretleme ve diğer işlemler engellenen mesajlar için çalışmasın
+                        final filteredMessages = isUserBlocked ? messages.where((msg) => msg.senderId == widget.currentUserId).toList() : messages;
 
-                        // Yeni mesaj geldiğinde otomatik olarak okundu olarak işaretle
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          // Karşı taraftan gelen ve okunmamış mesajlar varsa işaretle
-                          final unreadMessages = messages.where((msg) => msg.senderId == widget.otherUserId && !msg.isRead).toList();
+                        // İlk mesaj kontrolü ve ödül verme - sadece engellenmemiş kullanıcılar için
+                        if (!isUserBlocked) {
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            if (!_hasCheckedFirstMessage && filteredMessages.isNotEmpty) {
+                              debugPrint('🔍 İlk kez mesaj kontrolü yapılıyor...');
+                              _checkAndRewardFirstMessage(filteredMessages);
+                            }
+                          });
 
-                          if (unreadMessages.isNotEmpty) {
-                            vm.markMessagesAsRead();
-                          }
-                        });
+                          // Yeni mesaj geldiğinde otomatik olarak okundu olarak işaretle
+                          // Sadece engellenmemiş kullanıcılardan gelen mesajlar için
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            // Karşı taraftan gelen ve okunmamış mesajlar varsa işaretle
+                            final unreadMessages = filteredMessages.where((msg) => msg.senderId == widget.otherUserId && !msg.isRead).toList();
 
-                        if (messages.isEmpty) {
+                            if (unreadMessages.isNotEmpty) {
+                              vm.markMessagesAsRead();
+                            }
+                          });
+                        }
+
+                        if (filteredMessages.isEmpty) {
                           return Center(
                             child: Text(
                               context.tr('no_messages'),
@@ -185,12 +235,13 @@ class _MessagesViewState extends State<MessagesView> {
                           );
                         }
 
+                        // Artık filtreleme yukarıda yapıldığı için burada tekrar yapmaya gerek yok
                         return ListView.builder(
                           controller: _scrollController,
                           reverse: true,
-                          itemCount: messages.length,
+                          itemCount: filteredMessages.length,
                           itemBuilder: (context, index) {
-                            final message = messages[index];
+                            final message = filteredMessages[index];
                             final isMe = message.senderId == widget.currentUserId;
 
                             return MessageBubble(
@@ -216,5 +267,79 @@ class _MessagesViewState extends State<MessagesView> {
         ),
       ),
     );
+  }
+
+  // Kullanıcıyı engelleme metodu
+  void _blockUser(BuildContext context, AuthProvider authProvider) async {
+    final reportService = ReportService();
+    final currentUser = authProvider.user;
+
+    try {
+      // Kullanıcı modelini güncelle
+      if (currentUser != null && currentUser.userID != null) {
+        final updatedBlockList = List<String>.from(currentUser.blockUsers ?? []);
+
+        // Eğer zaten engellenmiş ise tekrar ekleme
+        if (!updatedBlockList.contains(widget.otherUserId)) {
+          updatedBlockList.add(widget.otherUserId);
+
+          final updatedUser = currentUser.copyWith(
+            blockUsers: updatedBlockList,
+          );
+
+          authProvider.updateUser(updatedUser);
+
+          // Firestore'da güncelle - kendi kullanıcı ID'mizi gönderiyoruz
+          await reportService.blockUser(widget.otherUserId, currentUserId: currentUser.userID!);
+        }
+      }
+
+      if (context.mounted) {
+        ScaffoldMess.showSuccessSnackBar(context.tr('user_blocked'));
+        // UI'ı güncellemek için setState çağır
+        setState(() {});
+      }
+    } catch (e) {
+      debugPrint('Kullanıcı engellenirken hata: ${e.toString()}');
+      if (context.mounted) {
+        ScaffoldMess.showErrorSnackBar(context.tr('error_occurred'));
+      }
+    }
+  }
+
+  // Kullanıcının engelini kaldırma metodu
+  void _unblockUser(BuildContext context, AuthProvider authProvider) async {
+    final reportService = ReportService();
+    final currentUser = authProvider.user;
+
+    try {
+      // Kullanıcı modelini güncelle
+      if (currentUser != null && currentUser.userID != null) {
+        final updatedBlockList = List<String>.from(currentUser.blockUsers ?? []);
+
+        // Listeden kaldır
+        updatedBlockList.remove(widget.otherUserId);
+
+        final updatedUser = currentUser.copyWith(
+          blockUsers: updatedBlockList,
+        );
+
+        authProvider.updateUser(updatedUser);
+
+        // Firestore'da güncelle - kendi kullanıcı ID'mizi gönderiyoruz
+        await reportService.unblockUser(widget.otherUserId, currentUserId: currentUser.userID!);
+      }
+
+      if (context.mounted) {
+        ScaffoldMess.showSuccessSnackBar(context.tr('user_unblocked'));
+        // UI'ı güncellemek için setState çağır
+        setState(() {});
+      }
+    } catch (e) {
+      debugPrint('Kullanıcının engeli kaldırılırken hata: ${e.toString()}');
+      if (context.mounted) {
+        ScaffoldMess.showErrorSnackBar(context.tr('error_occurred'));
+      }
+    }
   }
 }

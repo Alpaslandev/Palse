@@ -10,6 +10,8 @@ import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/widgets/circle_profile_picture.dart';
 import 'package:palseapp/core/services/chat_service.dart';
+import 'package:palseapp/core/services/firestore/report_service.dart';
+import 'package:palseapp/core/widgets/scaffold_mess.dart';
 import 'package:palseapp/features/achievement/achievement_service.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -450,6 +452,13 @@ class AdvertCard extends StatelessWidget {
 
   // Şikayet/Bildir bottom sheet'ini gösteren metod
   void _showReportBottomSheet(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final currentUser = authProvider.user;
+    final reportService = ReportService();
+
+    // Kullanıcının engellenip engellenmediğini kontrol et
+    final bool isBlocked = currentUser != null && _isUserBlocked(currentUser, advert.creatorUserID);
+
     showModalBottomSheet(
       context: context,
       builder: (context) => Container(
@@ -460,21 +469,67 @@ class AdvertCard extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.report_problem, color: Colors.red),
               title: Text(context.tr('report_listing')),
-              onTap: () {
+              onTap: () async {
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(context.tr('report_sent'))),
-                );
+                // İlanı şikayet et
+                try {
+                  // İlan ID'si veya ilan şikayet metodu
+                  await reportService.reportListing(advert.advertID ?? advert.creatorUserID);
+                  if (context.mounted) {
+                    ScaffoldMess.showSuccessSnackBar(context.tr('report_sent'));
+                  }
+                } catch (e) {
+                  debugPrint('İlan şikayet edilirken hata: ${e.toString()}');
+                  if (context.mounted) {
+                    ScaffoldMess.showErrorSnackBar(context.tr('error_occurred'));
+                  }
+                }
               },
             ),
             ListTile(
-              leading: const Icon(Icons.block, color: Colors.orange),
-              title: Text(context.tr('block_user')),
-              onTap: () {
+              leading: Icon(isBlocked ? Icons.person_add : Icons.block, color: isBlocked ? Colors.green : Colors.orange),
+              title: Text(isBlocked ? context.tr('unblock_user') : context.tr('block_user')),
+              onTap: () async {
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(context.tr('user_blocked'))),
-                );
+
+                try {
+                  // Kullanıcı modelini güncelle
+                  if (currentUser != null && currentUser.userID != null) {
+                    final updatedBlockList = List<String>.from(currentUser.blockUsers ?? []);
+
+                    if (isBlocked) {
+                      // Engeli kaldır
+                      updatedBlockList.remove(advert.creatorUserID);
+                    } else {
+                      // Kullanıcıyı engelle
+                      if (!updatedBlockList.contains(advert.creatorUserID)) {
+                        updatedBlockList.add(advert.creatorUserID);
+                      }
+                    }
+
+                    final updatedUser = currentUser.copyWith(
+                      blockUsers: updatedBlockList,
+                    );
+
+                    authProvider.updateUser(updatedUser);
+
+                    // Firestore'da güncelle
+                    if (isBlocked) {
+                      await reportService.unblockUser(advert.creatorUserID, currentUserId: currentUser.userID!);
+                    } else {
+                      await reportService.blockUser(advert.creatorUserID, currentUserId: currentUser.userID!);
+                    }
+                  }
+
+                  if (context.mounted) {
+                    ScaffoldMess.showSuccessSnackBar(isBlocked ? context.tr('user_unblocked') : context.tr('user_blocked'));
+                  }
+                } catch (e) {
+                  debugPrint('Kullanıcı engelleme/engel kaldırma işleminde hata: ${e.toString()}');
+                  if (context.mounted) {
+                    ScaffoldMess.showErrorSnackBar(context.tr('error_occurred'));
+                  }
+                }
               },
             ),
           ],
@@ -562,5 +617,11 @@ class AdvertCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  // Kullanıcının engellenip engellenmediğini kontrol eden metod
+  bool _isUserBlocked(Customer currentUser, String userId) {
+    final blockList = currentUser.blockUsers ?? [];
+    return blockList.contains(userId);
   }
 }

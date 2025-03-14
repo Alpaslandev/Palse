@@ -1,0 +1,2 @@
+/Users/okanerdincarslan/AndroidStudioProjects/palseapp/android/app/.cxx/RelWithDebInfo/3y4f5821/x86/CMakeFiles/edit_cache.dir
+/Users/okanerdincarslan/AndroidStudioProjects/palseapp/android/app/.cxx/RelWithDebInfo/3y4f5821/x86/CMakeFiles/rebuild_cache.dir

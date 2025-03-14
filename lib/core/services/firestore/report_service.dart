@@ -57,15 +57,21 @@ class ReportService {
     await _firestore.collection('reports').doc().set(report.toJson());
   }
 
-  Future<void> blockUser(String userId) async {
-    await _firestore.collection('customers').doc(userId).update({
+  Future<void> blockUser(String userId, {required String currentUserId}) async {
+    await _firestore.collection('customers').doc(currentUserId).update({
       'blockUsers': FieldValue.arrayUnion([userId])
     });
   }
 
-  Future<void> unblockUser(String userId) async {
-    await _firestore.collection('customers').doc(userId).update({
+  Future<void> unblockUser(String userId, {required String currentUserId}) async {
+    await _firestore.collection('customers').doc(currentUserId).update({
       'blockUsers': FieldValue.arrayRemove([userId])
+    });
+  }
+
+  Future<void> reportListing(String listingId) async {
+    await _firestore.collection('reports').doc(listingId).update({
+      'reports': FieldValue.arrayUnion([listingId])
     });
   }
 }

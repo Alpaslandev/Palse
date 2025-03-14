@@ -66,11 +66,11 @@ class MessageInput extends StatelessWidget {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final currentUser = authProvider.user;
 
-    if (currentUser == null) return;
+    if (currentUser == null || currentUser.userID == null) return;
 
     try {
       final reportService = ReportService();
-      await reportService.unblockUser(otherUserId);
+      await reportService.unblockUser(otherUserId, currentUserId: currentUser.userID!);
 
       // Kullanıcı modelini güncelle
       if (currentUser.blockUsers != null) {

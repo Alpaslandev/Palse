@@ -50,11 +50,11 @@ class FriendProfileViewModel extends ChangeNotifier {
   Future<void> toggleBlockUser() async {
     try {
       final currentUser = authProvider.user;
-      if (currentUser == null) return;
+      if (currentUser == null || currentUser.userID == null) return;
 
       if (isUserBlocked()) {
         // Engeli kaldır
-        await reportService.unblockUser(customerID);
+        await reportService.unblockUser(customerID, currentUserId: currentUser.userID!);
 
         // Kullanıcı modelini güncelle
         if (currentUser.blockUsers != null) {
@@ -69,7 +69,7 @@ class FriendProfileViewModel extends ChangeNotifier {
         }
       } else {
         // Kullanıcıyı engelle
-        await reportService.blockUser(customerID);
+        await reportService.blockUser(customerID, currentUserId: currentUser.userID!);
 
         // Kullanıcı modelini güncelle
         final updatedBlockList = currentUser.blockUsers != null ? List<String>.from(currentUser.blockUsers!) : <String>[];

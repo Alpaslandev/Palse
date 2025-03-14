@@ -12,6 +12,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:palseapp/features/achievement/achievement_service.dart';
 import 'package:palseapp/features/achievement/xp_events.dart';
 import 'package:palseapp/core/widgets/scaffold_mess.dart';
+import 'package:palseapp/core/services/cloud_storage.dart';
 
 class CreateAdvertViewModel extends ChangeNotifier {
   final LocationService locationService;
@@ -31,6 +32,7 @@ class CreateAdvertViewModel extends ChangeNotifier {
   Categories? eventType;
   bool _isLoading = false;
   LocationModel? locationModel;
+  final CloudStorageService _cloudStorageService = CloudStorageService();
 
   bool get isLoading => _isLoading;
   int currentStep = 0;
@@ -92,13 +94,32 @@ class CreateAdvertViewModel extends ChangeNotifier {
   Future<void> createAdvert() async {
     _setLoading(true);
     try {
+      // Eğer galeriden seçilmiş bir fotoğraf varsa ve bu fotoğraf assets klasöründen değilse yükle
+      String imageUrl = '';
+      if (advertImage != null) {
+        // Eğer galeriden seçilen bir dosya ise (assets/ ile başlamıyorsa)
+        if (!advertImage!.path.startsWith('assets/')) {
+          // Resmi Cloud Storage'a yükle
+          imageUrl = await _cloudStorageService.uploadUserFile(
+            userId: authProvider.user!.userID!,
+            fileType: FileType.adverts,
+            fileName: 'advert_${DateTime.now().millisecondsSinceEpoch}',
+            file: advertImage!,
+          );
+          debugPrint('Resim yüklendi: $imageUrl');
+        } else {
+          // Hazır görsel kullanıldıysa direkt yolunu kullan
+          imageUrl = advertImage!.path;
+        }
+      }
+
       final advert = Advert(
         title: advertName,
         description: advertDescription,
         creatorUserID: authProvider.user!.userID!,
         advertType: eventType ?? Categories.diger,
         location: locationModel!,
-        advertImage: advertImage?.path ?? '',
+        advertImage: imageUrl, // Yüklenen resmin URL'ini veya hazır görsel yolunu kullan
         startEventDate: startDate ?? DateTime.now(),
         createdAt: DateTime.now(),
         likers: [],

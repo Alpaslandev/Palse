@@ -18,6 +18,13 @@ class _LocationStepState extends State<LocationStep> {
   final Debouncer _debouncer = Debouncer(milliseconds: 300);
   List<LocationModel> _suggestions = [];
   bool _isLoading = false;
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +32,9 @@ class _LocationStepState extends State<LocationStep> {
     final bool isLocationSelected = widget.viewModel.isLocationValid();
 
     return SingleChildScrollView(
+      controller: _scrollController,
       physics: const AlwaysScrollableScrollPhysics(),
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       child: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
@@ -112,11 +121,14 @@ class _LocationStepState extends State<LocationStep> {
                 ),
               ),
 
-            // Öneriler listesi
-            SizedBox(
-              height: 200, // Sabit yükseklik
-              child: _buildSuggestionsList(),
-            ),
+            // Öneriler listesi - Klavye açıldığında görünür olması için değiştirildi
+            if (_suggestions.isNotEmpty)
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.3,
+                ),
+                child: _buildSuggestionsList(),
+              ),
 
             // Seçilen konum bilgisi
             if (isLocationSelected)
@@ -193,7 +205,7 @@ class _LocationStepState extends State<LocationStep> {
               ),
 
             // Klavye açıldığında alt kısmın görünmesi için ekstra boşluk
-            const SizedBox(height: 100),
+            SizedBox(height: MediaQuery.of(context).viewInsets.bottom > 0 ? 300 : 100),
           ],
         ),
       ),
@@ -275,6 +287,18 @@ class _LocationStepState extends State<LocationStep> {
           filled: true,
         ),
         onChanged: (value) => _searchLocation(value),
+        onTap: () {
+          // Klavye açıldığında arama alanına odaklanıldığında otomatik kaydırma
+          Future.delayed(const Duration(milliseconds: 300), () {
+            if (_scrollController.hasClients) {
+              _scrollController.animateTo(
+                80,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+              );
+            }
+          });
+        },
         style: TextStyle(
           color: Theme.of(context).textTheme.bodyLarge?.color,
         ),
@@ -430,6 +454,19 @@ class _LocationStepState extends State<LocationStep> {
       try {
         final results = await LocationService().searchLocation(query);
         setState(() => _suggestions = results);
+
+        // Öneriler geldiğinde, klavye açıksa ve öneriler varsa, sayfayı kaydır
+        if (_suggestions.isNotEmpty && MediaQuery.of(context).viewInsets.bottom > 0) {
+          Future.delayed(const Duration(milliseconds: 100), () {
+            if (_scrollController.hasClients) {
+              _scrollController.animateTo(
+                120,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+              );
+            }
+          });
+        }
       } catch (e) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(

@@ -11,9 +11,28 @@ class LocaleManager {
     _currentLocale = locale;
   }
 
-  /// Geçerli locale'yi döndürür. Eğer henüz ayarlanmamışsa varsayılan olarak Türkçe döner.
+  /// Geçerli locale'yi döndürür. Eğer henüz ayarlanmamışsa varsayılan olarak cihaz dilini veya İngilizce döner.
   static Locale get currentLocale {
-    return _currentLocale ?? const Locale('tr', 'TR'); // Varsayılan olarak Türkçe
+    if (_currentLocale != null) {
+      return _currentLocale!;
+    }
+
+    // Cihaz dilini al
+    final deviceLocale = WidgetsBinding.instance.window.locale;
+
+    // Desteklenen diller listesi (LocaleProvider ile senkronize tutulmalı)
+    const supportedLocales = [
+      Locale('tr', 'TR'),
+      Locale('en', 'US'),
+    ];
+
+    // Cihaz dili destekleniyorsa onu kullan
+    if (supportedLocales.any((locale) => locale.languageCode == deviceLocale.languageCode)) {
+      return deviceLocale;
+    }
+
+    // Desteklenmiyorsa İngilizce kullan
+    return const Locale('en', 'US');
   }
 
   /// Verilen anahtar için çeviriyi döndürür.
