@@ -6,6 +6,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
+import 'package:palseapp/core/keys/global_keys.dart';
 import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/localization/locale_manager.dart';
 import 'package:palseapp/core/provider/ads_provider.dart';
@@ -55,25 +56,21 @@ void main() async {
   final authProvider = AuthProvider();
   await authProvider.initializeAuth();
 
-  final notificationService = NotificationService();
-  await notificationService.initialize();
-
   final adsProvider = AdsProvider();
   AppRouter.initialize(authProvider, adsProvider);
+
+  // Sonra NotificationService'i başlat
+  final notificationService = NotificationService();
+  await notificationService.initialize();
 
   // Locale provider'ı başlat
   final localeProvider = LocaleProvider();
   await localeProvider.initialize();
-
-  // Cihazın diline uygun tarih formatlamasını başlat
-  final locale = localeProvider.locale;
-  debugPrint('Locale: $locale');
-
   // LocaleManager'ı ayarla
-  LocaleManager.setLocale(locale);
+  LocaleManager.setLocale(localeProvider.locale);
 
-  await initializeDateFormatting(locale.toString(), null);
-  Intl.defaultLocale = locale.toString();
+  await initializeDateFormatting(localeProvider.locale.toString(), null);
+  Intl.defaultLocale = localeProvider.locale.toString();
   debugPrint('Intl.defaultLocale: ${Intl.defaultLocale}');
 
   final subscriptionProvider = SubscriptionProvider();
@@ -94,16 +91,15 @@ void main() async {
         ChangeNotifierProvider.value(value: localeProvider),
         ChangeNotifierProvider.value(value: adsProvider),
         Provider(create: (_) => AchievementService()),
+        Provider(create: (_) => NotificationService()),
       ],
-      child: MyApp(notificationService: notificationService),
+      child: const MyApp(),
     ),
   );
 }
 
 class MyApp extends StatelessWidget {
-  final NotificationService notificationService;
-
-  const MyApp({super.key, required this.notificationService});
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -117,12 +113,12 @@ class MyApp extends StatelessWidget {
 
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
-      title: 'Palse App',
+      title: 'Palse',
       theme: AppTheme.theme, // Aydınlık tema
       darkTheme: AppTheme.darkTheme, // Koyu tema
       themeMode: themeProvider.themeMode, // Tema modunu provider'dan al
       routerConfig: AppRouter.router,
-      scaffoldMessengerKey: ScaffoldMess.rootScaffoldMessengerKey, // ScaffoldMess için GlobalKey kullan
+      scaffoldMessengerKey: GlobalKeys.instance.scaffoldMessengerKey, // Burada router'ın navigatorKey'ini kullanıyoruz
       locale: localeProvider.locale, // Dil ayarını provider'dan al
       localizationsDelegates: const [
         AppLocalizations.delegate, // Kendi localization delegemiz

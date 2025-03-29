@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/localization/app_localizations.dart';
+import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
@@ -20,6 +21,9 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   late TabController _tabController;
   late HomeViewModel _viewModel;
 
+  // Kullanıcı verilerini saklayacağız
+  Customer? _user;
+
   @override
   void initState() {
     super.initState();
@@ -29,8 +33,14 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
 
     // İlk yüklemeyi yap
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Kullanıcının sadece ID'sini kaydet
       final authProvider = context.read<AuthProvider>();
-      _viewModel.fetchAdvertsForTab(authProvider.user, 0);
+      _user = authProvider.user;
+
+      // İlanları yükle
+      if (authProvider.user != null) {
+        _viewModel.fetchAdvertsForTab(authProvider.user, _tabController.index);
+      }
     });
   }
 
@@ -50,8 +60,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
-
     return ChangeNotifierProvider.value(
       value: _viewModel,
       child: Consumer<HomeViewModel>(
@@ -142,6 +150,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                           if (scrollInfo.metrics.pixels == scrollInfo.metrics.maxScrollExtent) {
                             if (viewModel.hasMore && !viewModel.isLoading) {
                               debugPrint('Listenin sonuna gelindi, yeni ilanlar yükleniyor...');
+                              final authProvider = context.read<AuthProvider>();
                               viewModel.loadMore(authProvider.user, _tabController.index);
                             }
                           }
@@ -199,18 +208,18 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                             }
 
                             final advert = viewModel.adverts[index];
+                            final isLiked = advert.likers.contains(_user?.userID);
 
                             return AdvertCard(
                               advert: advert,
-                              isLiked: advert.likers.contains(authProvider.user?.userID),
+                              isLiked: isLiked,
                               onLikeTap: () async {
-                                final userId = authProvider.user?.userID;
-                                if (userId == null) return;
+                                if (_user == null) return;
 
-                                if (advert.likers.contains(userId)) {
-                                  await viewModel.unlikeAdvert(advert.advertID ?? '', userId);
+                                if (isLiked) {
+                                  await viewModel.unlikeAdvert(advert.advertID ?? '', _user!.userID ?? '');
                                 } else {
-                                  await viewModel.likeAdvert(advert.advertID ?? '', userId);
+                                  await viewModel.likeAdvert(advert.advertID ?? '', _user!.userID ?? '');
                                 }
                               },
                             );
@@ -221,137 +230,12 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
               backgroundColor: AppTheme.primaryColor,
               shape: const StadiumBorder(),
               onPressed: () {
-                // SVG önizleme dialogunu göster
                 context.pushNamed(createAdvert);
               },
               label: Text(context.tr('create_listing'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           );
         },
-      ),
-    );
-  }
-
-  // SVG önizleme dialogu
-  void _showSvgPreviewDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return Dialog(
-          child: Container(
-            width: MediaQuery.of(context).size.width * 0.9,
-            height: MediaQuery.of(context).size.height * 0.8,
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                Text(
-                  'SVG Dosyaları Önizleme',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 16),
-                Expanded(
-                  child: GridView.count(
-                    crossAxisCount: 2,
-                    childAspectRatio: 0.8,
-                    children: [
-                      _buildSvgItem(context, 'vector_star_empty.svg'),
-                      _buildSvgItem(context, 'vector_x2.svg'),
-                      _buildSvgItem(context, 'vectormessage.svg'),
-                      _buildSvgItem(context, 'vector_6_x2.svg'),
-                      _buildSvgItem(context, 'vector_7_x2.svg'),
-                      _buildSvgItem(context, 'vector_8_x2.svg'),
-                      _buildSvgItem(context, 'vector_9_x2.svg'),
-                      _buildSvgItem(context, 'vector_confirm.svg'),
-                      _buildSvgItem(context, 'vector_profile_confirm.svg'),
-                      _buildSvgItem(context, 'vector_2_x2.svg'),
-                      _buildSvgItem(context, 'vector_3_x2.svg'),
-                      _buildSvgItem(context, 'vector_4_x2.svg'),
-                      _buildSvgItem(context, 'vector_5_x2.svg'),
-                      _buildSvgItem(context, 'vector_5_x231.svg'),
-                      _buildSvgItem(context, 'vector4bar.svg'),
-                      _buildSvgItem(context, 'vector_10_x2.svg'),
-                      _buildSvgItem(context, 'vector_11_x2.svg'),
-                      _buildSvgItem(context, 'vector_1_x2.svg'),
-                      _buildSvgItem(context, 'vector3.0.svg'),
-                      _buildSvgItem(context, 'vector3bar.svg'),
-                      _buildSvgItem(context, 'vector1bar.svg'),
-                      _buildSvgItem(context, 'vector2.0.svg'),
-                      _buildSvgItem(context, 'stroke_1_x222.svg'),
-                      _buildSvgItem(context, 'profile.svg'),
-                      _buildSvgItem(context, 'vector1.0.svg'),
-                      _buildSvgItem(context, 'star_filled_2.svg'),
-                      _buildSvgItem(context, 'star_mini1.svg'),
-                      _buildSvgItem(context, 'star_mini_22.svg'),
-                      _buildSvgItem(context, 'stroke_11_x2.svg'),
-                      _buildSvgItem(context, 'stroke_1_x2.svg'),
-                      _buildSvgItem(context, 'show_hide_1_x2.svg'),
-                      _buildSvgItem(context, 'star_filled_1.svg'),
-                      _buildSvgItem(context, 'ringing_iconly_pro_1_x2.svg'),
-                      _buildSvgItem(context, 'ringtone_iconly_pro_1_x2.svg'),
-                      _buildSvgItem(context, 'search_iconly_pro_x2.svg'),
-                      _buildSvgItem(context, 'setting_iconly_pro_x2.svg'),
-                      _buildSvgItem(context, 'plus_4_iconly_pro_1_x2.svg'),
-                      _buildSvgItem(context, 'plus_yeni_ilan.svg'),
-                      _buildSvgItem(context, 'logout_iconly_pro_x2.svg'),
-                      _buildSvgItem(context, 'image_x2.svg'),
-                      _buildSvgItem(context, 'gem_iconly_pro_x2.svg'),
-                      _buildSvgItem(context, 'google.svg'),
-                      _buildSvgItem(context, 'home_1_x2.svg'),
-                      _buildSvgItem(context, 'docuemnt_2_lines_iconly_pro_x2.svg'),
-                      _buildSvgItem(context, 'edit_x2.svg'),
-                      _buildSvgItem(context, 'eye_iconly_pro_4_x2.svg'),
-                      _buildSvgItem(context, 'filter_x2.svg'),
-                      _buildSvgItem(context, 'ad_1_x2.svg'),
-                      _buildSvgItem(context, 'apple.svg'),
-                      _buildSvgItem(context, 'category_1_x2.svg'),
-                      _buildSvgItem(context, 'chat_iconly_pro_x2.svg'),
-                      _buildSvgItem(context, 'counter_clockwise_undo_iconly_pro_x2.svg'),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    // Orijinal işlevi çağır
-                    context.pushNamed(createAdvert);
-                  },
-                  child: Text('İlan Oluştur'),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  // SVG öğesi widget'ı
-  Widget _buildSvgItem(BuildContext context, String fileName) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Expanded(
-              child: SvgPicture.asset(
-                'assets/vectors/$fileName',
-                width: 48,
-                height: 48,
-                colorFilter: const ColorFilter.mode(AppTheme.primaryColor, BlendMode.srcIn),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              fileName,
-              style: const TextStyle(fontSize: 12),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
       ),
     );
   }

@@ -1,9 +1,11 @@
+import 'dart:io';
+
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:palseapp/core/routes/app_router.dart';
+import 'package:palseapp/core/routes/routes.dart' as Routes;
 import 'package:palseapp/core/services/shared_pref_service.dart';
-import 'package:palseapp/core/widgets/scaffold_mess.dart';
 
 // NotificationService sınıfı - bildirim yönetimi için genel sınıf
 class NotificationService {
@@ -17,17 +19,56 @@ class NotificationService {
 
   // Servisi başlatma metodu
   Future<void> initialize() async {
+    debugPrint('📢 NotificationService başlatılıyor...');
+
+    // Önce izinleri isteyelim
     await _requestPermissions();
+
+    // FCM yapılandırmasını ayarlayalım
     _configureFCM();
+
+    // Token kontrolü yapalım
+    _checkFcmToken();
+
+    debugPrint('📢 NotificationService başlatma tamamlandı!');
   }
 
   // İzinleri isteme metodu
   Future<void> _requestPermissions() async {
-    await _firebaseMessaging.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
+    debugPrint('📢 Bildirim izinleri isteniyor...');
+
+    try {
+      final settings = await _firebaseMessaging.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+        provisional: false,
+      );
+
+      debugPrint('📢 Bildirim izin durumu: ${settings.authorizationStatus}');
+
+      // Ön planda bildirimleri göstermek için ayarlar
+      // Bu, uygulamanın ön planda olması durumunda bile bildirim alanında görünmesini sağlar
+      await _firebaseMessaging.setForegroundNotificationPresentationOptions(
+        alert: true, // iOS/macOS için sistem uyarısı gösterme seçeneği
+        badge: true, // iOS/macOS için uygulama simgesi rozeti
+        sound: true, // Bildirim sesi
+      );
+
+      debugPrint('📢 Ön plan bildirim görüntüleme ayarları yapılandırıldı.');
+    } catch (e) {
+      debugPrint('📢 Bildirim izni hatası: $e');
+    }
+  }
+
+  // Token kontrolü
+  Future<void> _checkFcmToken() async {
+    try {
+      final token = await _firebaseMessaging.getToken();
+      debugPrint('📢 FCM Token: ${token?.substring(0, 20)}... (ilk 20 karakter)');
+    } catch (e) {
+      debugPrint('📢 Token kontrol hatası: $e');
+    }
   }
 
   // FCM token güncelleme metodu
@@ -46,29 +87,109 @@ class NotificationService {
 
   // FCM yapılandırma metodu
   void _configureFCM() {
+    debugPrint('📢 FCM yapılandırması başlatılıyor...');
+
+    // FCM izin kontrolü
+    _firebaseMessaging.getNotificationSettings().then((settings) {
+      debugPrint('📢 FCM bildirim ayarları: ${settings.authorizationStatus}');
+    });
+
+    // Bildirim kanalı kaydını kontrol et
+    _checkNotificationChannel();
+
     // Ön planda bildirim işleme
-    FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
+    FirebaseMessaging.onMessage.listen((message) {
+      debugPrint('📢 FCM onMessage tetiklendi!');
+      debugPrint('📢 Mesaj bilgileri: messageId=${message.messageId}, senderId=${message.senderId}');
+      debugPrint('📢 Bildirim: ${message.notification?.title ?? "başlık yok"} - ${message.notification?.body ?? "içerik yok"}');
+      debugPrint('📢 Data: ${message.data}');
+
+      // Ön plandayken gelen notificationlar için data bilgisini işle
+      _handleForegroundMessageData(message);
+    });
 
     // Arka planda bildirim tıklama işleme
-    FirebaseMessaging.onMessageOpenedApp.listen(_handleBackgroundNotificationClick);
+    FirebaseMessaging.onMessageOpenedApp.listen((message) {
+      debugPrint('📢 onMessageOpenedApp tetiklendi! Bildirim tıklandı!');
+      _handleBackgroundNotificationClick(message);
+    });
+
+    // Bildirim iznini kontrol et ve yenile
+    _refreshNotificationPermission();
+
+    debugPrint('📢 FCM yapılandırması tamamlandı!');
+    _getInitialMessage();
   }
 
-  // Ön plandaki bildirimleri işleme metodu
-  void _handleForegroundMessage(RemoteMessage message) {
-    debugPrint('Ön planda bildirim alındı: ${message.notification?.title}');
-    debugPrint('Ön planda bildirim alındı: ${message.notification?.body}');
-    debugPrint('Bildirim data: ${message.data}');
+  // Bildirim izinlerini kontrol et ve yenile
+  Future<void> _refreshNotificationPermission() async {
+    try {
+      final settings = await _firebaseMessaging.getNotificationSettings();
+      debugPrint('📢 Mevcut bildirim izni: ${settings.authorizationStatus}');
 
-    final String notificationType = message.data['type'] ?? '';
-
-    // Mesaj dışındaki bildirimler için SharedPrefs'e kaydet
-    if (notificationType != typeMessage) {
-      _saveNotificationToLocal(message);
-      return;
+      if (settings.authorizationStatus != AuthorizationStatus.authorized) {
+        debugPrint('📢 Bildirim izni eksik veya kısıtlı, yeniden izin isteniyor...');
+        final newSettings = await _firebaseMessaging.requestPermission(
+          alert: true,
+          badge: true,
+          sound: true,
+          provisional: false,
+          criticalAlert: true,
+          announcement: true,
+        );
+        debugPrint('📢 Yeni bildirim izni: ${newSettings.authorizationStatus}');
+      }
+    } catch (e) {
+      debugPrint('📢 Bildirim izni kontrolü hatası: $e');
     }
+  }
 
-    // Mesaj ise bildirim göster
-    _showMessageNotification(message);
+  // Bildirim kanallarını kontrol et (Android için)
+  Future<void> _checkNotificationChannel() async {
+    try {
+      if (Platform.isAndroid) {
+        // Android bildirim kanalı kontrolü
+        debugPrint('📢 Android bildirim kanalları kontrol ediliyor...');
+
+        // Firebase Messaging spesifik bildirim kanalları mevcut mu?
+        // Bu kısım, FCM'in otomatik oluşturduğu kanalların doğru ayarlandığından emin olmak için
+        // Firebase otomatik olarak yönettiği için ek kanal oluşturmaya gerek yok
+
+        debugPrint('📢 Android bildirim kanalları FCM tarafından otomatik yönetiliyor');
+      }
+    } catch (e) {
+      debugPrint('📢 Bildirim kanalı kontrolü hatası: $e');
+    }
+  }
+
+  // İlk açılıştaki bildirimi kontrol et
+  Future<void> _getInitialMessage() async {
+    try {
+      RemoteMessage? initialMessage = await FirebaseMessaging.instance.getInitialMessage();
+      if (initialMessage != null) {
+        debugPrint('📢 Uygulama bildirimden açıldı!');
+        _handleBackgroundNotificationClick(initialMessage);
+      } else {
+        debugPrint('📢 Uygulama normal şekilde açıldı');
+      }
+    } catch (e) {
+      debugPrint('📢 İlk mesaj kontrolü hatası: $e');
+    }
+  }
+
+  // Ön plandayken gelen bildirimlerin data bilgisini işle
+  void _handleForegroundMessageData(RemoteMessage message) {
+    try {
+      final String notificationType = message.data['type'] ?? '';
+
+      // Mesaj dışındaki bildirimler için SharedPrefs'e kaydet
+      if (notificationType != typeMessage) {
+        debugPrint('📢 Ön planda mesaj DIŞI bildirim alındı, locale kaydediliyor...');
+        _saveNotificationToLocal(message);
+      }
+    } catch (e) {
+      debugPrint('📢 Ön plan bildirim data işleme hatası: $e');
+    }
   }
 
   // Yerel bildirimleri kaydetme metodu
@@ -79,30 +200,6 @@ class NotificationService {
       title: message.notification?.title ?? '',
     );
     debugPrint('Bildirim kaydedildi');
-  }
-
-  // Mesaj bildirimi gösterme metodu
-  void _showMessageNotification(RemoteMessage message) {
-    final data = message.data;
-    final chatId = data['chatId'];
-    final senderId = data['senderId'];
-    final receiverId = data['receiverId'];
-
-    // Kullanıcı zaten ilgili sohbet sayfasındaysa bildirim gösterme
-    if (chatId != null && AppRouter.router.routeInformationProvider.value.uri.path.contains('chats/$chatId')) {
-      return;
-    }
-
-    // ScaffoldMess sınıfının showMessageBanner metodunu kullanarak üstte bildirim göster
-    ScaffoldMess.showMessageBanner(
-      title: message.notification?.title ?? 'Yeni Mesaj',
-      message: message.notification?.body ?? '',
-      backgroundColor: Colors.blue.shade800,
-      duration: const Duration(seconds: 5),
-      onViewPressed: () {
-        _navigateToChat(chatId, senderId, receiverId);
-      },
-    );
   }
 
   // Sohbete yönlendirme metodu
@@ -135,92 +232,18 @@ class NotificationService {
         break;
 
       case typeLikeAdvert:
-        AppRouter.router.push('/myAdverts');
+        AppRouter.router.pushNamed(Routes.myAdverts);
         break;
 
       case typeProfileViewed:
         if (senderId != null) {
-          AppRouter.router.push('/profile/$senderId');
+          AppRouter.router.pushNamed(Routes.profile);
         }
         break;
 
       default:
         debugPrint('Bilinmeyen bildirim türü: $notificationType');
         break;
-    }
-  }
-
-  // Bildirim gönderme metodu
-  Future<void> sendNotification({
-    required String receiverId,
-    required String notificationType,
-    String? chatId,
-  }) async {
-    try {
-      debugPrint('Bildirim gönderiliyor: $receiverId, $notificationType, $chatId');
-
-      await _db.collection('notifications').add({
-        'timestamp': FieldValue.serverTimestamp(),
-        'receiverId': receiverId,
-        'type': notificationType,
-        'chatId': chatId,
-      });
-
-      debugPrint('Bildirim gönderildi');
-    } catch (e) {
-      debugPrint('Bildirim gönderme hatası: $e');
-    }
-  }
-
-  /// Firestore koleksiyon kopyalama yardımcı metodu
-  /// Bir Firestore koleksiyonunu başka bir koleksiyona kopyalar
-  Future<void> copyFirestoreCollection({
-    required String sourceCollection,
-    required String targetCollection,
-    Function(String)? onProgress,
-  }) async {
-    final FirebaseFirestore firestore = FirebaseFirestore.instance;
-
-    try {
-      // İlerleme bildirimi
-      onProgress?.call('Belgeler alınıyor...');
-
-      // Kaynak koleksiyondan tüm belgeleri al
-      final QuerySnapshot snapshot = await firestore.collection(sourceCollection).get();
-      final int totalDocs = snapshot.docs.length;
-
-      onProgress?.call('$totalDocs belge kopyalanacak');
-
-      // Belgeleri gruplar halinde işle (Firestore batch sınırı 500)
-      int processedDocs = 0;
-      List<List<QueryDocumentSnapshot>> batches = [];
-
-      for (int i = 0; i < totalDocs; i += 500) {
-        final end = (i + 500 < totalDocs) ? i + 500 : totalDocs;
-        batches.add(snapshot.docs.sublist(i, end));
-      }
-
-      // Her batch için işlem yap
-      for (var batchDocs in batches) {
-        final WriteBatch batch = firestore.batch();
-
-        for (var doc in batchDocs) {
-          // Belgeyi hedef koleksiyona aynı ID ile ekle
-          final targetDocRef = firestore.collection(targetCollection).doc(doc.id);
-          batch.set(targetDocRef, doc.data() as Map<String, dynamic>);
-        }
-
-        // Batch'i commit et
-        await batch.commit();
-
-        processedDocs += batchDocs.length;
-        onProgress?.call('$processedDocs / $totalDocs belge kopyalandı');
-      }
-
-      onProgress?.call('Kopyalama tamamlandı: $sourceCollection -> $targetCollection');
-    } catch (e) {
-      onProgress?.call('Hata: $e');
-      rethrow;
     }
   }
 }
