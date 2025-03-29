@@ -94,9 +94,6 @@ class NotificationService {
       debugPrint('📢 FCM bildirim ayarları: ${settings.authorizationStatus}');
     });
 
-    // Bildirim kanalı kaydını kontrol et
-    _checkNotificationChannel();
-
     // Ön planda bildirim işleme
     FirebaseMessaging.onMessage.listen((message) {
       debugPrint('📢 FCM onMessage tetiklendi!');
@@ -144,24 +141,6 @@ class NotificationService {
     }
   }
 
-  // Bildirim kanallarını kontrol et (Android için)
-  Future<void> _checkNotificationChannel() async {
-    try {
-      if (Platform.isAndroid) {
-        // Android bildirim kanalı kontrolü
-        debugPrint('📢 Android bildirim kanalları kontrol ediliyor...');
-
-        // Firebase Messaging spesifik bildirim kanalları mevcut mu?
-        // Bu kısım, FCM'in otomatik oluşturduğu kanalların doğru ayarlandığından emin olmak için
-        // Firebase otomatik olarak yönettiği için ek kanal oluşturmaya gerek yok
-
-        debugPrint('📢 Android bildirim kanalları FCM tarafından otomatik yönetiliyor');
-      }
-    } catch (e) {
-      debugPrint('📢 Bildirim kanalı kontrolü hatası: $e');
-    }
-  }
-
   // İlk açılıştaki bildirimi kontrol et
   Future<void> _getInitialMessage() async {
     try {
@@ -202,13 +181,6 @@ class NotificationService {
     debugPrint('Bildirim kaydedildi');
   }
 
-  // Sohbete yönlendirme metodu
-  void _navigateToChat(String? chatId, String? senderId, String? receiverId) {
-    if (chatId != null && senderId != null && receiverId != null) {
-      AppRouter.router.push('/chats/$chatId?otherId=$senderId&currentId=$receiverId');
-    }
-  }
-
   // Arka plan bildirimi tıklama işleme metodu
   void _handleBackgroundNotificationClick(RemoteMessage message) {
     debugPrint('Arka planda bildirim tıklandı');
@@ -228,7 +200,7 @@ class NotificationService {
 
     switch (notificationType) {
       case typeMessage:
-        _navigateToChat(chatId, senderId, receiverId);
+        AppRouter.router.push('/chats/$chatId?otherId=$senderId&currentId=$receiverId');
         break;
 
       case typeLikeAdvert:
