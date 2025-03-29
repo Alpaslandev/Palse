@@ -96,12 +96,6 @@ class AdvertService {
       final querySnapshot = await query.get();
       final adverts = querySnapshot.docs.map((doc) => Advert.fromJson(doc.data(), doc.id)).toList();
 
-      // Konuma göre sıralama - SADECE fetchAdverts için
-      if (userLocation != null) {
-        _sortAdvertsByDistance(adverts, userLocation);
-        debugPrint('Tüm ilanlar konuma göre sıralandı.');
-      }
-
       debugPrint('Toplam ilan sayısı: ${adverts.length}');
       return adverts;
     } catch (e) {
@@ -151,31 +145,11 @@ class AdvertService {
 
       debugPrint('Filtreleme sonrası kalan ilan sayısı: ${otherAdverts.length}');
 
-      // Konuma göre sıralama
-      if (userLocation != null) {
-        _sortAdvertsByDistance(otherAdverts, userLocation);
-        debugPrint('Other ilanlar konuma göre sıralandı.');
-      }
-
       return otherAdverts;
     } catch (e) {
       debugPrint('Other ilanlar çekilirken hata: $e');
       return [];
     }
-  }
-
-  // İlanları mesafeye göre sıralayan yardımcı metod
-  void _sortAdvertsByDistance(List<Advert> adverts, LocationModel userLocation) {
-    adverts.sort((a, b) {
-      // Eğer konum bilgisi yoksa en sona koy
-      int distanceA = userLocation.distanceTo(a.location);
-      int distanceB = userLocation.distanceTo(b.location);
-
-      // Yakından uzağa sırala
-      return distanceA.compareTo(distanceB);
-    });
-
-    debugPrint('İlanlar konuma göre sıralandı.');
   }
 
 // İlan adverts koleksiyonlarında arar

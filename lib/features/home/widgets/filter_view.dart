@@ -51,39 +51,6 @@ class _FilterViewState extends State<FilterView> {
     final advertService = AdvertService();
     List<Advert> allAdverts = await advertService.fetchAdverts(limit: 100);
 
-    // Kullanıcının kendi ilanlarını ve engellediği kişilerin ilanlarını filtrele
-    if (_currentUser != null) {
-      allAdverts = allAdverts.where((advert) {
-        // Kullanıcının kendi ilanlarını filtrele
-        if (advert.creatorUserID == _currentUser!.userID) {
-          return false;
-        }
-
-        // Kullanıcının engellediği kişilerin ilanlarını filtrele
-        if (_currentUser!.blockUsers != null && _currentUser!.blockUsers!.contains(advert.creatorUserID)) {
-          return false;
-        }
-
-        return true;
-      }).toList();
-    }
-
-    // Mesafe filtrelemesi
-    if (_distance != null && _distance! > 0 && _currentUser?.location != null) {
-      allAdverts = allAdverts.where((advert) {
-        // Kullanıcının konumu ile ilanın konumu arasındaki mesafeyi hesapla
-        if (_currentUser?.location == null || advert.location == null) return false;
-
-        try {
-          int distance = _currentUser!.location!.distanceTo(advert.location);
-          return distance <= _distance!;
-        } catch (e) {
-          debugPrint('Mesafe hesaplama hatası: $e');
-          return false;
-        }
-      }).toList();
-    }
-
     // Cinsiyet filtrelemesi
     if (_selectedGender != null) {
       allAdverts = allAdverts.where((advert) {
@@ -104,29 +71,6 @@ class _FilterViewState extends State<FilterView> {
       }).toList();
 
       debugPrint('Kategori filtrelemesi sonucu kalan ilan sayısı: ${allAdverts.length}');
-    }
-
-    // Konuma göre sıralama - yakından uzağa
-    if (_currentUser?.location != null) {
-      try {
-        allAdverts.sort((a, b) {
-          // Eğer konum bilgisi yoksa en sona koy
-          if (a.location == null) return 1;
-          if (b.location == null) return -1;
-
-          // Mesafeleri hesapla
-          int distanceA = _currentUser!.location!.distanceTo(a.location);
-          int distanceB = _currentUser!.location!.distanceTo(b.location);
-
-          // Yakından uzağa sırala
-          return distanceA.compareTo(distanceB);
-        });
-
-        debugPrint(
-            'İlanlar konuma göre sıralandı. İlk 3 ilan mesafeleri: ${allAdverts.take(3).map((e) => _currentUser!.location!.distanceTo(e.location)).toList()}');
-      } catch (e) {
-        debugPrint('Sıralama hatası: $e');
-      }
     }
 
     setState(() {

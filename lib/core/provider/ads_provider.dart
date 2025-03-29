@@ -20,7 +20,7 @@ class AdsProvider extends ChangeNotifier {
 
   // Reklam gösterim zaman kontrolü için değişken
   DateTime? _lastInterstitialAdShow;
-  static const int _minimumSecondsBetweenAds = 120; // İki reklam arası minimum süre
+  static const int _minimumSecondsBetweenAds = 80; // İki reklam arası minimum süre
 
   bool get isInterstitialAdReady => _isInterstitialAdReady;
   bool get isRewardedAdReady => _isRewardedAdReady;
