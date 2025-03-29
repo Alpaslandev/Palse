@@ -20,6 +20,7 @@ class FriendProfileViewModel extends ChangeNotifier {
 
   FriendProfileViewModel({required this.customerID, required this.authProvider}) {
     getCustomer();
+    addProfileViewers();
   }
 
   Future<void> getCustomer() async {
@@ -119,6 +120,16 @@ class FriendProfileViewModel extends ChangeNotifier {
         adverts.add(advert);
         debugPrint('İlan eklendi: ${advert.title}');
       }
+    }
+  }
+
+  Future<void> addProfileViewers() async {
+    try {
+      await customerService.addProfileViewers(customerID, authProvider.user?.userID ?? '');
+      debugPrint('Kullanıcı görünümü güncellendi');
+    } catch (e) {
+      debugPrint('Kullanıcı görünümü güncellenirken hata: $e');
+      rethrow;
     }
   }
 }

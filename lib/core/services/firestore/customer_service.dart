@@ -267,4 +267,14 @@ class CustomerService {
       throw Exception('Sohbet silinemedi: $e');
     }
   }
+
+  Future<void> addProfileViewers(String userId, String currentUserId) async {
+    try {
+      await _firestore.collection('customers').doc(userId).set({
+        'profileViewers': FieldValue.arrayUnion([currentUserId])
+      }, SetOptions(merge: true));
+    } catch (e) {
+      debugPrint('Kullanıcı görünümü güncellenirken hata: $e');
+    }
+  }
 }

@@ -19,7 +19,7 @@ class FriendProfileView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final userID = context.read<AuthProvider>().user!.userID;
-    return ChangeNotifierProvider(
+    return ChangeNotifierProvider<FriendProfileViewModel>(
       create: (context) => FriendProfileViewModel(customerID: customerID, authProvider: context.read<AuthProvider>()),
       child: Consumer<FriendProfileViewModel>(
         builder: (context, viewModel, child) {

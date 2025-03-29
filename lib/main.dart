@@ -31,15 +31,12 @@ void main() async {
     DeviceOrientation.portraitUp,
   ]);
 
-  // Firebase'i güvenli şekilde başlat
   try {
     await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   } catch (e) {
     if (e.toString().contains('duplicate-app')) {
-      // Zaten başlatılmış, görmezden gel
       debugPrint('Firebase already initialized');
     } else {
-      // Başka bir hata varsa fırlat
       rethrow;
     }
   }
@@ -135,9 +132,6 @@ class MyApp extends StatelessWidget {
       ],
       supportedLocales: AppLocalizations.supportedLocales,
       builder: (context, child) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          notificationService.setContext(context);
-        });
         return child!;
       },
     );

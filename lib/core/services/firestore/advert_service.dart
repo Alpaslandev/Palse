@@ -24,10 +24,8 @@ class AdvertService {
       final upperCity = city;
       debugPrint('Aranan şehir: $upperCity, limit: $limit');
 
-      // Yeni veri yapısına göre sorgu güncellendi
-      // Artık city doğrudan belgede değil, location.city içinde
-      var query = _firestore.collection('events').where('location.city', isEqualTo: upperCity).limit(limit);
-
+      // Temel sorgu
+      var query = _firestore.collection('events').where('location.city', isEqualTo: upperCity).orderBy('createdAt', descending: true).limit(limit);
       // Eğer son döküman varsa, ondan sonrasını getir
       if (lastDocument != null) {
         query = query.startAfterDocument(lastDocument);
@@ -35,12 +33,6 @@ class AdvertService {
 
       final querySnapshot = await query.get();
       final adverts = querySnapshot.docs.map((doc) => Advert.fromJson(doc.data(), doc.id)).toList();
-
-      // Şehre göre ilanları karıştır
-      if (adverts.isNotEmpty) {
-        adverts.shuffle();
-        debugPrint('Şehre göre ilanlar karıştırıldı.');
-      }
 
       debugPrint('Bulunan ilan sayısı: ${adverts.length}');
       return adverts;
@@ -51,68 +43,35 @@ class AdvertService {
   }
 
   // İlgi alanlarına göre ilanları getir
-  Future<List<Advert>> fetchAdvertsByInterests(
-    List<Categories>? interests, {
-    DocumentSnapshot? lastDocument,
-    int limit = 25,
-    LocationModel? userLocation,
-  }) async {
+  Future<List<Advert>> fetchAdvertsByInterests(List<Categories>? interests,
+      {DocumentSnapshot? lastDocument, int limit = 25, LocationModel? userLocation}) async {
     try {
       // İlgi alanı yoksa boş liste döndür
       if (interests == null || interests.isEmpty) {
         return [];
       }
 
-      // Eski format değerler (Türkçe metin karşılıkları)
-      final oldFormatValues = interests.map((interest) => legacyTurkishTextMapReverse[interest] ?? interest.name).toList();
-      debugPrint('Eski format değerler (Türkçe): $oldFormatValues');
+      // Kategorileri string olarak al
+      final categoryValues = interests.map((interest) => interest.name).toList();
+      debugPrint('Aranan kategoriler: $categoryValues');
 
-      // Yeni format değerler (enum.name)
-      final newFormatValues = interests.map((interest) => interest.name).toList();
-      debugPrint('Yeni format değerler (enum.name): $newFormatValues');
+      // GERÇEK ÇÖZÜM: Firestore'un kısıtlamalarından dolayı tek sorguda tüm kategorileri alamayız
+      // En fazla whereIn ile 10 kategori alabiliriz
+      List<String> categoriesToQuery = categoryValues.length > 10 ? categoryValues.sublist(0, 10) : categoryValues;
 
-      // Events koleksiyonuna referans
-      final eventsRef = FirebaseFirestore.instance.collection('events');
+      // Tek sorgu oluştur - 10'dan fazla kategori varsa ilk 10'unu al
+      var query = _firestore.collection('events').where('advertType', whereIn: categoriesToQuery).orderBy('createdAt', descending: true).limit(limit);
 
-      // Sorgular listesi
-      List<Future<QuerySnapshot>> queries = [];
-
-      // Eski format için sorgular (Türkçe metinler için)
-      for (var value in oldFormatValues) {
-        queries.add(eventsRef.where('advertType', isEqualTo: value).limit(limit).get());
+      // Pagination için
+      if (lastDocument != null) {
+        query = query.startAfterDocument(lastDocument);
       }
 
-      // Yeni format için sorgular (enum.name değerleri için)
-      for (var value in newFormatValues) {
-        queries.add(eventsRef.where('advertType', isEqualTo: value).limit(limit).get());
-      }
+      // Sorguyu çalıştır
+      final querySnapshot = await query.get();
+      final adverts = querySnapshot.docs.map((doc) => Advert.fromJson(doc.data(), doc.id)).toList();
 
-      // Tüm sorguları paralel çalıştır
-      final queryResults = await Future.wait(queries);
-
-      // Sonuçları birleştir (tekrarları önlemek için Map kullan)
-      final Map<String, Advert> uniqueAdverts = {};
-
-      for (var querySnapshot in queryResults) {
-        for (var doc in querySnapshot.docs) {
-          final data = doc.data() as Map<String, dynamic>;
-          data['id'] = doc.id;
-
-          final advert = Advert.fromJson(data, doc.id);
-          uniqueAdverts[doc.id] = advert;
-        }
-      }
-
-      // Map'ten liste oluştur
-      final adverts = uniqueAdverts.values.toList();
       debugPrint('Bulunan ilan sayısı: ${adverts.length}');
-
-      // İlgi alanlarına göre ilanları karıştır
-      if (adverts.isNotEmpty) {
-        adverts.shuffle();
-        debugPrint('İlgi alanlarına göre ilanlar karıştırıldı.');
-      }
-
       return adverts;
     } catch (e) {
       debugPrint('İlgi alanlarına göre ilanlar çekilirken hata: $e');

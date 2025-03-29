@@ -54,6 +54,100 @@ class ScaffoldMess extends StatelessWidget {
     }
   }
 
+  /// Mesaj bildirimi için MaterialBanner gösterir (üstte)
+  ///
+  /// [title] - Bildirimin başlığı
+  /// [message] - Gösterilecek mesaj
+  /// [onViewPressed] - Görüntüle düğmesine basıldığında çalışacak fonksiyon
+  /// [duration] - Banner'ın ekranda kalma süresi
+  /// [backgroundColor] - Arkaplan rengi
+  /// [context] - Opsiyonel build context (GlobalKey çalışmazsa kullanılır)
+  static void showMessageBanner({
+    required String title,
+    required String message,
+    required VoidCallback onViewPressed,
+    Duration? duration,
+    Color backgroundColor = Colors.blue,
+    BuildContext? context,
+  }) {
+    final MaterialBanner materialBanner = MaterialBanner(
+      backgroundColor: backgroundColor,
+      padding: const EdgeInsets.all(16),
+      content: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            message,
+            style: const TextStyle(color: Colors.white),
+          ),
+        ],
+      ),
+      leading: const CircleAvatar(
+        backgroundColor: Colors.white,
+        child: Icon(Icons.message, color: Colors.blue),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            _hideCurrentMaterialBanner(context);
+            onViewPressed();
+          },
+          child: const Text('Görüntüle', style: TextStyle(color: Colors.white)),
+        ),
+        TextButton(
+          onPressed: () {
+            _hideCurrentMaterialBanner(context);
+          },
+          child: const Text('Kapat', style: TextStyle(color: Colors.white)),
+        ),
+      ],
+    );
+
+    _showMaterialBannerWithState(materialBanner, context);
+
+    // Otomatik kapanma süresi
+    if (duration != null) {
+      Future.delayed(duration, () {
+        _hideCurrentMaterialBanner(context);
+      });
+    }
+  }
+
+  /// MaterialBanner gösterir
+  static void _showMaterialBannerWithState(MaterialBanner banner, [BuildContext? context]) {
+    if (_messenger != null) {
+      _messenger!.showMaterialBanner(banner);
+    } else if (context != null) {
+      ScaffoldMessenger.of(context).showMaterialBanner(banner);
+    } else {
+      throw Exception('ScaffoldMess: MaterialBanner göstermek için GlobalKey veya Context gerekli');
+    }
+  }
+
+  /// Mevcut MaterialBanner'ı gizler
+  static void _hideCurrentMaterialBanner([BuildContext? context]) {
+    if (_messenger != null) {
+      _messenger!.hideCurrentMaterialBanner();
+    } else if (context != null) {
+      ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+    }
+  }
+
+  /// Tüm MaterialBanner'ları temizler
+  static void clearMaterialBanners([BuildContext? context]) {
+    if (_messenger != null) {
+      _messenger!.clearMaterialBanners();
+    } else if (context != null) {
+      ScaffoldMessenger.of(context).clearMaterialBanners();
+    }
+  }
+
   /// Test amaçlı uygulama genelinde mesaj gösterir
   ///
   /// Bu metod, ScaffoldMess'in nasıl kullanılacağını göstermek için eklenmiştir.

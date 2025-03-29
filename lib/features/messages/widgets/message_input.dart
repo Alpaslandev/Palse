@@ -12,15 +12,14 @@ import 'package:palseapp/core/widgets/scaffold_mess.dart';
 import 'package:palseapp/features/messages/viewmodel/messages_view_model.dart';
 import 'package:provider/provider.dart';
 
-class MessageInput extends StatelessWidget {
-  final TextEditingController _messageController = TextEditingController();
+class MessageInput extends StatefulWidget {
   final String chatId;
   final String currentUserId;
   final String otherUserId;
   final bool isPremium;
   final String senderName;
 
-  MessageInput({
+  const MessageInput({
     super.key,
     required this.chatId,
     required this.currentUserId,
@@ -28,6 +27,20 @@ class MessageInput extends StatelessWidget {
     required this.isPremium,
     required this.senderName,
   });
+
+  @override
+  State<MessageInput> createState() => _MessageInputState();
+}
+
+class _MessageInputState extends State<MessageInput> {
+  // Controller'ı state içinde tut ve dispose etmeyi unutma
+  final TextEditingController _messageController = TextEditingController();
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    super.dispose();
+  }
 
   // URL tespiti yapan yardımcı fonksiyon
   bool isUrl(String text) {
@@ -58,7 +71,7 @@ class MessageInput extends StatelessWidget {
       return false;
     }
 
-    return currentUser.blockUsers!.contains(otherUserId);
+    return currentUser.blockUsers!.contains(widget.otherUserId);
   }
 
   // Kullanıcının engelini kaldır
@@ -70,12 +83,12 @@ class MessageInput extends StatelessWidget {
 
     try {
       final reportService = ReportService();
-      await reportService.unblockUser(otherUserId, currentUserId: currentUser.userID!);
+      await reportService.unblockUser(widget.otherUserId, currentUserId: currentUser.userID!);
 
       // Kullanıcı modelini güncelle
       if (currentUser.blockUsers != null) {
         final updatedBlockList = List<String>.from(currentUser.blockUsers!);
-        updatedBlockList.remove(otherUserId);
+        updatedBlockList.remove(widget.otherUserId);
 
         final updatedUser = currentUser.copyWith(
           blockUsers: updatedBlockList,
@@ -236,10 +249,10 @@ class MessageInput extends StatelessWidget {
                                     ),
                                   )
                                 : Icon(Icons.attach_file, color: theme.colorScheme.onSurface),
-                            onPressed: isPremium
+                            onPressed: widget.isPremium
                                 ? viewModel.isUploadingImage
                                     ? null
-                                    : () => viewModel.handleAttachment(context, senderName)
+                                    : () => viewModel.handleAttachment(context, widget.senderName)
                                 : () => _showPremiumDialog(context),
                           ),
                           Expanded(
@@ -280,11 +293,11 @@ class MessageInput extends StatelessWidget {
                                 }
 
                                 viewModel.sendMessage(
-                                  chatId,
-                                  currentUserId,
-                                  otherUserId,
+                                  widget.chatId,
+                                  widget.currentUserId,
+                                  widget.otherUserId,
                                   messageText,
-                                  senderName,
+                                  widget.senderName,
                                   messageType,
                                 );
                                 _messageController.clear();
