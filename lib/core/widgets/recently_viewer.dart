@@ -15,7 +15,13 @@ class RecentlyViewer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Customer currentCustomer = context.read<AuthProvider>().user!;
-    return ListView.builder(
+    return GridView.builder(
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        childAspectRatio: 0.7,
+        mainAxisSpacing: 10,
+        crossAxisSpacing: 10,
+      ),
       itemCount: viewers.length,
       itemBuilder: (context, index) {
         return FutureBuilder<Customer?>(
@@ -26,7 +32,7 @@ class RecentlyViewer extends StatelessWidget {
             }
             final Customer customer = snapshot.data!;
             return GestureDetector(
-              onTap: () => context.goNamed(Routes.friendProfile, extra: customer),
+              onTap: () => context.pushNamed(Routes.friendProfile, extra: customer.userID),
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Column(

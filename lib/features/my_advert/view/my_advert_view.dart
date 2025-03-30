@@ -120,7 +120,7 @@ class _MyAdvertViewState extends State<MyAdvertView> with TickerProviderStateMix
                               },
                             ),
                       // Profilime Bakanlar
-                      _buildProfileViewersTab(viewModel, authProvider),
+                      _buildProfileViewersTab(authProvider),
                     ],
                   ),
                 ),
@@ -138,24 +138,13 @@ class _MyAdvertViewState extends State<MyAdvertView> with TickerProviderStateMix
     );
   }
 
-  Widget _buildProfileViewersTab(MyAdvertViewModel viewModel, AuthProvider authProvider) {
+  Widget _buildProfileViewersTab(AuthProvider authProvider) {
     return PremiumOverlay(
-      child: viewModel.recentlyViewed.isEmpty
+      child: authProvider.user?.profileViewers?.isEmpty ?? true
           ? _buildEmptyAdvert()
-          : GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                childAspectRatio: 0.7,
-                mainAxisSpacing: 10,
-                crossAxisSpacing: 10,
-              ),
-              itemCount: viewModel.recentlyViewed.length,
-              itemBuilder: (context, index) {
-                return RecentlyViewer(
-                  viewers: authProvider.user?.profileViewers ?? [],
-                  onProfileTap: () => context.pushNamed(Routes.friendProfile, extra: authProvider.user?.userID),
-                );
-              },
+          : RecentlyViewer(
+              viewers: authProvider.user?.profileViewers ?? [],
+              onProfileTap: () => context.pushNamed(Routes.friendProfile, extra: authProvider.user?.userID),
             ),
     );
   }

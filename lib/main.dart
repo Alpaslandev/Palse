@@ -41,17 +41,26 @@ void main() async {
     }
   }
 
-  MobileAds.instance.initialize();
+  // Uygulamanın açılışında kritik olmayan işlemleri geciktir
+  Future.delayed(const Duration(milliseconds: 500), () {
+    MobileAds.instance.initialize();
+    debugPrint('Reklamlar gecikmeli başlatıldı');
+  });
 
-  // RevenueCat'i başlat
+  // RevenueCat ayarlarını platform bazlı ayarlama
   if (Platform.isIOS) {
     await Purchases.setLogLevel(LogLevel.debug);
     await Purchases.configure(PurchasesConfiguration('appl_nqgFBnNbiUeCvilAmLqKsvbZNal'));
   } else if (Platform.isAndroid) {
-    await Purchases.setLogLevel(LogLevel.debug);
-    await Purchases.configure(PurchasesConfiguration('goog_PEygpHUWqHBCeYbZdjULShUAQfz'));
+    // Android'de RevenueCat başlatmasını geciktir
+    Future.delayed(const Duration(milliseconds: 800), () async {
+      await Purchases.setLogLevel(LogLevel.debug);
+      await Purchases.configure(PurchasesConfiguration('goog_PEygpHUWqHBCeYbZdjULShUAQfz'));
+      debugPrint('RevenueCat gecikmeli başlatıldı');
+    });
   }
 
+  // Kritik işlemleri önce başlat
   final authProvider = AuthProvider();
   await authProvider.initializeAuth();
 
@@ -62,10 +71,9 @@ void main() async {
   final notificationService = NotificationService();
   await notificationService.initialize();
 
-  // Locale provider'ı başlat
+  // Diğer provider'ları hazırla
   final localeProvider = LocaleProvider();
   await localeProvider.initialize();
-  // LocaleManager'ı ayarla
   LocaleManager.setLocale(localeProvider.locale);
 
   await initializeDateFormatting(localeProvider.locale.toString(), null);
@@ -76,10 +84,17 @@ void main() async {
   final themeProvider = ThemeProvider();
   await SharedPrefService.init();
 
-  // Achievement servisini başlat (günlük görevleri kontrol et)
-  await AchievementService().init();
+  // Achievement servisini gecikmeli başlat - kritik olmayan
+  Future.delayed(const Duration(seconds: 1), () async {
+    await AchievementService().init();
+    debugPrint('Achievement servisi gecikmeli başlatıldı');
+  });
 
-  await MetaAnalyticsService().logAppLaunch();
+  // Analitik loglamayı gecikmeli başlat
+  Future.delayed(const Duration(seconds: 1), () async {
+    await MetaAnalyticsService().logAppLaunch();
+    debugPrint('Analitik servisi gecikmeli başlatıldı');
+  });
 
   runApp(
     MultiProvider(

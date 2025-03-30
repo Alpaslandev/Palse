@@ -101,8 +101,8 @@ class NotificationService {
         debugPrint('📢 Yerel bildirime tıklandı: ${response.payload}');
         // Payload varsa, işle ve yönlendir
         if (response.payload != null && response.payload!.isNotEmpty) {
-          // Burada yerel bildirimlere tıklama işlemi yapabiliriz
-          // Örneğin: _handleNotificationPayload(response.payload!);
+          // Bildirime tıklayınca navigate işlemi yap
+          _handleLocalNotificationClick(response.payload!);
         }
       },
     );
@@ -303,7 +303,7 @@ class NotificationService {
 
       default:
         debugPrint('Bilinmeyen bildirim türü: $notificationType');
-        AppRouter.router.pushNamed(Routes.home);
+
         break;
     }
   }
@@ -315,6 +315,13 @@ class NotificationService {
       final android = message.notification?.android;
 
       if (notification != null) {
+        // Bildirim payloadını oluştur - JSON formatında bilgileri saklayalım
+        final Map<String, dynamic> notificationData = {
+          'messageId': message.messageId,
+          ...message.data, // tüm data'yı ekle
+        };
+        final String payload = notificationData.toString();
+
         _flutterLocalNotificationsPlugin.show(
           notification.hashCode,
           notification.title,
@@ -329,11 +336,42 @@ class NotificationService {
               icon: android?.smallIcon ?? '@mipmap/ic_launcher',
             ),
           ),
-          // Payload olarak mesaj ID'sini ekle (tıklama olayı için kullanılabilir)
-          payload: message.messageId,
+          // JSON formatında mesaj verilerini payloada ekle
+          payload: payload,
         );
         debugPrint('📢 Android için heads-up notification gösterildi');
       }
+    }
+  }
+
+  // Yerel bildirime tıklanınca çağrılan metot
+  void _handleLocalNotificationClick(String payload) {
+    try {
+      debugPrint('📢 Yerel bildirime tıklandı, navigate yapılıyor...');
+
+      // String payload'ı Map'e çevirme işlemi
+      // Basit bir yaklaşım - regex kullanarak string map'i parse etmek
+      final Map<String, dynamic> data = {};
+
+      // {key: value, key2: value2} formatında gelen string'i parse et
+      final pattern = RegExp(r'([^:,{\s]+)(?:\s*:\s*)([^,}]+)');
+      final matches = pattern.allMatches(payload);
+
+      for (var match in matches) {
+        if (match.groupCount >= 2) {
+          final key = match.group(1)?.trim().replaceAll("'", "") ?? "";
+          final value = match.group(2)?.trim().replaceAll("'", "") ?? "";
+          data[key] = value;
+        }
+      }
+
+      // Bildirim tipini belirle
+      final notificationType = data['type'] != null ? NotificationType.values.byName(data['type']) : NotificationType.message;
+
+      // Kullanıcıyı bildirim tipine göre yönlendir
+      _navigateBasedOnNotificationType(notificationType, data);
+    } catch (e) {
+      debugPrint('📢 Yerel bildirim tıklama işleme hatası: $e');
     }
   }
 }
