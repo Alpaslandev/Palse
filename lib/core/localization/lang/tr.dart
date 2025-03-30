@@ -232,6 +232,7 @@ const Map<String, String> tr = {
   'error': 'Hata',
   'try_again': 'Tekrar Dene',
   'connection_error': 'Bağlantı hatası',
+  'min_categories_warning': 'En az 3 kategori seçilmelidir.',
 
   // XP Event Grupları
   'welcome_rewards': 'Hoş Geldin Ödülleri (Tek Seferlik)',

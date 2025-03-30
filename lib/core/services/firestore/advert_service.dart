@@ -133,19 +133,14 @@ class AdvertService {
   }) async {
     try {
       // Temel sorgu: İlgi alanları dışındaki ilanları çek
-      var query = _firestore.collection('events').limit(limit * 2);
+      var query = _firestore.collection('events').limit(limit);
 
       // İlgi alanları dışındaki ilanları filtrele
-      if (user?.favoriteCategories != null && user?.favoriteCategories?.isNotEmpty == true) {
-        final categoryValues = user?.favoriteCategories?.map((interest) => interest.name).toList();
-        query = query
-            .where('advertType', whereNotIn: categoryValues)
-            .orderBy('isCreatorPremium', descending: true) // Premium ilanlar önce
-            .orderBy('createdAt', descending: true);
-      } else {
-        // Kategori sınırlaması yoksa sadece premium ve tarih sıralaması uygula
-        query = query.orderBy('isCreatorPremium', descending: true).orderBy('createdAt', descending: true);
-      }
+      var categoryValues = user!.favoriteCategories!.map((interest) => interest.name).take(10).toList();
+      query = query
+          .where('advertType', whereNotIn: categoryValues)
+          .orderBy('isCreatorPremium', descending: true) // Premium ilanlar önce
+          .orderBy('createdAt', descending: true);
 
       // Pagination için
       if (lastDocument != null) {
@@ -158,13 +153,7 @@ class AdvertService {
 
       debugPrint('Firestore\'dan çekilen ilan sayısı: ${adverts.length}');
 
-      // Şehir dışındaki ilanları manuel filtrele
-      final otherAdverts = adverts.where((advert) {
-        return user?.location?.city == null || user?.location?.city.isEmpty == true || advert.location.city != user?.location?.city;
-      }).toList();
-
-      debugPrint('Filtreleme sonrası kalan ilan sayısı: ${otherAdverts.length}');
-      return otherAdverts;
+      return adverts;
     } catch (e) {
       debugPrint('Other ilanlar çekilirken hata: $e');
       return [];
@@ -304,6 +293,361 @@ class AdvertService {
     } catch (e) {
       debugPrint('İlanlar güncellenirken hata oluştu: $e');
       throw Exception('İlanlar güncellenirken hata oluştu: $e');
+    }
+  }
+
+  // Silinmiş kullanıcıların ilanlarını temizleyen metod
+  Future<void> cleanupDeletedUsersAdverts() async {
+    try {
+      // İşlem başlangıcını logla
+      debugPrint('Silinmiş kullanıcıların ilanlarını temizleme işlemi başlatıldı');
+
+      // İstatistikler için sayaçlar
+      int totalProcessed = 0;
+      int totalDeleted = 0;
+
+      // Batch işlemi için counter ve batch
+      int batchCount = 0;
+      var batch = _firestore.batch();
+
+      // Tüm ilanları getir
+      final eventsSnapshot = await _firestore.collection('events').get();
+      debugPrint('Toplam ilan sayısı: ${eventsSnapshot.size}');
+
+      // Silinecek ilanların referanslarını tutacak liste
+      final List<DocumentReference> advertsToDelete = [];
+
+      // İlanları işle
+      for (var doc in eventsSnapshot.docs) {
+        totalProcessed++;
+
+        // İlan verisini al
+        final advertData = doc.data();
+        final creatorUserID = advertData['creatorUserID'] as String?;
+
+        if (creatorUserID == null || creatorUserID.isEmpty) {
+          // CreatorUserID bilgisi eksikse doğrudan sil
+          advertsToDelete.add(doc.reference);
+          totalDeleted++;
+          continue;
+        }
+
+        // Kullanıcı belgesinin var olup olmadığını kontrol et
+        try {
+          final customerDoc = await _firestore.collection('customers').doc(creatorUserID).get();
+
+          // Kullanıcı bulunamadıysa ilanı silme listesine ekle
+          if (!customerDoc.exists) {
+            advertsToDelete.add(doc.reference);
+            totalDeleted++;
+
+            debugPrint('Silinecek ilan: ${doc.id}, Sahibi bulunamadı: $creatorUserID');
+          }
+        } catch (e) {
+          // Kullanıcı kontrolünde hata olursa güvenli tarafa geç, silme
+          debugPrint('Kullanıcı kontrolünde hata: $e');
+          continue;
+        }
+
+        // Her 100 ilanda bir ilerleme bildirimi
+        if (totalProcessed % 100 == 0) {
+          debugPrint('İşlenen ilan: $totalProcessed / ${eventsSnapshot.size}, Silinecek: $totalDeleted');
+        }
+      }
+
+      // Silinecek ilanları batch işlemi ile sil
+      debugPrint('Toplam silinecek ilan sayısı: ${advertsToDelete.length}');
+
+      for (var advertRef in advertsToDelete) {
+        batch.delete(advertRef);
+        batchCount++;
+
+        // Batch limitini kontrol et (500 işlem)
+        if (batchCount >= 499) {
+          // Batch'i commit et
+          await batch.commit();
+          debugPrint('Batch commit edildi: $batchCount ilan silindi');
+
+          // Yeni batch oluştur
+          batch = _firestore.batch();
+          batchCount = 0;
+        }
+      }
+
+      // Kalan işlemleri commit et
+      if (batchCount > 0) {
+        await batch.commit();
+        debugPrint('Son batch commit edildi: $batchCount ilan silindi');
+      }
+
+      debugPrint('Temizleme işlemi tamamlandı. Toplam silinen ilan sayısı: $totalDeleted / ${eventsSnapshot.size}');
+
+      return;
+    } catch (e) {
+      debugPrint('İlanlar temizlenirken hata oluştu: $e');
+      throw Exception('İlanlar temizlenirken hata oluştu: $e');
+    }
+  }
+
+  // Kategorisi yetersiz olan kullanıcıların kategorilerini 3'e tamamlayan metod
+  Future<void> completeUserCategoriesToMinimumThree() async {
+    try {
+      // İşlem başlangıcını logla
+      debugPrint('Kategori sayısı yetersiz olan kullanıcıların kategorilerini tamamlama işlemi başlatıldı');
+
+      // Kullanılabilecek tüm varsayılan kategoriler
+      final List<String> availableCategories = [
+        'kahveSohbet',
+        'kitapBulusma',
+        'dilKultur',
+        'halisaha',
+        'doga',
+        'fitness',
+        'sanatTarih',
+        'filmDizi',
+        'spor'
+      ];
+
+      // İstatistikler için sayaçlar
+      int totalProcessed = 0;
+      int totalUpdated = 0;
+
+      // Batch işlemi için counter ve batch
+      int batchCount = 0;
+      var batch = _firestore.batch();
+
+      // Tüm kullanıcıları getir ve manuel olarak kategorileri kontrol et
+      final customersSnapshot = await _firestore.collection('customers').get();
+
+      debugPrint('Toplam kullanıcı sayısı: ${customersSnapshot.size}');
+
+      // Kullanıcıları işle
+      for (var doc in customersSnapshot.docs) {
+        totalProcessed++;
+
+        // Kullanıcı verisini al
+        final userData = doc.data();
+
+        // Mevcut kategorileri al
+        List<String> currentCategories = [];
+        final favoriteCategories = userData['favoriteCategories'];
+
+        if (favoriteCategories != null && favoriteCategories is List) {
+          currentCategories = List<String>.from(favoriteCategories.map((cat) => cat.toString()));
+        }
+
+        // Kategori sayısı 3'ten az mı kontrol et
+        if (currentCategories.length < 3) {
+          // Eklenmesi gereken kategori sayısı
+          int neededCategories = 3 - currentCategories.length;
+          List<String> categoriesToAdd = [];
+
+          // Kullanıcının henüz sahip olmadığı kategorilerden ekle
+          for (String category in availableCategories) {
+            if (!currentCategories.contains(category)) {
+              categoriesToAdd.add(category);
+              neededCategories--;
+
+              // Yeterli sayıda kategori eklendiyse döngüden çık
+              if (neededCategories <= 0) break;
+            }
+          }
+
+          // Yeni kategori listesi oluştur (mevcut + eklenecek)
+          List<String> updatedCategories = [...currentCategories, ...categoriesToAdd];
+
+          // Firestore'u güncelle
+          batch.update(doc.reference, {'favoriteCategories': updatedCategories});
+
+          batchCount++;
+          totalUpdated++;
+
+          // Batch limitini kontrol et (500 işlem)
+          if (batchCount >= 499) {
+            // Batch'i commit et
+            await batch.commit();
+            debugPrint('Batch commit edildi: $batchCount kullanıcı güncellendi, toplam: $totalUpdated / $totalProcessed');
+
+            // Yeni batch oluştur
+            batch = _firestore.batch();
+            batchCount = 0;
+          }
+        }
+
+        // Her 100 kullanıcıda bir ilerleme bildirimi
+        if (totalProcessed % 100 == 0) {
+          debugPrint('İşlenen kullanıcı: $totalProcessed / ${customersSnapshot.size}, Güncellenen: $totalUpdated');
+        }
+      }
+
+      // Kalan işlemleri commit et
+      if (batchCount > 0) {
+        await batch.commit();
+        debugPrint('Son batch commit edildi: $batchCount kullanıcı güncellendi');
+      }
+
+      debugPrint('Kategori tamamlama işlemi tamamlandı. Toplam güncellenen kullanıcı sayısı: $totalUpdated / $totalProcessed');
+    } catch (e) {
+      debugPrint('Kullanıcı kategorileri tamamlanırken hata oluştu: $e');
+      throw Exception('Kullanıcı kategorileri tamamlanırken hata oluştu: $e');
+    }
+  }
+
+  // Kullanıcıların kategori durumlarını kontrol eden metod
+  Future<void> checkUserCategoriesStatus() async {
+    try {
+      // İşlem başlangıcını logla
+      debugPrint('Kullanıcı kategori durumu kontrol işlemi başlatıldı');
+
+      // İstatistikler için sayaçlar
+      int totalUsers = 0;
+      int usersWithNoCategories = 0;
+      int usersWithFewCategories = 0; // 3'ten az kategorisi olanlar
+
+      // Tüm kullanıcıları getir
+      final customersSnapshot = await _firestore.collection('customers').get();
+      totalUsers = customersSnapshot.size;
+
+      debugPrint('Toplam kullanıcı sayısı: $totalUsers');
+
+      // Kategori sayısına göre kullanıcı dağılımı
+      Map<int, int> categoryCountDistribution = {};
+      List<String> usersWithoutCategories = [];
+
+      // Kullanıcıları işle
+      for (var doc in customersSnapshot.docs) {
+        final userData = doc.data();
+        final userId = doc.id;
+
+        // Kategori listesini al
+        final List<dynamic>? categories = userData['favoriteCategories'] as List<dynamic>?;
+
+        int categoryCount = 0;
+        if (categories != null) {
+          categoryCount = categories.length;
+        }
+
+        // Kategori sayısına göre istatistik tut
+        categoryCountDistribution[categoryCount] = (categoryCountDistribution[categoryCount] ?? 0) + 1;
+
+        // Hiç kategorisi yoksa
+        if (categoryCount == 0) {
+          usersWithNoCategories++;
+          usersWithoutCategories.add(userId);
+        }
+
+        // 3'ten az kategorisi varsa
+        if (categoryCount < 3) {
+          usersWithFewCategories++;
+        }
+
+        // Her 500 kullanıcıda bir ilerleme bildirimi
+        if (usersWithoutCategories.length % 500 == 0 && usersWithoutCategories.isNotEmpty) {
+          debugPrint('İşlenen kullanıcı: ${usersWithoutCategories.length}');
+        }
+      }
+
+      // Sonuçları logla
+      debugPrint('Kategori sayısına göre kullanıcı dağılımı:');
+      categoryCountDistribution.forEach((categoryCount, userCount) {
+        debugPrint('$categoryCount kategori: $userCount kullanıcı (${(userCount / totalUsers * 100).toStringAsFixed(2)}%)');
+      });
+
+      debugPrint(
+          'Hiç kategorisi olmayan kullanıcı sayısı: $usersWithNoCategories (${(usersWithNoCategories / totalUsers * 100).toStringAsFixed(2)}%)');
+      debugPrint(
+          '3\'ten az kategorisi olan kullanıcı sayısı: $usersWithFewCategories (${(usersWithFewCategories / totalUsers * 100).toStringAsFixed(2)}%)');
+
+      // Hiç kategorisi olmayan kullanıcıları listele (ilk 20)
+      if (usersWithoutCategories.isNotEmpty) {
+        final displayCount = usersWithoutCategories.length > 20 ? 20 : usersWithoutCategories.length;
+        debugPrint('Hiç kategorisi olmayan ilk $displayCount kullanıcı:');
+        for (int i = 0; i < displayCount; i++) {
+          debugPrint('- ${usersWithoutCategories[i]}');
+        }
+      }
+
+      debugPrint('Kategori kontrolü tamamlandı.');
+    } catch (e) {
+      debugPrint('Kullanıcı kategori kontrolünde hata oluştu: $e');
+    }
+  }
+
+  // Kategorisi olmayan kullanıcılara varsayılan kategoriler ekleyen metod
+  Future<void> addDefaultCategoriesToUsers() async {
+    try {
+      // İşlem başlangıcını logla
+      debugPrint('Kategorisi olmayan kullanıcılara varsayılan kategoriler ekleme işlemi başlatıldı');
+
+      // Varsayılan kategoriler
+      final List<String> defaultCategories = ['kahveSohbet', 'kitapBulusma', 'dilKultur'];
+
+      // İstatistikler için sayaçlar
+      int totalProcessed = 0;
+      int totalUpdated = 0;
+
+      // Batch işlemi için counter ve batch
+      int batchCount = 0;
+      var batch = _firestore.batch();
+
+      // Tüm kullanıcıları getir ve manuel olarak kategorileri kontrol et
+      final customersSnapshot = await _firestore.collection('customers').get();
+
+      debugPrint('Toplam kullanıcı sayısı: ${customersSnapshot.size}');
+
+      // Kullanıcıları işle
+      for (var doc in customersSnapshot.docs) {
+        totalProcessed++;
+
+        // Kullanıcı verisini al
+        final userData = doc.data();
+
+        // Kategorileri kontrol et (null veya boş ise güncelle)
+        final favoriteCategories = userData['favoriteCategories'];
+        bool shouldUpdate = false;
+
+        // Kategoriler null ise veya boş bir liste ise güncelle
+        if (favoriteCategories == null) {
+          shouldUpdate = true;
+        } else if (favoriteCategories is List && favoriteCategories.isEmpty) {
+          shouldUpdate = true;
+        }
+
+        if (shouldUpdate) {
+          // Varsayılan kategorileri ekle
+          batch.update(doc.reference, {'favoriteCategories': defaultCategories});
+
+          batchCount++;
+          totalUpdated++;
+
+          // Batch limitini kontrol et (500 işlem)
+          if (batchCount >= 499) {
+            // Batch'i commit et
+            await batch.commit();
+            debugPrint('Batch commit edildi: $batchCount kullanıcı güncellendi, toplam: $totalUpdated / $totalProcessed');
+
+            // Yeni batch oluştur
+            batch = _firestore.batch();
+            batchCount = 0;
+          }
+        }
+
+        // Her 100 kullanıcıda bir ilerleme bildirimi
+        if (totalProcessed % 100 == 0) {
+          debugPrint('İşlenen kullanıcı: $totalProcessed / ${customersSnapshot.size}, Güncellenen: $totalUpdated');
+        }
+      }
+
+      // Kalan işlemleri commit et
+      if (batchCount > 0) {
+        await batch.commit();
+        debugPrint('Son batch commit edildi: $batchCount kullanıcı güncellendi');
+      }
+
+      debugPrint('Güncelleme işlemi tamamlandı. Toplam güncellenen kullanıcı sayısı: $totalUpdated / $totalProcessed');
+    } catch (e) {
+      debugPrint('Kullanıcı kategori güncellemesinde hata oluştu: $e');
+      throw Exception('Kullanıcı kategori güncellemesinde hata oluştu: $e');
     }
   }
 }

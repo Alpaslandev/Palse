@@ -238,7 +238,7 @@ const Map<String, String> en = {
   'error': 'Error',
   'try_again': 'Try Again',
   'connection_error': 'Connection error',
-
+  'min_categories_warning': 'You must select at least 3 categories.',
   // XP Event Groups
   'welcome_rewards': 'Welcome Rewards (One-time)',
   'listing': 'Listing',

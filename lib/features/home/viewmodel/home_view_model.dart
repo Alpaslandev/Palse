@@ -40,6 +40,7 @@ class HomeViewModel extends ChangeNotifier {
     _lastDocument = null;
     _hasMore = true;
     _shouldShowOtherTab = false; // Flag'i sıfırla
+    notifyListeners(); // Değişiklikleri bildir
 
     await _loadMoreAdverts(user, tabIndex);
   }
@@ -57,6 +58,7 @@ class HomeViewModel extends ChangeNotifier {
     _setLoading(true);
     try {
       List<Advert> newAdverts = [];
+      // await _advertService.checkUserCategoriesStatus();
 
       switch (tabIndex) {
         case 0:
@@ -107,12 +109,8 @@ class HomeViewModel extends ChangeNotifier {
       }
 
       if (newAdverts.isNotEmpty) {
-        // Son dökümanı güncelle - DÜZELTME BURADA
-        _lastDocument = await _firestore
-            .collection('events')
-            .where('advertID', isEqualTo: newAdverts.last.advertID)
-            .get()
-            .then((value) => value.docs.isNotEmpty ? value.docs.first : null);
+        // Son dökümanı güncelle
+        _lastDocument = await _firestore.collection('events').doc(newAdverts.last.advertID).get();
 
         // Yeni ilanları ekle
         _adverts.addAll(newAdverts);

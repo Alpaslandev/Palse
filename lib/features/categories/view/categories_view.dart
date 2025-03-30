@@ -19,6 +19,9 @@ class _CategoriesViewState extends State<CategoriesView> {
   List<Categories> selectedCategories = [];
   List<Categories> categories = [];
   bool changed = false;
+  // Minimum seçilmesi gereken kategori sayısı
+  final int minRequiredCategories = 3;
+
   @override
   void initState() {
     super.initState();
@@ -77,6 +80,17 @@ class _CategoriesViewState extends State<CategoriesView> {
                             style: const TextStyle(color: Colors.white),
                           ),
                           onDeleted: () {
+                            // Eğer seçili kategori sayısı minimum gerekenden az veya eşitse, silme işlemini engelle
+                            if (selectedCategories.length <= minRequiredCategories) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(context.tr('min_categories_warning')),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                              return;
+                            }
+
                             setState(() {
                               selectedCategories.remove(category);
                               changed = true;
@@ -123,6 +137,17 @@ class _CategoriesViewState extends State<CategoriesView> {
   }
 
   Future<void> saveCategories() async {
+    // Minimum kategori kontrolü
+    if (selectedCategories.length < minRequiredCategories) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.tr('min_categories_warning')),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final user = authProvider.user!;
 
