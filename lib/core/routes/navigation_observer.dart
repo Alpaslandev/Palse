@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:palseapp/core/provider/ads_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
+import 'package:provider/provider.dart';
+import 'package:palseapp/core/provider/auth_provider.dart';
 
 class NavigationObserver extends NavigatorObserver {
   final AdsProvider adsProvider;
@@ -91,6 +93,25 @@ class NavigationObserver extends NavigatorObserver {
       if (routeName == null) {
         debugPrint('🚫 Reklam gösterilmedi: Rota adı bulunamadı');
         return;
+      }
+
+      // Önce kullanıcı premium mi kontrol et
+      final context = navigator?.context;
+      if (context != null) {
+        final authProvider = Provider.of<AuthProvider>(context, listen: false);
+        final user = authProvider.user;
+
+        // Premium kullanıcılara reklam gösterme
+        if (user != null && user.isPremium == true) {
+          debugPrint('🚫 Reklam gösterilmedi: Kullanıcı premium üye');
+          return;
+        }
+
+        // Kullanıcı giriş yapmamışsa reklam gösterme
+        if (user == null) {
+          debugPrint('🚫 Reklam gösterilmedi: Kullanıcı giriş yapmamış');
+          return;
+        }
       }
 
       debugPrint('🔍 Rota adı: $routeName');
