@@ -650,4 +650,192 @@ class AdvertService {
       throw Exception('Kullanıcı kategori güncellemesinde hata oluştu: $e');
     }
   }
+
+  // Events koleksiyonundaki tüm belgelerin field tutarlılığını kontrol eden metod
+  Future<void> checkFieldConsistencyInEvents() async {
+    try {
+      // İşlem başlangıcını logla
+      debugPrint('Events koleksiyonundaki field tutarlılığı kontrolü başlatıldı');
+
+      // Tüm belgeleri getir
+      final eventsSnapshot = await _firestore.collection('events').get();
+      debugPrint('Toplam belge sayısı: ${eventsSnapshot.size}');
+
+      // İlk belgenin field'larını referans al
+      final firstDoc = eventsSnapshot.docs.last;
+      final referenceFields = firstDoc.data().keys.toSet();
+      debugPrint('Referans field\'lar: ${referenceFields.join(', ')}');
+
+      // İstatistikler için sayaçlar
+      int totalProcessed = 0;
+      int inconsistentDocs = 0;
+
+      // Tüm belgeleri kontrol et
+      for (var doc in eventsSnapshot.docs) {
+        totalProcessed++;
+
+        // Mevcut belgenin field'larını al
+        final currentFields = doc.data().keys.toSet();
+
+        // Eksik veya fazla field'ları bul
+        final missingFields = referenceFields.difference(currentFields);
+        final extraFields = currentFields.difference(referenceFields);
+
+        // Eksik veya fazla field varsa logla
+        if (missingFields.isNotEmpty || extraFields.isNotEmpty) {
+          inconsistentDocs++;
+          debugPrint('Tutarsız belge ID: ${doc.id}');
+          if (missingFields.isNotEmpty) {
+            debugPrint('Eksik field\'lar: ${missingFields.join(', ')}');
+          }
+          if (extraFields.isNotEmpty) {
+            debugPrint('Fazla field\'lar: ${extraFields.join(', ')}');
+          }
+        }
+
+        // Her 100 belgede bir ilerleme bildirimi
+        if (totalProcessed % 100 == 0) {
+          debugPrint('İşlenen belge: $totalProcessed / ${eventsSnapshot.size}, Tutarsız belge sayısı: $inconsistentDocs');
+        }
+      }
+
+      // Sonuçları logla
+      debugPrint('Field tutarlılığı kontrolü tamamlandı. Toplam tutarsız belge sayısı: $inconsistentDocs / ${eventsSnapshot.size}');
+    } catch (e) {
+      debugPrint('Field tutarlılığı kontrolü sırasında hata oluştu: $e');
+      throw Exception('Field tutarlılığı kontrolü sırasında hata oluştu: $e');
+    }
+  }
+
+  // isCreatorPremium, createdAt ve advertType alanlarının varlığını kontrol eden metod
+  Future<void> checkRequiredFieldsInEvents() async {
+    try {
+      // İşlem başlangıcını logla
+      debugPrint('İlan belgelerinde zorunlu alanların kontrolü başlatıldı');
+
+      // Kontrol edilecek alanlar
+      final requiredFields = ['isCreatorPremium', 'createdAt', 'advertType'];
+
+      // İstatistikler için sayaçlar
+      int totalProcessed = 0;
+      int documentsWithMissingFields = 0;
+
+      // Eksik alanlara sahip belgelerin ID'lerini saklayan map
+      final Map<String, List<String>> missingFieldsMap = {};
+
+      // Tüm ilanları getir
+      final eventsSnapshot = await _firestore.collection('events').get();
+      debugPrint('Toplam ilan sayısı: ${eventsSnapshot.size}');
+
+      // Tüm belgeleri kontrol et
+      for (var doc in eventsSnapshot.docs) {
+        totalProcessed++;
+        final data = doc.data();
+
+        // Belgedeki eksik alanları bul
+        final List<String> missingFields = [];
+        for (var field in requiredFields) {
+          if (!data.containsKey(field)) {
+            missingFields.add(field);
+          }
+        }
+
+        // Eksik alan varsa kaydet
+        if (missingFields.isNotEmpty) {
+          documentsWithMissingFields++;
+          missingFieldsMap[doc.id] = missingFields;
+
+          debugPrint('Belge ID: ${doc.id}, Eksik alanlar: ${missingFields.join(', ')}');
+        }
+
+        // Her 100 belgede bir ilerleme bildirimi
+        if (totalProcessed % 100 == 0) {
+          debugPrint('İşlenen ilan: $totalProcessed / ${eventsSnapshot.size}, Sorunlu belge sayısı: $documentsWithMissingFields');
+        }
+      }
+
+      // Sonuçları logla
+      debugPrint('Zorunlu alan kontrolü tamamlandı.');
+      debugPrint('Toplam işlenen belge: $totalProcessed');
+      debugPrint(
+          'Eksik alanlara sahip belge sayısı: $documentsWithMissingFields (${(documentsWithMissingFields / totalProcessed * 100).toStringAsFixed(2)}%)');
+
+      // Özet istatistikler
+      final fieldStats = <String, int>{};
+      for (var field in requiredFields) {
+        int missingCount = 0;
+        missingFieldsMap.forEach((_, fields) {
+          if (fields.contains(field)) {
+            missingCount++;
+          }
+        });
+        fieldStats[field] = missingCount;
+      }
+
+      // Alan bazlı istatistikleri logla
+      debugPrint('Alan bazlı eksik belge sayısı:');
+      fieldStats.forEach((field, count) {
+        debugPrint('- $field: $count belge (${(count / totalProcessed * 100).toStringAsFixed(2)}%)');
+      });
+    } catch (e) {
+      debugPrint('Zorunlu alan kontrolü sırasında hata oluştu: $e');
+      throw Exception('Zorunlu alan kontrolü sırasında hata oluştu: $e');
+    }
+  }
+
+  // Belirli ilan ID'leri için creatorUserID kontrolü ve customer varlığı kontrolü
+  Future<void> checkAdvertCreatorExistence() async {
+    try {
+      // Kontrol edilecek ilan ID'leri
+      final List<String> advertIds = ['3OgPxKdkfVQayOEJb3q6', 'ABNqUY7sV33orG6I2ack', 'UJ7dkpq4QOJ0HYfJjv1H'];
+
+      debugPrint('Belirtilen ilanların creatorUserID kontrolü başlatıldı');
+
+      for (var advertId in advertIds) {
+        // İlan belgesini getir
+        final advertDoc = await _firestore.collection('events').doc(advertId).get();
+
+        if (!advertDoc.exists) {
+          debugPrint('İlan bulunamadı: $advertId');
+          continue;
+        }
+
+        final advertData = advertDoc.data();
+        if (advertData == null) {
+          debugPrint('İlan verisi boş: $advertId');
+          continue;
+        }
+
+        // creatorUserID alanını kontrol et
+        final creatorUserID = advertData['creatorUserID'];
+
+        if (creatorUserID == null || creatorUserID.toString().isEmpty) {
+          debugPrint('İlan: $advertId - creatorUserID alanı yok veya boş!');
+          continue;
+        }
+
+        debugPrint('İlan: $advertId - creatorUserID: $creatorUserID');
+
+        // Customer koleksiyonunda bu kullanıcının varlığını kontrol et
+        final customerDoc = await _firestore.collection('customers').doc(creatorUserID.toString()).get();
+
+        if (!customerDoc.exists) {
+          debugPrint('İlan: $advertId - SORUN: Kullanıcı bulunamadı: $creatorUserID');
+        } else {
+          // Kullanıcı premium durumunu al
+          final isPremium = customerDoc.data()?['isPremium'] ?? false;
+          debugPrint('İlan: $advertId - Kullanıcı bulundu: $creatorUserID (Premium: $isPremium)');
+
+          // İlana isCreatorPremium alanını ekle/güncelle
+          await _firestore.collection('events').doc(advertId).update({'isCreatorPremium': isPremium});
+
+          debugPrint('İlan: $advertId - isCreatorPremium alanı güncellendi: $isPremium');
+        }
+      }
+
+      debugPrint('Kontrol işlemi tamamlandı.');
+    } catch (e) {
+      debugPrint('İlan yaratıcısı kontrolü sırasında hata oluştu: $e');
+    }
+  }
 }

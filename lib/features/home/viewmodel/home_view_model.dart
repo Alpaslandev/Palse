@@ -40,7 +40,6 @@ class HomeViewModel extends ChangeNotifier {
     _lastDocument = null;
     _hasMore = true;
     _shouldShowOtherTab = false; // Flag'i sıfırla
-    notifyListeners(); // Değişiklikleri bildir
 
     await _loadMoreAdverts(user, tabIndex);
   }
@@ -58,7 +57,7 @@ class HomeViewModel extends ChangeNotifier {
     _setLoading(true);
     try {
       List<Advert> newAdverts = [];
-      // await _advertService.checkUserCategoriesStatus();
+      //await _advertService.checkAdvertCreatorExistence();
 
       switch (tabIndex) {
         case 0:
@@ -69,13 +68,11 @@ class HomeViewModel extends ChangeNotifier {
           );
           break;
         case 1:
-          if (user?.favoriteCategories != null && user?.favoriteCategories?.isNotEmpty == true) {
-            newAdverts = await _advertService.fetchAdvertsByInterests(
-              user?.favoriteCategories ?? [],
-              lastDocument: _lastDocument,
-              limit: _pageSize,
-            );
-          }
+          newAdverts = await _advertService.fetchAdvertsByInterests(
+            user?.favoriteCategories ?? [],
+            lastDocument: _lastDocument,
+            limit: _pageSize,
+          );
           break;
         case 2: // Other sekmesi
           newAdverts = await _advertService.fetchOtherAdverts(
@@ -91,25 +88,15 @@ class HomeViewModel extends ChangeNotifier {
           );
       }
 
-      // Kullanıcının kendi ilanlarını ve engellediği kişilerin ilanlarını filtrele
-      if (user != null) {
-        newAdverts = newAdverts.where((advert) {
-          // Kullanıcının kendi ilanlarını filtrele
-          if (advert.creatorUserID == user.userID) {
-            return false;
-          }
+      // Filtreleme ÖNCESİ ilan sayısına göre hasMore değerini belirle
+      // Eğer pageSize kadar ilan çekildiyse, daha fazla veri olabilir
+      bool canHaveMore = newAdverts.length >= _pageSize;
 
-          // Kullanıcının engellediği kişilerin ilanlarını filtrele
-          if (user.blockUsers != null && user.blockUsers!.contains(advert.creatorUserID)) {
-            return false;
-          }
-
-          return true;
-        }).toList();
-      }
+      // NOT: Artık burada filtreleme yapmıyoruz. Görüntüleme sırasında filtreleceğiz.
+      // Bu şekilde sayfalama mantığı bozulmayacak.
 
       if (newAdverts.isNotEmpty) {
-        // Son dökümanı güncelle
+        // Son dökümanı güncelle (filtrelenmemiş listeden alıyoruz)
         _lastDocument = await _firestore.collection('events').doc(newAdverts.last.advertID).get();
 
         // Yeni ilanları ekle
@@ -127,11 +114,12 @@ class HomeViewModel extends ChangeNotifier {
         }
       }
 
-      // Sayfa kontrolü
-      _hasMore = newAdverts.length >= _pageSize;
+      // Sayfa kontrolü - Filtreleme öncesi duruma göre hasMore değerini ayarla
+      _hasMore = canHaveMore;
+
       notifyListeners();
 
-      debugPrint('Yeni ilanlar yüklendi. Toplam: ${_adverts.length}, Yeni: ${newAdverts.length}');
+      debugPrint('Yeni ilanlar yüklendi. Toplam: ${_adverts.length}, Yeni: ${newAdverts.length}, Daha fazla var mı: $_hasMore');
     } catch (e) {
       debugPrint('İlanlar yüklenirken hata: $e');
     } finally {
