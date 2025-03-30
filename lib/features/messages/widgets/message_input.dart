@@ -233,7 +233,7 @@ class _MessageInputState extends State<MessageInput> {
                       if (viewModel.isUploadingImage)
                         LinearProgressIndicator(
                           value: viewModel.uploadProgress,
-                          backgroundColor: theme.colorScheme.surfaceVariant,
+                          backgroundColor: theme.colorScheme.surfaceContainerHighest,
                           valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
                         ),
                       Row(

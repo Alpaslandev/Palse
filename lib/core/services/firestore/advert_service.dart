@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:palseapp/core/constant/categories.dart';
 import 'package:palseapp/core/models/advert.dart';
-import 'package:palseapp/core/models/location_model.dart';
+import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/services/notification_service.dart';
 
 class AdvertService {
@@ -14,13 +14,8 @@ class AdvertService {
     String? city, {
     DocumentSnapshot? lastDocument,
     int limit = 25,
-    LocationModel? userLocation,
   }) async {
     try {
-      if (city == null || city.isEmpty) {
-        return await fetchAdverts(lastDocument: lastDocument, limit: limit, userLocation: userLocation);
-      }
-
       final upperCity = city;
       debugPrint('Aranan şehir: $upperCity, limit: $limit');
 
@@ -43,8 +38,7 @@ class AdvertService {
   }
 
   // İlgi alanlarına göre ilanları getir
-  Future<List<Advert>> fetchAdvertsByInterests(List<Categories>? interests,
-      {DocumentSnapshot? lastDocument, int limit = 25, LocationModel? userLocation}) async {
+  Future<List<Advert>> fetchAdvertsByInterests(List<Categories>? interests, {DocumentSnapshot? lastDocument, int limit = 25}) async {
     try {
       // İlgi alanı yoksa boş liste döndür
       if (interests == null || interests.isEmpty) {
@@ -80,71 +74,82 @@ class AdvertService {
     }
   }
 
-  // Tüm ilanları getir
-  Future<List<Advert>> fetchAdverts({
+  // Cinsiyet ve kategoriye göre esnek filtreleme ile ilanları getir
+  Future<List<Advert>> fetchAdvertsByFiltering({
     DocumentSnapshot? lastDocument,
     int limit = 25,
-    LocationModel? userLocation,
+    String? gender,
+    String? category,
   }) async {
     try {
+      // Temel sorgu
       var query = _firestore.collection('events').limit(limit);
 
+      // Cinsiyet filtresi ekle (eğer belirtilmişse)
+      if (gender != null && gender.isNotEmpty) {
+        query = query.where('creatorGender', isEqualTo: gender);
+      }
+
+      // Kategori filtresi ekle (eğer belirtilmişse)
+      if (category != null && category.isNotEmpty) {
+        query = query.where('advertType', isEqualTo: category);
+      }
+
+      // Sıralama ve pagination
+      query = query.orderBy('createdAt', descending: true);
       if (lastDocument != null) {
         query = query.startAfterDocument(lastDocument);
       }
 
+      // Sorguyu çalıştır
       final querySnapshot = await query.get();
       final adverts = querySnapshot.docs.map((doc) => Advert.fromJson(doc.data(), doc.id)).toList();
 
-      debugPrint('Toplam ilan sayısı: ${adverts.length}');
+      debugPrint('Filtrelenmiş ilan sayısı: ${adverts.length}');
       return adverts;
     } catch (e) {
-      debugPrint('İlanlar çekilirken hata: $e');
+      debugPrint('Filtrelenmiş ilanlar çekilirken hata: $e');
       return [];
     }
   }
 
   // Other sekmesi için ilanları getir - Kullanıcının şehrinde ve ilgi alanlarında olmayan ilanlar
   Future<List<Advert>> fetchOtherAdverts({
-    required String? userCity,
-    required List<Categories>? userInterests,
     DocumentSnapshot? lastDocument,
     int limit = 25,
-    LocationModel? userLocation,
+    Customer? user,
   }) async {
     try {
       debugPrint('Other sekmesi için ilanlar getiriliyor...');
-      debugPrint('Kullanıcı şehri: $userCity');
-      debugPrint('Kullanıcı ilgi alanları: ${userInterests?.map((e) => e.name).toList()}');
+      debugPrint('Kullanıcı şehri: ${user?.location?.city}');
+      debugPrint('Kullanıcı ilgi alanları: ${user?.favoriteCategories?.map((e) => e.name).toList()}');
 
-      // Tüm ilanları çek
-      var query = _firestore.collection('events').limit(limit * 3); // Daha fazla ilan çekelim, filtreleme yapacağız
+      // Temel sorgu: İlgi alanları dışındaki ilanları çek
+      var query = _firestore.collection('events').limit(limit * 2);
 
+      // İlgi alanları dışındaki ilanları filtrele
+      if (user?.favoriteCategories != null && user?.favoriteCategories?.isNotEmpty == true) {
+        final categoryValues = user?.favoriteCategories?.map((interest) => interest.name).toList();
+        query = query.where('advertType', whereNotIn: categoryValues).orderBy('createdAt', descending: true);
+      }
+
+      // Pagination için
       if (lastDocument != null) {
         query = query.startAfterDocument(lastDocument);
       }
 
+      // Sorguyu çalıştır
       final querySnapshot = await query.get();
-      final allAdverts = querySnapshot.docs.map((doc) => Advert.fromJson(doc.data(), doc.id)).toList();
+      final adverts = querySnapshot.docs.map((doc) => Advert.fromJson(doc.data(), doc.id)).toList();
 
-      debugPrint('Toplam çekilen ilan sayısı: ${allAdverts.length}');
+      debugPrint('Firestore\'dan çekilen ilan sayısı: ${adverts.length}');
 
-      // Kullanıcının şehrinde ve ilgi alanlarında olmayan ilanları filtrele
-      List<Advert> otherAdverts = allAdverts.where((advert) {
-        // Kullanıcının şehrinde değilse ve ilgi alanlarında değilse göster
-        bool isNotInUserCity = userCity == null || userCity.isEmpty || advert.location.city != userCity;
-        bool isNotInUserInterests = userInterests == null || userInterests.isEmpty || !userInterests.contains(advert.advertType);
-
-        return isNotInUserCity && isNotInUserInterests;
+      // Şehir dışındaki ilanları manuel filtrele
+      final otherAdverts = adverts.where((advert) {
+        return user?.location?.city == null || user?.location?.city.isEmpty == true || advert.location.city != user?.location?.city;
       }).toList();
 
-      // Limit uygula
-      if (otherAdverts.length > limit) {
-        otherAdverts = otherAdverts.sublist(0, limit);
-      }
-
       debugPrint('Filtreleme sonrası kalan ilan sayısı: ${otherAdverts.length}');
-
       return otherAdverts;
     } catch (e) {
       debugPrint('Other ilanlar çekilirken hata: $e');

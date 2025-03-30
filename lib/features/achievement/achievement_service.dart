@@ -379,7 +379,7 @@ class AchievementService {
       final taskDateKey = '${_dailyTaskDateKey}_${userId}_${event.name}';
       await prefs.setString(taskDateKey, today);
 
-      debugPrint('📆 ${event.name} görevi bugün (${today}) için tamamlandı olarak işaretlendi');
+      debugPrint('📆 ${event.name} görevi bugün ($today) için tamamlandı olarak işaretlendi');
     }
   }
 
@@ -722,7 +722,7 @@ class AchievementService {
     final now = DateTime.now();
 
     // Bir sonraki sıfırlamaya kalan süre
-    final Duration? timeUntilReset = lastResetTime != null ? lastResetTime.difference(now) : null;
+    final Duration? timeUntilReset = lastResetTime?.difference(now);
 
     final result = {
       'last_reset_time': lastResetTime?.toIso8601String() ?? 'Henüz ayarlanmadı',

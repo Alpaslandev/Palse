@@ -90,7 +90,7 @@ class _NotificationViewState extends State<NotificationView> {
                         padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                         child: Container(
                           decoration: BoxDecoration(
-                            color: theme.brightness == Brightness.light ? const Color(0xFFF7F7F7) : colorScheme.surfaceVariant,
+                            color: theme.brightness == Brightness.light ? const Color(0xFFF7F7F7) : colorScheme.surfaceContainerHighest,
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Container(

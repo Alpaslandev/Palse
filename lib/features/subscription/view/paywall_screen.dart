@@ -41,8 +41,8 @@ class _PaywallScreenState extends State<PaywallScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final _subscriptionProvider = context.read<SubscriptionProvider>();
-    final _authProvider = context.read<AuthProvider>();
+    final subscriptionProvider = context.read<SubscriptionProvider>();
+    final authProvider = context.read<AuthProvider>();
 
     return Scaffold(
       body: SafeArea(
@@ -67,7 +67,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     },
                     onPurchaseCompleted: (CustomerInfo customerInfo, StoreTransaction? transaction) {
                       debugPrint('Satın alma tamamlandı: ${customerInfo.originalAppUserId}');
-                      _subscriptionProvider.updatePremiumStatus(true, _authProvider.user?.userID ?? '');
+                      subscriptionProvider.updatePremiumStatus(true, authProvider.user?.userID ?? '');
                     },
                     onPurchaseStarted: (Package package) {
                       debugPrint('Satın alma başladı: ${package.identifier}');

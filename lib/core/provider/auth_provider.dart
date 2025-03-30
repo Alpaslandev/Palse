@@ -3,14 +3,11 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:palseapp/core/models/advert.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/services/auth/auth_service.dart';
-import 'package:palseapp/core/services/cloud_storage.dart';
 import 'package:palseapp/core/services/firestore/advert_service.dart';
 import 'package:palseapp/core/services/firestore/customer_service.dart';
 import 'package:palseapp/core/services/notification_service.dart';
-import 'package:palseapp/core/services/chat_service.dart';
 
 // Auth durumunu yöneten provider sınıfı
 class AuthProvider extends ChangeNotifier implements Listenable {

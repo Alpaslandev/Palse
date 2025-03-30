@@ -11,14 +11,6 @@ import 'package:palseapp/core/widgets/advert_card.dart';
 import 'package:palseapp/core/widgets/premium_overlay.dart';
 import 'package:provider/provider.dart';
 
-// List extension for firstOrNull
-extension ListExtension<T> on List<T>? {
-  T? get firstOrNull {
-    if (this == null || this!.isEmpty) return null;
-    return this!.first;
-  }
-}
-
 class FilterView extends StatefulWidget {
   const FilterView({
     super.key,
@@ -31,7 +23,7 @@ class FilterView extends StatefulWidget {
 class _FilterViewState extends State<FilterView> {
   int? _distance;
   Gender? _selectedGender;
-  List<Categories>? _selectedCategories;
+  Categories? _selectedCategory;
   bool _isFiltered = false;
   List<Advert> _filteredAdverts = [];
   Customer? _currentUser;
@@ -49,7 +41,7 @@ class _FilterViewState extends State<FilterView> {
 
     // Tüm ilanları çek
     final advertService = AdvertService();
-    List<Advert> allAdverts = await advertService.fetchAdverts(limit: 100);
+    List<Advert> allAdverts = await advertService.fetchAdvertsByFiltering(gender: _selectedGender?.name, category: _selectedCategory?.name);
 
     // Cinsiyet filtrelemesi
     if (_selectedGender != null) {
@@ -60,14 +52,14 @@ class _FilterViewState extends State<FilterView> {
       debugPrint('Filtreleme sonucu kalan ilan sayısı: ${allAdverts.length}');
     }
 
-    if (_selectedCategories != null && _selectedCategories!.isNotEmpty) {
-      debugPrint('Seçilen kategoriler: ${_selectedCategories!.map((e) => e.name).toList()}');
+    if (_selectedCategory != null) {
+      debugPrint('Seçilen kategoriler: ${_selectedCategory!.name}');
 
       allAdverts = allAdverts.where((advert) {
         final ilanKategori = advert.advertType;
-        debugPrint('İlan kategorisi: ${ilanKategori.name} - Seçilen kategorilerde var mı: ${_selectedCategories!.contains(ilanKategori)}');
+        debugPrint('İlan kategorisi: ${ilanKategori.name} - Seçilen kategorilerde var mı: ${_selectedCategory!.name == advert.advertType.name}');
 
-        return _selectedCategories!.contains(advert.advertType);
+        return _selectedCategory!.name == advert.advertType.name;
       }).toList();
 
       debugPrint('Kategori filtrelemesi sonucu kalan ilan sayısı: ${allAdverts.length}');
@@ -145,7 +137,7 @@ class _FilterViewState extends State<FilterView> {
           const SizedBox(height: 16),
           // Kategori seçici
           DropdownButtonFormField<Categories?>(
-            value: _selectedCategories?.firstOrNull,
+            value: _selectedCategory,
             decoration: InputDecoration(
               labelText: context.tr('category'),
               border: const OutlineInputBorder(),
@@ -161,7 +153,7 @@ class _FilterViewState extends State<FilterView> {
             ],
             onChanged: (value) {
               setState(() {
-                _selectedCategories = value != null ? [value] : null;
+                _selectedCategory = value;
               });
             },
           ),
@@ -182,7 +174,6 @@ class _FilterViewState extends State<FilterView> {
       itemCount: adverts.length,
       itemBuilder: (context, index) {
         final advert = adverts[index];
-        // Mesafeyi göstermek için AdvertCard'a mesafe bilgisini ekleyebiliriz
         return AdvertCard(
           advert: advert,
           isLiked: _currentUser != null ? advert.likers.contains(_currentUser?.userID) : false,

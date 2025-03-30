@@ -214,10 +214,10 @@ class _AchievementTestPageState extends State<AchievementTestPage> {
               ),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Evet, Tam Sıfırla'),
                 style: TextButton.styleFrom(
                   foregroundColor: Colors.red,
                 ),
+                child: const Text('Evet, Tam Sıfırla'),
               ),
             ],
           ),
@@ -554,16 +554,16 @@ class _AchievementTestPageState extends State<AchievementTestPage> {
         ),
 
         // Görevler listesi
-        ...tasks.map((task) => _buildTaskItem(context, task)).toList(),
+        ...tasks.map((task) => _buildTaskItem(context, task)),
       ],
     );
   }
 
   // Tek bir görev öğesini oluşturan yardımcı metot
   Widget _buildTaskItem(BuildContext context, XpEvent task) {
-    final canCompleteTask = _debugInfo.containsKey('${task.name}') ? _debugInfo['${task.name}']['completable'] : true;
+    final canCompleteTask = _debugInfo.containsKey(task.name) ? _debugInfo[task.name]['completable'] : true;
 
-    final completionCount = _debugInfo.containsKey('${task.name}') ? _debugInfo['${task.name}']['completion_count'] ?? 0 : 0;
+    final completionCount = _debugInfo.containsKey(task.name) ? _debugInfo[task.name]['completion_count'] ?? 0 : 0;
 
     return Padding(
       padding: const EdgeInsets.only(left: 16.0, bottom: 8),
@@ -622,7 +622,6 @@ class _AchievementTestPageState extends State<AchievementTestPage> {
           // Tamamla butonu
           ElevatedButton(
             onPressed: () => _earnXp(task),
-            child: const Text('Tamamla'),
             style: ElevatedButton.styleFrom(
               backgroundColor: canCompleteTask ? Colors.green : Colors.grey,
               foregroundColor: Colors.white,
@@ -630,6 +629,7 @@ class _AchievementTestPageState extends State<AchievementTestPage> {
               minimumSize: Size.zero,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
+            child: const Text('Tamamla'),
           ),
         ],
       ),

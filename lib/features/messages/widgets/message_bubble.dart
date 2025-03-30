@@ -319,7 +319,7 @@ class MessageBubble extends StatelessWidget {
             imageUrl: imageUrl,
             placeholder: (context, url) => Container(
               height: 100,
-              color: theme.colorScheme.surfaceVariant,
+              color: theme.colorScheme.surfaceContainerHighest,
               child: Center(
                 child: CircularProgressIndicator(
                   color: theme.colorScheme.primary,

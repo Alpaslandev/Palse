@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/routes/routes.dart';

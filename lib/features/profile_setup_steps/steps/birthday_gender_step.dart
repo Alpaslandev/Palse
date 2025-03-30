@@ -8,7 +8,7 @@ import 'package:palseapp/features/profile_setup_steps/viewmodel/profile_setup_vi
 class BirthdayGenderStep extends StatelessWidget {
   final ProfileSetupViewModel viewModel;
 
-  const BirthdayGenderStep({Key? key, required this.viewModel}) : super(key: key);
+  const BirthdayGenderStep({super.key, required this.viewModel});
 
   @override
   Widget build(BuildContext context) {

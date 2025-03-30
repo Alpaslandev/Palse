@@ -123,7 +123,7 @@ class XpEventsView extends StatelessWidget {
                     child: LinearProgressIndicator(
                       value: progressSnapshot.data ?? 0.0,
                       minHeight: 10,
-                      backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
+                      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                       valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
                     ),
                   );
@@ -320,7 +320,7 @@ class XpEventsView extends StatelessWidget {
                       // Görev tamamlanma sayısı ve toplam kazanılan XP
                       subtitle: completionCount > 0
                           ? Text(
-                              '${completionCount}x • ${totalXpFromEvent} XP ${context.tr('total')}',
+                              '${completionCount}x • $totalXpFromEvent XP ${context.tr('total')}',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: colorScheme.onSurfaceVariant,
@@ -347,7 +347,7 @@ class XpEventsView extends StatelessWidget {
                       ),
                     );
                   });
-            }).toList(),
+            }),
             const SizedBox(height: 8),
           ],
         ),

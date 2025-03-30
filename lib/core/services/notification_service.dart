@@ -1,23 +1,33 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'dart:io' show Platform;
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:palseapp/core/models/notification_model.dart';
 import 'package:palseapp/core/routes/app_router.dart';
 import 'package:palseapp/core/routes/routes.dart' as Routes;
 import 'package:palseapp/core/services/shared_pref_service.dart';
+import 'package:flutter/foundation.dart';
 
 // NotificationService sınıfı - bildirim yönetimi için genel sınıf
 class NotificationService {
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  // Bildirim türleri
-  static const String typeMessage = 'message';
-  static const String typeLikeAdvert = 'likeAdvert';
-  static const String typeProfileViewed = 'profileViewed';
+  // Flutter Local Notifications için plugin tanımla
+  final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+
+  // Bildirim kanalı ID'si
+  static const String _channelId = 'high_importance_channel';
+  static const String _channelName = 'Yüksek Öncelikli Bildirimler';
+  static const String _channelDescription = 'Bu kanal önemli bildirimler için kullanılır.';
 
   // Servisi başlatma metodu
   Future<void> initialize() async {
     debugPrint('📢 NotificationService başlatılıyor...');
+
+    // Önce Android için yüksek öncelikli bildirim kanalı oluştur
+    await _createHighPriorityChannel();
 
     // Önce izinleri isteyelim
     await _requestPermissions();
@@ -29,6 +39,75 @@ class NotificationService {
     _checkFcmToken();
 
     debugPrint('📢 NotificationService başlatma tamamlandı!');
+  }
+
+  // Android için yüksek öncelikli bildirim kanalı oluştur
+  Future<void> _createHighPriorityChannel() async {
+    if (Platform.isAndroid) {
+      try {
+        debugPrint('📢 Android için yüksek öncelikli bildirim kanalı oluşturuluyor...');
+
+        // Android bildirim kanalını tanımla
+        const AndroidNotificationChannel channel = AndroidNotificationChannel(
+          _channelId, // id
+          _channelName, // title
+          description: _channelDescription, // description
+          importance: Importance.max, // Yüksek öncelikli kanal (heads-up notification)
+        );
+
+        // Kanalı oluştur (eğer varsa günceller)
+        await _flutterLocalNotificationsPlugin
+            .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+            ?.createNotificationChannel(channel);
+
+        debugPrint('📢 Android için yüksek öncelikli bildirim kanalı oluşturuldu!');
+
+        // Not: AndroidManifest.xml dosyasına da aşağıdaki meta-data'yı eklemen gerekiyor:
+        // <meta-data
+        //   android:name="com.google.firebase.messaging.default_notification_channel_id"
+        //   android:value="high_importance_channel" />
+
+        // Flutter Local Notifications'ı başlat
+        await _initializeLocalNotifications();
+      } catch (e) {
+        debugPrint('📢 Bildirim kanalı oluşturma hatası: $e');
+      }
+    }
+  }
+
+  // Flutter Local Notifications'ı başlat
+  Future<void> _initializeLocalNotifications() async {
+    // Bildirim ikon ayarları
+    const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher'); // Android icon
+
+    // iOS bildirim ayarları
+    const DarwinInitializationSettings initializationSettingsIOS = DarwinInitializationSettings(
+      requestAlertPermission: false, // İzinleri FCM ile alacağız
+      requestBadgePermission: false,
+      requestSoundPermission: false,
+    );
+
+    // Tüm platformlar için başlatma ayarları
+    const InitializationSettings initializationSettings = InitializationSettings(
+      android: initializationSettingsAndroid,
+      iOS: initializationSettingsIOS,
+    );
+
+    // Plugin'i başlat
+    await _flutterLocalNotificationsPlugin.initialize(
+      initializationSettings,
+      // Bildirime tıklama olayını yakalama (opsiyonel)
+      onDidReceiveNotificationResponse: (NotificationResponse response) {
+        debugPrint('📢 Yerel bildirime tıklandı: ${response.payload}');
+        // Payload varsa, işle ve yönlendir
+        if (response.payload != null && response.payload!.isNotEmpty) {
+          // Burada yerel bildirimlere tıklama işlemi yapabiliriz
+          // Örneğin: _handleNotificationPayload(response.payload!);
+        }
+      },
+    );
+
+    debugPrint('📢 Yerel bildirim ayarları yapılandırıldı.');
   }
 
   // İzinleri isteme metodu
@@ -85,8 +164,6 @@ class NotificationService {
 
   // FCM yapılandırma metodu
   void _configureFCM() {
-    debugPrint('📢 FCM yapılandırması başlatılıyor...');
-
     // FCM izin kontrolü
     _firebaseMessaging.getNotificationSettings().then((settings) {
       debugPrint('📢 FCM bildirim ayarları: ${settings.authorizationStatus}');
@@ -99,20 +176,25 @@ class NotificationService {
       debugPrint('📢 Bildirim: ${message.notification?.title ?? "başlık yok"} - ${message.notification?.body ?? "içerik yok"}');
       debugPrint('📢 Data: ${message.data}');
 
-      // Ön plandayken gelen notificationlar için data bilgisini işle
-      _handleForegroundMessageData(message);
+      // Ön plandayken bildirim geldiği an kaydet
+      _saveNotification(message);
+
+      // Android için ön plandayken heads-up notification göster
+      _showHeadsUpNotification(message);
     });
 
     // Arka planda bildirim tıklama işleme
     FirebaseMessaging.onMessageOpenedApp.listen((message) {
       debugPrint('📢 onMessageOpenedApp tetiklendi! Bildirim tıklandı!');
-      _handleBackgroundNotificationClick(message);
+
+      // Arka plandayken tıklanınca önce kaydet sonra yönlendir
+      _saveNotification(message);
+      _navigateForNotification(message);
     });
 
     // Bildirim iznini kontrol et ve yenile
     _refreshNotificationPermission();
 
-    debugPrint('📢 FCM yapılandırması tamamlandı!');
     _getInitialMessage();
   }
 
@@ -145,7 +227,10 @@ class NotificationService {
       RemoteMessage? initialMessage = await FirebaseMessaging.instance.getInitialMessage();
       if (initialMessage != null) {
         debugPrint('📢 Uygulama bildirimden açıldı!');
-        _handleBackgroundNotificationClick(initialMessage);
+
+        // Tamamen kapalıyken bildirime tıklayınca önce kaydet sonra yönlendir
+        _saveNotification(initialMessage);
+        _navigateForNotification(initialMessage);
       } else {
         debugPrint('📢 Uygulama normal şekilde açıldı');
       }
@@ -154,66 +239,101 @@ class NotificationService {
     }
   }
 
-  // Ön plandayken gelen bildirimlerin data bilgisini işle
-  void _handleForegroundMessageData(RemoteMessage message) {
+  // Bildirimi yerel depolamaya kaydet
+  void _saveNotification(RemoteMessage message) {
     try {
-      final String notificationType = message.data['type'] ?? '';
+      final NotificationType notificationType =
+          message.data['type'] != null ? NotificationType.values.byName(message.data['type']) : NotificationType.message;
 
-      // Mesaj dışındaki bildirimler için SharedPrefs'e kaydet
-      if (notificationType != typeMessage) {
-        debugPrint('📢 Ön planda mesaj DIŞI bildirim alındı, locale kaydediliyor...');
-        _saveNotificationToLocal(message);
+      // Mesaj tipinde bildirimleri kaydetme, diğerlerini kaydet
+      if (notificationType != NotificationType.message) {
+        debugPrint('📢 Bildirim yerel depolamaya kaydediliyor...');
+
+        SharedPrefService.saveNotificationWithEnum(
+          type: notificationType.name,
+          body: message.notification?.body ?? '',
+          title: message.notification?.title ?? '',
+        );
+
+        debugPrint('📢 Bildirim kaydedildi: $notificationType');
       }
     } catch (e) {
-      debugPrint('📢 Ön plan bildirim data işleme hatası: $e');
+      debugPrint('📢 Bildirim kaydetme hatası: $e');
     }
   }
 
-  // Yerel bildirimleri kaydetme metodu
-  void _saveNotificationToLocal(RemoteMessage message) {
-    SharedPrefService.saveNotificationWithEnum(
-      type: message.data['type'],
-      body: message.notification?.body ?? '',
-      title: message.notification?.title ?? '',
-    );
-    debugPrint('Bildirim kaydedildi');
-  }
-
-  // Arka plan bildirimi tıklama işleme metodu
-  void _handleBackgroundNotificationClick(RemoteMessage message) {
-    debugPrint('Arka planda bildirim tıklandı');
-
-    final String notificationType = message.data['type'] ?? '';
-    final data = message.data;
-
-    // Bildirim türüne göre yönlendirme yap
-    _navigateBasedOnNotificationType(notificationType, data);
+  // Bildirim için yönlendirme yap
+  void _navigateForNotification(RemoteMessage message) {
+    try {
+      final NotificationType notificationType =
+          message.data['type'] != null ? NotificationType.values.byName(message.data['type']) : NotificationType.message;
+      debugPrint('📢 Bildirime tıklandı, yönlendirme yapılıyor: $notificationType');
+      _navigateBasedOnNotificationType(notificationType, message.data);
+    } catch (e) {
+      debugPrint('📢 Bildirim yönlendirme hatası: $e');
+    }
   }
 
   // Bildirim türüne göre yönlendirme metodu
-  void _navigateBasedOnNotificationType(String notificationType, Map<String, dynamic> data) {
+  void _navigateBasedOnNotificationType(NotificationType notificationType, Map<String, dynamic> data) {
     final chatId = data['chatId'];
     final senderId = data['senderId'];
     final receiverId = data['receiverId'];
 
     switch (notificationType) {
-      case typeMessage:
+      case NotificationType.message:
         AppRouter.router.push('/chats/$chatId?otherId=$senderId&currentId=$receiverId');
         break;
 
-      case typeLikeAdvert:
+      case NotificationType.likeAdvert:
         AppRouter.router.pushNamed(Routes.myAdverts);
         break;
 
-      case typeProfileViewed:
-        if (senderId != null) {
-          AppRouter.router.pushNamed(Routes.profile);
-        }
+      case NotificationType.profileViewed:
+        AppRouter.router.pushNamed(Routes.recentlyViewers);
+        break;
+
+      case NotificationType.newAdvertInInterestArea:
+        AppRouter.router.pushNamed(Routes.byInterest);
+        break;
+
+      case NotificationType.comment:
+        AppRouter.router.pushNamed(Routes.comment);
         break;
 
       default:
         debugPrint('Bilinmeyen bildirim türü: $notificationType');
+        AppRouter.router.pushNamed(Routes.home);
         break;
+    }
+  }
+
+  // Android için ön plandayken heads-up notification gösterme
+  void _showHeadsUpNotification(RemoteMessage message) {
+    if (Platform.isAndroid && message.notification != null) {
+      final notification = message.notification;
+      final android = message.notification?.android;
+
+      if (notification != null) {
+        _flutterLocalNotificationsPlugin.show(
+          notification.hashCode,
+          notification.title,
+          notification.body,
+          NotificationDetails(
+            android: AndroidNotificationDetails(
+              _channelId,
+              _channelName,
+              channelDescription: _channelDescription,
+              importance: Importance.max,
+              priority: Priority.high,
+              icon: android?.smallIcon ?? '@mipmap/ic_launcher',
+            ),
+          ),
+          // Payload olarak mesaj ID'sini ekle (tıklama olayı için kullanılabilir)
+          payload: message.messageId,
+        );
+        debugPrint('📢 Android için heads-up notification gösterildi');
+      }
     }
   }
 }

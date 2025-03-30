@@ -142,7 +142,6 @@ class _SettingsTile extends StatelessWidget {
   final Widget? trailing;
   final Color? titleColor;
   final VoidCallback? onTap;
-  final String? subtitle;
 
   const _SettingsTile({
     required this.icon,
@@ -150,7 +149,6 @@ class _SettingsTile extends StatelessWidget {
     this.trailing,
     this.titleColor,
     this.onTap,
-    this.subtitle,
   });
 
   @override
@@ -162,7 +160,6 @@ class _SettingsTile extends StatelessWidget {
         style: TextStyle(color: titleColor),
       ),
       trailing: trailing ?? const Icon(Icons.chevron_right),
-      subtitle: subtitle != null ? Text(subtitle!, style: const TextStyle(color: Colors.grey)) : null,
       onTap: onTap,
     );
   }

@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:palseapp/core/provider/ads_provider.dart';
 
 class AdsDemoPage extends StatelessWidget {
-  const AdsDemoPage({Key? key}) : super(key: key);
+  const AdsDemoPage({super.key});
 
   @override
   Widget build(BuildContext context) {

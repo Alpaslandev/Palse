@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:in_app_review/in_app_review.dart';
 import 'package:palseapp/core/constant/categories.dart';
 import 'package:palseapp/core/models/advert.dart';
 import 'package:palseapp/core/models/customer.dart';
@@ -10,7 +11,6 @@ import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/services/location_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:palseapp/features/achievement/achievement_service.dart';
-import 'package:palseapp/features/achievement/xp_events.dart';
 import 'package:palseapp/core/widgets/scaffold_mess.dart';
 import 'package:palseapp/core/services/cloud_storage.dart';
 
@@ -36,6 +36,7 @@ class CreateAdvertViewModel extends ChangeNotifier {
 
   bool get isLoading => _isLoading;
   int currentStep = 0;
+  final InAppReview inAppReview = InAppReview.instance;
 
   CreateAdvertViewModel({
     required this.authProvider,
@@ -139,6 +140,9 @@ class CreateAdvertViewModel extends ChangeNotifier {
       // XP kazanıldığında bildirim gösterme
       if (earnedXp > 0) {
         ScaffoldMess.showSuccessSnackBar("Tebrikler! İlan oluşturarak $earnedXp XP kazandınız.");
+      }
+      if (await inAppReview.isAvailable()) {
+        inAppReview.requestReview();
       }
     } catch (e) {
       debugPrint('Error creating advert: $e');

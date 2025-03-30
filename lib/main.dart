@@ -24,7 +24,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:palseapp/core/provider/subscription_provider.dart';
-import 'package:palseapp/core/widgets/scaffold_mess.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

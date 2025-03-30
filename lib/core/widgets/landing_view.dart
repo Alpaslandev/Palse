@@ -62,7 +62,7 @@ class _LandingViewState extends State<LandingView> {
       appBar: const ProjectAppBar(),
       body: widget.child,
       bottomNavigationBar: SafeArea(
-        child: Container(
+        child: SizedBox(
           height: navBarHeight,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,

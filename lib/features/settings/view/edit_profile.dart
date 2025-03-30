@@ -11,7 +11,6 @@ import 'package:palseapp/core/services/cloud_storage.dart';
 import 'package:palseapp/core/services/firestore/customer_service.dart';
 import 'package:palseapp/core/widgets/circle_profile_picture.dart';
 import 'package:palseapp/core/widgets/location_sheet.dart';
-import 'package:palseapp/features/settings/view/widgets/phone_number_sheet.dart';
 import 'package:palseapp/features/settings/viewmodel/edit_profile_view_model.dart';
 import 'package:provider/provider.dart';
 

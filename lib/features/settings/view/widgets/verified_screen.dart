@@ -106,7 +106,7 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
     debugPrint('Telefon doğrulama başlatılıyor: ${_phoneNumber.rawFullNumber}');
 
     // Telefon numarasını formatlayalım - + işareti ile başlayacak şekilde
-    _formattedPhoneNumber = "+" + _formatPhoneNumber(_phoneNumber);
+    _formattedPhoneNumber = "+${_formatPhoneNumber(_phoneNumber)}";
     debugPrint('Formatlanmış telefon numarası: $_formattedPhoneNumber');
 
     if (!mounted) return;
@@ -382,7 +382,7 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
 
     // Telefon numarası kontrolü
     if (_formattedPhoneNumber.isEmpty) {
-      _formattedPhoneNumber = "+" + _formatPhoneNumber(_phoneNumber);
+      _formattedPhoneNumber = "+${_formatPhoneNumber(_phoneNumber)}";
     }
 
     debugPrint('Yeniden kod gönderiliyor: $_formattedPhoneNumber');
@@ -445,7 +445,7 @@ class _VerifiedScreenState extends State<VerifiedScreen> {
               end: Alignment.bottomCenter,
               colors: [
                 colorScheme.primary.withOpacity(0.05),
-                colorScheme.background,
+                colorScheme.surface,
               ],
             ),
           ),

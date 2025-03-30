@@ -204,7 +204,7 @@ Widget _ratingCard(Customer customer, BuildContext context) {
   final colorScheme = theme.colorScheme;
 
   return Card(
-      color: theme.brightness == Brightness.light ? Colors.grey.shade200 : colorScheme.surfaceVariant,
+      color: theme.brightness == Brightness.light ? Colors.grey.shade200 : colorScheme.surfaceContainerHighest,
       child: ListTile(
         onTap: () => context.pushNamed(comment, extra: customer),
         title: Row(
@@ -245,7 +245,7 @@ class DailyTaskCard extends StatefulWidget {
 }
 
 class _DailyTaskCardState extends State<DailyTaskCard> {
-  bool _isTestMode = false;
+  final bool _isTestMode = false;
   bool _isDailyLoginCompleted = false;
   bool _isDailyCreateListingCompleted = false;
   bool _isDailySendMessageCompleted = false;
@@ -390,12 +390,11 @@ class _DailyTaskCardState extends State<DailyTaskCard> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                context.tr('completed_tasks') +
-                    ' ${(_isDailyLoginCompleted ? 1 : 0) + (_isDailyCreateListingCompleted ? 1 : 0) + (_isDailySendMessageCompleted ? 1 : 0)}/3',
+                '${context.tr('completed_tasks')} ${(_isDailyLoginCompleted ? 1 : 0) + (_isDailyCreateListingCompleted ? 1 : 0) + (_isDailySendMessageCompleted ? 1 : 0)}/3',
                 style: const TextStyle(color: Colors.white),
               ),
               Text(
-                '${totalDailyXp}/${XpEvent.dailyLogin.xpAmount + XpEvent.dailyCreateListing.xpAmount + XpEvent.dailySendMessage.xpAmount} XP',
+                '$totalDailyXp/${XpEvent.dailyLogin.xpAmount + XpEvent.dailyCreateListing.xpAmount + XpEvent.dailySendMessage.xpAmount} XP',
                 style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
               ),
             ],

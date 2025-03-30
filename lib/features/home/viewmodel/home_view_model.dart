@@ -64,7 +64,6 @@ class HomeViewModel extends ChangeNotifier {
             user?.location?.city ?? '',
             lastDocument: _lastDocument,
             limit: _pageSize,
-            userLocation: user?.location,
           );
           break;
         case 1:
@@ -73,24 +72,20 @@ class HomeViewModel extends ChangeNotifier {
               user?.favoriteCategories ?? [],
               lastDocument: _lastDocument,
               limit: _pageSize,
-              userLocation: user?.location,
             );
           }
           break;
         case 2: // Other sekmesi
           newAdverts = await _advertService.fetchOtherAdverts(
-            userCity: user?.location?.city,
-            userInterests: user?.favoriteCategories,
+            user: user,
             lastDocument: _lastDocument,
             limit: _pageSize,
-            userLocation: user?.location,
           );
           break;
         default:
-          newAdverts = await _advertService.fetchAdverts(
+          newAdverts = await _advertService.fetchAdvertsByFiltering(
             lastDocument: _lastDocument,
             limit: _pageSize,
-            userLocation: user?.location,
           );
       }
 

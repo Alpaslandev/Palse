@@ -271,7 +271,7 @@ class _LoginViewState extends State<LoginView> {
                                             debugPrint('Giriş hatası: $e');
                                             if (!context.mounted) return;
                                             ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(content: Text(context.tr('login_failed') + ': $e')),
+                                              SnackBar(content: Text('${context.tr('login_failed')}: $e')),
                                             );
                                           }
                                         },

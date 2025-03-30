@@ -13,6 +13,7 @@ class Advert {
   String advertImage;
   List<String> likers;
   LocationModel location;
+
   String creatorUserID;
   Gender creatorGender;
   DateTime createdAt;

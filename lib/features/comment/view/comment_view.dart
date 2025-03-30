@@ -27,7 +27,7 @@ class CommentView extends StatelessWidget {
   }
 
   Widget _buildScaffold(BuildContext context, CommentViewModel viewModel, Customer currentUser) {
-    debugPrint(context.tr('viewmodel_comments_debug') + ': ${viewModel.comments}');
+    debugPrint('${context.tr('viewmodel_comments_debug')}: ${viewModel.comments}');
     bool isMe = currentUser.userID == customer.userID;
     return Scaffold(
       appBar: AppBar(
@@ -88,7 +88,7 @@ class CommentView extends StatelessWidget {
         commenterProfilePictureUrl: currentUser.profilePictureUrl ?? '',
         commentDate: DateTime.now(),
       );
-      debugPrint(context.tr('received_comment_debug') + ': ${comment.toString()}');
+      debugPrint('${context.tr('received_comment_debug')}: ${comment.toString()}');
 
       // Kullanıcı ID'sini de geçirerek yorum ekleme işlemini başlat
       viewModel.addComment(comment, currentUser.userID ?? '');

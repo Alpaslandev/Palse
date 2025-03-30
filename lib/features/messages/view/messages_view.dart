@@ -55,32 +55,6 @@ class _MessagesViewState extends State<MessagesView> {
     FocusScope.of(context).unfocus();
   }
 
-  // Karşı tarafın ilk mesajı mı kontrolü
-  bool _isFirstMessageFromOtherUser(List<Message> messages) {
-    if (messages.isEmpty) return false;
-
-    // Karşı taraftan gelen mesajlar
-    final messagesFromOther = messages.where((msg) => msg.senderId == widget.otherUserId).toList();
-    // Bizden giden mesajlar
-    final messagesFromUs = messages.where((msg) => msg.senderId == widget.currentUserId).toList();
-
-    // Karşı taraftan mesaj varsa ve bizden hiç mesaj yoksa
-    return messagesFromOther.isNotEmpty && messagesFromUs.isEmpty;
-  }
-
-  // Bizim ilk mesajımız mı kontrolü
-  bool _isFirstMessageFromUs(List<Message> messages) {
-    if (messages.isEmpty) return false;
-
-    // Karşı taraftan gelen mesajlar
-    final messagesFromOther = messages.where((msg) => msg.senderId == widget.otherUserId).toList();
-    // Bizden giden mesajlar
-    final messagesFromUs = messages.where((msg) => msg.senderId == widget.currentUserId).toList();
-
-    // Bizden mesaj varsa ve karşı taraftan hiç mesaj yoksa
-    return messagesFromUs.isNotEmpty && messagesFromOther.isEmpty;
-  }
-
   // İlk mesaj için XP ödülü ver
   void _checkAndRewardFirstMessage(List<Message> messages) async {
     // Hemen flag'i true yap ki birden fazla kontrol olmasın

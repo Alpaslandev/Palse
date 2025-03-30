@@ -2,46 +2,41 @@ import 'package:flutter/material.dart';
 
 /// XP seviyelerine göre kullanıcı unvanlarını tanımlayan enum
 enum UserRank {
-  /// 0-99 XP: Keşfe Başlayan
   beginner(
     'rank_beginner',
     0,
-    99,
+    199,
     '🌟',
     Colors.blue,
   ),
 
-  /// 100-499 XP: Sosyal Keşifçi
   explorer(
     'rank_explorer',
-    100,
-    499,
+    200,
+    999,
     '🔍',
     Colors.green,
   ),
 
-  /// 500-999 XP: Bağlantı Ustası
   connector(
     'rank_connector',
-    500,
-    999,
+    1000,
+    1999,
     '🧩',
     Colors.amber,
   ),
 
-  /// 1000-2999 XP: Etkinlik Lideri
   leader(
     'rank_leader',
-    1000,
-    2999,
+    2000,
+    5999,
     '🎯',
     Colors.orange,
   ),
 
-  /// 3000+ XP: Sosyal Usta
   master(
     'rank_master',
-    3000,
+    6000,
     double.infinity,
     '👑',
     Colors.purple,

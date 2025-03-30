@@ -11,7 +11,6 @@ import 'package:palseapp/core/provider/ads_provider.dart';
 import 'package:palseapp/core/widgets/faq_page.dart';
 import 'package:palseapp/core/widgets/landing_view.dart';
 import 'package:palseapp/core/widgets/notification_view.dart';
-import 'package:palseapp/core/widgets/recently_viewer.dart';
 import 'package:palseapp/core/widgets/see_likers.dart';
 import 'package:palseapp/features/achievement/achievement_test_page.dart';
 import 'package:palseapp/features/auth/views/login_view.dart';
@@ -59,7 +58,7 @@ class AppRouter {
       redirect: _handleRedirect,
       extraCodec: CustomGoRouterCodec(),
       observers: [
-        NavigationObserver(_adsProvider),
+        if (_authProvider.user != null && _authProvider.user!.isPremium == false) NavigationObserver(_adsProvider),
       ],
       errorBuilder: (context, state) {
         debugPrint('❌ ROUTER HATASI: ${state.error}');
@@ -159,16 +158,22 @@ class AppRouter {
             final customerID = state.extra! as String; // Null check eklendi
             return FriendProfileView(customerID: customerID);
           },
-          routes: [
-            GoRoute(
-              path: '/$comment',
-              name: comment,
-              builder: (context, state) {
-                final customer = state.extra! as Customer; // Null check eklendi
-                return CommentView(customer: customer);
-              },
-            ),
-          ],
+        ),
+        GoRoute(
+          path: "/$comment",
+          name: comment,
+          parentNavigatorKey: _rootNavigatorKey, // Ana navigator'ı kullan
+          builder: (context, state) {
+            // Extra parametresi opsiyonel hale getirildi
+            Customer customer;
+            if (state.extra != null) {
+              customer = state.extra! as Customer;
+            } else {
+              // Extra yoksa mevcut kullanıcıyı kullan
+              customer = _authProvider.user!;
+            }
+            return CommentView(customer: customer);
+          },
         ),
         GoRoute(
           path: "/$notification",
@@ -265,16 +270,39 @@ class AppRouter {
               ),
               routes: [
                 GoRoute(
-                  path: "/$seeViewers",
-                  name: seeViewers,
+                  path: "/$seeLikers",
+                  name: seeLikers,
                   builder: (context, state) => SeeLikersView(viewers: state.extra as List<String>? ?? []),
                 ),
-                GoRoute(
-                  path: "/$recentlyViewers",
-                  name: recentlyViewers,
-                  builder: (context, state) => RecentlyViewer(customer: state.extra as Customer, onProfileTap: () {}),
-                ),
               ],
+            ),
+            GoRoute(
+              path: "/$recentlyViewers",
+              name: recentlyViewers,
+              pageBuilder: (context, state) => CustomTransitionPage(
+                key: state.pageKey,
+                child: const MyAdvertView(initialTabIndex: 2), // 2 = Profilime Bakanlar tabı
+                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                  return FadeTransition(
+                    opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+                    child: child,
+                  );
+                },
+              ),
+            ),
+            GoRoute(
+              path: "/$byInterest",
+              name: byInterest,
+              pageBuilder: (context, state) => CustomTransitionPage(
+                key: state.pageKey,
+                child: const HomeView(initialTabIndex: 1), // İlgi alanı-bazlı tab
+                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                  return FadeTransition(
+                    opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+                    child: child,
+                  );
+                },
+              ),
             ),
             GoRoute(
               path: "/$categories",

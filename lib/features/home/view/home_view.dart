@@ -11,7 +11,8 @@ import 'package:palseapp/features/home/viewmodel/home_view_model.dart';
 import 'package:provider/provider.dart';
 
 class HomeView extends StatefulWidget {
-  const HomeView({super.key});
+  final int initialTabIndex;
+  const HomeView({super.key, this.initialTabIndex = 0});
 
   @override
   State<HomeView> createState() => _HomeViewState();
@@ -22,12 +23,12 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   late HomeViewModel _viewModel;
 
   // Kullanıcı verilerini saklayacağız
-  Customer? _user;
+  late final Customer _user;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 3, vsync: this, initialIndex: widget.initialTabIndex);
     _viewModel = HomeViewModel();
     _tabController.addListener(_onTabChanged);
 
@@ -35,19 +36,18 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Kullanıcının sadece ID'sini kaydet
       final authProvider = context.read<AuthProvider>();
-      _user = authProvider.user;
+      _user = authProvider.user!;
 
       // İlanları yükle
       if (authProvider.user != null) {
-        _viewModel.fetchAdvertsForTab(authProvider.user, _tabController.index);
+        _viewModel.fetchAdvertsForTab(_user, _tabController.index);
       }
     });
   }
 
   void _onTabChanged() {
     if (!_tabController.indexIsChanging) {
-      final authProvider = context.read<AuthProvider>();
-      _viewModel.fetchAdvertsForTab(authProvider.user, _tabController.index);
+      _viewModel.fetchAdvertsForTab(_user, _tabController.index);
     }
   }
 
@@ -150,8 +150,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                           if (scrollInfo.metrics.pixels == scrollInfo.metrics.maxScrollExtent) {
                             if (viewModel.hasMore && !viewModel.isLoading) {
                               debugPrint('Listenin sonuna gelindi, yeni ilanlar yükleniyor...');
-                              final authProvider = context.read<AuthProvider>();
-                              viewModel.loadMore(authProvider.user, _tabController.index);
+                              viewModel.loadMore(_user, _tabController.index);
                             }
                           }
                           return true;
@@ -208,18 +207,16 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                             }
 
                             final advert = viewModel.adverts[index];
-                            final isLiked = advert.likers.contains(_user?.userID);
+                            final isLiked = advert.likers.contains(_user.userID);
 
                             return AdvertCard(
                               advert: advert,
                               isLiked: isLiked,
                               onLikeTap: () async {
-                                if (_user == null) return;
-
                                 if (isLiked) {
-                                  await viewModel.unlikeAdvert(advert.advertID ?? '', _user!.userID ?? '');
+                                  await viewModel.unlikeAdvert(advert.advertID ?? '', _user.userID ?? '');
                                 } else {
-                                  await viewModel.likeAdvert(advert.advertID ?? '', _user!.userID ?? '');
+                                  await viewModel.likeAdvert(advert.advertID ?? '', _user.userID ?? '');
                                 }
                               },
                             );

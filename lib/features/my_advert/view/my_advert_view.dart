@@ -2,17 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
-import 'package:palseapp/core/routes/routes.dart';
+import 'package:palseapp/core/routes/routes.dart' as Routes;
 import 'package:palseapp/core/widgets/advert_card.dart';
 import 'package:palseapp/core/widgets/premium_overlay.dart';
 import 'package:palseapp/core/widgets/recently_viewer.dart';
 import 'package:palseapp/core/widgets/scaffold_mess.dart';
 import 'package:palseapp/features/my_advert/viewmodel/my_advert_view_model.dart';
 import 'package:provider/provider.dart';
-import 'package:palseapp/core/provider/subscription_provider.dart';
 
 class MyAdvertView extends StatefulWidget {
-  const MyAdvertView({super.key});
+  final int initialTabIndex;
+
+  // Constructor'a başlangıç tab indeksi parametresi ekle
+  const MyAdvertView({super.key, this.initialTabIndex = 0});
 
   @override
   State<MyAdvertView> createState() => _MyAdvertViewState();
@@ -24,7 +26,7 @@ class _MyAdvertViewState extends State<MyAdvertView> with TickerProviderStateMix
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 3, vsync: this, initialIndex: widget.initialTabIndex);
   }
 
   @override
@@ -91,8 +93,7 @@ class _MyAdvertViewState extends State<MyAdvertView> with TickerProviderStateMix
                                     ScaffoldMess.showSuccessSnackBar(context.tr('advert_deleted_successfully'));
                                   },
                                   onSeeLikersTap: () {
-                                    // TODO: Görüntüleyenler sayısını görüntüleme
-                                    context.pushNamed(seeViewers, extra: advert.likers);
+                                    context.pushNamed(Routes.seeLikers, extra: advert.likers);
                                   },
                                 );
                               },
@@ -113,7 +114,7 @@ class _MyAdvertViewState extends State<MyAdvertView> with TickerProviderStateMix
                                   advert: advert,
                                   isMyLikes: true,
                                   isLiked: advert.likers.contains(authProvider.user?.userID ?? ''),
-                                  onProfileTap: () => context.pushNamed(friendProfile, extra: customer?.userID),
+                                  onProfileTap: () => context.pushNamed(Routes.friendProfile, extra: customer?.userID),
                                   onMessageTap: () => debugPrint('mesaj'),
                                 );
                               },
@@ -150,11 +151,9 @@ class _MyAdvertViewState extends State<MyAdvertView> with TickerProviderStateMix
               ),
               itemCount: viewModel.recentlyViewed.length,
               itemBuilder: (context, index) {
-                final customer = viewModel.recentlyViewed[index];
-                if (customer == null) return const SizedBox();
                 return RecentlyViewer(
-                  customer: customer,
-                  onProfileTap: () => context.pushNamed(friendProfile, extra: customer.userID),
+                  viewers: authProvider.user?.profileViewers ?? [],
+                  onProfileTap: () => context.pushNamed(Routes.friendProfile, extra: authProvider.user?.userID),
                 );
               },
             ),

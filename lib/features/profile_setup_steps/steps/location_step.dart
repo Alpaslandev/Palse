@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:palseapp/core/models/location_model.dart';
 import 'package:palseapp/features/profile_setup_steps/viewmodel/profile_setup_view_model.dart';
-import 'package:provider/provider.dart';
 import 'package:palseapp/core/services/location_service.dart';
 import 'package:palseapp/core/utils/debouncer.dart';
 import 'package:palseapp/core/localization/app_localizations.dart';

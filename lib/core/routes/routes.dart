@@ -29,9 +29,10 @@ const String chats = 'chats';
 const String messages = 'messages';
 
 const String myAdverts = 'myAdverts';
-const String seeViewers = 'seeViewers';
+const String seeLikers = 'seeLikers';
 const String recentlyViewers = 'recentlyViewers';
 const String categories = 'categories';
+const String byInterest = 'byInterest';
 const String notification = 'notification';
 const String createAdvert = 'createAdvert';
 const String createAdvertStep1 = 'createAdvertStep1';
