@@ -132,10 +132,6 @@ class AdvertService {
     Customer? user,
   }) async {
     try {
-      debugPrint('Other sekmesi için ilanlar getiriliyor...');
-      debugPrint('Kullanıcı şehri: ${user?.location?.city}');
-      debugPrint('Kullanıcı ilgi alanları: ${user?.favoriteCategories?.map((e) => e.name).toList()}');
-
       // Temel sorgu: İlgi alanları dışındaki ilanları çek
       var query = _firestore.collection('events').limit(limit * 2);
 
