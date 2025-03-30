@@ -2,5 +2,5 @@
 <!-- Uygulama renkleri -->
 <resources>
     <!-- Bildirim rengi -->
-    <color name="notification_color">#4CAF50</color>
+    <color name="notification_color">#FF0000</color>
 </resources> 

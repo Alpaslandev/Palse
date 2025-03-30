@@ -333,7 +333,7 @@ class NotificationService {
               channelDescription: _channelDescription,
               importance: Importance.max,
               priority: Priority.high,
-              icon: android?.smallIcon ?? 'ic_notification',
+              icon: android?.smallIcon ?? '@mipmap/ic_stat_ic_launcher',
             ),
           ),
           // JSON formatında mesaj verilerini payloada ekle

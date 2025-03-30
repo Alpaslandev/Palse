@@ -40,24 +40,16 @@ void main() async {
       rethrow;
     }
   }
+  MobileAds.instance.initialize();
 
-  // Uygulamanın açılışında kritik olmayan işlemleri geciktir
-  Future.delayed(const Duration(milliseconds: 500), () {
-    MobileAds.instance.initialize();
-    debugPrint('Reklamlar gecikmeli başlatıldı');
-  });
+  await Purchases.setLogLevel(LogLevel.debug);
 
   // RevenueCat ayarlarını platform bazlı ayarlama
   if (Platform.isIOS) {
-    await Purchases.setLogLevel(LogLevel.debug);
     await Purchases.configure(PurchasesConfiguration('appl_nqgFBnNbiUeCvilAmLqKsvbZNal'));
   } else if (Platform.isAndroid) {
-    // Android'de RevenueCat başlatmasını geciktir
-    Future.delayed(const Duration(milliseconds: 800), () async {
-      await Purchases.setLogLevel(LogLevel.debug);
-      await Purchases.configure(PurchasesConfiguration('goog_PEygpHUWqHBCeYbZdjULShUAQfz'));
-      debugPrint('RevenueCat gecikmeli başlatıldı');
-    });
+    await Purchases.configure(PurchasesConfiguration('goog_PEygpHUWqHBCeYbZdjULShUAQfz'));
+    debugPrint('RevenueCat gecikmeli başlatıldı');
   }
 
   // Kritik işlemleri önce başlat
@@ -119,6 +111,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final localeProvider = Provider.of<LocaleProvider>(context);
+    debugPrint('Locale: ${localeProvider.locale.languageCode}');
 
     // Locale değiştiğinde LocaleManager'ı güncelle
     WidgetsBinding.instance.addPostFrameCallback((_) {

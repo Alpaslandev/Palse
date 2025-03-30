@@ -63,7 +63,7 @@ class ProfileSetupViewModel extends ChangeNotifier {
     }
   }
 
-  Future<bool> completeProfileSetup() async {
+  Future<bool> completeProfileSetup(String locale) async {
     debugPrint('Profile setup completed');
 
     debugPrint(_authProvider.firebaseUser?.uid ?? 'User ID not found');
@@ -86,6 +86,7 @@ class ProfileSetupViewModel extends ChangeNotifier {
       }
 
       _customer.userID = _authProvider.firebaseUser!.uid;
+      _customer.languagePreference = locale;
       await _customerService.updateCustomer(_authProvider.firebaseUser!.uid, _customer);
       debugPrint('Profile setup completed');
       return true;

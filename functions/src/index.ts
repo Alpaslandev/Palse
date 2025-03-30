@@ -2,6 +2,7 @@ import * as admin from "firebase-admin";
 import {onDocumentCreated, onDocumentUpdated} from "firebase-functions/v2/firestore";
 import {getNotificationContent} from "./notifications";
 import {logger} from "firebase-functions/v2";
+import {onSchedule} from "firebase-functions/v2/scheduler";
 
 // Firebase'i başlat
 admin.initializeApp();
@@ -725,3 +726,118 @@ export const onNewMessage = onDocumentUpdated("chats/{chatId}", async (event) =>
     return null;
   }
 });
+
+/**
+ * Her gün belirli bir saatte (örneğin sabah 9:00'da) tüm kullanıcılara bildirim gönderir
+ * Türkiye saat dilimine göre ayarlanmış (Europe/Istanbul)
+ */
+export const sendDailyNotification = onSchedule({
+  schedule: "0 9 * * *", // Her gün sabah 9:00'da çalışır (cron formatı)
+  timeZone: "Europe/Istanbul", // Türkiye saat dilimi
+}, async (event) => {
+  try {
+    logger.info("=== GÜNLÜK BİLDİRİM FONKSİYONU BAŞLADI ===");
+    
+    // Aktif FCM tokeni olan tüm kullanıcıları getir
+    const usersSnapshot = await admin.firestore()
+      .collection("customers")
+      .where("fcmToken", "!=", "")
+      .get();
+    
+    // Kullanıcı sayısını log'a yaz
+    logger.info(`${usersSnapshot.size} kullanıcı bildirimi alacak`);
+    
+    if (usersSnapshot.empty) {
+      logger.warn("Aktif token'a sahip kullanıcı bulunamadı");
+      return;
+    }
+    
+    // Toplu bildirim gönderimi için batch hazırla
+    const batchSize = 500; // Firebase bir seferde maksimum 500 mesaj gönderilebilir
+    const messages: admin.messaging.Message[] = [];
+    
+    // Tüm kullanıcılara bildirim için döngü
+    for (const userDoc of usersSnapshot.docs) {
+      const userData = userDoc.data();
+      const userId = userDoc.id;
+      const token = userData.fcmToken;
+      const userLang = userData.languagePreference || "tr";
+      const isPremium = userData.isPremium === true;
+      
+      if (!token) continue; // Token yoksa atla
+      
+      // "dailyTask" tipi bildirimin içeriğini al
+      const {title, body} = getNotificationContent("dailyTask", userLang, isPremium);
+      
+      // FCM bildirim mesajını oluştur
+      const message: admin.messaging.Message = {
+        token: token,
+        notification: {
+          title: title,
+          body: body,
+        },
+        data: {
+          type: "dailyTask",
+          receiverId: userId,
+          click_action: "FLUTTER_NOTIFICATION_CLICK",
+        },
+        android: {
+          priority: "high" as const,
+          notification: {
+            sound: "default",
+            priority: "high" as const,
+            channelId: "messages", 
+          },
+        },
+        apns: {
+          payload: {
+            aps: {
+              sound: "default",
+              badge: 1,
+              contentAvailable: true,
+            },
+          },
+        },
+      };
+      
+      messages.push(message);
+      
+      // Batch limitine ulaşıldığında gönder
+      if (messages.length === batchSize) {
+        await sendBatchMessages(messages);
+        messages.length = 0; // Array'i temizle
+      }
+    }
+    
+    // Kalan mesajları gönder
+    if (messages.length > 0) {
+      await sendBatchMessages(messages);
+    }
+    
+    logger.info("=== GÜNLÜK BİLDİRİM FONKSİYONU TAMAMLANDI ===");
+    return;
+  } catch (error) {
+    logger.error("Günlük bildirim gönderme hatası:", error);
+    return;
+  }
+});
+
+/**
+ * Bildirimleri toplu olarak gönderen yardımcı fonksiyon
+ */
+async function sendBatchMessages(messages: admin.messaging.Message[]) {
+  if (messages.length === 0) return;
+  
+  try {
+    logger.info(`${messages.length} bildirim gönderiliyor...`);
+    const response = await admin.messaging().sendEach(messages);
+    logger.info(`${response.successCount} bildirim başarıyla gönderildi, ${response.failureCount} başarısız oldu`);
+    
+    if (response.failureCount > 0) {
+      const failedMessages = response.responses.filter((resp, idx) => resp.error);
+      logger.warn(`Hatalı bildirimler: ${JSON.stringify(failedMessages)}`);
+    }
+  } catch (error) {
+    logger.error("Toplu bildirim gönderme hatası:", error);
+  }
+}

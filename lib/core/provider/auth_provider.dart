@@ -57,8 +57,6 @@ class AuthProvider extends ChangeNotifier implements Listenable {
 
         notifyListeners();
 
-        // await Future.delayed(const Duration(seconds: 4));
-
         await _userStreamSubscription?.cancel();
         _userStreamSubscription = null;
 
@@ -88,9 +86,6 @@ class AuthProvider extends ChangeNotifier implements Listenable {
       if (userData.exists && userData.data() != null) {
         final newUser = Customer.fromJson(userData.data() as Map<String, dynamic>, userId);
 
-        // Önceki kullanıcı verisi ile yeni kullanıcı verisini karşılaştır
-        final bool isPremiumChanged = _user?.isPremium != newUser.isPremium;
-
         _user = newUser;
         _isFirestoreDataLoaded = true; // Firestore verisi yüklendi
 
@@ -103,15 +98,6 @@ class AuthProvider extends ChangeNotifier implements Listenable {
 
         debugPrint('User data: ${_user?.toJson()}');
         debugPrint('Firestore data loaded: $_isFirestoreDataLoaded');
-
-        // Sadece isPremium değişmişse bildirim gönder
-        if (isPremiumChanged) {
-          debugPrint('isPremium değişti: ${_user?.isPremium}');
-          notifyListeners();
-        } else {
-          // Diğer değişiklikler için normal bildirim
-          notifyListeners();
-        }
       } else {
         debugPrint('User data not found');
         _user = null;

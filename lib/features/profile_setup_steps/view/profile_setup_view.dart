@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
+import 'package:palseapp/core/provider/locale_provider.dart';
 import 'package:palseapp/features/profile_setup_steps/steps/birthday_gender_step.dart';
 import 'package:palseapp/features/profile_setup_steps/steps/favorite_category_step.dart';
 import 'package:palseapp/features/profile_setup_steps/steps/location_step.dart';
@@ -184,6 +185,7 @@ class ProfileSetupView extends StatelessWidget {
 
   // Navigasyon işlemlerini yönetir
   void _handleNavigation(BuildContext context, ProfileSetupViewModel viewModel) {
+    final locale = Provider.of<LocaleProvider>(context, listen: false).locale;
     // İlk adımda ad ve soyad validasyonu yap
     if (viewModel.currentStep == 0 && !viewModel.isUserInfoStepValid()) {
       _showErrorSnackBar(context, context.tr('profile_setup_error_name'));
@@ -215,7 +217,7 @@ class ProfileSetupView extends StatelessWidget {
     }
 
     // Validasyon başarılıysa veya başka bir adımdaysa devam et
-    viewModel.isLastStep ? viewModel.completeProfileSetup() : viewModel.nextStep();
+    viewModel.isLastStep ? viewModel.completeProfileSetup(locale.languageCode) : viewModel.nextStep();
   }
 
   // Hata mesajı gösterir
