@@ -10,7 +10,8 @@
     <application
         android:label="@string/app_name"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:notificationIcon="@mipmap/ic_stat_ic_launcher">
         <!-- Impeller'ı devre dışı bırak -->
         <meta-data
             android:name="io.flutter.embedding.android.EnableImpeller"
@@ -18,7 +19,7 @@
         <!-- Bildirim ikonu için meta-data -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
-            android:resource="@drawable/ic_notification" />
+            android:resource="@mipmap/ic_stat_ic_launcher" />
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_color"
             android:resource="@color/notification_color" />

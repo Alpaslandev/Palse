@@ -92,7 +92,7 @@ class MessageBubble extends StatelessWidget {
 
                     // Mesaj tipine göre içeriği göster
                     if (message.type == MessageType.image)
-                      _buildImageMessage(message.content, theme)
+                      _buildImageMessage(message.content, theme, context)
                     else if (message.type == MessageType.url)
                       _buildUrlMessage(message.content, isMe, theme)
                     else
@@ -306,10 +306,37 @@ class MessageBubble extends StatelessWidget {
   }
 
   // Görsel mesajlar için widget
-  Widget _buildImageMessage(String imageUrl, ThemeData theme) {
+  Widget _buildImageMessage(String imageUrl, ThemeData theme, BuildContext context) {
     return GestureDetector(
       onTap: () {
-        // Büyük görüntü gösterimi veya URL açılımı
+        // Fotoğrafı büyük bir dialog olarak aç
+        showDialog(
+          context: context,
+          builder: (context) {
+            return Dialog(
+              backgroundColor: Colors.transparent,
+              insetPadding: const EdgeInsets.all(20),
+              child: GestureDetector(
+                onTap: () => Navigator.of(context).pop(),
+                child: CachedNetworkImage(
+                  imageUrl: imageUrl,
+                  fit: BoxFit.contain,
+                  placeholder: (context, url) => Center(
+                    child: CircularProgressIndicator(
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                  errorWidget: (context, url, error) => Center(
+                    child: Icon(
+                      Icons.error,
+                      color: theme.colorScheme.error,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
       },
       child: Container(
         constraints: const BoxConstraints(maxHeight: 200),
