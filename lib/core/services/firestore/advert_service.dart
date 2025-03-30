@@ -94,7 +94,7 @@ class AdvertService {
   }) async {
     try {
       // Temel sorgu
-      var query = _firestore.collection('events').limit(limit);
+      var query = _firestore.collection('events').limit(1000);
 
       // Cinsiyet filtresi ekle (eğer belirtilmişse)
       if (gender != null && gender.isNotEmpty) {
@@ -132,15 +132,50 @@ class AdvertService {
     Customer? user,
   }) async {
     try {
-      // Temel sorgu: İlgi alanları dışındaki ilanları çek
-      var query = _firestore.collection('events').limit(limit);
+      // Kullanıcı null ise veya favoriteCategories null/boş ise doğrudan tüm ilanları getir
+      if (user == null || user.favoriteCategories == null || user.favoriteCategories!.isEmpty) {
+        // Temel sorgu: Tüm ilanları getir
+        var query = _firestore.collection('events').orderBy('isCreatorPremium', descending: true).orderBy('createdAt', descending: true).limit(limit);
+
+        // Pagination için
+        if (lastDocument != null) {
+          query = query.startAfterDocument(lastDocument);
+        }
+
+        final querySnapshot = await query.get();
+        final adverts = querySnapshot.docs.map((doc) => Advert.fromJson(doc.data(), doc.id)).toList();
+        debugPrint('Kategori olmadan çekilen ilan sayısı: ${adverts.length}');
+        return adverts;
+      }
 
       // İlgi alanları dışındaki ilanları filtrele
-      var categoryValues = user!.favoriteCategories!.map((interest) => interest.name).take(10).toList();
-      query = query
+      // Firestore whereNotIn sorgusu en fazla 10 değer alabilir
+      var categoryValues = user.favoriteCategories!.map((interest) => interest.name).take(10).toList();
+
+      // Kategori listesi boş olmamalı, en az bir kategori içermeli
+      if (categoryValues.isEmpty) {
+        // Boş liste durumunda yine normal sorgu yap
+        var query = _firestore.collection('events').orderBy('isCreatorPremium', descending: true).orderBy('createdAt', descending: true).limit(limit);
+
+        // Pagination için
+        if (lastDocument != null) {
+          query = query.startAfterDocument(lastDocument);
+        }
+
+        final querySnapshot = await query.get();
+        final adverts = querySnapshot.docs.map((doc) => Advert.fromJson(doc.data(), doc.id)).toList();
+        debugPrint('Boş kategori listesi için çekilen ilan sayısı: ${adverts.length}');
+        return adverts;
+      }
+
+      // Temel sorgu: İlgi alanları dışındaki ilanları çek
+      var query = _firestore
+          .collection('events')
           .where('advertType', whereNotIn: categoryValues)
-          .orderBy('isCreatorPremium', descending: true) // Premium ilanlar önce
-          .orderBy('createdAt', descending: true);
+          .orderBy('advertType') // whereNotIn ile kullanılan alan için önce orderBy gerekli
+          .orderBy('isCreatorPremium', descending: true)
+          .orderBy('createdAt', descending: true)
+          .limit(limit);
 
       // Pagination için
       if (lastDocument != null) {
@@ -151,11 +186,14 @@ class AdvertService {
       final querySnapshot = await query.get();
       final adverts = querySnapshot.docs.map((doc) => Advert.fromJson(doc.data(), doc.id)).toList();
 
-      debugPrint('Firestore\'dan çekilen ilan sayısı: ${adverts.length}');
-
+      debugPrint('whereNotIn ile çekilen ilan sayısı: ${adverts.length}');
       return adverts;
     } catch (e) {
       debugPrint('Other ilanlar çekilirken hata: $e');
+      // Hata durumunda hatanın tam detayını logla
+      debugPrint('Hata detayı: $e');
+
+      // Hata durumunda boş liste döndür
       return [];
     }
   }
@@ -836,6 +874,161 @@ class AdvertService {
       debugPrint('Kontrol işlemi tamamlandı.');
     } catch (e) {
       debugPrint('İlan yaratıcısı kontrolü sırasında hata oluştu: $e');
+    }
+  }
+
+  // Veritabanındaki sıralama ve filtreleme için kullanılan alanlarda tutarsızlık kontrolü
+  Future<void> checkDatabaseConsistencyForQueries() async {
+    try {
+      debugPrint('Veritabanı tutarsızlık kontrolü başlatıldı: Sorgu alanları için detaylı kontrol');
+
+      // Kontrol edilecek kritik sorgu alanları
+      final List<String> queryFields = ['advertType', 'isCreatorPremium', 'createdAt'];
+
+      // İstatistikler için sayaçlar
+      int totalProcessed = 0;
+      int inconsistentDocs = 0;
+
+      // Her bir alan için tip tutarsızlığı olan belgeleri sakla
+      Map<String, List<String>> fieldTypeErrors = {};
+      // Her alan için belge sayısı
+      Map<String, int> fieldCounts = {};
+      // advertType değerlerinin dağılımı
+      Map<String, int> advertTypeDistribution = {};
+
+      queryFields.forEach((field) {
+        fieldTypeErrors[field] = [];
+        fieldCounts[field] = 0;
+      });
+
+      // Tüm ilanları getir
+      final eventsSnapshot = await _firestore.collection('events').get();
+      int totalDocs = eventsSnapshot.size;
+      debugPrint('Toplam belge sayısı: $totalDocs');
+
+      // Tüm belgeleri kontrol et
+      for (var doc in eventsSnapshot.docs) {
+        totalProcessed++;
+        final data = doc.data();
+        final docId = doc.id;
+
+        // Her bir kritik alanı kontrol et
+        for (var field in queryFields) {
+          // 1. Alan var mı?
+          if (!data.containsKey(field)) {
+            inconsistentDocs++;
+            debugPrint('HATA: Belge $docId - $field alanı eksik!');
+            continue;
+          }
+
+          fieldCounts[field] = (fieldCounts[field] ?? 0) + 1;
+
+          // 2. Alan için tip kontrolü
+          final value = data[field];
+
+          switch (field) {
+            case 'advertType':
+              // advertType bir string olmalı
+              if (value is! String) {
+                fieldTypeErrors[field]!.add(docId);
+                debugPrint('HATA: Belge $docId - advertType alan tipi yanlış: ${value.runtimeType}');
+              } else {
+                // advertType dağılımını topla
+                advertTypeDistribution[value] = (advertTypeDistribution[value] ?? 0) + 1;
+              }
+              break;
+
+            case 'isCreatorPremium':
+              // isCreatorPremium bir boolean olmalı
+              if (value is! bool) {
+                fieldTypeErrors[field]!.add(docId);
+                debugPrint('HATA: Belge $docId - isCreatorPremium alan tipi yanlış: ${value.runtimeType}');
+              }
+              break;
+
+            case 'createdAt':
+              // createdAt bir Timestamp olmalı
+              if (value is! Timestamp) {
+                fieldTypeErrors[field]!.add(docId);
+                debugPrint('HATA: Belge $docId - createdAt alan tipi yanlış: ${value.runtimeType}');
+              }
+              break;
+          }
+        }
+
+        // Ayrıca sorgu sırasında sorun çıkarabilecek diğer tutarsızlıkları kontrol et
+        if (data.containsKey('advertType') && data.containsKey('isCreatorPremium') && data.containsKey('createdAt')) {
+          // whereNotIn sorgusu için advertType kontrolü
+          final advertType = data['advertType'];
+          if (advertType is String && advertType.isEmpty) {
+            debugPrint('UYARI: Belge $docId - advertType boş string, bu sorgu sırasında sorun yaratabilir');
+          }
+        }
+
+        // Her 100 belgede bir ilerleme bildirimi
+        if (totalProcessed % 100 == 0) {
+          debugPrint('İşlenen belge: $totalProcessed / $totalDocs');
+        }
+      }
+
+      // Sonuçları logla
+      debugPrint('\n===== KONTROL SONUÇLARI =====');
+
+      // Alan varlığı istatistikleri
+      debugPrint('\nAlan Varlığı İstatistikleri:');
+      fieldCounts.forEach((field, count) {
+        double percentage = (count / totalDocs) * 100;
+        debugPrint('- $field: $count / $totalDocs belge (${percentage.toStringAsFixed(2)}%)');
+      });
+
+      // Tip hatası olan belgeler
+      debugPrint('\nTip Hatası Olan Belgeler:');
+      bool hasTypeErrors = false;
+      fieldTypeErrors.forEach((field, docs) {
+        if (docs.isNotEmpty) {
+          hasTypeErrors = true;
+          debugPrint('- $field: ${docs.length} belgede tip hatası var');
+          if (docs.length <= 5) {
+            debugPrint('  Belge ID\'leri: ${docs.join(', ')}');
+          } else {
+            debugPrint('  İlk 5 belge ID: ${docs.take(5).join(', ')}...');
+          }
+        }
+      });
+
+      if (!hasTypeErrors) {
+        debugPrint('Hiçbir belgede tip hatası bulunamadı.');
+      }
+
+      // advertType dağılımı
+      debugPrint('\nadvertType Dağılımı:');
+      advertTypeDistribution.forEach((type, count) {
+        double percentage = (count / totalDocs) * 100;
+        debugPrint('- $type: $count belge (${percentage.toStringAsFixed(2)}%)');
+      });
+
+      // Sorgu testi: whereNotIn kullanılabilir mi?
+      debugPrint('\nSorgu Uyumluluk Kontrolü:');
+      if (advertTypeDistribution.length > 10) {
+        debugPrint('UYARI: ${advertTypeDistribution.length} farklı advertType değeri var. whereNotIn sorgusu maksimum 10 değer alabilir!');
+      } else {
+        debugPrint('OK: ${advertTypeDistribution.length} farklı advertType değeri var, whereNotIn sorgusu için uygundur.');
+      }
+
+      // Tespit edilen sorunlar var mı?
+      if (inconsistentDocs > 0) {
+        debugPrint('\nTOPLAM SORUNLU BELGE: $inconsistentDocs / $totalDocs (${(inconsistentDocs / totalDocs * 100).toStringAsFixed(2)}%)');
+        debugPrint('\nÖNERİLER:');
+        debugPrint('1. Eksik alanları olan belgeleri güncelleyin veya silin.');
+        debugPrint('2. Tip hataları olan belgeleri düzeltin.');
+        debugPrint('3. Özellikle advertType alanı için veritabanı tutarlılığını sağlayın.');
+      } else {
+        debugPrint('\nHiçbir tutarsızlık tespit edilmedi. Veritabanı sorgu alanları için tutarlı görünüyor.');
+      }
+
+      debugPrint('\nVeritabanı tutarlılık kontrolü tamamlandı.');
+    } catch (e) {
+      debugPrint('Veritabanı tutarlılık kontrolünde hata oluştu: $e');
     }
   }
 }

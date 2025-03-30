@@ -57,7 +57,7 @@ class HomeViewModel extends ChangeNotifier {
     _setLoading(true);
     try {
       List<Advert> newAdverts = [];
-      //await _advertService.checkAdvertCreatorExistence();
+      //  await _advertService.checkDatabaseConsistencyForQueries();
 
       switch (tabIndex) {
         case 0:
@@ -88,13 +88,6 @@ class HomeViewModel extends ChangeNotifier {
           );
       }
 
-      // Filtreleme ÖNCESİ ilan sayısına göre hasMore değerini belirle
-      // Eğer pageSize kadar ilan çekildiyse, daha fazla veri olabilir
-      bool canHaveMore = newAdverts.length >= _pageSize;
-
-      // NOT: Artık burada filtreleme yapmıyoruz. Görüntüleme sırasında filtreleceğiz.
-      // Bu şekilde sayfalama mantığı bozulmayacak.
-
       if (newAdverts.isNotEmpty) {
         // Son dökümanı güncelle (filtrelenmemiş listeden alıyoruz)
         _lastDocument = await _firestore.collection('events').doc(newAdverts.last.advertID).get();
@@ -115,9 +108,7 @@ class HomeViewModel extends ChangeNotifier {
       }
 
       // Sayfa kontrolü - Filtreleme öncesi duruma göre hasMore değerini ayarla
-      _hasMore = canHaveMore;
-
-      notifyListeners();
+      _hasMore = newAdverts.length >= _pageSize;
 
       debugPrint('Yeni ilanlar yüklendi. Toplam: ${_adverts.length}, Yeni: ${newAdverts.length}, Daha fazla var mı: $_hasMore');
     } catch (e) {

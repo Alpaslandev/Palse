@@ -561,9 +561,25 @@ class AchievementService {
   }
 
   /// Bir sonraki premium ödüle kalan XP miktarını hesaplar
+  /// Premium ödüller tamamen kazanılmışsa 0 döndürür
   Future<int> getXpToNextPremium(String userId) async {
     final totalXp = await getUserXp(userId);
     return PremiumRewards.xpToNextPremium(totalXp);
+  }
+
+  /// Bir sonraki premium ödül eşiğini döndürür
+  /// (Toplam XP gerektiren değil, sadece bir sonraki eşik değeri)
+  Future<int> getNextPremiumThreshold(String userId) async {
+    final totalXp = await getUserXp(userId);
+
+    for (var threshold in PremiumRewards.xpThresholds) {
+      if (totalXp < threshold) {
+        return threshold;
+      }
+    }
+
+    // Tüm eşikleri geçmişse son eşiği döndür
+    return PremiumRewards.xpThresholds.last;
   }
 
   //
@@ -605,11 +621,21 @@ class AchievementService {
 
     // Bir sonraki premium ödüle kalan XP bildirimini kaydet
     final xpToNextPremium = PremiumRewards.xpToNextPremium(newTotalXp);
-    await SharedPrefService.saveNotificationWithEnum(
-      type: NotificationsEnum.premiumReward.name,
-      title: LocaleManager.translate('notification_next_premium_title'),
-      body: LocaleManager.translateWithParams('notification_next_premium_body', {'xp': xpToNextPremium.toString()}),
-    );
+    if (xpToNextPremium > 0) {
+      // Kalan XP 0'dan büyükse bildirim göster
+      await SharedPrefService.saveNotificationWithEnum(
+        type: NotificationsEnum.premiumReward.name,
+        title: LocaleManager.translate('notification_next_premium_title'),
+        body: LocaleManager.translateWithParams('notification_next_premium_body', {'xp': xpToNextPremium.toString()}),
+      );
+    } else {
+      // Tüm premium ödülleri kazanmışsa farklı bir bildirim göster
+      await SharedPrefService.saveNotificationWithEnum(
+        type: NotificationsEnum.premiumReward.name,
+        title: LocaleManager.translate('notification_premium_complete_title'),
+        body: LocaleManager.translate('notification_premium_complete_body'),
+      );
+    }
   }
 
   //

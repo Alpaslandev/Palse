@@ -9,6 +9,7 @@ import 'package:palseapp/core/services/firestore/advert_service.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
 import 'package:palseapp/core/widgets/advert_card.dart';
 import 'package:palseapp/core/widgets/premium_overlay.dart';
+import 'package:palseapp/core/helper/calculate_distance.dart';
 import 'package:provider/provider.dart';
 
 class FilterView extends StatefulWidget {
@@ -39,34 +40,56 @@ class _FilterViewState extends State<FilterView> {
       _isLoading = true;
     });
 
-    // Tüm ilanları çek
+    // Tüm ilanları çek (filtrelerimizi backendde uygulayarak)
     final advertService = AdvertService();
     List<Advert> allAdverts = await advertService.fetchAdvertsByFiltering(gender: _selectedGender?.name, category: _selectedCategory?.name);
 
-    // Cinsiyet filtrelemesi
-    if (_selectedGender != null) {
-      allAdverts = allAdverts.where((advert) {
-        return advert.creatorGender.name.toLowerCase() == _selectedGender!.name.toLowerCase();
-      }).toList();
+    // Orijinal listeyi kaydet (sıralamanın bozulmaması için)
+    List<Advert> resultAdverts = List.from(allAdverts);
 
-      debugPrint('Filtreleme sonucu kalan ilan sayısı: ${allAdverts.length}');
-    }
+    debugPrint('Toplam çekilen ilan sayısı: ${allAdverts.length}');
 
-    if (_selectedCategory != null) {
-      debugPrint('Seçilen kategoriler: ${_selectedCategory!.name}');
+    // Mesafe filtresi uygula (eğer belirtilmişse)
+    if (_distance != null && _distance! > 0 && _currentUser?.location != null) {
+      // Kullanıcının konumu
+      final userLat = _currentUser?.location?.lat;
+      final userLng = _currentUser?.location?.lon;
 
-      allAdverts = allAdverts.where((advert) {
-        final ilanKategori = advert.advertType;
-        debugPrint('İlan kategorisi: ${ilanKategori.name} - Seçilen kategorilerde var mı: ${_selectedCategory!.name == advert.advertType.name}');
+      if (userLat != null && userLng != null) {
+        debugPrint('Kullanıcı konumu: $userLat, $userLng');
+        debugPrint('Mesafe filtresi uygulanıyor: $_distance km');
 
-        return _selectedCategory!.name == advert.advertType.name;
-      }).toList();
+        // Orijinal listeden filtreye uymayanları çıkar
+        resultAdverts = resultAdverts.where((advert) {
+          // İlanın konumu
+          final advertLat = advert.location?.lat;
+          final advertLng = advert.location?.lon;
 
-      debugPrint('Kategori filtrelemesi sonucu kalan ilan sayısı: ${allAdverts.length}');
+          // Eğer ilanın konumu yoksa filtre dışında bırakılır
+          if (advertLat == null || advertLng == null) {
+            return false;
+          }
+
+          // Mesafeyi hesapla
+          final distance = calculateDistance(latitude1: userLat, longitude1: userLng, latitude2: advertLat, longitude2: advertLng);
+
+          // Debug mesajı
+          debugPrint('İlan ID: ${advert.advertID}, Mesafe: $distance km, Filtreleniyor mu: ${distance <= _distance!}');
+
+          // Mesafe filtresine göre kontrol
+          return distance <= _distance!;
+        }).toList();
+
+        debugPrint('Mesafe filtrelemesi sonucu kalan ilan sayısı: ${resultAdverts.length}');
+      } else {
+        debugPrint('Kullanıcı konumu bulunamadı, mesafe filtresi uygulanamadı');
+      }
+    } else {
+      debugPrint('Mesafe filtresi uygulanmadı: $_distance');
     }
 
     setState(() {
-      _filteredAdverts = allAdverts;
+      _filteredAdverts = resultAdverts;
       _isLoading = false;
     });
   }
