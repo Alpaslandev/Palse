@@ -125,6 +125,7 @@ class CreateAdvertViewModel extends ChangeNotifier {
         createdAt: DateTime.now(),
         likers: [],
         creatorGender: authProvider.user!.gender ?? Gender.male,
+        isCreatorPremium: authProvider.user!.isPremium ?? false,
       );
 
       debugPrint('Advert: ${advert.toJson()}');

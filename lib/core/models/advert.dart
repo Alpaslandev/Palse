@@ -15,6 +15,8 @@ class Advert {
   LocationModel location;
 
   String creatorUserID;
+  bool isCreatorPremium;
+
   Gender creatorGender;
   DateTime createdAt;
 
@@ -29,6 +31,7 @@ class Advert {
     required this.location,
     required this.createdAt,
     required this.creatorUserID,
+    required this.isCreatorPremium,
     required this.creatorGender,
   });
 
@@ -42,6 +45,7 @@ class Advert {
         title: json['title'] ?? '',
         description: json['description'] ?? '',
         creatorUserID: json['creatorUserID'] ?? '',
+        isCreatorPremium: json['isCreatorPremium'] ?? false,
         startEventDate: (json['startEventDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
         advertType: Categories.values.byName(json['advertType'] ?? 'diger'),
         advertImage: json['advertImage'] ?? '',
@@ -54,6 +58,7 @@ class Advert {
       debugPrint('İlan oluşturulurken hata: $e');
       return Advert(
         createdAt: DateTime.now(),
+        isCreatorPremium: false,
         creatorGender: Gender.others,
         advertID: advertID,
         title: '',
@@ -73,6 +78,7 @@ class Advert {
       'title': title,
       'description': description,
       'creatorUserID': creatorUserID,
+      'isCreatorPremium': isCreatorPremium,
       'startEventDate': Timestamp.fromDate(startEventDate),
       'createdAt': Timestamp.fromDate(createdAt),
       'advertType': advertType.name,
@@ -89,6 +95,7 @@ class Advert {
     String? description,
     String? advertImage,
     String? creatorUserID,
+    bool? isCreatorPremium,
     Categories? advertType,
     DateTime? createdAt,
     Gender? creatorGender,
@@ -102,6 +109,7 @@ class Advert {
       description: description ?? this.description,
       advertImage: advertImage ?? this.advertImage,
       creatorUserID: creatorUserID ?? this.creatorUserID,
+      isCreatorPremium: isCreatorPremium ?? this.isCreatorPremium,
       creatorGender: creatorGender ?? this.creatorGender,
       advertType: advertType ?? this.advertType,
       createdAt: createdAt ?? this.createdAt,
