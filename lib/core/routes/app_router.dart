@@ -329,22 +329,6 @@ class AppRouter {
                 },
               ),
             ),
-
-            // XP ve Görev Test Sayfası
-            GoRoute(
-              path: "/$achievementTest",
-              name: achievementTest,
-              pageBuilder: (context, state) => CustomTransitionPage(
-                key: state.pageKey,
-                child: const AchievementTestPage(),
-                transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                  return FadeTransition(
-                    opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
-                    child: child,
-                  );
-                },
-              ),
-            ),
           ],
         ),
       ],
