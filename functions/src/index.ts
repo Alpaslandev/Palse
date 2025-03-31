@@ -833,7 +833,7 @@ async function sendBatchMessages(messages: admin.messaging.Message[]) {
     logger.info(`${response.successCount} bildirim başarıyla gönderildi, ${response.failureCount} başarısız oldu`);
 
     if (response.failureCount > 0) {
-      const failedMessages = response.responses.filter((resp, _) => resp.error);
+      const failedMessages = response.responses.filter((resp) => resp.error);
       logger.warn(`Hatalı bildirimler: ${JSON.stringify(failedMessages)}`);
     }
   } catch (error) {
@@ -862,52 +862,108 @@ export const sendBroadcastNotification = onCall({
     logger.info(`Sadece iOS: ${onlyIos}`);
     logger.info(`Sadece Android: ${onlyAndroid}`);
 
-    // Platform koşulunu belirle
-    let condition = "'all-users' in topics";
+    // Aktif FCM tokeni olan tüm kullanıcıları getir
+    const query = admin.firestore().collection("customers").where("fcmToken", "!=", "");
+    const usersSnapshot = await query.get();
 
-    if (onlyIos && !onlyAndroid) {
-      condition = "'ios' in topics";
-    } else if (!onlyIos && onlyAndroid) {
-      condition = "'android' in topics";
+    logger.info(`${usersSnapshot.size} kullanıcı token'ı bulundu.`);
+
+    if (usersSnapshot.empty) {
+      logger.warn("Aktif token'a sahip kullanıcı bulunamadı");
+      return {success: false, error: "Bildirim gönderilecek kullanıcı bulunamadı"};
     }
 
-    // FCM mesajını oluştur
-    const message = {
-      condition: condition,
-      notification: {
-        title: title,
-        body: body,
-      },
-      data: {
-        type: "broadcast",
-        click_action: "FLUTTER_NOTIFICATION_CLICK",
-      },
-      android: {
-        priority: "high" as const,
-        notification: {
-          sound: "default",
-          priority: "high" as const,
-          channelId: "messages",
-        },
-      },
-      apns: {
-        payload: {
-          aps: {
-            sound: "default",
-            badge: 1,
-            contentAvailable: true,
+    // Tüm FCM tokenlarını topla
+    const tokens: string[] = [];
+    usersSnapshot.forEach((doc) => {
+      const fcmToken = doc.data().fcmToken;
+      if (fcmToken && typeof fcmToken === "string" && fcmToken.trim() !== "") {
+        tokens.push(fcmToken);
+      }
+    });
+
+    logger.info(`Toplam ${tokens.length} geçerli FCM token'ı bulundu.`);
+
+    if (tokens.length === 0) {
+      return {success: false, error: "Geçerli FCM token bulunamadı"};
+    }
+
+    // Eğer platform seçimi yapılmışsa şimdilik görmezden gel
+    // Platform filtreleme için devicePlatform alanı eklenince kullanılabilir
+    if (onlyIos || onlyAndroid) {
+      logger.warn("Platform filtreleme (iOS/Android) için devicePlatform alanı henüz mevcut değil.");
+      logger.warn("Tüm cihazlara bildirim gönderilecek.");
+    }
+
+    // FCM multicast bildirimi gönder (en fazla 500 token)
+    const chunks = chunkArray(tokens, 500);
+    let successCount = 0;
+    let failureCount = 0;
+
+    for (const tokenChunk of chunks) {
+      try {
+        // Multicast bildirim oluştur
+        const message = {
+          notification: {
+            title: title,
+            body: body,
           },
-        },
-      },
-    };
+          data: {
+            type: "broadcast",
+            click_action: "FLUTTER_NOTIFICATION_CLICK",
+          },
+          tokens: tokenChunk,
+          android: {
+            priority: "high" as const,
+            notification: {
+              sound: "default",
+              priority: "high" as const,
+              channelId: "messages",
+            },
+          },
+          apns: {
+            payload: {
+              aps: {
+                sound: "default",
+                badge: 1,
+                contentAvailable: true,
+              },
+            },
+          },
+        };
 
-    // Bildirimi gönder
-    const response = await admin.messaging().send(message);
-    logger.info("Broadcast bildirimi gönderildi:", response);
+        // Bildirimi gönder
+        const response = await admin.messaging().sendEachForMulticast(message);
+        logger.info(`Bildirim gönderildi: ${response.successCount} başarılı, ${response.failureCount} başarısız`);
 
+        successCount += response.successCount;
+        failureCount += response.failureCount;
+
+        // Başarısız olanları logla
+        if (response.failureCount > 0) {
+          const failedTokens = response.responses
+            .map((resp, idx) => resp.error ? {token: tokenChunk[idx], error: resp.error} : null)
+            .filter((item) => item !== null);
+
+          logger.warn(`Başarısız bildirimler: ${JSON.stringify(failedTokens)}`);
+        }
+      } catch (error) {
+        logger.error(`Multicast gönderimi hatası: ${error}`);
+        failureCount += tokenChunk.length;
+      }
+    }
+
+    logger.info(`Tüm bildirimler gönderildi. Başarılı: ${successCount}, Başarısız: ${failureCount}`);
     logger.info("=== BROADCAST BİLDİRİM TAMAMLANDI ===");
 
-    return {success: true, messageId: response};
+    return {
+      success: true,
+      stats: {
+        totalTokens: tokens.length,
+        successCount: successCount,
+        failureCount: failureCount,
+      },
+    };
   } catch (error) {
     logger.error("Broadcast bildirim gönderme hatası:", error);
     throw new HttpsError(
@@ -917,3 +973,18 @@ export const sendBroadcastNotification = onCall({
     );
   }
 });
+
+/**
+ * Bir diziyi belirtilen boyutta parçalara ayırır
+ * @template T Dizi elemanlarının tipi
+ * @param {Array<T>} array - Parçalara ayrılacak dizi
+ * @param {number} chunkSize - Her bir parçanın maksimum boyutu
+ * @return {Array<Array<T>>} Parçalara ayrılmış dizi
+ */
+function chunkArray<T>(array: T[], chunkSize: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < array.length; i += chunkSize) {
+    chunks.push(array.slice(i, i + chunkSize));
+  }
+  return chunks;
+}
