@@ -73,4 +73,25 @@ enum UserRank {
       orElse: () => UserRank.master,
     );
   }
+
+  /// Rütbe ilerleme yüzdesini hesaplar
+  static double calculateProgressPercentage(UserRank rank, int currentXp) {
+    if (rank == UserRank.master) {
+      return 1.0; // En üst seviye için %100
+    }
+
+    final totalRangeXp = rank.maxXp - rank.minXp;
+    final userProgressInRange = currentXp - rank.minXp;
+
+    return (userProgressInRange / totalRangeXp).clamp(0.0, 1.0);
+  }
+
+  /// Bir sonraki unvana geçmek için gereken XP miktarını hesaplayan metod
+  static int calculateXpToNextRank(UserRank rank, int currentXp) {
+    if (rank == UserRank.master) {
+      return 0; // En üst seviyede olduğu için 0
+    }
+
+    return (rank.maxXp - currentXp + 1).toInt();
+  }
 }

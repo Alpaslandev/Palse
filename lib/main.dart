@@ -76,17 +76,11 @@ void main() async {
   final themeProvider = ThemeProvider();
   await SharedPrefService.init();
 
-  // Achievement servisini gecikmeli başlat - kritik olmayan
-  Future.delayed(const Duration(seconds: 1), () async {
-    await AchievementService().init();
-    debugPrint('Achievement servisi gecikmeli başlatıldı');
-  });
+  await AchievementService().init();
 
   // Analitik loglamayı gecikmeli başlat
-  Future.delayed(const Duration(seconds: 1), () async {
-    await MetaAnalyticsService().logAppLaunch();
-    debugPrint('Analitik servisi gecikmeli başlatıldı');
-  });
+  await MetaAnalyticsService().logAppLaunch();
+  debugPrint('Analitik servisi gecikmeli başlatıldı');
 
   runApp(
     MultiProvider(

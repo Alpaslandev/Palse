@@ -474,7 +474,13 @@ class AdvertCard extends StatelessWidget {
                 // İlanı şikayet et
                 try {
                   // İlan ID'si veya ilan şikayet metodu
-                  await reportService.reportListing(advert.advertID ?? advert.creatorUserID);
+                  await reportService.createReport(Report(
+                    reportedUserId: advert.creatorUserID,
+                    reporterUserId: currentUser?.userID ?? '',
+                    reportType: ReportType.inappropriateAdvert.name,
+                    description: 'İlan içerik ihlali: "${advert.title}"',
+                    createdAt: DateTime.now().toIso8601String(),
+                  ));
                   if (context.mounted) {
                     ScaffoldMess.showSuccessSnackBar(context.tr('report_sent'));
                   }

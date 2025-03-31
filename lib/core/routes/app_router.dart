@@ -348,6 +348,8 @@ class AppRouter {
       debugPrint('👤 Kullanıcı Durumu:');
       debugPrint('👤 Yükleniyor: ${_authProvider.isLoading}');
       debugPrint('👤 Giriş Yapılmış: ${_authProvider.isAuthenticated}');
+      debugPrint('👤 Firebase User: ${_authProvider.firebaseUser?.email}');
+      debugPrint('👤 User: ${_authProvider.user?.userID}');
       debugPrint('👤 Profil Kurulumu Tamamlanmış: ${_authProvider.isProfileSetupCompleted}');
       debugPrint('👤 Firestore Verileri Yüklenmiş: ${_authProvider.isFirestoreDataLoaded}');
 

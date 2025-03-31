@@ -72,8 +72,16 @@ class _ProjectAppBarState extends State<ProjectAppBar> {
       scrolledUnderElevation: 0,
       title: Row(
         children: [
-          Image.asset('assets/images/dostum_olsana.png', width: 50, height: 50),
-          const SizedBox(width: 5),
+          // Logo görüntüsünü app bar'a uygun şekilde yerleştir
+          ClipRRect(
+            borderRadius: BorderRadius.circular(30),
+            child: Image.asset(
+              'assets/images/dostum_olsana_trimmed.png',
+              height: 50,
+              width: 50,
+              fit: BoxFit.cover,
+            ),
+          ),
           const Text('PALSE', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
         ],
       ),

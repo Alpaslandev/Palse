@@ -31,6 +31,20 @@ enum XpEvent {
 
   /// Görevin günlük görev olup olmadığı
   final bool isDaily;
+
+  /// Görevi adından bulur
+  static XpEvent? fromName(String name) {
+    try {
+      return XpEvent.values.firstWhere((event) => event.name == name || event.descriptionKey == name);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Tüm günlük görevleri listeler
+  static List<XpEvent> getDailyTasks() {
+    return XpEvent.values.where((event) => event.isDaily).toList();
+  }
 }
 
 /// XP event gruplarını tanımlayan enum
@@ -85,4 +99,22 @@ enum XpEventGroup {
 
   /// Grup için emoji
   final String emoji;
+
+  /// Başlık anahtarına göre grup bulur
+  static XpEventGroup? fromTitleKey(String titleKey) {
+    try {
+      return XpEventGroup.values.firstWhere((group) => group.titleKey == titleKey);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Tüm görev gruplarını başlıklarına göre Map olarak döndürür
+  static Map<String, List<XpEvent>> getAllTaskGroups() {
+    final Map<String, List<XpEvent>> groups = {};
+    for (final group in XpEventGroup.values) {
+      groups[group.titleKey] = group.events;
+    }
+    return groups;
+  }
 }

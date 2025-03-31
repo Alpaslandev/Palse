@@ -36,8 +36,8 @@ android {
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = 24
         targetSdk = flutter.targetSdkVersion
-        versionCode = 52
-        versionName = '0.0.44'
+        versionCode = 53
+        versionName = '0.0.45'
     }
 
     signingConfigs {
@@ -53,6 +53,9 @@ android {
         release {
             // Release yapılandırması için imzalama ayarlarını kullan
             signingConfig signingConfigs.release
+            minifyEnabled false
+            shrinkResources false
+            // proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 }
@@ -60,3 +63,11 @@ android {
 flutter {
     source = "../.."
 }
+
+// Play Core kütüphanesini tamamen kaldırıyoruz
+// dependencies {
+//     implementation('com.google.android.play:core:1.10.3') {
+//         exclude group: 'com.google.android.play', module: 'core-common'
+//         exclude group: 'com.google.android.play', module: 'review'
+//     }
+// }

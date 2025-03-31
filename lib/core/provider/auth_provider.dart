@@ -83,11 +83,15 @@ class AuthProvider extends ChangeNotifier implements Listenable {
     debugPrint('Starting user stream for user: $userId');
 
     _userStreamSubscription = _userService.streamFirestore(userId).listen((userData) {
+      debugPrint('Firestore verisi alındı: exists=${userData.exists}');
+
       if (userData.exists && userData.data() != null) {
         final newUser = Customer.fromJson(userData.data() as Map<String, dynamic>, userId);
+        debugPrint('Customer objesi oluşturuldu: id=${newUser.userID}, firstName=${newUser.firstName}');
 
         _user = newUser;
         _isFirestoreDataLoaded = true; // Firestore verisi yüklendi
+        notifyListeners(); // Her durumda notifyListeners() çağrılması gerekiyor
 
         if (_isFirstTime) {
           _isFirstTime = false;
@@ -158,6 +162,7 @@ class AuthProvider extends ChangeNotifier implements Listenable {
   // Google ile giriş
   Future<void> loginWithGoogle() async {
     try {
+      debugPrint('Google ile giriş başlatılıyor...');
       _isLoading = true;
       _isFirestoreDataLoaded = false; // Google ile giriş yaparken false olarak ayarla
       notifyListeners();
@@ -166,13 +171,20 @@ class AuthProvider extends ChangeNotifier implements Listenable {
 
       // Sonra user data ve profile durumu
       if (user != null) {
+        debugPrint('Google ile giriş başarılı: ${user.email}');
         _firebaseUser = user;
+        notifyListeners();
+      } else {
+        debugPrint('Google ile giriş başarısız: User null döndü');
       }
     } catch (e) {
+      debugPrint('Google ile giriş hatası: $e');
       rethrow;
     } finally {
       _isLoading = false;
       notifyListeners();
+      debugPrint(
+          'Google giriş durumu: isAuthenticated=${isAuthenticated}, isLoading=${isLoading}, isFirestoreDataLoaded=${isFirestoreDataLoaded}, user=${_user?.userID}');
     }
   }
 

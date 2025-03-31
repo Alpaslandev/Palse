@@ -93,7 +93,7 @@ class CommentViewModel extends ChangeNotifier {
     notifyListeners();
     try {
       await _reportService.createReport(Report(
-        reportedUserId: _friendCustomer.userID!,
+        reportedUserId: comment.commenterID!,
         reporterUserId: currentUserId,
         reportType: ReportType.inappropriateComment.name,
         description: 'Yorum içerik ihlali: "${comment.comment}"',

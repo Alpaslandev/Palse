@@ -34,18 +34,18 @@ class RecentlyViewer extends StatelessWidget {
             return GestureDetector(
               onTap: () => context.pushNamed(Routes.friendProfile, extra: customer.userID),
               child: Padding(
-                padding: const EdgeInsets.all(8.0),
+                padding: const EdgeInsets.all(4.0),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     // Profil Resmi ve Temel Bilgiler
                     CircleProfilePicture(
-                      radius: 30,
+                      radius: 24,
                       imageUrl: customer.profilePictureUrl ?? '',
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 2),
                     Text(
-                      '${customer.firstName} ${customer.lastName}',
+                      '${customer.firstName}',
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,

@@ -17,7 +17,12 @@ class AchievementService {
   // Singleton yapısı
   static final AchievementService _instance = AchievementService._internal();
   factory AchievementService() => _instance;
-  AchievementService._internal();
+  AchievementService._internal() {
+    _cacheHelper = _CacheHelper();
+  }
+
+  // Cache yardımcı sınıfı
+  late final _CacheHelper _cacheHelper;
 
   // Servisin ilk başlatılma işlemi
   Future<void> init() async {
@@ -35,26 +40,39 @@ class AchievementService {
   }
 
   /// Gün değişimi kontrolü ve görevlerin sıfırlanması
+  /// İstanbul saatine göre 09:00'da sıfırlama yapılır
   Future<void> _checkForDayChangeAndResetTasks(String userId) async {
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      // Bugünün tarihini al (YYYY-MM-DD formatında)
-      final today = DateTime.now().toIso8601String().split('T')[0];
+      // Şu anki İstanbul saatini al (UTC+3)
+      final now = DateTime.now().toLocal();
+      final today = now.toIso8601String().split('T')[0]; // YYYY-MM-DD
+
+      // İstanbul'da saat 09:00 - sıfırlama zamanı
+      final resetTime = DateTime(now.year, now.month, now.day, 9, 0, 0);
+
+      // Son sıfırlama zamanını kontrol et
+      final lastResetTimeKey = _PrefsKeys.forUser(_PrefsKeys.dailyTaskResetTime, userId);
+      final lastResetCheck = prefs.getString(lastResetTimeKey);
+      final lastResetTime = lastResetCheck != null ? DateTime.parse(lastResetCheck) : null;
 
       // Son kontrol tarihini al
-      final lastResetCheckKey = 'lastDailyTasksResetCheck_$userId';
-      final lastResetCheck = prefs.getString(lastResetCheckKey);
+      final lastResetDateKey = _PrefsKeys.forUser(_PrefsKeys.dailyTaskResetDate, userId);
+      final lastResetDate = prefs.getString(lastResetDateKey);
 
-      // Eğer son kontrol tarihi bugün değilse, görevleri sıfırla
-      if (lastResetCheck != today) {
-        debugPrint('📅 Gün değişimi tespit edildi, günlük görevler sıfırlanıyor...');
+      // Sıfırlama gerektiren durumları kontrol et:
+      // 1. Şu an saat 09:00'dan sonra ve son sıfırlama saat 09:00'dan önce ise
+      // 2. Son sıfırlama tarihi bugünden farklı ise
+      if ((now.isAfter(resetTime) && (lastResetTime == null || lastResetTime.isBefore(resetTime))) || lastResetDate != today) {
+        debugPrint('📅 Günlük görev sıfırlama zamanı (09:00) geldi veya gün değişimi tespit edildi');
         await resetDailyTasks(userId);
 
-        // Bugünün tarihini kaydet
-        await prefs.setString(lastResetCheckKey, today);
+        // Son sıfırlama zamanını ve tarihini kaydet
+        await prefs.setString(lastResetTimeKey, now.toIso8601String());
+        await prefs.setString(lastResetDateKey, today);
       } else {
-        debugPrint('📅 Günlük görevler bugün zaten kontrol edilmiş, tekrar sıfırlanmıyor');
+        debugPrint('📅 Günlük görevler için sıfırlama zamanı henüz gelmedi');
       }
     } catch (e) {
       debugPrint('⚠️ Gün değişimi kontrolü sırasında hata: $e');
@@ -68,21 +86,21 @@ class AchievementService {
       final today = DateTime.now().toIso8601String().split('T')[0];
 
       // Tüm günlük görevler için cache'i yükle
-      for (final event in XpEvent.values.where((e) => e.isDaily)) {
-        final taskDateKey = '${_dailyTaskDateKey}_${userId}_${event.name}';
+      for (final event in XpEvent.getDailyTasks()) {
+        final taskDateKey = _PrefsKeys.forUser(_PrefsKeys.dailyTaskDate, userId, suffix: event.name);
         final lastTaskDate = prefs.getString(taskDateKey);
 
         // Cache'e ekle
         final cacheKey = '${userId}_${event.name}_$today';
-        _taskCompletionCache[cacheKey] = lastTaskDate == today ? false : true;
+        _cacheHelper.setTaskCompletion(cacheKey, lastTaskDate == today ? false : true);
       }
 
       // Mesaj ödülleri için cache'i yükle
       final allKeys = prefs.getKeys();
       for (final key in allKeys) {
-        if (key.startsWith('${_firstMessageSentKey}_$userId') || key.startsWith('${_firstMessageReceivedKey}_$userId')) {
+        if (key.startsWith('${_PrefsKeys.firstMessageSent}_$userId') || key.startsWith('${_PrefsKeys.firstMessageReceived}_$userId')) {
           final value = prefs.getBool(key) ?? false;
-          _chatRewardCache[key] = value;
+          _cacheHelper.setChatReward(key, value);
         }
       }
 
@@ -103,15 +121,10 @@ class AchievementService {
   static const String _lastCheckDateKey = 'lastCheckDate';
   static const String _dailyTaskDateKey = 'dailyTaskDate';
 
-  // Ödüllendirilmiş sohbetleri tutacak anahtarlar
-  static const String _firstMessageSentKey = 'firstMessageSent';
-  static const String _firstMessageReceivedKey = 'firstMessageReceived';
   static const String _firstMessageSentCountKey = 'firstMessageSentCount'; // İlk mesaj gönderme ödülü sayısı anahtarı
   static const int _maxFirstMessageSentRewards = 3; // Maksimum ilk mesaj ödülü sayısı
 
   // Görev kontrolü optimizasyonu için cache mekanizması
-  final Map<String, bool> _chatRewardCache = {};
-  final Map<String, bool> _taskCompletionCache = {};
   DateTime? _lastDailyTaskCheck;
 
   //
@@ -127,7 +140,7 @@ class AchievementService {
     try {
       // Önce yerel veriyi kontrol et
       final prefs = await SharedPreferences.getInstance();
-      final localXp = prefs.getInt('${_totalXpKey}_$userId');
+      final localXp = prefs.getInt(_PrefsKeys.forUser(_PrefsKeys.totalXp, userId));
 
       if (localXp != null) {
         return localXp;
@@ -140,7 +153,7 @@ class AchievementService {
         final totalXp = userDoc.data()!['totalXp'] as int;
 
         // Yerel olarak da kaydet
-        await prefs.setInt('${_totalXpKey}_$userId', totalXp);
+        await prefs.setInt(_PrefsKeys.forUser(_PrefsKeys.totalXp, userId), totalXp);
 
         return totalXp;
       }
@@ -170,7 +183,7 @@ class AchievementService {
 
       // Yerel veritabanına da kaydet
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setInt('${_totalXpKey}_$userId', newXp);
+      await prefs.setInt(_PrefsKeys.forUser(_PrefsKeys.totalXp, userId), newXp);
 
       // Seviye atlama kontrol et
       await _checkAndSendRankNotifications(currentXp, newXp, userId);
@@ -188,12 +201,11 @@ class AchievementService {
   /// Premium ödül kontrolü yapar ve gerekli işlemleri gerçekleştirir
   Future<void> _checkAndHandlePremiumRewards(int oldTotalXp, int newTotalXp, String userId) async {
     try {
-      // Eski ve yeni premium ödül sayılarını hesapla
-      final oldPremiumCount = PremiumRewards.earnedPremiumRewards(oldTotalXp);
-      final newPremiumCount = PremiumRewards.earnedPremiumRewards(newTotalXp);
+      // Eski ve yeni premium ödül sayılarını hesapla ve yeni ödül kazanıldı mı kontrol et
+      if (PremiumRewards.hasEarnedNewReward(oldTotalXp, newTotalXp)) {
+        final oldPremiumCount = PremiumRewards.earnedPremiumRewards(oldTotalXp);
+        final newPremiumCount = PremiumRewards.earnedPremiumRewards(newTotalXp);
 
-      // Eğer yeni premium ödül kazanıldıysa
-      if (newPremiumCount > oldPremiumCount) {
         // Kazanılan premium ödül sayısı
         final earnedCount = newPremiumCount - oldPremiumCount;
 
@@ -251,7 +263,7 @@ class AchievementService {
 
         // Cache'i güncelle
         final cacheKey = '${userId}_${event.name}_$todayStr';
-        _taskCompletionCache[cacheKey] = false; // Artık tamamlanamaz
+        _cacheHelper.setTaskCompletion(cacheKey, false); // Artık tamamlanamaz
 
         // Günlük görev tamamlandığında SharedPreferences'a da kaydet
         final taskDateKey = '${_dailyTaskDateKey}_${userId}_${event.name}';
@@ -296,13 +308,13 @@ class AchievementService {
       final cacheKey = '${userId}_${event.name}_$today';
 
       // Eğer cache'de varsa, sonucu doğrudan döndür
-      if (_taskCompletionCache.containsKey(cacheKey)) {
-        return _taskCompletionCache[cacheKey]!;
+      if (_cacheHelper.hasTaskCompletion(cacheKey)) {
+        return _cacheHelper.getTaskCompletion(cacheKey)!;
       }
 
       // Cache'de yoksa, hesapla ve cache'e ekle
       final canComplete = await _canCompleteDailyTask(userId, event);
-      _taskCompletionCache[cacheKey] = canComplete;
+      _cacheHelper.setTaskCompletion(cacheKey, canComplete);
 
       // Cache'i SharedPreferences'a da kaydet
       await _saveCacheToPrefs(userId, event, canComplete);
@@ -385,20 +397,6 @@ class AchievementService {
     }
   }
 
-  /// Tüm günlük görevlerin tamamlanıp tamamlanmadığını kontrol eder
-  Future<bool> _areAllDailyTasksCompleted(String userId) async {
-    final dailyTasks = XpEvent.values.where((event) => event.isDaily).toList();
-
-    for (final task in dailyTasks) {
-      final count = await _getTaskCompletionCount(userId, task);
-      if (count == 0) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
   /// Görev tamamlama sayısını getirir (private)
   Future<int> _getTaskCompletionCount(String userId, XpEvent event) async {
     final prefs = await SharedPreferences.getInstance();
@@ -445,7 +443,7 @@ class AchievementService {
       }
 
       // Cache'i temizle
-      _taskCompletionCache.clear();
+      _cacheHelper.clear();
 
       // Günlük görevlerin sıfırlandığı tarihi kaydet
       final today = DateTime.now().toIso8601String().split('T')[0];
@@ -519,37 +517,26 @@ class AchievementService {
 
   /// Rütbe ilerleme yüzdesini hesaplar
   double getRankProgressPercentage(UserRank rank, int currentXp) {
-    if (rank == UserRank.master) {
-      return 1.0; // En üst seviye için %100
-    }
-
-    final totalRangeXp = rank.maxXp - rank.minXp;
-    final userProgressInRange = currentXp - rank.minXp;
-
-    return (userProgressInRange / totalRangeXp).clamp(0.0, 1.0);
+    return UserRank.calculateProgressPercentage(rank, currentXp);
   }
 
   /// Bir sonraki unvana geçmek için gereken XP miktarını hesaplayan metod
   int calculateXpToNextRank(UserRank rank, int currentXp) {
-    if (rank == UserRank.master) {
-      return 0; // En üst seviyede olduğu için 0
-    }
-
-    return (rank.maxXp - currentXp + 1).toInt();
+    return UserRank.calculateXpToNextRank(rank, currentXp);
   }
 
   /// Bir sonraki seviyeye kalan XP yüzdesini hesaplar
   Future<double> getXpToNextRankPercentage(String userId) async {
     final totalXp = await getUserXp(userId);
     final userRank = UserRank.fromXp(totalXp);
-    return getRankProgressPercentage(userRank, totalXp);
+    return UserRank.calculateProgressPercentage(userRank, totalXp);
   }
 
   /// Bir sonraki seviyeye kalan XP miktarını hesaplar
   Future<int> getXpToNextRank(String userId) async {
     final totalXp = await getUserXp(userId);
     final userRank = UserRank.fromXp(totalXp);
-    return calculateXpToNextRank(userRank, totalXp);
+    return UserRank.calculateXpToNextRank(userRank, totalXp);
   }
 
   //
@@ -567,21 +554,6 @@ class AchievementService {
   Future<int> getXpToNextPremium(String userId) async {
     final totalXp = await getUserXp(userId);
     return PremiumRewards.xpToNextPremium(totalXp);
-  }
-
-  /// Bir sonraki premium ödül eşiğini döndürür
-  /// (Toplam XP gerektiren değil, sadece bir sonraki eşik değeri)
-  Future<int> getNextPremiumThreshold(String userId) async {
-    final totalXp = await getUserXp(userId);
-
-    for (var threshold in PremiumRewards.xpThresholds) {
-      if (totalXp < threshold) {
-        return threshold;
-      }
-    }
-
-    // Tüm eşikleri geçmişse son eşiği döndür
-    return PremiumRewards.xpThresholds.last;
   }
 
   //
@@ -668,164 +640,6 @@ class AchievementService {
     return LocaleManager.translate(group.titleKey);
   }
 
-  //
-  // YARDIMCI METODLAR
-  //
-
-  /// Tüm görev gruplarını başlıklarına göre Map olarak döndürür
-  Map<String, List<XpEvent>> getAllTaskGroups() {
-    final Map<String, List<XpEvent>> groups = {};
-    for (final group in XpEventGroup.values) {
-      groups[group.titleKey] = group.events;
-    }
-    return groups;
-  }
-
-  /// Belirli bir grup anahtarının emojisinin döndürülmesi
-  String getGroupEmoji(String groupKey) {
-    final group = XpEventGroup.values.firstWhere(
-      (g) => g.titleKey == groupKey,
-      orElse: () => XpEventGroup.welcomeRewards, // varsayılan değer
-    );
-    return group.emoji;
-  }
-
-  /// Belirli bir görevin XP değerini döndürür
-  int getTaskXpValue(String taskName) {
-    // taskName'i XpEvent'e çevirmeye çalış
-    final xpEvent = mapTaskNameToXpEvent(taskName);
-    if (xpEvent != null) {
-      return xpEvent.xpAmount;
-    }
-    return 0; // Eşleşme bulunamazsa 0 döndür
-  }
-
-  /// Task adını XpEvent'e dönüştürür
-  XpEvent? mapTaskNameToXpEvent(String taskName) {
-    try {
-      return XpEvent.values.firstWhere((event) => event.name == taskName || event.descriptionKey == taskName);
-    } catch (e) {
-      debugPrint('Bu taskName için tanımsız bir XpEvent var: $taskName');
-      return null;
-    }
-  }
-
-  //
-  // TEST VE LOGLAMA METODLARI
-  //
-
-  /// Günlük görevlerin durumunu kontrol eder ve debug bilgisi döndürür
-  Future<Map<String, dynamic>> checkDailyTasksStatus(String userId) async {
-    final prefs = await SharedPreferences.getInstance();
-
-    // Son sıfırlama zamanını getir
-    final lastResetTimeStr = prefs.getString('${_dailyTaskResetTimeKey}_$userId');
-    final DateTime? lastResetTime = lastResetTimeStr != null ? DateTime.parse(lastResetTimeStr) : null;
-
-    // Son günlük görev tarihini getir
-    final lastDailyTaskDateStr = prefs.getString('${_lastDailyTaskDateKey}_$userId');
-    final DateTime? lastDailyTaskDate = lastDailyTaskDateStr != null ? DateTime.parse(lastDailyTaskDateStr) : null;
-
-    // Tamamlanmış görevleri getir
-    final completedTasks = await getCompletedTasks(userId);
-
-    // Tüm görevleri kontrol et (günlük, tek seferlik ve tekrarlanabilir)
-    final Map<String, Map<String, dynamic>> taskStatuses = {};
-
-    // Tüm görev tiplerinin durumlarını ekle
-    for (final event in XpEvent.values) {
-      final isCompletable = await canCompleteTask(userId, event);
-      final completionCount = completedTasks[event.name] ?? 0;
-
-      taskStatuses[event.name] = {
-        'completable': isCompletable,
-        'completion_count': completionCount,
-        'is_repeatable': event.isRepeatable,
-        'is_daily': event.isDaily,
-        'xp_amount': event.xpAmount,
-      };
-    }
-
-    // Şu anki zaman
-    final now = DateTime.now();
-
-    // Bir sonraki sıfırlamaya kalan süre
-    final Duration? timeUntilReset = lastResetTime?.difference(now);
-
-    final result = {
-      'last_reset_time': lastResetTime?.toIso8601String() ?? 'Henüz ayarlanmadı',
-      'last_daily_task_date': lastDailyTaskDate?.toIso8601String() ?? 'Henüz ayarlanmadı',
-      'time_until_reset': timeUntilReset != null ? '${timeUntilReset.inHours} saat ${timeUntilReset.inMinutes % 60} dakika' : 'Sıfırlama zamanı yok',
-      'all_daily_tasks_completed': await _areAllDailyTasksCompleted(userId),
-      'completed_tasks': completedTasks,
-    };
-
-    // Tüm görev durumlarını ekle
-    result.addAll(taskStatuses);
-
-    return result;
-  }
-
-  /// Test için görev tamamlama (test sayfasından çağrılır)
-  Future<void> completeTaskForTesting(String userId, XpEvent event) async {
-    // Sadece görev tamamlama sayısını güncelle, XP ekleme
-    await _updateTaskCompletionCount(userId, event);
-
-    ScaffoldMess.showSnackBar('${event.name} görevi test için tamamlandı!');
-  }
-
-  /// Test için günlük görevleri geçmiş olarak ayarla
-  Future<void> setDailyTaskAsExpired(String userId) async {
-    final prefs = await SharedPreferences.getInstance();
-
-    // Dün olarak ayarla
-    final yesterday = DateTime.now().subtract(const Duration(days: 1));
-    await prefs.setString('${_dailyTaskResetTimeKey}_$userId', yesterday.toIso8601String());
-
-    ScaffoldMess.showSnackBar('Sıfırlama zamanı dün olarak ayarlandı!');
-  }
-
-  /// Test için TÜM görevleri sıfırla (Tüm görev tiplerini içerir)
-  Future<void> resetAllTasks(String userId) async {
-    if (userId.isEmpty) return;
-
-    try {
-      final prefs = await SharedPreferences.getInstance();
-
-      // Tüm tamamlanmış görevleri sıfırla
-      final emptyTasks = <String, int>{};
-
-      // Her görev için 0 sayısını set et
-      for (final event in XpEvent.values) {
-        emptyTasks[event.name] = 0;
-      }
-
-      // Boş görev listesini kaydet
-      await prefs.setString('${_completedTasksKey}_$userId', json.encode(emptyTasks));
-
-      // İlk mesaj gönderme ödülü sayacını sıfırla
-      await prefs.setInt('${_firstMessageSentCountKey}_$userId', 0);
-
-      // Sıfırlama zamanını şimdiki zaman olarak ayarla
-      final now = DateTime.now();
-      await prefs.setString('${_dailyTaskDateKey}_$userId', now.toIso8601String());
-
-      // Eski sistemdeki kayıtları da temizleyelim
-      if (prefs.containsKey('${_dailyTaskResetTimeKey}_$userId')) {
-        await prefs.remove('${_dailyTaskResetTimeKey}_$userId');
-      }
-
-      // Mesaj sohbet ödüllerini de sıfırla (Çok karmaşık olabilir, seçimlik)
-      // Bu kısım isteğe bağlı, her sohbet ID'si için kaydedilmiş ödülleri temizlemek için
-      // tüm SharedPreferences'ı tarayıp ilgili anahtarları silmek gerekebilir
-
-      ScaffoldMess.showSuccessSnackBar('Tüm görevler sıfırlandı! Yeniden başlayabilirsiniz.');
-    } catch (e) {
-      debugPrint('Tüm görevler sıfırlanırken hata: $e');
-      ScaffoldMess.showSnackBar('Görevler sıfırlanırken bir hata oluştu: $e');
-    }
-  }
-
   /// Test için XP'yi sıfırla (hem yerel depolamada hem de Firestore'da)
   Future<void> resetAllXp(String userId) async {
     if (userId.isEmpty) return;
@@ -846,62 +660,215 @@ class AchievementService {
       ScaffoldMess.showSnackBar('XP sıfırlanırken bir hata oluştu: $e');
     }
   }
+  //
+  // MESAJ ÖDÜLLERİ METODLARI - OPTİMİZE EDİLMİŞ
+  //
 
-  /// Tam fabrika ayarlarına döndür (Tüm görevler ve XP sıfırlanır)
-  Future<void> factoryReset(String userId) async {
-    if (userId.isEmpty) return;
+  /// İlk mesaj gönderme/alma ödüllerini işler (optimize edilmiş)
+  Future<int> processMessageReward({
+    required String userId,
+    required String chatId,
+    required bool isMessageSent, // Mesaj gönderildi mi (true) yoksa alındı mı (false)
+  }) async {
+    if (userId.isEmpty || chatId.isEmpty) return 0;
 
     try {
-      // Önce tüm görevleri sıfırla
-      await resetAllTasks(userId);
+      // Ödül türünü belirle
+      final rewardType = isMessageSent ? _PrefsKeys.firstMessageSent : _PrefsKeys.firstMessageReceived;
+      final xpEvent = isMessageSent ? XpEvent.sendMessage : XpEvent.receiveMessage;
 
-      // Sonra XP'yi sıfırla
-      await resetAllXp(userId);
+      // Önce cache kontrol et, sonra SharedPreferences
+      final cacheKey = '${rewardType}_${userId}_$chatId';
 
-      ScaffoldMess.showSuccessSnackBar('Fabrika ayarlarına dönüldü! Tüm görevler ve XP sıfırlandı.');
+      // Eğer zaten ödül alınmışsa, hemen dön
+      if (_cacheHelper.hasChatReward(cacheKey) && _cacheHelper.getChatReward(cacheKey) == true) {
+        return 0;
+      }
+
+      // Cache'de yoksa, SharedPreferences'dan kontrol et
+      final prefs = await SharedPreferences.getInstance();
+      if (prefs.getBool(cacheKey) == true) {
+        // Cache'e ekle ve dön
+        _cacheHelper.setChatReward(cacheKey, true);
+        return 0;
+      }
+
+      // Mesaj gönderiliyorsa ve maksimum ödül limitine ulaşıldıysa kontrol et
+      if (isMessageSent) {
+        // Sadece ilk mesaj ödülü için limit kontrolü yap
+        final currentCount = prefs.getInt('${_firstMessageSentCountKey}_$userId') ?? 0;
+        if (currentCount >= _maxFirstMessageSentRewards) {
+          // Limiti aştıysa, sadece kaydedip 0 dön
+          await prefs.setBool(cacheKey, true);
+          _cacheHelper.setChatReward(cacheKey, true);
+          debugPrint('⚠️ İlk mesaj ödülü limiti (${_maxFirstMessageSentRewards}) dolduğu için XP verilmiyor');
+          return 0;
+        }
+
+        // Ödül sayısını artır
+        await prefs.setInt('${_firstMessageSentCountKey}_$userId', currentCount + 1);
+        debugPrint('📊 Kullanıcının toplam ilk mesaj ödülü sayısı: ${currentCount + 1}/${_maxFirstMessageSentRewards}');
+      }
+
+      // Ödülü kaydet
+      await prefs.setBool(cacheKey, true);
+      _cacheHelper.setChatReward(cacheKey, true);
+
+      // XP ekle
+      final earnedXp = await earnXpForEvent(userId, xpEvent);
+
+      final message = isMessageSent ? '✅ İlk mesaj gönderme ödülü verildi' : '✅ İlk mesaj alma ödülü verildi';
+      debugPrint(message);
+
+      return xpEvent.xpAmount;
     } catch (e) {
-      debugPrint('Fabrika ayarlarına dönerken hata: $e');
-      ScaffoldMess.showSnackBar('İşlem sırasında bir hata oluştu: $e');
+      debugPrint('⚠️ Mesaj ödülü işlenirken hata: $e');
+      return 0;
     }
   }
 
-  //
-  // MESAJ ÖDÜLLERİ METODLARI
-  //
-
-  /// Belirli bir sohbet için ödül alınıp alınmadığını kontrol eder
-  Future<bool> hasChatReward(String userId, String chatId, String rewardType) async {
-    if (userId.isEmpty || chatId.isEmpty) return false;
-
-    try {
-      // Önce cache'i kontrol et
-      final cacheKey = '${rewardType}_${userId}_$chatId';
-      if (_chatRewardCache.containsKey(cacheKey)) {
-        return _chatRewardCache[cacheKey]!;
-      }
-
-      final prefs = await SharedPreferences.getInstance();
-      final key = '${rewardType}_${userId}_$chatId';
-      final result = prefs.getBool(key) ?? false;
-
-      // Sonucu cache'e ekle
-      _chatRewardCache[cacheKey] = result;
-
-      return result;
-    } catch (e) {
-      debugPrint('hasChatReward hatası: $e');
-      return false;
+  /// Mesaj gönderme ve alma ödüllerini işler (optimize edilmiş)
+  Future<int> handleMessageEvents(
+      {required String userId, required String chatId, required bool isFirstMessageFromUs, required bool isFirstMessageFromOther}) async {
+    if (userId.isEmpty) {
+      debugPrint('⚠️ Kullanıcı ID bulunamadı, ödül işlemi iptal edildi');
+      return 0;
     }
+
+    int totalXp = 0;
+
+    // Bizim ilk mesajımız ise
+    if (isFirstMessageFromUs) {
+      totalXp += await processMessageReward(userId: userId, chatId: chatId, isMessageSent: true);
+    }
+
+    // Karşıdan gelen ilk mesaj ise
+    if (isFirstMessageFromOther) {
+      totalXp += await processMessageReward(userId: userId, chatId: chatId, isMessageSent: false);
+    }
+
+    return totalXp;
+  }
+
+  /// Günlük mesaj görevi için XP kazandırır (optimize edilmiş)
+  Future<int> handleDailyMessageTask(String userId) async {
+    if (userId.isEmpty) return 0;
+
+    // Günlük mesaj gönderme görevi kontrolü
+    final canCompleteDaily = await canCompleteTask(userId, XpEvent.dailySendMessage);
+    if (canCompleteDaily) {
+      debugPrint('📅 Günlük mesaj gönderme ödülü veriliyor...');
+      await earnXpForEvent(userId, XpEvent.dailySendMessage);
+      return XpEvent.dailySendMessage.xpAmount;
+    }
+
+    return 0;
+  }
+
+  /// Mesaj gönderme işlemlerini otomatik olarak işler
+  Future<int> handleMessageSent(String userId, {String? chatId}) async {
+    if (userId.isEmpty) return 0;
+
+    int totalEarnedXp = 0;
+
+    // Eğer chatId verilmişse sohbet bazlı kontrol yap
+    if (chatId != null) {
+      // Optimize edilmiş yeni metodu kullan
+      totalEarnedXp += await processMessageReward(userId: userId, chatId: chatId, isMessageSent: true);
+
+      // Günlük görev XP'sini ekle
+      totalEarnedXp += await handleDailyMessageTask(userId);
+
+      return totalEarnedXp;
+    }
+
+    // Sohbet ID yoksa genel kontrollerle devam et
+
+    // İlk kez mesaj gönderme kontrolü
+    final isFirstMessage = await canCompleteTask(userId, XpEvent.firstMessage);
+    if (isFirstMessage) {
+      // İlk mesaj gönderme XP'sini ver
+      debugPrint('👑 İlk mesaj gönderme ödülü veriliyor...');
+      await earnXpForEvent(userId, XpEvent.firstMessage);
+      totalEarnedXp += XpEvent.firstMessage.xpAmount;
+    }
+
+    // Her mesaj gönderme için XP ver
+    debugPrint('💬 Mesaj gönderme ödülü veriliyor...');
+    await earnXpForEvent(userId, XpEvent.sendMessage);
+    totalEarnedXp += XpEvent.sendMessage.xpAmount;
+
+    // Günlük mesaj görevi için optimize edilmiş metodu kullan
+    totalEarnedXp += await handleDailyMessageTask(userId);
+
+    return totalEarnedXp;
+  }
+
+  /// Mesaj alma işlemlerini otomatik olarak işler
+  Future<int> handleMessageReceived(String userId, {String? chatId}) async {
+    if (userId.isEmpty) return 0;
+
+    int totalEarnedXp = 0;
+
+    // Eğer chatId verilmişse sohbet bazlı kontrol yap
+    if (chatId != null) {
+      // Optimize edilmiş yeni metodu kullan
+      totalEarnedXp += await processMessageReward(userId: userId, chatId: chatId, isMessageSent: false);
+
+      return totalEarnedXp;
+    }
+
+    // Her mesaj alma için XP ver
+    debugPrint('📩 Mesaj alma ödülü veriliyor...');
+    await earnXpForEvent(userId, XpEvent.receiveMessage);
+    totalEarnedXp += XpEvent.receiveMessage.xpAmount;
+
+    return totalEarnedXp;
+  }
+
+  /// Mesaj ödüllerini işle
+  Future<void> processMessageRewards(
+      {required String userId, required String chatId, required bool isFirstMessageFromUs, required bool isFirstMessageFromOther}) async {
+    await handleMessageEvents(
+        userId: userId, chatId: chatId, isFirstMessageFromUs: isFirstMessageFromUs, isFirstMessageFromOther: isFirstMessageFromOther);
   }
 
   /// İlk mesaj gönderme ödülü alınmış mı?
   Future<bool> hasFirstMessageSentReward(String userId, String chatId) async {
-    return await hasChatReward(userId, chatId, _firstMessageSentKey);
+    final key = '${_PrefsKeys.firstMessageSent}_${userId}_$chatId';
+
+    // Önce cache kontrol et
+    if (_cacheHelper.hasChatReward(key)) {
+      return _cacheHelper.getChatReward(key)!;
+    }
+
+    // Sonra SharedPreferences'a bak
+    final prefs = await SharedPreferences.getInstance();
+    final result = prefs.getBool(key) ?? false;
+
+    // Cache'e ekle
+    _cacheHelper.setChatReward(key, result);
+
+    return result;
   }
 
   /// İlk mesaj alma ödülü alınmış mı?
   Future<bool> hasFirstMessageReceivedReward(String userId, String chatId) async {
-    return await hasChatReward(userId, chatId, _firstMessageReceivedKey);
+    final key = '${_PrefsKeys.firstMessageReceived}_${userId}_$chatId';
+
+    // Önce cache kontrol et
+    if (_cacheHelper.hasChatReward(key)) {
+      return _cacheHelper.getChatReward(key)!;
+    }
+
+    // Sonra SharedPreferences'a bak
+    final prefs = await SharedPreferences.getInstance();
+    final result = prefs.getBool(key) ?? false;
+
+    // Cache'e ekle
+    _cacheHelper.setChatReward(key, result);
+
+    return result;
   }
 
   /// Sohbet için ödül kaydeder
@@ -914,7 +881,7 @@ class AchievementService {
       await prefs.setBool(key, true);
 
       // Cache'i güncelle
-      _chatRewardCache[key] = true;
+      _cacheHelper.setChatReward(key, true);
     } catch (e) {
       debugPrint('setChatReward hatası: $e');
     }
@@ -928,18 +895,6 @@ class AchievementService {
     return prefs.getInt('${_firstMessageSentCountKey}_$userId') ?? 0;
   }
 
-  /// İlk mesaj gönderme ödülü sayısını artırır
-  Future<int> _increaseFirstMessageSentRewardCount(String userId) async {
-    if (userId.isEmpty) return 0;
-
-    final prefs = await SharedPreferences.getInstance();
-    final currentCount = prefs.getInt('${_firstMessageSentCountKey}_$userId') ?? 0;
-    final newCount = currentCount + 1;
-
-    await prefs.setInt('${_firstMessageSentCountKey}_$userId', newCount);
-    return newCount;
-  }
-
   /// Kullanıcının daha fazla ilk mesaj ödülü alıp alamayacağını kontrol eder
   Future<bool> canReceiveMoreFirstMessageSentRewards(String userId) async {
     if (userId.isEmpty) return false;
@@ -948,121 +903,14 @@ class AchievementService {
     return currentCount < _maxFirstMessageSentRewards;
   }
 
-  /// İlk mesaj gönderme ödülü kaydeder ve XP verir
+  /// İlk mesaj gönderme ödülü kaydeder ve XP verir (bu metod artık processMessageReward tarafından ele alınıyor)
   Future<void> rewardFirstMessageSent(String userId, String chatId) async {
-    // Daha önce ödül almamış olmalı
-    if (await hasFirstMessageSentReward(userId, chatId)) {
-      debugPrint('⚠️ Bu sohbet için zaten ilk mesaj gönderme ödülü alınmış');
-      return;
-    }
-
-    // Kullanıcı maksimum ödül sayısını kontrol et
-    if (!(await canReceiveMoreFirstMessageSentRewards(userId))) {
-      debugPrint('⚠️ Kullanıcı maksimum ilk mesaj gönderme ödülü sayısına ulaştı (${_maxFirstMessageSentRewards})');
-
-      // Ödül vermeden sadece kaydet ki tekrar kontrol edilmesin
-      await setChatReward(userId, chatId, _firstMessageSentKey);
-      return;
-    }
-
-    debugPrint('✅ İlk mesaj gönderme ödülü veriliyor');
-
-    // Ödülü kaydet
-    await setChatReward(userId, chatId, _firstMessageSentKey);
-
-    // Ödül sayısını artır
-    final newCount = await _increaseFirstMessageSentRewardCount(userId);
-    debugPrint('📊 Kullanıcının toplam ilk mesaj ödülü sayısı: $newCount/${_maxFirstMessageSentRewards}');
-
-    // XP ekle
-    await earnXpForEvent(userId, XpEvent.sendMessage);
-
-    // Cache'i güncelle
-    final cacheKey = '${_firstMessageSentKey}_${userId}_$chatId';
-    _chatRewardCache[cacheKey] = true;
+    await processMessageReward(userId: userId, chatId: chatId, isMessageSent: true);
   }
 
-  /// İlk mesaj alma ödülü kaydeder ve XP verir
+  /// İlk mesaj alma ödülü kaydeder ve XP verir (bu metod artık processMessageReward tarafından ele alınıyor)
   Future<void> rewardFirstMessageReceived(String userId, String chatId) async {
-    // Daha önce ödül almamış olmalı
-    if (await hasFirstMessageReceivedReward(userId, chatId)) {
-      debugPrint('⚠️ Bu sohbet için zaten ilk mesaj alma ödülü alınmış');
-      return;
-    }
-
-    debugPrint('✅ İlk mesaj alma ödülü veriliyor');
-
-    // Ödülü kaydet
-    await setChatReward(userId, chatId, _firstMessageReceivedKey);
-
-    // XP ekle
-    await earnXpForEvent(userId, XpEvent.receiveMessage);
-
-    // Cache'i güncelle
-    final cacheKey = '${_firstMessageReceivedKey}_${userId}_$chatId';
-    _chatRewardCache[cacheKey] = true;
-  }
-
-  /// Mesaj ödüllerini işle
-  Future<void> processMessageRewards(
-      {required String userId, required String chatId, required bool isFirstMessageFromUs, required bool isFirstMessageFromOther}) async {
-    if (userId.isEmpty) {
-      debugPrint('⚠️ Kullanıcı ID bulunamadı, ödül işlemi iptal edildi');
-      return;
-    }
-
-    // Önce SharedPreferences'dan kontrol et, sonra cache'e bak
-    final prefs = await SharedPreferences.getInstance();
-
-    // Bizim ilk mesajımız ise
-    if (isFirstMessageFromUs) {
-      final sentKey = '${_firstMessageSentKey}_${userId}_$chatId';
-      final hasReward = prefs.getBool(sentKey) ?? _chatRewardCache[sentKey] ?? false;
-
-      if (!hasReward) {
-        await rewardFirstMessageSent(userId, chatId);
-      }
-    }
-
-    // Karşıdan gelen ilk mesaj ise
-    if (isFirstMessageFromOther) {
-      final receivedKey = '${_firstMessageReceivedKey}_${userId}_$chatId';
-      final hasReward = prefs.getBool(receivedKey) ?? _chatRewardCache[receivedKey] ?? false;
-
-      if (!hasReward) {
-        await rewardFirstMessageReceived(userId, chatId);
-      }
-    }
-  }
-
-  /// Günlük görevlerin durumunu ve tarih bazlı kontrolleri sıfırlar
-  Future<void> clearTaskCache() async {
-    _taskCompletionCache.clear();
-    _chatRewardCache.clear();
-    _lastDailyTaskCheck = null;
-    debugPrint('📋 Görev cache\'i temizlendi');
-  }
-
-  /// Test için tarih bazlı kontrolleri sıfırlama (test sayfasından çağrılır)
-  Future<void> resetDateChecks(String userId) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-
-      // Tüm tarih kontrollerini sıfırla
-      final allKeys = prefs.getKeys();
-      for (final key in allKeys) {
-        if (key.startsWith('${_lastCheckDateKey}_$userId')) {
-          await prefs.remove(key);
-        }
-      }
-
-      // Cache'i temizle
-      _taskCompletionCache.clear();
-
-      ScaffoldMess.showSnackBar('Tarih kontrolleri sıfırlandı!');
-    } catch (e) {
-      debugPrint('Tarih kontrolleri sıfırlanırken hata: $e');
-    }
+    await processMessageReward(userId: userId, chatId: chatId, isMessageSent: false);
   }
 
   /// Profil sayfası için günlük giriş ödülü kontrolü
@@ -1099,11 +947,6 @@ class AchievementService {
       debugPrint('Günlük giriş ödülü kontrolünde hata: $e');
       return false;
     }
-  }
-
-  /// Uygulama başlatıldığında çağrılacak - gün değişimi kontrol ve görev sıfırlama
-  Future<void> checkForDayChange(String userId) async {
-    await _checkForDayChangeAndResetTasks(userId);
   }
 
   //
@@ -1214,30 +1057,6 @@ class AchievementService {
     return {'commenterXp': commenterXp, 'receiverXp': receiverXp};
   }
 
-  /// Belirli bir kullanıcı için tüm yorum ödüllerini sıfırlar (test için)
-  Future<void> resetCommentRewards(String userId) async {
-    if (userId.isEmpty) return;
-
-    try {
-      final prefs = await SharedPreferences.getInstance();
-
-      // SharedPreferences'daki tüm anahtarları al
-      final allKeys = prefs.getKeys();
-
-      // Yorum ödülleriyle ilgili anahtarları filtrele
-      final commentKeys = allKeys.where((key) => (key.startsWith('${_writeCommentKey}_$userId') || key.startsWith('${_receiveCommentKey}_$userId')));
-
-      // Filtrelenen anahtarları sil
-      for (final key in commentKeys) {
-        await prefs.remove(key);
-      }
-
-      ScaffoldMess.showSnackBar('Yorum ödülleri sıfırlandı!');
-    } catch (e) {
-      debugPrint('Yorum ödüllerini sıfırlarken hata: $e');
-    }
-  }
-
   //
   // AKILLI EYLEM İŞLEME METODLARI
   //
@@ -1273,91 +1092,46 @@ class AchievementService {
 
     return totalEarnedXp;
   }
+}
 
-  /// Mesaj gönderme işlemlerini otomatik olarak işler
-  /// İlk mesaj ise firstMessage, her durumda sendMessage XP'sini verir
-  Future<int> handleMessageSent(String userId, {String? chatId}) async {
-    if (userId.isEmpty) return 0;
+/// Cache yönetimi için yardımcı sınıf
+class _CacheHelper {
+  final Map<String, bool> _chatRewardCache = {};
+  final Map<String, bool> _taskCompletionCache = {};
 
-    int totalEarnedXp = 0;
+  // Task tamamlama cache işlemleri
+  bool hasTaskCompletion(String key) => _taskCompletionCache.containsKey(key);
+  bool? getTaskCompletion(String key) => _taskCompletionCache[key];
+  void setTaskCompletion(String key, bool value) => _taskCompletionCache[key] = value;
 
-    // Eğer chatId verilmişse sohbet bazlı kontrol yap
-    if (chatId != null) {
-      final hasReward = await hasFirstMessageSentReward(userId, chatId);
-      final canReceiveMoreRewards = await canReceiveMoreFirstMessageSentRewards(userId);
+  // Chat ödül cache işlemleri
+  bool hasChatReward(String key) => _chatRewardCache.containsKey(key);
+  bool? getChatReward(String key) => _chatRewardCache[key];
+  void setChatReward(String key, bool value) => _chatRewardCache[key] = value;
 
-      if (!hasReward && canReceiveMoreRewards) {
-        // İlk mesaj gönderme XP'sini ver (limit dahilinde)
-        debugPrint('💬 İlk mesaj gönderme ödülü veriliyor (chatId: $chatId)...');
-        await rewardFirstMessageSent(userId, chatId);
-        totalEarnedXp += XpEvent.sendMessage.xpAmount;
-      } else if (!hasReward) {
-        // Ödül verme limiti aşılmış, sadece kaydedelim
-        await setChatReward(userId, chatId, _firstMessageSentKey);
-        debugPrint('⚠️ İlk mesaj ödülü limiti (${_maxFirstMessageSentRewards}) dolduğu için XP verilmiyor');
-      }
+  // Tüm cache'i temizle
+  void clear() {
+    _chatRewardCache.clear();
+    _taskCompletionCache.clear();
+  }
+}
 
-      // chatId olsa bile günlük görevleri kontrol et
-      final canCompleteDaily = await canCompleteTask(userId, XpEvent.dailySendMessage);
-      if (canCompleteDaily) {
-        debugPrint('📅 Günlük mesaj gönderme ödülü veriliyor...');
-        await earnXpForEvent(userId, XpEvent.dailySendMessage);
-        totalEarnedXp += XpEvent.dailySendMessage.xpAmount;
-      }
-
-      return totalEarnedXp;
-    }
-
-    // Sohbet ID yoksa genel kontrollerle devam et
-
-    // İlk kez mesaj gönderme kontrolü
-    final isFirstMessage = await canCompleteTask(userId, XpEvent.firstMessage);
-    if (isFirstMessage) {
-      // İlk mesaj gönderme XP'sini ver
-      debugPrint('👑 İlk mesaj gönderme ödülü veriliyor...');
-      await earnXpForEvent(userId, XpEvent.firstMessage);
-      totalEarnedXp += XpEvent.firstMessage.xpAmount;
-    }
-
-    // Her mesaj gönderme için XP ver
-    debugPrint('💬 Mesaj gönderme ödülü veriliyor...');
-    await earnXpForEvent(userId, XpEvent.sendMessage);
-    totalEarnedXp += XpEvent.sendMessage.xpAmount;
-
-    // Günlük mesaj gönderme görevi
-    final canCompleteDaily = await canCompleteTask(userId, XpEvent.dailySendMessage);
-    if (canCompleteDaily) {
-      debugPrint('📅 Günlük mesaj gönderme ödülü veriliyor...');
-      await earnXpForEvent(userId, XpEvent.dailySendMessage);
-      totalEarnedXp += XpEvent.dailySendMessage.xpAmount;
-    }
-
-    return totalEarnedXp;
+/// SharedPreferences anahtarlarını merkezi olarak yöneten sınıf
+class _PrefsKeys {
+  // Kullanıcı bazlı anahtar oluşturma
+  static String forUser(String baseKey, String userId, {String? suffix}) {
+    return suffix != null ? '${baseKey}_${userId}_$suffix' : '${baseKey}_$userId';
   }
 
-  /// Mesaj alma işlemlerini otomatik olarak işler
-  Future<int> handleMessageReceived(String userId, {String? chatId}) async {
-    if (userId.isEmpty) return 0;
+  // Tarih kontrolü anahtarları
+  static const String dailyTaskResetTime = 'dailyTaskResetTime';
+  static const String dailyTaskResetDate = 'dailyTasksResetDate';
+  static const String dailyTaskDate = 'dailyTaskDate';
 
-    int totalEarnedXp = 0;
+  // XP ve görev anahtarları
+  static const String totalXp = 'totalXp';
 
-    // Eğer chatId verilmişse sohbet bazlı kontrol yap
-    if (chatId != null) {
-      final hasReward = await hasFirstMessageReceivedReward(userId, chatId);
-      if (!hasReward) {
-        // İlk mesaj alma XP'sini ver
-        debugPrint('📩 İlk mesaj alma ödülü veriliyor (chatId: $chatId)...');
-        await rewardFirstMessageReceived(userId, chatId);
-        totalEarnedXp += XpEvent.receiveMessage.xpAmount;
-      }
-      return totalEarnedXp;
-    }
-
-    // Her mesaj alma için XP ver
-    debugPrint('📩 Mesaj alma ödülü veriliyor...');
-    await earnXpForEvent(userId, XpEvent.receiveMessage);
-    totalEarnedXp += XpEvent.receiveMessage.xpAmount;
-
-    return totalEarnedXp;
-  }
+  // Mesaj ödül anahtarları
+  static const String firstMessageSent = 'firstMessageSent';
+  static const String firstMessageReceived = 'firstMessageReceived';
 }

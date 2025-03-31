@@ -184,30 +184,3 @@ class AdsProvider extends ChangeNotifier {
     super.dispose();
   }
 }
-
-
-/*
-
-  static String get interstitialAdUnitId {
-    if (Platform.isAndroid) {
-      return "ca-app-pub-4607763683457173/7152609705";
-    } else if (Platform.isIOS) {
-      return "ca-app-pub-4607763683457173/8618320377";
-    } else {
-      throw new UnsupportedError("Unsupported platform");
-    }
-  }
-
-  static String get rewardedAdUnitId {
-    if (Platform.isAndroid) {
-      return "ca-app-pub-4607763683457173/5001073176";
-    } else if (Platform.isIOS) {
-      return "ca-app-pub-4607763683457173/9060091931";
-    } else {
-      throw new UnsupportedError("Unsupported platform");
-    }
-  }
-
-
-
-*/

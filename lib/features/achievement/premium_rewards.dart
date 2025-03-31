@@ -31,4 +31,22 @@ class PremiumRewards {
     // Tüm ödülleri kazanmışsa 0 döndür (gereken XP kalmadı)
     return 0;
   }
+
+  /// Yeni premium ödül kazanıldı mı kontrolü yapar
+  static bool hasEarnedNewReward(int oldXp, int newXp) {
+    final oldCount = earnedPremiumRewards(oldXp);
+    final newCount = earnedPremiumRewards(newXp);
+    return newCount > oldCount;
+  }
+
+  /// Bir sonraki premium ödül eşiğini döndürür
+  /// Tüm eşikleri geçmişse son eşiği döndürür
+  static int getNextPremiumThreshold(int currentXp) {
+    for (var threshold in xpThresholds) {
+      if (currentXp < threshold) {
+        return threshold;
+      }
+    }
+    return xpThresholds.last;
+  }
 }

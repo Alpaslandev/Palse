@@ -24,10 +24,17 @@ class CircleProfilePicture extends StatelessWidget {
   Widget build(BuildContext context) {
     bool isPhoto = imageUrl != null && imageUrl != '' && imageUrl!.isNotEmpty;
 
-    return CircleAvatar(
-      radius: radius,
-      backgroundColor: backgroundColor ?? Theme.of(context).cardColor,
-      backgroundImage: isPhoto ? CachedNetworkImageProvider(imageUrl!) : const AssetImage('assets/images/dostum_olsana.png') as ImageProvider,
+    return Container(
+      width: (radius ?? 24) * 2,
+      height: (radius ?? 24) * 2,
+      decoration: BoxDecoration(
+        color: backgroundColor ?? Theme.of(context).cardColor,
+        shape: BoxShape.circle,
+        image: DecorationImage(
+          image: isPhoto ? CachedNetworkImageProvider(imageUrl!) : const AssetImage('assets/images/dostum_olsana_trimmed.png') as ImageProvider,
+          fit: BoxFit.cover,
+        ),
+      ),
     );
   }
 }
