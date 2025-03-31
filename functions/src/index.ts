@@ -3,6 +3,7 @@ import {onDocumentCreated, onDocumentUpdated} from "firebase-functions/v2/firest
 import {getNotificationContent} from "./notifications";
 import {logger} from "firebase-functions/v2";
 import {onSchedule} from "firebase-functions/v2/scheduler";
+import {onCall, HttpsError} from "firebase-functions/v2/https";
 
 // Firebase'i başlat
 admin.initializeApp();
@@ -839,3 +840,80 @@ async function sendBatchMessages(messages: admin.messaging.Message[]) {
     logger.error("Toplu bildirim gönderme hatası:", error);
   }
 }
+
+/**
+ * Tüm kullanıcılara doğrudan bildirim gönderen fonksiyon
+ */
+export const sendBroadcastNotification = onCall({
+  maxInstances: 10,
+}, async (request) => {
+  try {
+    // Bildirim verilerini al
+    const {title, body, onlyIos, onlyAndroid} = request.data as {
+      title: string;
+      body: string;
+      onlyIos: boolean;
+      onlyAndroid: boolean;
+    };
+
+    logger.info("=== BROADCAST BİLDİRİM BAŞLADI ===");
+    logger.info(`Başlık: ${title}`);
+    logger.info(`İçerik: ${body}`);
+    logger.info(`Sadece iOS: ${onlyIos}`);
+    logger.info(`Sadece Android: ${onlyAndroid}`);
+
+    // Platform koşulunu belirle
+    let condition = "'all-users' in topics";
+
+    if (onlyIos && !onlyAndroid) {
+      condition = "'ios' in topics";
+    } else if (!onlyIos && onlyAndroid) {
+      condition = "'android' in topics";
+    }
+
+    // FCM mesajını oluştur
+    const message = {
+      condition: condition,
+      notification: {
+        title: title,
+        body: body,
+      },
+      data: {
+        type: "broadcast",
+        click_action: "FLUTTER_NOTIFICATION_CLICK",
+      },
+      android: {
+        priority: "high" as const,
+        notification: {
+          sound: "default",
+          priority: "high" as const,
+          channelId: "messages",
+        },
+      },
+      apns: {
+        payload: {
+          aps: {
+            sound: "default",
+            badge: 1,
+            contentAvailable: true,
+          },
+        },
+      },
+    };
+
+    // Bildirimi gönder
+    const response = await admin.messaging().send(message);
+    logger.info("Broadcast bildirimi gönderildi:", response);
+
+    logger.info("=== BROADCAST BİLDİRİM TAMAMLANDI ===");
+
+    return {success: true, messageId: response};
+  } catch (error) {
+    logger.error("Broadcast bildirim gönderme hatası:", error);
+    throw new HttpsError(
+      "internal",
+      "Bildirim gönderilirken bir hata oluştu.",
+      error
+    );
+  }
+});

@@ -73,13 +73,16 @@ class _ProjectAppBarState extends State<ProjectAppBar> {
       title: Row(
         children: [
           // Logo görüntüsünü app bar'a uygun şekilde yerleştir
-          ClipRRect(
-            borderRadius: BorderRadius.circular(30),
-            child: Image.asset(
-              'assets/images/dostum_olsana_trimmed.png',
-              height: 50,
-              width: 50,
-              fit: BoxFit.cover,
+          ClipRect(
+            child: Align(
+              alignment: Alignment.topCenter,
+              heightFactor: 0.9, // Görüntünün %80'ini göster, alt kısmını kırp
+              child: Image.asset(
+                'assets/images/dostum_olsana_trimmed.png',
+                height: 85,
+                width: 50,
+                fit: BoxFit.cover,
+              ),
             ),
           ),
           const Text('PALSE', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
