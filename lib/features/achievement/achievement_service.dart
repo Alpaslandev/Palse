@@ -106,6 +106,8 @@ class AchievementService {
   // Ödüllendirilmiş sohbetleri tutacak anahtarlar
   static const String _firstMessageSentKey = 'firstMessageSent';
   static const String _firstMessageReceivedKey = 'firstMessageReceived';
+  static const String _firstMessageSentCountKey = 'firstMessageSentCount'; // İlk mesaj gönderme ödülü sayısı anahtarı
+  static const int _maxFirstMessageSentRewards = 3; // Maksimum ilk mesaj ödülü sayısı
 
   // Görev kontrolü optimizasyonu için cache mekanizması
   final Map<String, bool> _chatRewardCache = {};
@@ -801,6 +803,9 @@ class AchievementService {
       // Boş görev listesini kaydet
       await prefs.setString('${_completedTasksKey}_$userId', json.encode(emptyTasks));
 
+      // İlk mesaj gönderme ödülü sayacını sıfırla
+      await prefs.setInt('${_firstMessageSentCountKey}_$userId', 0);
+
       // Sıfırlama zamanını şimdiki zaman olarak ayarla
       final now = DateTime.now();
       await prefs.setString('${_dailyTaskDateKey}_$userId', now.toIso8601String());
@@ -915,6 +920,34 @@ class AchievementService {
     }
   }
 
+  /// İlk mesaj gönderme ödülü sayısını getirir
+  Future<int> getFirstMessageSentRewardCount(String userId) async {
+    if (userId.isEmpty) return 0;
+
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt('${_firstMessageSentCountKey}_$userId') ?? 0;
+  }
+
+  /// İlk mesaj gönderme ödülü sayısını artırır
+  Future<int> _increaseFirstMessageSentRewardCount(String userId) async {
+    if (userId.isEmpty) return 0;
+
+    final prefs = await SharedPreferences.getInstance();
+    final currentCount = prefs.getInt('${_firstMessageSentCountKey}_$userId') ?? 0;
+    final newCount = currentCount + 1;
+
+    await prefs.setInt('${_firstMessageSentCountKey}_$userId', newCount);
+    return newCount;
+  }
+
+  /// Kullanıcının daha fazla ilk mesaj ödülü alıp alamayacağını kontrol eder
+  Future<bool> canReceiveMoreFirstMessageSentRewards(String userId) async {
+    if (userId.isEmpty) return false;
+
+    final currentCount = await getFirstMessageSentRewardCount(userId);
+    return currentCount < _maxFirstMessageSentRewards;
+  }
+
   /// İlk mesaj gönderme ödülü kaydeder ve XP verir
   Future<void> rewardFirstMessageSent(String userId, String chatId) async {
     // Daha önce ödül almamış olmalı
@@ -923,10 +956,23 @@ class AchievementService {
       return;
     }
 
+    // Kullanıcı maksimum ödül sayısını kontrol et
+    if (!(await canReceiveMoreFirstMessageSentRewards(userId))) {
+      debugPrint('⚠️ Kullanıcı maksimum ilk mesaj gönderme ödülü sayısına ulaştı (${_maxFirstMessageSentRewards})');
+
+      // Ödül vermeden sadece kaydet ki tekrar kontrol edilmesin
+      await setChatReward(userId, chatId, _firstMessageSentKey);
+      return;
+    }
+
     debugPrint('✅ İlk mesaj gönderme ödülü veriliyor');
 
     // Ödülü kaydet
     await setChatReward(userId, chatId, _firstMessageSentKey);
+
+    // Ödül sayısını artır
+    final newCount = await _increaseFirstMessageSentRewardCount(userId);
+    debugPrint('📊 Kullanıcının toplam ilk mesaj ödülü sayısı: $newCount/${_maxFirstMessageSentRewards}');
 
     // XP ekle
     await earnXpForEvent(userId, XpEvent.sendMessage);
@@ -1238,11 +1284,17 @@ class AchievementService {
     // Eğer chatId verilmişse sohbet bazlı kontrol yap
     if (chatId != null) {
       final hasReward = await hasFirstMessageSentReward(userId, chatId);
-      if (!hasReward) {
-        // İlk mesaj gönderme XP'sini ver
+      final canReceiveMoreRewards = await canReceiveMoreFirstMessageSentRewards(userId);
+
+      if (!hasReward && canReceiveMoreRewards) {
+        // İlk mesaj gönderme XP'sini ver (limit dahilinde)
         debugPrint('💬 İlk mesaj gönderme ödülü veriliyor (chatId: $chatId)...');
         await rewardFirstMessageSent(userId, chatId);
         totalEarnedXp += XpEvent.sendMessage.xpAmount;
+      } else if (!hasReward) {
+        // Ödül verme limiti aşılmış, sadece kaydedelim
+        await setChatReward(userId, chatId, _firstMessageSentKey);
+        debugPrint('⚠️ İlk mesaj ödülü limiti (${_maxFirstMessageSentRewards}) dolduğu için XP verilmiyor');
       }
 
       // chatId olsa bile günlük görevleri kontrol et
