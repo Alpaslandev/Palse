@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
@@ -6,9 +8,23 @@ class AdsProvider extends ChangeNotifier {
   static const String _testInterstitialAdUnitId = 'ca-app-pub-3940256099942544/1033173712';
   static const String _testRewardedAdUnitId = 'ca-app-pub-3940256099942544/5224354917';
 
+  static const String _interstitialAdUnitIdIos = 'ca-app-pub-4607763683457173/8618320377';
+  static const String _rewardedAdUnitIdIos = 'ca-app-pub-4607763683457173/9060091931';
+
+  static const String _interstitialAdUnitIdAndroid = 'ca-app-pub-4607763683457173/7152609705';
+  static const String _rewardedAdUnitIdAndroid = 'ca-app-pub-4607763683457173/5001073176';
+
   // Gerçek ortam için reklam ID'leri (sonradan değiştirilecek)
-  static const String _interstitialAdUnitId = kDebugMode ? _testInterstitialAdUnitId : 'ca-app-pub-4607763683457173/8618320377';
-  static const String _rewardedAdUnitId = kDebugMode ? _testRewardedAdUnitId : 'ca-app-pub-4607763683457173/9060091931';
+  static String get _interstitialAdUnitId => kDebugMode
+      ? _testInterstitialAdUnitId
+      : Platform.isIOS
+          ? _interstitialAdUnitIdIos
+          : _interstitialAdUnitIdAndroid;
+  static String get _rewardedAdUnitId => kDebugMode
+      ? _testRewardedAdUnitId
+      : Platform.isIOS
+          ? _rewardedAdUnitIdIos
+          : _rewardedAdUnitIdAndroid;
 
   // Geçiş reklamı için değişkenler
   InterstitialAd? _interstitialAd;

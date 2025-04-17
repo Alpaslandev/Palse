@@ -73,7 +73,7 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>This app needs access to detect your location.</string>
+	<string>Access to your location is necessary to show you personalized events and allow you to create events.</string>
 	<key>NSUserNotificationUsageDescription</key>
 	<string>We would like to send you notifications for important updates and messages.</string>
 	<key>NSUserNotificationAlertStyle</key>

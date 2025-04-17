@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -13,6 +15,7 @@ import 'package:palseapp/core/provider/ads_provider.dart';
 import 'package:palseapp/core/provider/locale_provider.dart';
 import 'package:palseapp/core/provider/theme_provider.dart';
 import 'package:palseapp/core/routes/app_router.dart';
+import 'package:palseapp/core/services/firestore_service.dart';
 import 'package:palseapp/features/achievement/achievement_service.dart';
 import 'package:palseapp/core/services/notification_service.dart';
 import 'package:palseapp/core/services/shared_pref_service.dart';
@@ -40,9 +43,43 @@ void main() async {
       rethrow;
     }
   }
-  MobileAds.instance.initialize();
+
+  final firebaseAnalytics = FirebaseAnalytics.instance;
+  Future<void> deleteCustomersWithoutFirstName() async {
+    try {
+      // firstName alanı olmayan belgeleri bul
+      final querySnapshot = await FirebaseFirestore.instance.collection('customers').get();
+
+      int silinecekBelgeSayisi = 0;
+
+      // Her belgeyi kontrol et
+      for (var doc in querySnapshot.docs) {
+        final data = doc.data();
+        if (!data.containsKey('firstName')) {
+          debugPrint('firstName alanı olmayan belge bulundu - ID: ${doc.id}');
+          debugPrint('Belge içeriği: $data');
+          silinecekBelgeSayisi++;
+
+          // Belgeyi sil
+          await doc.reference.delete();
+          debugPrint('Belge silindi - ID: ${doc.id}');
+        }
+      }
+
+      debugPrint('Toplam $silinecekBelgeSayisi belge silindi');
+    } catch (e) {
+      debugPrint('Belge silme işlemi sırasında hata oluştu: $e');
+      rethrow;
+    }
+  }
+
+//  await FirestoreService().checkEventsAgainstAdvertModel();
+  // await FirestoreService().fixMissingCreatorPremiumField();
+
+  await MobileAds.instance.initialize();
 
   await Purchases.setLogLevel(LogLevel.debug);
+  // await deleteCustomersWithoutFirstName();
 
   // RevenueCat ayarlarını platform bazlı ayarlama
   if (Platform.isIOS) {

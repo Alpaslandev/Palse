@@ -21,6 +21,9 @@ class AuthProvider extends ChangeNotifier implements Listenable {
   User? _firebaseUser;
   Customer? _user;
   bool _isFirstTime = true;
+  // Apple giriş bilgilerini saklayacak değişkenler
+  String? _appleFirstName;
+  String? _appleLastName;
 
   // Getterlar
   bool get isLoading => _isLoading || (_firebaseUser != null && !_isFirestoreDataLoaded);
@@ -29,6 +32,8 @@ class AuthProvider extends ChangeNotifier implements Listenable {
   User? get firebaseUser => _firebaseUser;
   bool get isAuthenticated => _firebaseUser != null;
   bool get isFirestoreDataLoaded => _isFirestoreDataLoaded;
+  String? get appleFirstName => _appleFirstName;
+  String? get appleLastName => _appleLastName;
 
   StreamSubscription<DocumentSnapshot<Object?>>? _userStreamSubscription;
 
@@ -197,6 +202,18 @@ class AuthProvider extends ChangeNotifier implements Listenable {
 
       final user = await _authService.signInWithApple();
       _firebaseUser = user;
+
+      // Apple ile giriş yapıldığında kullanıcı bilgilerini alıyoruz
+      if (user != null) {
+        // DisplayName formatı genellikle "Ad Soyad" şeklindedir
+        final displayName = user.displayName;
+        if (displayName != null && displayName.isNotEmpty && displayName.contains(' ')) {
+          final nameParts = displayName.split(' ');
+          _appleFirstName = nameParts.first;
+          _appleLastName = nameParts.length > 1 ? nameParts.last : '';
+          debugPrint('Apple ile giriş: Ad: $_appleFirstName, Soyad: $_appleLastName');
+        }
+      }
     } catch (e) {
       rethrow;
     } finally {

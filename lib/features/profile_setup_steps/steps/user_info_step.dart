@@ -1,16 +1,59 @@
 import 'package:flutter/material.dart';
 import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/features/profile_setup_steps/viewmodel/profile_setup_view_model.dart';
+import 'package:provider/provider.dart';
+import 'package:palseapp/core/provider/auth_provider.dart';
 
-class UserInfoStep extends StatelessWidget {
+class UserInfoStep extends StatefulWidget {
   const UserInfoStep({super.key, required this.viewModel});
   final ProfileSetupViewModel viewModel;
 
   @override
+  State<UserInfoStep> createState() => _UserInfoStepState();
+}
+
+class _UserInfoStepState extends State<UserInfoStep> {
+  bool _isInitialized = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Fill Apple User Info If Available
+    if (!_isInitialized) {
+      _fillAppleUserInfoIfAvailable();
+      _isInitialized = true;
+    }
+  }
+
+  // Fill Apple User Info If Available
+  void _fillAppleUserInfoIfAvailable() {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final appleDisplayName = authProvider.firebaseUser?.displayName;
+    debugPrint('Apple Display Name: $appleDisplayName');
+
+    if (appleDisplayName != null && appleDisplayName.isNotEmpty) {
+      final nameParts = appleDisplayName.split(' ');
+
+      final firstName = nameParts.first;
+      final lastName = nameParts.length > 1 ? nameParts.last : '';
+
+      if (firstName.isNotEmpty && widget.viewModel.firstNameController.text.isEmpty) {
+        widget.viewModel.firstNameController.text = firstName;
+        widget.viewModel.updateFirstName(firstName);
+      }
+
+      if (lastName.isNotEmpty && widget.viewModel.lastNameController.text.isEmpty) {
+        widget.viewModel.lastNameController.text = lastName;
+        widget.viewModel.updateLastName(lastName);
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     // Validasyon durumunu kontrol et
-    final bool isFirstNameValid = viewModel.firstNameController.text.length >= 3;
-    final bool isLastNameValid = viewModel.lastNameController.text.length >= 3;
+    final bool isFirstNameValid = widget.viewModel.firstNameController.text.length >= 3;
+    final bool isLastNameValid = widget.viewModel.lastNameController.text.length >= 3;
     final bool isAllValid = isFirstNameValid && isLastNameValid;
 
     return SingleChildScrollView(
@@ -57,11 +100,11 @@ class UserInfoStep extends StatelessWidget {
             // İsim giriş alanı
             _buildTextFieldWithValidation(
               context,
-              controller: viewModel.firstNameController,
+              controller: widget.viewModel.firstNameController,
               labelText: context.tr('user_info_first_name'),
               hintText: context.tr('user_info_first_name_hint'),
               isValid: isFirstNameValid,
-              onChanged: viewModel.updateFirstName,
+              onChanged: widget.viewModel.updateFirstName,
             ),
 
             const SizedBox(height: 16),
@@ -69,11 +112,11 @@ class UserInfoStep extends StatelessWidget {
             // Soyisim giriş alanı
             _buildTextFieldWithValidation(
               context,
-              controller: viewModel.lastNameController,
+              controller: widget.viewModel.lastNameController,
               labelText: context.tr('user_info_last_name'),
               hintText: context.tr('user_info_last_name_hint'),
               isValid: isLastNameValid,
-              onChanged: viewModel.updateLastName,
+              onChanged: widget.viewModel.updateLastName,
             ),
 
             const SizedBox(height: 32),
@@ -108,8 +151,8 @@ class UserInfoStep extends StatelessWidget {
                           Text(
                             context
                                 .tr('user_info_hello')
-                                .replaceAll('{firstName}', viewModel.firstNameController.text)
-                                .replaceAll('{lastName}', viewModel.lastNameController.text),
+                                .replaceAll('{firstName}', widget.viewModel.firstNameController.text)
+                                .replaceAll('{lastName}', widget.viewModel.lastNameController.text),
                             style: TextStyle(
                               color: Theme.of(context).brightness == Brightness.dark ? Colors.green.shade300 : Colors.green.shade800,
                               fontWeight: FontWeight.w500,

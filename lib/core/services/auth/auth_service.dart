@@ -108,11 +108,17 @@ emin olun.''');
   Future<User?> signInWithApple() async {
     try {
       final appleProvider = AppleAuthProvider();
+      appleProvider.addScope('name');
+      appleProvider.addScope('email');
       final userCredential = await _auth.signInWithProvider(appleProvider);
+      debugPrint('Apple Sign In User Credential: ${userCredential.user?.displayName ?? 'empty'}');
       return userCredential.user;
     } on FirebaseAuthException catch (e) {
-      debugPrint('Apple Sign In Error: $e');
+      debugPrint('Apple Sign In Error: $e.toString()');
       throw Exception('Apple ile giriş yapılırken bir hata oluştu.');
+    } on Exception catch (e, s) {
+      debugPrint('Apple Sign In Detailed Error: $e\nStackTrace: $s');
+      throw Exception('Apple ile giriş yapılırken beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.');
     }
   }
 
