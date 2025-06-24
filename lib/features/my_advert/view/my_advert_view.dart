@@ -28,7 +28,7 @@ class _MyAdvertViewState extends State<MyAdvertView>
   void initState() {
     super.initState();
     _tabController = TabController(
-        length: 3, vsync: this, initialIndex: widget.initialTabIndex);
+        length: 4, vsync: this, initialIndex: widget.initialTabIndex);
   }
 
   @override
@@ -68,6 +68,10 @@ class _MyAdvertViewState extends State<MyAdvertView>
                     ),
                     Tab(
                       text: context.tr('profile_viewers'),
+                      iconMargin: EdgeInsets.zero,
+                    ),
+                    Tab(
+                      text: context.tr('joined_events'),
                       iconMargin: EdgeInsets.zero,
                     ),
                   ],
@@ -143,6 +147,34 @@ class _MyAdvertViewState extends State<MyAdvertView>
                             ),
                       // Profilime Bakanlar
                       _buildProfileViewersTab(authProvider),
+                      // Katıldığım etkinlikler
+                      viewModel.joinedEvents.isEmpty
+                          ? _buildEmptyAdvert()
+                          : ListView.builder(
+                              itemCount: viewModel.joinedEvents.length,
+                              itemBuilder: (context, index) {
+                                debugPrint(
+                                    viewModel.joinedEvents.length.toString());
+                                final advert = viewModel.joinedEvents[index];
+                                final customer =
+                                    viewModel.getCustomerForAdvert(advert);
+
+                                if (advert == null) return const SizedBox();
+
+                                return AdvertCard(
+                                  advert: advert,
+                                  isMyLikes: true,
+                                  isLiked: advert.likers.contains(
+                                      authProvider.user?.userID ?? ''),
+                                  onProfileTap: () => context.pushNamed(
+                                      Routes.friendProfile,
+                                      extra: customer?.userID),
+                                  onMessageTap: () => debugPrint('mesaj'),
+                                  leaveEventTap: () => viewModel
+                                      .leaveEvent(advert.advertID ?? ''),
+                                );
+                              },
+                            ),
                     ],
                   ),
                 ),

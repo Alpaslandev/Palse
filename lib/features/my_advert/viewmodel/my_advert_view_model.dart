@@ -15,14 +15,17 @@ class MyAdvertViewModel extends ChangeNotifier {
   final Map<String, Customer> _customers = {}; // userId -> Customer eşleşmesi
   bool _isLoading = false;
   final List<Customer?> _recentlyViewed = [];
+  final List<Advert?> _joinedEvents = [];
 
   List<Advert?> get myAdverts => _myAdverts;
   List<Advert?> get favorites => _favorites;
+  List<Advert?> get joinedEvents => _joinedEvents;
   Map<String, Customer> get customers => _customers;
   bool get isLoading => _isLoading;
   List<Customer?> get recentlyViewed => _recentlyViewed;
 
-  MyAdvertViewModel({required AuthProvider authProvider}) : _authProvider = authProvider {
+  MyAdvertViewModel({required AuthProvider authProvider})
+      : _authProvider = authProvider {
     fetchAdvertsWithCustomers();
   }
 
@@ -34,6 +37,7 @@ class MyAdvertViewModel extends ChangeNotifier {
         fetchMyAdverts(),
         fetchFavorites(),
         fetchRecentlyViewed(),
+        fetchJoinedEvents(),
       ]);
 
       // Tüm ilanlardan benzersiz userId'leri topla
@@ -49,7 +53,8 @@ class MyAdvertViewModel extends ChangeNotifier {
       // Her userId için Customer bilgisini çek
       await Future.wait(
         userIds.map((userId) async {
-          final customer = await _customerService.fetchUserFromFirestore(userId);
+          final customer =
+              await _customerService.fetchUserFromFirestore(userId);
           if (customer != null) {
             _customers[userId] = customer;
           }
@@ -64,7 +69,8 @@ class MyAdvertViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> deleteAdvert({required String advertId, required String userId}) async {
+  Future<void> deleteAdvert(
+      {required String advertId, required String userId}) async {
     try {
       await _advertService.deleteAdvert(advertId);
       await _customerService.deleteAdvertFromCustomer(advertId, userId);
@@ -80,17 +86,44 @@ class MyAdvertViewModel extends ChangeNotifier {
   // Kullanıcı UID'leri ile kullanıcıları çekiyoruz
   Future<void> fetchRecentlyViewed() async {
     if (_authProvider.user?.profileViewers != null) {
-      final List<Future<Customer?>> futures =
-          _authProvider.user!.profileViewers!.map((userId) => _customerService.fetchUserFromFirestore(userId)).toList();
+      final List<Future<Customer?>> futures = _authProvider
+          .user!.profileViewers!
+          .map((userId) => _customerService.fetchUserFromFirestore(userId))
+          .toList();
 
       final List<Customer?> customers = await Future.wait(futures);
       _recentlyViewed.addAll(customers.where((customer) => customer != null));
     }
   }
 
+  Future<void> fetchJoinedEvents() async {
+    if (_authProvider.user?.joinedAdvertIds != null) {
+      final List<Future<Advert?>> futures = _authProvider.user!.joinedAdvertIds!
+          .map((advertId) => _advertService.fetchAdvertById(advertId))
+          .toList();
+      debugPrint(futures.length.toString());
+      final List<Advert?> adverts = await Future.wait(futures);
+      debugPrint(adverts.length.toString());
+      _joinedEvents.addAll(adverts.where((advert) => advert != null));
+    }
+  }
+
+  Future<void> leaveEvent(String advertId) async {
+    try {
+      await _advertService.rejectJoinRequest(
+          advertId, _authProvider.user?.userID ?? '');
+      _joinedEvents.removeWhere((advert) => advert?.advertID == advertId);
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Etkinlikten çıkma hatası: ${e.toString()}');
+    }
+  }
+
   Future<void> fetchMyAdverts() async {
     if (_authProvider.user?.adverts != null) {
-      final List<Future<Advert?>> futures = _authProvider.user!.adverts!.map((advertId) => _advertService.fetchAdvertById(advertId)).toList();
+      final List<Future<Advert?>> futures = _authProvider.user!.adverts!
+          .map((advertId) => _advertService.fetchAdvertById(advertId))
+          .toList();
 
       final List<Advert?> adverts = await Future.wait(futures);
       _myAdverts.addAll(adverts.where((advert) => advert != null));
@@ -99,7 +132,9 @@ class MyAdvertViewModel extends ChangeNotifier {
 
   Future<void> fetchFavorites() async {
     if (_authProvider.user?.favoriteAdverts != null) {
-      final List<Future<Advert?>> futures = _authProvider.user!.favoriteAdverts!.map((advertId) => _advertService.fetchAdvertById(advertId)).toList();
+      final List<Future<Advert?>> futures = _authProvider.user!.favoriteAdverts!
+          .map((advertId) => _advertService.fetchAdvertById(advertId))
+          .toList();
 
       final List<Advert?> adverts = await Future.wait(futures);
 

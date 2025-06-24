@@ -24,7 +24,7 @@ import 'package:palseapp/features/home/widgets/filter_view.dart';
 import 'package:palseapp/features/messages/view/messages_view.dart';
 import 'package:palseapp/features/my_advert/view/my_advert_view.dart';
 import 'package:palseapp/features/profile/view/profile_view.dart';
-import 'package:palseapp/features/profile/widgets/xp_events_view.dart';
+import 'package:palseapp/features/profile/view/widgets/xp_events_view.dart';
 import 'package:palseapp/features/profile_setup_steps/view/profile_setup_view.dart';
 import 'package:palseapp/features/settings/view/edit_profile.dart';
 import 'package:palseapp/features/settings/view/language_settings_view.dart';

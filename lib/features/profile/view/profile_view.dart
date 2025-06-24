@@ -5,10 +5,12 @@ import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/widgets/circle_profile_picture.dart';
-import 'package:palseapp/features/achievement/achievement_test_page.dart';
 import 'package:palseapp/features/achievement/achievements.dart';
-import 'package:palseapp/features/profile/widgets/leader_board.dart';
-import 'package:palseapp/features/profile/widgets/xp_progress_card.dart';
+import 'package:palseapp/features/profile/view/widgets/premium_button.dart';
+import 'package:palseapp/features/profile/view/widgets/verify_profile_button.dart';
+import 'package:palseapp/features/profile/view/widgets/xp_system_button.dart';
+import 'package:palseapp/features/profile/view/widgets/leader_board.dart';
+import 'package:palseapp/features/profile/view/widgets/xp_progress_card.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -45,7 +47,8 @@ class _ProfileViewState extends State<ProfileView> {
       final achievementService = AchievementService();
 
       // Yeni metodu kullan - tarih bazlı kontrol yapan
-      final rewardGiven = await achievementService.checkDailyLoginReward(user.userID!);
+      final rewardGiven =
+          await achievementService.checkDailyLoginReward(user.userID!);
 
       // Sadece durum göstergesi olarak flag'i güncelle
       setState(() {
@@ -70,14 +73,16 @@ class _ProfileViewState extends State<ProfileView> {
         final achievementService = AchievementService();
 
         // Kullanıcının tamamlanan görevlerini local storage'dan yükle
-        final completedTasks = await _getCompletedTasksFromLocalStorage(user.userID!);
+        final completedTasks =
+            await _getCompletedTasksFromLocalStorage(user.userID!);
 
         // Kullanıcı modelini güncelle
         if (completedTasks.isNotEmpty) {
           final updatedUser = user.copyWith(completedTasks: completedTasks);
           // AuthProvider'da kullanıcı modelini güncelle
           authProvider.updateUser(updatedUser);
-          debugPrint('Tamamlanan görevler local storage\'dan yüklendi: ${completedTasks.length} görev');
+          debugPrint(
+              'Tamamlanan görevler local storage\'dan yüklendi: ${completedTasks.length} görev');
         }
 
         debugPrint('🔄 Kullanıcı görev bilgileri güncellendi');
@@ -88,7 +93,8 @@ class _ProfileViewState extends State<ProfileView> {
   }
 
   // Tamamlanan görevleri local storage'dan getir
-  Future<Map<String, int>> _getCompletedTasksFromLocalStorage(String userId) async {
+  Future<Map<String, int>> _getCompletedTasksFromLocalStorage(
+      String userId) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final key = 'completed_tasks_$userId';
@@ -119,6 +125,9 @@ class _ProfileViewState extends State<ProfileView> {
                 // Profil başlığı
                 profileHeader(context, authProvider),
 
+                // Takipçi/Takip istatistikleri
+                _buildFollowStats(context, authProvider.user!),
+
                 // Yorumlar kartı
                 _ratingCard(authProvider.user!, context),
 
@@ -137,15 +146,178 @@ class _ProfileViewState extends State<ProfileView> {
                 const DailyTaskCard(),
 
                 // Profil doğrulama butonu
-                if (authProvider.user?.verification == false) const VerifyProfileButton(),
+                if (authProvider.user?.verification == false)
+                  const VerifyProfileButton(),
 
                 // Premium buton
-                if (authProvider.user?.isPremium == false) const PremiumButton(),
+                if (authProvider.user?.isPremium == false)
+                  const PremiumButton(),
 
                 // XP Sistemi butonu
                 const XPSystemButton(),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Takipçi ve takip istatistiklerini gösteren widget
+  Widget _buildFollowStats(BuildContext context, Customer user) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    final followersCount = user.followers?.length ?? 0;
+    final followingCount = user.followings?.length ?? 0;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+      decoration: BoxDecoration(
+        color: theme.brightness == Brightness.light
+            ? Colors.grey.shade50
+            : colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: theme.dividerColor.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          // Takipçiler
+          _buildStatItem(
+            context: context,
+            count: followersCount,
+            label: 'Takipçi',
+            onTap: () {
+              // Takipçi listesi sayfasına git
+              _showFollowList(context, user.userID!, true);
+            },
+          ),
+
+          // Ayırıcı çizgi
+          Container(
+            height: 40,
+            width: 1,
+            color: theme.dividerColor.withValues(alpha: 0.5),
+          ),
+
+          // Takip edilenler
+          _buildStatItem(
+            context: context,
+            count: followingCount,
+            label: 'Takip',
+            onTap: () {
+              // Takip edilen listesi sayfasına git
+              _showFollowList(context, user.userID!, false);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Tek bir istatistik öğesi oluşturan yardımcı widget
+  Widget _buildStatItem({
+    required BuildContext context,
+    required int count,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              count.toString(),
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Takipçi/takip listesi modal'ını gösteren fonksiyon
+  void _showFollowList(
+      BuildContext context, String userId, bool showFollowers) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        minChildSize: 0.5,
+        maxChildSize: 0.9,
+        builder: (context, scrollController) => Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            children: [
+              // Modal handle
+              Container(
+                margin: const EdgeInsets.only(top: 8),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade400,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+
+              // Başlık
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  showFollowers ? 'Takipçiler' : 'Takip Edilenler',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+              ),
+
+              // Liste içeriği - şimdilik placeholder
+              Expanded(
+                child: ListView.builder(
+                  controller: scrollController,
+                  itemCount: 5, // Placeholder count
+                  itemBuilder: (context, index) => ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: Colors.grey.shade300,
+                      child: const Icon(Icons.person),
+                    ),
+                    title: Text('Kullanıcı ${index + 1}'),
+                    subtitle: Text('@kullanici${index + 1}'),
+                    trailing: OutlinedButton(
+                      onPressed: () {},
+                      child: const Text('Takip Et'),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -176,10 +348,13 @@ Widget profileHeader(BuildContext context, AuthProvider authProvider) {
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(width: 2),
-              if (authProvider.user?.isPremium == true) const Icon(Icons.verified, color: Colors.yellow, size: 16),
-              if (authProvider.user?.verification == true) Icon(Icons.verified, color: colorScheme.primary, size: 16),
+              if (authProvider.user?.isPremium == true)
+                const Icon(Icons.verified, color: Colors.yellow, size: 16),
+              if (authProvider.user?.verification == true)
+                Icon(Icons.verified, color: colorScheme.primary, size: 16),
               IconButton(
-                icon: Icon(Icons.settings_outlined, color: colorScheme.onSurface),
+                icon:
+                    Icon(Icons.settings_outlined, color: colorScheme.onSurface),
                 onPressed: () {
                   context.pushNamed(settings);
                 },
@@ -204,7 +379,9 @@ Widget _ratingCard(Customer customer, BuildContext context) {
   final colorScheme = theme.colorScheme;
 
   return Card(
-      color: theme.brightness == Brightness.light ? Colors.grey.shade200 : colorScheme.surfaceContainerHighest,
+      color: theme.brightness == Brightness.light
+          ? Colors.grey.shade200
+          : colorScheme.surfaceContainerHighest,
       child: ListTile(
         onTap: () => context.pushNamed(comment, extra: customer),
         title: Row(
@@ -223,13 +400,17 @@ Widget _ratingCard(Customer customer, BuildContext context) {
         ),
         trailing: Container(
           decoration: BoxDecoration(
-            border: Border(left: BorderSide(color: theme.dividerColor, width: 1)),
+            border:
+                Border(left: BorderSide(color: theme.dividerColor, width: 1)),
           ),
           child: Padding(
             padding: const EdgeInsets.only(left: 8.0),
             child: Text(
               customer.getAverage().toStringAsFixed(1),
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.orange),
+              style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.orange),
             ),
           ),
         ),
@@ -266,9 +447,12 @@ class _DailyTaskCardState extends State<DailyTaskCard> {
 
       try {
         // Görevlerin tamamlanma durumlarını kontrol et
-        final isDailyLoginCompleted = !(await achievementService.canCompleteTask(user!.userID!, XpEvent.dailyLogin));
-        final isDailyCreateListingCompleted = !(await achievementService.canCompleteTask(user.userID!, XpEvent.dailyCreateListing));
-        final isDailySendMessageCompleted = !(await achievementService.canCompleteTask(user.userID!, XpEvent.dailySendMessage));
+        final isDailyLoginCompleted = !(await achievementService
+            .canCompleteTask(user!.userID!, XpEvent.dailyLogin));
+        final isDailyCreateListingCompleted = !(await achievementService
+            .canCompleteTask(user.userID!, XpEvent.dailyCreateListing));
+        final isDailySendMessageCompleted = !(await achievementService
+            .canCompleteTask(user.userID!, XpEvent.dailySendMessage));
 
         // Widget hala monte edilmişse state'i güncelle
         if (mounted) {
@@ -296,8 +480,10 @@ class _DailyTaskCardState extends State<DailyTaskCard> {
     // Toplam XP hesapla (tamamlanan görevler için)
     int totalDailyXp = 0;
     if (_isDailyLoginCompleted) totalDailyXp += XpEvent.dailyLogin.xpAmount;
-    if (_isDailyCreateListingCompleted) totalDailyXp += XpEvent.dailyCreateListing.xpAmount;
-    if (_isDailySendMessageCompleted) totalDailyXp += XpEvent.dailySendMessage.xpAmount;
+    if (_isDailyCreateListingCompleted)
+      totalDailyXp += XpEvent.dailyCreateListing.xpAmount;
+    if (_isDailySendMessageCompleted)
+      totalDailyXp += XpEvent.dailySendMessage.xpAmount;
 
     // Bir sonraki yenilemeye kalan süreyi al - bu metod artık yok, basit bir metin kullanacağız
     final String timeUntilReset = context.tr('daily_task_next_reset_time');
@@ -343,11 +529,13 @@ class _DailyTaskCardState extends State<DailyTaskCard> {
             padding: const EdgeInsets.symmetric(vertical: 8.0),
             child: Row(
               children: [
-                Icon(Icons.access_time, color: Colors.white.withOpacity(0.7), size: 16),
+                Icon(Icons.access_time,
+                    color: Colors.white.withOpacity(0.7), size: 16),
                 const SizedBox(width: 4),
                 Text(
                   '${context.tr('next_reset')}: $timeUntilReset',
-                  style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 12),
+                  style: TextStyle(
+                      color: Colors.white.withOpacity(0.7), fontSize: 12),
                 ),
               ],
             ),
@@ -395,7 +583,8 @@ class _DailyTaskCardState extends State<DailyTaskCard> {
               ),
               Text(
                 '$totalDailyXp/${XpEvent.dailyLogin.xpAmount + XpEvent.dailyCreateListing.xpAmount + XpEvent.dailySendMessage.xpAmount} XP',
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -455,110 +644,10 @@ class _DailyTaskCardState extends State<DailyTaskCard> {
           if (isCompleted)
             const Padding(
               padding: EdgeInsets.only(left: 8.0),
-              child: Icon(Icons.check_circle, color: Colors.greenAccent, size: 18),
+              child:
+                  Icon(Icons.check_circle, color: Colors.greenAccent, size: 18),
             ),
         ],
-      ),
-    );
-  }
-}
-
-// Profil doğrulama butonu
-class VerifyProfileButton extends StatelessWidget {
-  const VerifyProfileButton({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.green,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-        ),
-        onPressed: () {
-          context.pushNamed(verified);
-          // context.pushNamed(verified).then((value) {
-          //   if (value == true) {
-          //     ScaffoldMessenger.of(context).showSnackBar(
-          //       const SnackBar(content: Text('Doğrulama başarılı')),
-          //     );
-          //   }
-          // });
-        },
-        icon: const Icon(Icons.check_circle, color: Colors.white),
-        label: Text(
-          context.tr('verify_profile_text'),
-          textAlign: TextAlign.center,
-          style: const TextStyle(color: Colors.white),
-        ),
-      ),
-    );
-  }
-}
-
-// Premium buton
-class PremiumButton extends StatelessWidget {
-  const PremiumButton({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: theme.brightness == Brightness.dark ? Colors.grey.shade800 : Colors.black,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-        ),
-        onPressed: () {
-          context.pushNamed(paywall);
-        },
-        icon: const Icon(Icons.diamond, color: Colors.amber, size: 30),
-        label: Text(
-          context.tr('get_premium'),
-          style: const TextStyle(color: Colors.white),
-        ),
-      ),
-    );
-  }
-}
-
-// XP Sistemi butonu
-class XPSystemButton extends StatelessWidget {
-  const XPSystemButton({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return SizedBox(
-      width: double.infinity,
-      child: OutlinedButton.icon(
-        style: OutlinedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          foregroundColor: colorScheme.primary,
-        ),
-        onPressed: () {
-          context.pushNamed(xpEvents);
-        },
-        icon: Icon(Icons.settings, color: colorScheme.primary),
-        label: Text(
-          context.tr('xp_system'),
-          style: TextStyle(color: colorScheme.primary),
-        ),
       ),
     );
   }

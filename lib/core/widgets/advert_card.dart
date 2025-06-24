@@ -34,6 +34,7 @@ class AdvertCard extends StatelessWidget {
     this.isJoinRequestAccepted = true,
     this.onJoinRequestTap,
     this.onSeeJoinRequestsTap,
+    this.leaveEventTap,
   });
 
   final Advert advert;
@@ -51,6 +52,8 @@ class AdvertCard extends StatelessWidget {
   final bool isJoinRequestAccepted;
   final VoidCallback? onJoinRequestTap;
   final VoidCallback? onSeeJoinRequestsTap;
+  final VoidCallback? leaveEventTap;
+
   @override
   Widget build(BuildContext context) {
     final currentCustomer = context.read<AuthProvider>().user!;
@@ -463,16 +466,18 @@ class AdvertCard extends StatelessWidget {
                   flex: 3,
                   child: _buildButton(
                     isJoinRequestAccepted
-                        ? context.tr('joined')
+                        ? context.tr('leave')
                         : isJoinRequestSent
                             ? context.tr('waiting')
                             : context.tr('join'),
                     isJoinRequestAccepted
-                        ? Icons.check_circle_outline
+                        ? Icons.exit_to_app_outlined
                         : isJoinRequestSent
                             ? Icons.schedule_outlined
                             : Icons.person_add_alt_1_outlined,
-                    !isJoinRequestAccepted ? onJoinRequestTap ?? () {} : () {},
+                    !isJoinRequestAccepted
+                        ? onJoinRequestTap ?? () {}
+                        : leaveEventTap ?? () {},
                     compactMode: true,
                   ),
                 ),

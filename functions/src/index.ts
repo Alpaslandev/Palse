@@ -191,15 +191,6 @@ export const onCustomerProfileViewed = onDocumentUpdated("customers/{userId}", a
       return null;
     }
 
-    const userData = userDoc.data();
-    const token = userData?.fcmToken;
-    const userLang = userData?.languagePreference || "tr";
-    const isPremium = userData?.isPremium === true;
-
-    if (!token) {
-      logger.error("Kullanıcı FCM tokeni bulunamadı:", userId);
-      return null;
-    }
 
     // 1. profileViewers array'ini kontrol et
     const beforeViewers = beforeData.profileViewers || [];
@@ -213,44 +204,11 @@ export const onCustomerProfileViewed = onDocumentUpdated("customers/{userId}", a
       if (newViewers.length > 0) {
         logger.info(`${userId} kullanıcısının profili ${newViewers.length} yeni kişi tarafından görüntülendi`);
 
-        // Bildirim içeriğini al
-        const {title, body} = getNotificationContent("profileViewed", userLang, isPremium);
-
-        // FCM mesajını oluştur
-        const message = {
-          token: token,
-          notification: {
-            title: title,
-            body: body,
-          },
-          data: {
-            type: "profileViewed",
-            viewerCount: newViewers.length.toString(),
-            viewerIds: JSON.stringify(newViewers),
-            click_action: "FLUTTER_NOTIFICATION_CLICK",
-          },
-          android: {
-            priority: "high" as const,
-            notification: {
-              sound: "default",
-              priority: "high" as const,
-              channelId: "messages",
-            },
-          },
-          apns: {
-            payload: {
-              aps: {
-                sound: "default",
-                badge: 1,
-                contentAvailable: true,
-              },
-            },
-          },
-        };
-
-        // Bildirimi direkt gönder
-        const response = await admin.messaging().send(message);
-        logger.info("Profil görüntüleme bildirimi gönderildi:", response);
+        // Ortak fonksiyon ile bildirim gönder
+        await sendNotificationToUser(userId, "profileViewed", {
+          viewerCount: newViewers.length.toString(),
+          viewerIds: JSON.stringify(newViewers),
+        });
       }
     }
 
@@ -269,51 +227,18 @@ export const onCustomerProfileViewed = onDocumentUpdated("customers/{userId}", a
       if (newCommentKeys.length > 0) {
         logger.info(`${userId} kullanıcısına ${newCommentKeys.length} yeni yorum yapıldı`);
 
-        // Bildirim içeriğini al
-        const {title, body} = getNotificationContent("comment", userLang, isPremium);
-
         // Son yorumu al
         const lastCommentKey = newCommentKeys[newCommentKeys.length - 1];
         const lastComment = afterComments[lastCommentKey];
 
-        // FCM mesajını oluştur
-        const message = {
-          token: token,
-          notification: {
-            title: title,
-            body: body,
-          },
-          data: {
-            type: "comment",
-            commentCount: newCommentKeys.length.toString(),
-            commentIds: JSON.stringify(newCommentKeys),
-            lastCommentId: lastCommentKey,
-            lastCommentText: lastComment.text || "",
-            lastCommentUserId: lastComment.userId || "",
-            click_action: "FLUTTER_NOTIFICATION_CLICK",
-          },
-          android: {
-            priority: "high" as const,
-            notification: {
-              sound: "default",
-              priority: "high" as const,
-              channelId: "messages",
-            },
-          },
-          apns: {
-            payload: {
-              aps: {
-                sound: "default",
-                badge: 1,
-                contentAvailable: true,
-              },
-            },
-          },
-        };
-
-        // Bildirimi direkt gönder
-        const response = await admin.messaging().send(message);
-        logger.info("Yorum bildirimi gönderildi:", response);
+        // Ortak fonksiyon ile bildirim gönder
+        await sendNotificationToUser(userId, "comment", {
+          commentCount: newCommentKeys.length.toString(),
+          commentIds: JSON.stringify(newCommentKeys),
+          lastCommentId: lastCommentKey,
+          lastCommentText: lastComment.text || "",
+          lastCommentUserId: lastComment.userId || "",
+        });
       }
     }
 
@@ -358,62 +283,13 @@ export const onAdvertLiked = onDocumentUpdated("events/{eventId}", async (event)
           return null;
         }
 
-        // Kullanıcı bilgilerini al
-        const userDoc = await admin.firestore().collection("customers").doc(creatorId).get();
-        if (!userDoc.exists) {
-          logger.error("Kullanıcı bulunamadı:", creatorId);
-          return null;
-        }
 
-        const userData = userDoc.data();
-        const token = userData?.fcmToken;
-        const userLang = userData?.languagePreference || "tr";
-        const isPremium = userData?.isPremium === true;
-
-        if (!token) {
-          logger.error("Kullanıcı FCM tokeni bulunamadı:", creatorId);
-          return null;
-        }
-
-        // Bildirim içeriğini al
-        const {title, body} = getNotificationContent("likeAdvert", userLang, isPremium);
-
-        // FCM mesajını oluştur
-        const message = {
-          token: token,
-          notification: {
-            title: title,
-            body: body,
-          },
-          data: {
-            type: "likeAdvert",
-            eventId: eventId,
-            likeCount: newLikes.length.toString(),
-            likerIds: JSON.stringify(newLikes),
-            click_action: "FLUTTER_NOTIFICATION_CLICK",
-          },
-          android: {
-            priority: "high" as const,
-            notification: {
-              sound: "default",
-              priority: "high" as const,
-              channelId: "messages",
-            },
-          },
-          apns: {
-            payload: {
-              aps: {
-                sound: "default",
-                badge: 1,
-                contentAvailable: true,
-              },
-            },
-          },
-        };
-
-        // Bildirimi direkt gönder
-        const response = await admin.messaging().send(message);
-        logger.info("İlan beğeni bildirimi gönderildi:", response);
+        // Ortak fonksiyon ile bildirim gönder
+        await sendNotificationToUser(creatorId, "likeAdvert", {
+          eventId: eventId,
+          likeCount: newLikes.length.toString(),
+          likerIds: JSON.stringify(newLikes),
+        });
       }
     }
 
@@ -435,81 +311,45 @@ export const onAdvertJoinRequest = onDocumentUpdated("events/{eventId}", async (
       return null;
     }
 
-    // joinRequestIds array'ini kontrol et
+    // joinRequestIds array'ini kontrol et - Yeni katılım istekleri
     const beforeJoinRequests = beforeData.joinRequestIds || [];
     const afterJoinRequests = afterData.joinRequestIds || [];
 
-    // Yeni katılım istekleri varsa
+    // joinRequestAcceptedIds array'ini kontrol et - Onaylanan katılım istekleri
+    const beforeAcceptedRequests = beforeData.joinRequestAcceptedIds || [];
+    const afterAcceptedRequests = afterData.joinRequestAcceptedIds || [];
+
+    // 1. Yeni katılım istekleri varsa - İlan sahibine bildirim gönder
     if (afterJoinRequests.length > beforeJoinRequests.length) {
-      // Yeni katılım isteklerini bul
       const newJoinRequests = afterJoinRequests.filter((joinRequest: string) => !beforeJoinRequests.includes(joinRequest));
 
       if (newJoinRequests.length > 0) {
         logger.info(`${eventId} etkinliği ${newJoinRequests.length} yeni kişi tarafından katılım isteği gönderildi`);
 
-        // İlan sahibinin ID'sini al
         const creatorId = afterData.creatorUserID;
-        if (!creatorId) {
-          logger.error("İlan sahibi ID'si bulunamadı:", eventId);
-          return null;
-        }
-
-        // Kullanıcı bilgilerini al
-        const userDoc = await admin.firestore().collection("customers").doc(creatorId).get();
-        if (!userDoc.exists) {
-          logger.error("Kullanıcı bulunamadı:", creatorId);
-          return null;
-        }
-
-        const userData = userDoc.data();
-        const token = userData?.fcmToken;
-        const userLang = userData?.languagePreference || "tr";
-        const isPremium = userData?.isPremium === true;
-
-        if (!token) {
-          logger.error("Kullanıcı FCM tokeni bulunamadı:", creatorId);
-          return null;
-        }
-
-        // Bildirim içeriğini al
-        const {title, body} = getNotificationContent("joinRequest", userLang, isPremium);
-
-        // FCM mesajını oluştur
-        const message = {
-          token: token,
-          notification: {
-            title: title,
-            body: body,
-          },
-          data: {
-            type: "joinRequest",
+        if (creatorId) {
+          await sendNotificationToUser(creatorId, "joinRequest", {
             eventId: eventId,
             joinRequestCount: newJoinRequests.length.toString(),
             joinRequestIds: JSON.stringify(newJoinRequests),
-            click_action: "FLUTTER_NOTIFICATION_CLICK",
-          },
-          android: {
-            priority: "high" as const,
-            notification: {
-              sound: "default",
-              priority: "high" as const,
-              channelId: "messages",
-            },
-          },
-          apns: {
-            payload: {
-              aps: {
-                sound: "default",
-                badge: 1,
-                contentAvailable: true,
-              },
-            },
-          },
-        };
+          });
+        }
+      }
+    }
 
-        // Bildirimi direkt gönder
-        const response = await admin.messaging().send(message);
-        logger.info("İlan katılım isteği bildirimi gönderildi:", response);
+    // 2. Onaylanan katılım istekleri varsa - Katılımcıya bildirim gönder
+    if (afterAcceptedRequests.length > beforeAcceptedRequests.length) {
+      const newAcceptedRequests = afterAcceptedRequests.filter((acceptedRequest: string) => !beforeAcceptedRequests.includes(acceptedRequest));
+
+      if (newAcceptedRequests.length > 0) {
+        logger.info(`${eventId} etkinliği için ${newAcceptedRequests.length} katılım isteği onaylandı`);
+
+        // Her onaylanan kullanıcıya ayrı bildirim gönder
+        for (const userId of newAcceptedRequests) {
+          await sendNotificationToUser(userId, "joinRequestAccepted", {
+            eventId: eventId,
+          });
+        }
       }
     }
 
@@ -1069,6 +909,80 @@ export const sendBroadcastNotification = onCall({
     );
   }
 });
+
+/**
+ * Belirli bir kullanıcıya bildirim gönderen ortak yardımcı fonksiyon
+ * @param {string} userId - Bildirim gönderilecek kullanıcı ID'si
+ * @param {string} notificationType - Bildirim tipi
+ * @param {Record<string, string>} additionalData - Ek veri
+ */
+async function sendNotificationToUser(
+  userId: string,
+  notificationType: string,
+  additionalData: Record<string, string> = {}
+): Promise<void> {
+  try {
+    // Kullanıcı bilgilerini al
+    const userDoc = await admin.firestore().collection("customers").doc(userId).get();
+    if (!userDoc.exists) {
+      logger.error("Kullanıcı bulunamadı:", userId);
+      return;
+    }
+
+    const userData = userDoc.data();
+    const token = userData?.fcmToken;
+    const userLang = userData?.languagePreference || "tr";
+    const isPremium = userData?.isPremium === true;
+
+    if (!token) {
+      logger.error("Kullanıcı FCM tokeni bulunamadı:", userId);
+      return;
+    }
+
+    // Bildirim içeriğini al
+    const {title, body} = getNotificationContent(notificationType, userLang, isPremium);
+
+    // Temel veri objesi
+    const data: Record<string, string> = {
+      type: notificationType,
+      click_action: "FLUTTER_NOTIFICATION_CLICK",
+      ...additionalData, // Ek verileri ekle
+    };
+
+    // FCM mesajını oluştur
+    const message = {
+      token: token,
+      notification: {
+        title: title,
+        body: body,
+      },
+      data: data,
+      android: {
+        priority: "high" as const,
+        notification: {
+          sound: "default",
+          priority: "high" as const,
+          channelId: "messages",
+        },
+      },
+      apns: {
+        payload: {
+          aps: {
+            sound: "default",
+            badge: 1,
+            contentAvailable: true,
+          },
+        },
+      },
+    };
+
+    // Bildirimi gönder
+    const response = await admin.messaging().send(message);
+    logger.info(`${notificationType} bildirimi gönderildi (${userId}):`, response);
+  } catch (error) {
+    logger.error(`${notificationType} bildirimi gönderilirken hata (${userId}):`, error);
+  }
+}
 
 /**
  * Bir diziyi belirtilen boyutta parçalara ayırır

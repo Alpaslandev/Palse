@@ -60,8 +60,13 @@ class Customer {
   List<String>? blockUsers;
   List<String>? favoriteAdverts;
   List<String>? profileViewers;
+
+  List<String>? followings;
+  List<String>? followers;
+  List<String>? followingRequests;
+
   List<String>? joinRequestAdverts;
-  List<String>? joinRequestAcceptedAdverts;
+  List<String>? joinedAdvertIds;
   Map<String, Chat>? chatMap;
 
   List<Comment>? comments;
@@ -96,7 +101,10 @@ class Customer {
     this.totalXp = 0,
     this.completedTasks = const {},
     this.joinRequestAdverts = const [],
-    this.joinRequestAcceptedAdverts = const [],
+    this.joinedAdvertIds = const [],
+    this.followings = const [],
+    this.followers = const [],
+    this.followingRequests = const [],
   }) : appIdentifier = 'Customer App';
 
   String fullName() => '$firstName $lastName';
@@ -207,10 +215,18 @@ class Customer {
         joinRequestAdverts: parsedJson['joinRequestAdverts'] != null
             ? List<String>.from(parsedJson['joinRequestAdverts'])
             : [],
-        joinRequestAcceptedAdverts:
-            parsedJson['joinRequestAcceptedAdverts'] != null
-                ? List<String>.from(parsedJson['joinRequestAcceptedAdverts'])
-                : [],
+        joinedAdvertIds: parsedJson['joinedAdvertIds'] != null
+            ? List<String>.from(parsedJson['joinedAdvertIds'])
+            : [],
+        followings: parsedJson['followings'] != null
+            ? List<String>.from(parsedJson['followings'])
+            : [],
+        followers: parsedJson['followers'] != null
+            ? List<String>.from(parsedJson['followers'])
+            : [],
+        followingRequests: parsedJson['followingRequests'] != null
+            ? List<String>.from(parsedJson['followingRequests'])
+            : [],
       );
     } catch (e) {
       debugPrint('Customer.fromJson error: $e');
@@ -253,7 +269,10 @@ class Customer {
       'totalXp': totalXp,
       'completedTasks': completedTasks,
       'joinRequestAdverts': joinRequestAdverts ?? [],
-      'joinRequestAcceptedAdverts': joinRequestAcceptedAdverts ?? [],
+      'joinedAdvertIds': joinedAdvertIds ?? [],
+      'followings': followings ?? [],
+      'followers': followers ?? [],
+      'followingRequests': followingRequests ?? [],
     };
   }
 
@@ -284,7 +303,10 @@ class Customer {
     Map<String, int>? completedTasks,
     DateTime? lastDailyTaskDate,
     List<String>? joinRequestAdverts,
-    List<String>? joinRequestAcceptedAdverts,
+    List<String>? joinedAdvertIds,
+    List<String>? followings,
+    List<String>? followers,
+    List<String>? followingRequests,
   }) {
     return Customer(
       profilePictureUrl: profilePictureUrl ?? this.profilePictureUrl,
@@ -312,8 +334,10 @@ class Customer {
       totalXp: totalXp ?? this.totalXp,
       completedTasks: completedTasks ?? this.completedTasks,
       joinRequestAdverts: joinRequestAdverts ?? this.joinRequestAdverts,
-      joinRequestAcceptedAdverts:
-          joinRequestAcceptedAdverts ?? this.joinRequestAcceptedAdverts,
+      joinedAdvertIds: joinedAdvertIds ?? this.joinedAdvertIds,
+      followings: followings ?? this.followings,
+      followers: followers ?? this.followers,
+      followingRequests: followingRequests ?? this.followingRequests,
     );
   }
 }
