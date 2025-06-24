@@ -24,7 +24,8 @@ class AdvertService {
           .collection('events')
           .where('location.city', isEqualTo: upperCity)
           .orderBy('isCreatorPremium', descending: true) // Premium ilanlar önce
-          .orderBy('createdAt', descending: true) // Aynı premium durumunda yeni ilanlar önce
+          .orderBy('createdAt',
+              descending: true) // Aynı premium durumunda yeni ilanlar önce
           .limit(limit);
 
       // Eğer son döküman varsa, ondan sonrasını getir
@@ -33,7 +34,9 @@ class AdvertService {
       }
 
       final querySnapshot = await query.get();
-      final adverts = querySnapshot.docs.map((doc) => Advert.fromJson(doc.data(), doc.id)).toList();
+      final adverts = querySnapshot.docs
+          .map((doc) => Advert.fromJson(doc.data(), doc.id))
+          .toList();
 
       debugPrint('Bulunan ilan sayısı: ${adverts.length}');
       return adverts;
@@ -44,7 +47,8 @@ class AdvertService {
   }
 
   // İlgi alanlarına göre ilanları getir
-  Future<List<Advert>> fetchAdvertsByInterests(List<Categories>? interests, {DocumentSnapshot? lastDocument, int limit = 25}) async {
+  Future<List<Advert>> fetchAdvertsByInterests(List<Categories>? interests,
+      {DocumentSnapshot? lastDocument, int limit = 25}) async {
     try {
       // İlgi alanı yoksa boş liste döndür
       if (interests == null || interests.isEmpty) {
@@ -52,19 +56,23 @@ class AdvertService {
       }
 
       // Kategorileri string olarak al
-      final categoryValues = interests.map((interest) => interest.name).toList();
+      final categoryValues =
+          interests.map((interest) => interest.name).toList();
       debugPrint('Aranan kategoriler: $categoryValues');
 
       // GERÇEK ÇÖZÜM: Firestore'un kısıtlamalarından dolayı tek sorguda tüm kategorileri alamayız
       // En fazla whereIn ile 10 kategori alabiliriz
-      List<String> categoriesToQuery = categoryValues.length > 10 ? categoryValues.sublist(0, 10) : categoryValues;
+      List<String> categoriesToQuery = categoryValues.length > 10
+          ? categoryValues.sublist(0, 10)
+          : categoryValues;
 
       // Tek sorgu oluştur - 10'dan fazla kategori varsa ilk 10'unu al
       var query = _firestore
           .collection('events')
           .where('advertType', whereIn: categoriesToQuery)
           .orderBy('isCreatorPremium', descending: true) // Premium ilanlar önce
-          .orderBy('createdAt', descending: true) // Aynı premium durumunda yeni ilanlar önce
+          .orderBy('createdAt',
+              descending: true) // Aynı premium durumunda yeni ilanlar önce
           .limit(limit);
 
       // Pagination için
@@ -74,7 +82,9 @@ class AdvertService {
 
       // Sorguyu çalıştır
       final querySnapshot = await query.get();
-      final adverts = querySnapshot.docs.map((doc) => Advert.fromJson(doc.data(), doc.id)).toList();
+      final adverts = querySnapshot.docs
+          .map((doc) => Advert.fromJson(doc.data(), doc.id))
+          .toList();
 
       debugPrint('Bulunan ilan sayısı: ${adverts.length}');
       return adverts;
@@ -107,7 +117,9 @@ class AdvertService {
       }
 
       // Sıralama ve pagination - Premium ilanlar önce
-      query = query.orderBy('isCreatorPremium', descending: true).orderBy('createdAt', descending: true);
+      query = query
+          .orderBy('isCreatorPremium', descending: true)
+          .orderBy('createdAt', descending: true);
 
       if (lastDocument != null) {
         query = query.startAfterDocument(lastDocument);
@@ -115,7 +127,9 @@ class AdvertService {
 
       // Sorguyu çalıştır
       final querySnapshot = await query.get();
-      final adverts = querySnapshot.docs.map((doc) => Advert.fromJson(doc.data(), doc.id)).toList();
+      final adverts = querySnapshot.docs
+          .map((doc) => Advert.fromJson(doc.data(), doc.id))
+          .toList();
 
       debugPrint('Filtrelenmiş ilan sayısı: ${adverts.length}');
       return adverts;
@@ -133,9 +147,15 @@ class AdvertService {
   }) async {
     try {
       // Kullanıcı null ise veya favoriteCategories null/boş ise doğrudan tüm ilanları getir
-      if (user == null || user.favoriteCategories == null || user.favoriteCategories!.isEmpty) {
+      if (user == null ||
+          user.favoriteCategories == null ||
+          user.favoriteCategories!.isEmpty) {
         // Temel sorgu: Tüm ilanları getir
-        var query = _firestore.collection('events').orderBy('isCreatorPremium', descending: true).orderBy('createdAt', descending: true).limit(limit);
+        var query = _firestore
+            .collection('events')
+            .orderBy('isCreatorPremium', descending: true)
+            .orderBy('createdAt', descending: true)
+            .limit(limit);
 
         // Pagination için
         if (lastDocument != null) {
@@ -143,14 +163,19 @@ class AdvertService {
         }
 
         final querySnapshot = await query.get();
-        final adverts = querySnapshot.docs.map((doc) => Advert.fromJson(doc.data(), doc.id)).toList();
+        final adverts = querySnapshot.docs
+            .map((doc) => Advert.fromJson(doc.data(), doc.id))
+            .toList();
         debugPrint('Kategori olmadan çekilen ilan sayısı: ${adverts.length}');
         return adverts;
       }
 
       // İlgi alanları dışındaki ilanları filtrele
       // Firestore whereNotIn sorgusu en fazla 10 değer alabilir
-      var categoryValues = user.favoriteCategories!.map((interest) => interest.name).take(10).toList();
+      var categoryValues = user.favoriteCategories!
+          .map((interest) => interest.name)
+          .take(10)
+          .toList();
 
       // Temel sorgu: İlgi alanları dışındaki ilanları çek
       var query = _firestore
@@ -170,7 +195,9 @@ class AdvertService {
 
       // Sorguyu çalıştır
       final querySnapshot = await query.get();
-      final adverts = querySnapshot.docs.map((doc) => Advert.fromJson(doc.data(), doc.id)).toList();
+      final adverts = querySnapshot.docs
+          .map((doc) => Advert.fromJson(doc.data(), doc.id))
+          .toList();
 
       debugPrint('whereNotIn ile çekilen ilan sayısı: ${adverts.length}');
       return adverts;
@@ -188,9 +215,11 @@ class AdvertService {
   Future<Advert?> fetchAdvertById(String advertID) async {
     try {
       // Önce events koleksiyonunda ara
-      DocumentSnapshot eventSnapshot = await _firestore.collection('events').doc(advertID).get();
+      DocumentSnapshot eventSnapshot =
+          await _firestore.collection('events').doc(advertID).get();
       if (eventSnapshot.exists) {
-        return Advert.fromJson(eventSnapshot.data() as Map<String, dynamic>, advertID);
+        return Advert.fromJson(
+            eventSnapshot.data() as Map<String, dynamic>, advertID);
       }
 
       return null;
@@ -200,33 +229,49 @@ class AdvertService {
     }
   }
 
-  Future<void> likeAdvert(String advertId, String userId, String creatorUserID) async {
-    try {
-      final docSnapshot = await _firestore.collection('events').doc(advertId).get();
-      if (docSnapshot.exists) {
-        final data = docSnapshot.data();
-        if (data != null && data.containsKey('likers')) {
-          await _firestore.collection('events').doc(advertId).update({
-            'likers': FieldValue.arrayUnion([userId])
-          });
-        } else {
-          await _firestore.collection('events').doc(advertId).update({
-            'likers': [userId]
-          });
-        }
-      }
-    } catch (e) {
-      debugPrint('İlan beğenme hatası: $e');
-    }
-  }
+  /// İlan beğen
+  Future<void> likeAdvert({
+    required String advertId,
+    required String userId,
+  }) async {
+    final eventRef = _firestore.collection('events').doc(advertId);
+    final userRef = _firestore.collection('customers').doc(userId);
 
-  Future<void> unlikeAdvert(String advertId, String userId) async {
     try {
-      await _firestore.collection('events').doc(advertId).update({
-        'likers': FieldValue.arrayRemove([userId])
+      await _firestore.runTransaction((tx) async {
+        tx.update(eventRef, {
+          'likers': FieldValue.arrayUnion([userId]),
+        });
+        tx.update(userRef, {
+          'favoriteAdverts': FieldValue.arrayUnion([advertId]),
+        });
       });
     } catch (e) {
       debugPrint('İlan beğenme hatası: $e');
+      rethrow; // UI’da snackbar göstermek için
+    }
+  }
+
+  /// İlan beğeniyi kaldır
+  Future<void> unlikeAdvert({
+    required String advertId,
+    required String userId,
+  }) async {
+    final eventRef = _firestore.collection('events').doc(advertId);
+    final userRef = _firestore.collection('customers').doc(userId);
+
+    try {
+      await _firestore.runTransaction((tx) async {
+        tx.update(eventRef, {
+          'likers': FieldValue.arrayRemove([userId]),
+        });
+        tx.update(userRef, {
+          'favoriteAdverts': FieldValue.arrayRemove([advertId]),
+        });
+      });
+    } catch (e) {
+      debugPrint('İlan beğeni kaldırma hatası: $e');
+      rethrow;
     }
   }
 
@@ -236,6 +281,66 @@ class AdvertService {
       debugPrint('İlan başarıyla silindi');
     } catch (e) {
       debugPrint('İlan silme hatası: $e');
+    }
+  }
+
+  Future<void> sendJoinRequest(String advertId, String userId) async {
+    try {
+      final eventRef = _firestore.collection('events').doc(advertId);
+      final userRef = _firestore.collection('customers').doc(userId);
+
+      await _firestore.runTransaction((tx) async {
+        tx.update(eventRef, {
+          'joinRequestIds': FieldValue.arrayUnion([userId]),
+          'joinRequestAcceptedIds': FieldValue.arrayRemove([userId]),
+        });
+        tx.update(userRef, {
+          'joinRequestAdverts': FieldValue.arrayUnion([advertId]),
+          'joinedAdvertIds': FieldValue.arrayRemove([advertId]),
+        });
+      });
+    } catch (e) {
+      debugPrint('Katılım isteği gönderme hatası: $e');
+    }
+  }
+
+  Future<void> acceptJoinRequest(String advertId, String userId) async {
+    try {
+      final eventRef = _firestore.collection('events').doc(advertId);
+      final userRef = _firestore.collection('customers').doc(userId);
+
+      await _firestore.runTransaction((tx) async {
+        tx.update(eventRef, {
+          'joinRequestIds': FieldValue.arrayRemove([userId]),
+          'joinRequestAcceptedIds': FieldValue.arrayUnion([userId]),
+        });
+        tx.update(userRef, {
+          'joinRequestAdverts': FieldValue.arrayRemove([advertId]),
+          'joinedAdvertIds': FieldValue.arrayUnion([advertId]),
+        });
+      });
+    } catch (e) {
+      debugPrint('Katılım isteği kabul hatası: $e');
+    }
+  }
+
+  Future<void> rejectJoinRequest(String advertId, String userId) async {
+    try {
+      final eventRef = _firestore.collection('events').doc(advertId);
+      final userRef = _firestore.collection('customers').doc(userId);
+
+      await _firestore.runTransaction((tx) async {
+        tx.update(eventRef, {
+          'joinRequestIds': FieldValue.arrayRemove([userId]),
+          'joinRequestAcceptedIds': FieldValue.arrayRemove([userId]),
+        });
+        tx.update(userRef, {
+          'joinRequestAdverts': FieldValue.arrayRemove([advertId]),
+          'joinedAdvertIds': FieldValue.arrayRemove([advertId]),
+        });
+      });
+    } catch (e) {
+      debugPrint('Katılım isteği reddetme hatası: $e');
     }
   }
 }

@@ -29,7 +29,8 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this, initialIndex: widget.initialTabIndex);
+    _tabController = TabController(
+        length: 3, vsync: this, initialIndex: widget.initialTabIndex);
     _viewModel = HomeViewModel();
     _tabController.addListener(_onTabChanged);
 
@@ -50,7 +51,10 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 500 && !_viewModel.isLoading && _viewModel.hasMore) {
+    if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent - 500 &&
+        !_viewModel.isLoading &&
+        _viewModel.hasMore) {
       _viewModel.loadMore(_user, _tabController.index);
     }
   }
@@ -96,9 +100,15 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                       unselectedLabelColor: Colors.grey,
                       controller: _tabController,
                       tabs: [
-                        Tab(text: context.tr('city_based'), iconMargin: EdgeInsets.zero),
-                        Tab(text: context.tr('interest_based'), iconMargin: EdgeInsets.zero),
-                        Tab(text: context.tr('other'), iconMargin: EdgeInsets.zero),
+                        Tab(
+                            text: context.tr('city_based'),
+                            iconMargin: EdgeInsets.zero),
+                        Tab(
+                            text: context.tr('interest_based'),
+                            iconMargin: EdgeInsets.zero),
+                        Tab(
+                            text: context.tr('other'),
+                            iconMargin: EdgeInsets.zero),
                       ],
                     ),
                   ),
@@ -110,7 +120,8 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                       'assets/vectors/filter_x2.svg',
                       width: 24,
                       height: 24,
-                      colorFilter: const ColorFilter.mode(AppTheme.primaryColor, BlendMode.srcIn),
+                      colorFilter: const ColorFilter.mode(
+                          AppTheme.primaryColor, BlendMode.srcIn),
                     ),
                   ),
                 ],
@@ -131,8 +142,10 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                                     children: [
                                       Text(
                                         _tabController.index == 0
-                                            ? context.tr('no_listings_in_your_city')
-                                            : context.tr('no_listings_in_your_interests'),
+                                            ? context
+                                                .tr('no_listings_in_your_city')
+                                            : context.tr(
+                                                'no_listings_in_your_interests'),
                                         textAlign: TextAlign.center,
                                         style: const TextStyle(fontSize: 16),
                                       ),
@@ -142,7 +155,8 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                                           _tabController.animateTo(2);
                                         },
                                         child: Text(
-                                          context.tr('click_to_see_other_listings'),
+                                          context.tr(
+                                              'click_to_see_other_listings'),
                                           style: const TextStyle(
                                             color: Colors.blue,
                                             fontWeight: FontWeight.bold,
@@ -165,11 +179,14 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                             if (viewModel.isLoading) {
                               return const Padding(
                                 padding: EdgeInsets.all(8.0),
-                                child: Center(child: CircularProgressIndicator()),
+                                child:
+                                    Center(child: CircularProgressIndicator()),
                               );
                             }
 
-                            if ((!viewModel.hasMore && _tabController.index != 2) || viewModel.shouldShowOtherTab) {
+                            if ((!viewModel.hasMore &&
+                                    _tabController.index != 2) ||
+                                viewModel.shouldShowOtherTab) {
                               return Padding(
                                 padding: const EdgeInsets.all(16.0),
                                 child: Card(
@@ -181,9 +198,12 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                                         Text(
                                           viewModel.shouldShowOtherTab
                                               ? (_tabController.index == 0
-                                                  ? context.tr('no_listings_in_your_city')
-                                                  : context.tr('no_listings_in_your_interests'))
-                                              : context.tr('no_more_listings_in_category'),
+                                                  ? context.tr(
+                                                      'no_listings_in_your_city')
+                                                  : context.tr(
+                                                      'no_listings_in_your_interests'))
+                                              : context.tr(
+                                                  'no_more_listings_in_category'),
                                           textAlign: TextAlign.center,
                                           style: const TextStyle(fontSize: 16),
                                         ),
@@ -193,7 +213,8 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                                             _tabController.animateTo(2);
                                           },
                                           child: Text(
-                                            context.tr('click_to_see_other_listings'),
+                                            context.tr(
+                                                'click_to_see_other_listings'),
                                             style: const TextStyle(
                                               color: Colors.blue,
                                               fontWeight: FontWeight.bold,
@@ -213,8 +234,12 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                           final advert = viewModel.adverts[index];
 
                           if (advert.creatorUserID == _user.userID ||
-                              (_user.blockUsers != null && _user.blockUsers!.contains(advert.creatorUserID))) {
-                            if (index >= viewModel.adverts.length - 5 && viewModel.hasMore && !viewModel.isLoading) {
+                              (_user.blockUsers != null &&
+                                  _user.blockUsers!
+                                      .contains(advert.creatorUserID))) {
+                            if (index >= viewModel.adverts.length - 5 &&
+                                viewModel.hasMore &&
+                                !viewModel.isLoading) {
                               WidgetsBinding.instance.addPostFrameCallback((_) {
                                 viewModel.loadMore(_user, _tabController.index);
                               });
@@ -223,15 +248,34 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                           }
 
                           final isLiked = advert.likers.contains(_user.userID);
+                          final isJoinRequestSent =
+                              advert.joinRequestIds.contains(_user.userID);
+                          final isJoinRequestAccepted = advert
+                              .joinRequestAcceptedIds
+                              .contains(_user.userID);
 
                           return AdvertCard(
                             advert: advert,
                             isLiked: isLiked,
+                            isJoinRequestSent: isJoinRequestSent,
+                            isJoinRequestAccepted: isJoinRequestAccepted,
                             onLikeTap: () async {
                               if (isLiked) {
-                                await viewModel.unlikeAdvert(advert.advertID ?? '', _user.userID ?? '');
+                                await viewModel.unlikeAdvert(
+                                    advert.advertID ?? '', _user.userID ?? '');
                               } else {
-                                await viewModel.likeAdvert(advert.advertID ?? '', _user.userID ?? '');
+                                await viewModel.likeAdvert(
+                                    advert.advertID ?? '', _user.userID ?? '');
+                              }
+                            },
+                            onJoinRequestTap: () async {
+                              debugPrint('Katılım isteği gönderildi');
+                              if (isJoinRequestSent) {
+                                await viewModel.cancelJoinRequest(
+                                    advert.advertID ?? '', _user.userID ?? '');
+                              } else {
+                                await viewModel.sendJoinRequest(
+                                    advert.advertID ?? '', _user.userID ?? '');
                               }
                             },
                           );
@@ -243,7 +287,9 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
               onPressed: () {
                 context.pushNamed(createAdvert);
               },
-              label: Text(context.tr('create_listing'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              label: Text(context.tr('create_listing'),
+                  style: const TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           );
         },

@@ -14,6 +14,9 @@ class Advert {
   List<String> likers;
   LocationModel location;
 
+  List<String> joinRequestIds;
+  List<String> joinRequestAcceptedIds;
+
   String creatorUserID;
   bool isCreatorPremium;
 
@@ -32,13 +35,17 @@ class Advert {
     required this.createdAt,
     required this.creatorUserID,
     required this.isCreatorPremium,
+    required this.joinRequestIds,
+    required this.joinRequestAcceptedIds,
     required this.creatorGender,
   });
 
   factory Advert.fromJson(Map<String, dynamic> json, String advertID) {
     // Gender değerini önceden normalize edelim
     final genderValue = json['creatorGender'];
-    final normalizedGender = genderValue != null ? Gender.fromString(genderValue.toString()) : Gender.others;
+    final normalizedGender = genderValue != null
+        ? Gender.fromString(genderValue.toString())
+        : Gender.others;
     try {
       return Advert(
         advertID: advertID,
@@ -46,13 +53,22 @@ class Advert {
         description: json['description'] ?? '',
         creatorUserID: json['creatorUserID'] ?? '',
         isCreatorPremium: json['isCreatorPremium'] ?? false,
-        startEventDate: (json['startEventDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
+        startEventDate:
+            (json['startEventDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
         advertType: Categories.values.byName(json['advertType'] ?? 'diger'),
         advertImage: json['advertImage'] ?? '',
         likers: json['likers'] != null ? List<String>.from(json['likers']) : [],
         location: LocationModel.fromFirestore(json['location']),
-        createdAt: (json['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-        creatorGender: normalizedGender, // Normalize edilmiş gender değerini kullan
+        createdAt:
+            (json['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+        joinRequestIds: json['joinRequestIds'] != null
+            ? List<String>.from(json['joinRequestIds'])
+            : [],
+        joinRequestAcceptedIds: json['joinRequestAcceptedIds'] != null
+            ? List<String>.from(json['joinRequestAcceptedIds'])
+            : [],
+        creatorGender:
+            normalizedGender, // Normalize edilmiş gender değerini kullan
       );
     } catch (e) {
       debugPrint('İlan oluşturulurken hata: $e');
@@ -68,7 +84,10 @@ class Advert {
         advertType: Categories.diger,
         advertImage: '',
         likers: [],
-        location: LocationModel(city: '', district: '', country: '', lat: 0, lon: 0),
+        joinRequestIds: [],
+        joinRequestAcceptedIds: [],
+        location:
+            LocationModel(city: '', district: '', country: '', lat: 0, lon: 0),
       );
     }
   }
@@ -85,6 +104,8 @@ class Advert {
       'advertImage': advertImage,
       'likers': likers,
       'location': location.toJson(),
+      'joinRequestIds': joinRequestIds,
+      'joinRequestAcceptedIds': joinRequestAcceptedIds,
       'creatorGender': creatorGender.name.toLowerCase(),
     };
   }
@@ -101,6 +122,8 @@ class Advert {
     Gender? creatorGender,
     DateTime? startEventDate,
     LocationModel? location,
+    List<String>? joinRequestIds,
+    List<String>? joinRequestAcceptedIds,
     List<String>? likers,
   }) {
     return Advert(
@@ -115,6 +138,9 @@ class Advert {
       createdAt: createdAt ?? this.createdAt,
       startEventDate: startEventDate ?? this.startEventDate,
       location: location ?? this.location,
+      joinRequestIds: joinRequestIds ?? this.joinRequestIds,
+      joinRequestAcceptedIds:
+          joinRequestAcceptedIds ?? this.joinRequestAcceptedIds,
       likers: likers ?? this.likers,
     );
   }

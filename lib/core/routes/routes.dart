@@ -29,7 +29,7 @@ const String chats = 'chats';
 const String messages = 'messages';
 
 const String myAdverts = 'myAdverts';
-const String seeLikers = 'seeLikers';
+const String userList = 'userList';
 const String recentlyViewers = 'recentlyViewers';
 const String categories = 'categories';
 const String byInterest = 'byInterest';

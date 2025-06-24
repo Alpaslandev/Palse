@@ -60,6 +60,8 @@ class Customer {
   List<String>? blockUsers;
   List<String>? favoriteAdverts;
   List<String>? profileViewers;
+  List<String>? joinRequestAdverts;
+  List<String>? joinRequestAcceptedAdverts;
   Map<String, Chat>? chatMap;
 
   List<Comment>? comments;
@@ -93,6 +95,8 @@ class Customer {
     this.location,
     this.totalXp = 0,
     this.completedTasks = const {},
+    this.joinRequestAdverts = const [],
+    this.joinRequestAcceptedAdverts = const [],
   }) : appIdentifier = 'Customer App';
 
   String fullName() => '$firstName $lastName';
@@ -101,7 +105,9 @@ class Customer {
   double getAverage() {
     if (comments == null || comments!.isEmpty) return 0.0; // 0.0 döndür
     // ignore: avoid_types_as_parameter_names
-    return comments!.map((comment) => comment.rating ?? 0).fold(0.0, (sum, rating) => sum + rating) /
+    return comments!
+            .map((comment) => comment.rating ?? 0)
+            .fold(0.0, (sum, rating) => sum + rating) /
         comments!.length; // null değerleri 0 olarak değerlendir
   }
 
@@ -141,7 +147,9 @@ class Customer {
 
     // Gender değerini önceden normalize edelim
     final genderValue = parsedJson['gender'];
-    final normalizedGender = genderValue != null ? Gender.fromString(genderValue.toString()) : Gender.others;
+    final normalizedGender = genderValue != null
+        ? Gender.fromString(genderValue.toString())
+        : Gender.others;
 
     try {
       return Customer(
@@ -152,7 +160,9 @@ class Customer {
         firstName: parsedJson['firstName'] ?? '',
         lastName: parsedJson['lastName'] ?? '',
         userID: userID,
-        blockUsers: parsedJson['blockUsers'] != null ? List<String>.from(parsedJson['blockUsers']) : [],
+        blockUsers: parsedJson['blockUsers'] != null
+            ? List<String>.from(parsedJson['blockUsers'])
+            : [],
         favoriteCategories: parsedJson['favoriteCategories'] != null
             ? (parsedJson['favoriteCategories'] as List<dynamic>?)
                     ?.map((item) => parseCategoryType(item))
@@ -161,20 +171,46 @@ class Customer {
                 []
             : [],
         languagePreference: parsedJson['languagePreference'] ?? 'tr',
-        favoriteAdverts: parsedJson['favoriteAdverts'] != null ? List<String>.from(parsedJson['favoriteAdverts']) : [],
-        adverts: parsedJson['adverts'] != null ? List<String>.from(parsedJson['adverts']) : [],
+        favoriteAdverts: parsedJson['favoriteAdverts'] != null
+            ? List<String>.from(parsedJson['favoriteAdverts'])
+            : [],
+        adverts: parsedJson['adverts'] != null
+            ? List<String>.from(parsedJson['adverts'])
+            : [],
         verification: parsedJson['verification'] ?? false,
         isPremium: parsedJson['isPremium'] ?? false,
         gender: normalizedGender, // Normalize edilmiş gender değerini kullan
-        createdAt: parsedJson['createdAt'] != null ? (parsedJson['createdAt'] as Timestamp).toDate() : null,
-        lastSeen: parsedJson['lastSeen'] != null ? (parsedJson['lastSeen'] as Timestamp).toDate() : null,
-        birthday: parsedJson['birthday'] != null ? parseDateTime(parsedJson['birthday'], parsedJson['birthdayTime']) : null,
+        createdAt: parsedJson['createdAt'] != null
+            ? (parsedJson['createdAt'] as Timestamp).toDate()
+            : null,
+        lastSeen: parsedJson['lastSeen'] != null
+            ? (parsedJson['lastSeen'] as Timestamp).toDate()
+            : null,
+        birthday: parsedJson['birthday'] != null
+            ? parseDateTime(parsedJson['birthday'], parsedJson['birthdayTime'])
+            : null,
         chatMap: chatMap,
-        profileViewers: parsedJson['profileViewers'] != null ? List<String>.from(parsedJson['profileViewers']) : [],
-        comments: parsedJson['comments'] != null ? List<Comment>.from(parsedJson['comments'].map((comment) => Comment.fromJson(comment))) : [],
-        location: parsedJson['location'] != null ? parseCustomerLocation(parsedJson) : parseCustomerLocation(parsedJson),
+        profileViewers: parsedJson['profileViewers'] != null
+            ? List<String>.from(parsedJson['profileViewers'])
+            : [],
+        comments: parsedJson['comments'] != null
+            ? List<Comment>.from(parsedJson['comments']
+                .map((comment) => Comment.fromJson(comment)))
+            : [],
+        location: parsedJson['location'] != null
+            ? parseCustomerLocation(parsedJson)
+            : parseCustomerLocation(parsedJson),
         totalXp: parsedJson['totalXp'] ?? 0,
-        completedTasks: parsedJson['completedTasks'] != null ? Map<String, int>.from(parsedJson['completedTasks']) : {},
+        completedTasks: parsedJson['completedTasks'] != null
+            ? Map<String, int>.from(parsedJson['completedTasks'])
+            : {},
+        joinRequestAdverts: parsedJson['joinRequestAdverts'] != null
+            ? List<String>.from(parsedJson['joinRequestAdverts'])
+            : [],
+        joinRequestAcceptedAdverts:
+            parsedJson['joinRequestAcceptedAdverts'] != null
+                ? List<String>.from(parsedJson['joinRequestAcceptedAdverts'])
+                : [],
       );
     } catch (e) {
       debugPrint('Customer.fromJson error: $e');
@@ -198,21 +234,26 @@ class Customer {
       'appIdentifier': appIdentifier ?? '',
       'languagePreference': languagePreference ?? 'tr',
       'adverts': adverts ?? [],
-      'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : Timestamp.now(),
-      'lastSeen': lastSeen != null ? Timestamp.fromDate(lastSeen!) : Timestamp.now(),
+      'createdAt':
+          createdAt != null ? Timestamp.fromDate(createdAt!) : Timestamp.now(),
+      'lastSeen':
+          lastSeen != null ? Timestamp.fromDate(lastSeen!) : Timestamp.now(),
       'verification': verification ?? false,
       'isPremium': isPremium ?? false,
       'blockUsers': blockUsers ?? [],
       'profileViewers': profileViewers ?? [],
       'gender': gender?.name.toLowerCase() ?? Gender.others.name.toLowerCase(),
       'birthday': birthday != null ? Timestamp.fromDate(birthday!) : null,
-      'favoriteCategories': favoriteCategories?.map((category) => category.name).toList() ?? [],
+      'favoriteCategories':
+          favoriteCategories?.map((category) => category.name).toList() ?? [],
       'favoriteAdverts': favoriteAdverts ?? [],
       'location': location?.toJson() ?? {},
       'chatMap': chatMapJson,
       'comments': comments?.map((comment) => comment.toJson()).toList() ?? [],
       'totalXp': totalXp,
       'completedTasks': completedTasks,
+      'joinRequestAdverts': joinRequestAdverts ?? [],
+      'joinRequestAcceptedAdverts': joinRequestAcceptedAdverts ?? [],
     };
   }
 
@@ -242,6 +283,8 @@ class Customer {
     int? totalXp,
     Map<String, int>? completedTasks,
     DateTime? lastDailyTaskDate,
+    List<String>? joinRequestAdverts,
+    List<String>? joinRequestAcceptedAdverts,
   }) {
     return Customer(
       profilePictureUrl: profilePictureUrl ?? this.profilePictureUrl,
@@ -268,6 +311,9 @@ class Customer {
       lastName: lastName ?? this.lastName,
       totalXp: totalXp ?? this.totalXp,
       completedTasks: completedTasks ?? this.completedTasks,
+      joinRequestAdverts: joinRequestAdverts ?? this.joinRequestAdverts,
+      joinRequestAcceptedAdverts:
+          joinRequestAcceptedAdverts ?? this.joinRequestAcceptedAdverts,
     );
   }
 }

@@ -34,6 +34,7 @@ enum Categories {
   odaPaylas(emoji: "🏠", textKey: 'category_room_sharing'),
   arabaKiralama(emoji: "🚙", textKey: 'category_car_rental'),
   esyaAlimSatim(emoji: "🛒", textKey: 'category_items_trade'),
+  sinemaVeTiyatro(emoji: "🎭", textKey: 'category_theater'),
   diger(emoji: "⋯", textKey: 'category_other');
 
   final String emoji;
@@ -99,6 +100,7 @@ final Map<String, Categories> legacyTurkishTextMap = {
   'Oda Paylaşımı ve Emlak': Categories.odaPaylas,
   'Araba Kiralama, Alım/Satım': Categories.arabaKiralama,
   'Eşya Alım/Satım': Categories.esyaAlimSatim,
+  'Sinema ve Tiyatro': Categories.sinemaVeTiyatro,
   'Diğer': Categories.diger,
 };
 
@@ -135,5 +137,6 @@ final Map<Categories, String> legacyTurkishTextMapReverse = {
   Categories.odaPaylas: 'Oda Paylaşımı ve Emlak',
   Categories.arabaKiralama: 'Araba Kiralama, Alım/Satım',
   Categories.esyaAlimSatim: 'Eşya Alım/Satım',
+  Categories.sinemaVeTiyatro: 'Sinema ve Tiyatro',
   Categories.diger: 'Diğer',
 };

@@ -63,22 +63,21 @@ class BirthdayGenderStep extends StatelessWidget {
                           ),
                     ),
                     const SizedBox(width: 8),
-                    if (!isBirthdayValid)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).brightness == Brightness.dark ? Colors.red.shade900.withOpacity(0.3) : Colors.red.shade100,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          context.tr('birthday_gender_required'),
-                          style: TextStyle(
-                            color: Theme.of(context).brightness == Brightness.dark ? Colors.red.shade300 : Colors.red,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).brightness == Brightness.dark ? Colors.blue.shade900.withOpacity(0.3) : Colors.blue.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        context.tr('birthday_gender_optional'),
+                        style: TextStyle(
+                          color: Theme.of(context).brightness == Brightness.dark ? Colors.blue.shade300 : Colors.blue,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
                         ),
                       ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -92,13 +91,11 @@ class BirthdayGenderStep extends StatelessWidget {
                       color: Theme.of(context).inputDecorationTheme.fillColor,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: !isBirthdayValid
-                            ? Colors.red
-                            : isBirthdayValid
-                                ? Colors.green
-                                : Theme.of(context).brightness == Brightness.dark
-                                    ? Colors.grey.shade700
-                                    : Colors.grey.shade300,
+                        color: viewModel.customer.birthday != null
+                            ? Colors.green
+                            : Theme.of(context).brightness == Brightness.dark
+                                ? Colors.grey.shade700
+                                : Colors.grey.shade300,
                         width: 1.5,
                       ),
                       boxShadow: [
@@ -113,7 +110,7 @@ class BirthdayGenderStep extends StatelessWidget {
                       children: [
                         Icon(
                           Icons.calendar_today,
-                          color: isBirthdayValid ? Colors.green : Theme.of(context).primaryColor,
+                          color: viewModel.customer.birthday != null ? Colors.green : Theme.of(context).primaryColor,
                         ),
                         const SizedBox(width: 12),
                         Text(
@@ -129,7 +126,7 @@ class BirthdayGenderStep extends StatelessWidget {
                           ),
                         ),
                         const Spacer(),
-                        if (isBirthdayValid)
+                        if (viewModel.customer.birthday != null)
                           const Icon(Icons.check_circle, color: Colors.green)
                         else
                           Icon(Icons.arrow_forward_ios, size: 16, color: Theme.of(context).hintColor),
@@ -137,17 +134,6 @@ class BirthdayGenderStep extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (!isBirthdayValid)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8.0, left: 16),
-                    child: Text(
-                      context.tr('birthday_gender_select_birth_date'),
-                      style: TextStyle(
-                        color: Colors.red.shade700,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
               ],
             ),
 
@@ -166,31 +152,29 @@ class BirthdayGenderStep extends StatelessWidget {
                           ),
                     ),
                     const SizedBox(width: 8),
-                    if (!isGenderValid)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).brightness == Brightness.dark ? Colors.red.shade900.withOpacity(0.3) : Colors.red.shade100,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          context.tr('birthday_gender_required'),
-                          style: TextStyle(
-                            color: Theme.of(context).brightness == Brightness.dark ? Colors.red.shade300 : Colors.red,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).brightness == Brightness.dark ? Colors.blue.shade900.withOpacity(0.3) : Colors.blue.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        context.tr('birthday_gender_optional'),
+                        style: TextStyle(
+                          color: Theme.of(context).brightness == Brightness.dark ? Colors.blue.shade300 : Colors.blue,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
                         ),
                       ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 12),
                 Container(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
-                    border: !isGenderValid ? Border.all(color: Colors.red) : null,
                   ),
-                  padding: !isGenderValid ? const EdgeInsets.all(8) : EdgeInsets.zero,
+                  padding: EdgeInsets.zero,
                   child: Row(
                     children: [
                       Expanded(
@@ -228,104 +212,53 @@ class BirthdayGenderStep extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (!isGenderValid)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8.0, left: 16),
-                    child: Text(
-                      context.tr('birthday_gender_select_gender'),
-                      style: TextStyle(
-                        color: Colors.red.shade700,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
               ],
             ),
 
             const SizedBox(height: 32),
 
-            // Her iki alan da geçerliyse onay mesajı göster
-            if (isBirthdayValid && isGenderValid)
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).brightness == Brightness.dark ? Colors.green.shade900.withOpacity(0.2) : Colors.green.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Theme.of(context).brightness == Brightness.dark ? Colors.green.shade700 : Colors.green.shade200,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.check_circle, color: Colors.green),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            context.tr('birthday_gender_awesome'),
-                            style: const TextStyle(
-                              color: Colors.green,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            context.tr('birthday_gender_basics_completed'),
-                            style: TextStyle(
-                              color: Theme.of(context).brightness == Brightness.dark ? Colors.green.shade300 : Colors.green.shade800,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              )
-            else
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).brightness == Brightness.dark ? Colors.blue.shade900.withOpacity(0.2) : Colors.blue.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Theme.of(context).brightness == Brightness.dark ? Colors.blue.shade700 : Colors.blue.shade200,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.info_outline,
-                      color: Theme.of(context).brightness == Brightness.dark ? Colors.blue.shade300 : Colors.blue.shade700,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            context.tr('birthday_gender_info'),
-                            style: TextStyle(
-                              color: Theme.of(context).brightness == Brightness.dark ? Colors.blue.shade300 : Colors.blue.shade700,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            context.tr('birthday_gender_info_text'),
-                            style: TextStyle(
-                              color: Theme.of(context).brightness == Brightness.dark ? Colors.blue.shade200 : Colors.blue.shade800,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+            // Bilgi mesajı - her durumda gösteriliyor
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Theme.of(context).brightness == Brightness.dark ? Colors.blue.shade900.withOpacity(0.2) : Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Theme.of(context).brightness == Brightness.dark ? Colors.blue.shade700 : Colors.blue.shade200,
                 ),
               ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    color: Theme.of(context).brightness == Brightness.dark ? Colors.blue.shade300 : Colors.blue.shade700,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.tr('birthday_gender_info'),
+                          style: TextStyle(
+                            color: Theme.of(context).brightness == Brightness.dark ? Colors.blue.shade300 : Colors.blue.shade700,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          context.tr('birthday_gender_optional_info'),
+                          style: TextStyle(
+                            color: Theme.of(context).brightness == Brightness.dark ? Colors.blue.shade200 : Colors.blue.shade800,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
             // Klavye açıldığında alt kısmın görünmesi için ekstra boşluk
             const SizedBox(height: 100),
@@ -414,7 +347,7 @@ class BirthdayGenderStep extends StatelessWidget {
       context: context,
       initialDate: viewModel.customer.birthday ?? DateTime.now().subtract(const Duration(days: 365 * 18)),
       firstDate: DateTime(1940),
-      lastDate: DateTime.now().subtract(const Duration(days: 365 * 13)), // En az 13 yaş
+      lastDate: DateTime.now().subtract(const Duration(days: 365 * 18)), // En az 18 yaş
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(

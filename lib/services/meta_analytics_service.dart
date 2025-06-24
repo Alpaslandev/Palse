@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_meta_sdk/flutter_meta_sdk.dart';
 
 class MetaAnalyticsService {
@@ -5,19 +6,21 @@ class MetaAnalyticsService {
   final FlutterMetaSdk _metaSdk = FlutterMetaSdk();
 
   // Singleton pattern
-  static final MetaAnalyticsService _instance = MetaAnalyticsService._internal();
+  static final MetaAnalyticsService _instance =
+      MetaAnalyticsService._internal();
   factory MetaAnalyticsService() => _instance;
   MetaAnalyticsService._internal();
 
   // Olay izleme
-  Future<void> logEvent(String eventName, {Map<String, dynamic>? parameters}) async {
+  Future<void> logEvent(String eventName,
+      {Map<String, dynamic>? parameters}) async {
     try {
       await _metaSdk.logEvent(
         name: eventName,
         parameters: parameters,
       );
     } catch (e) {
-      print("Meta olay izleme hatası: $e");
+      debugPrint("Meta olay izleme hatası: $e");
     }
   }
 
@@ -30,8 +33,9 @@ class MetaAnalyticsService {
           'platform': 'flutter',
         },
       );
+      debugPrint('Meta uygulama başlatma izleme başarılı');
     } catch (e) {
-      print("Meta uygulama başlatma izleme hatası: $e");
+      debugPrint("Meta uygulama başlatma izleme hatası: $e");
     }
   }
 
@@ -48,7 +52,7 @@ class MetaAnalyticsService {
         parameters: parameters,
       );
     } catch (e) {
-      print("Meta satın alma izleme hatası: $e");
+      debugPrint("Meta satın alma izleme hatası: $e");
     }
   }
 }

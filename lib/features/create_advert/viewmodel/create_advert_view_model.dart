@@ -77,7 +77,8 @@ class CreateAdvertViewModel extends ChangeNotifier {
   void updateLocation(LocationModel location) {
     debugPrint('UpdateLocation çağrıldı');
     debugPrint('Gelen LocationModel: ${location.toString()}');
-    debugPrint('Konum Detayları - Şehir: ${location.city}, İlçe: ${location.district}, Ülke: ${location.country}');
+    debugPrint(
+        'Konum Detayları - Şehir: ${location.city}, İlçe: ${location.district}, Ülke: ${location.country}');
     debugPrint('Koordinatlar - Lat: ${location.lat}, Lon: ${location.lon}');
 
     city = location.city;
@@ -120,27 +121,37 @@ class CreateAdvertViewModel extends ChangeNotifier {
         creatorUserID: authProvider.user!.userID!,
         advertType: eventType ?? Categories.diger,
         location: locationModel!,
-        advertImage: imageUrl, // Yüklenen resmin URL'ini veya hazır görsel yolunu kullan
+        advertImage:
+            imageUrl, // Yüklenen resmin URL'ini veya hazır görsel yolunu kullan
         startEventDate: startDate ?? DateTime.now(),
         createdAt: DateTime.now(),
         likers: [],
         creatorGender: authProvider.user!.gender ?? Gender.male,
         isCreatorPremium: authProvider.user!.isPremium ?? false,
+        joinRequestIds: [],
+        joinRequestAcceptedIds: [],
       );
 
       debugPrint('Advert: ${advert.toJson()}');
       // Yeni kampanyayı Firestore koleksiyonuna ekle ve döküman ID'sini al
-      DocumentReference docRef = await FirebaseFirestore.instance.collection('events').add(advert.toJson());
+      DocumentReference docRef = await FirebaseFirestore.instance
+          .collection('events')
+          .add(advert.toJson());
       // Müşteri koleksiyonunu güncelle
-      await FirebaseFirestore.instance.collection('customers').doc(authProvider.user!.userID).update({
+      await FirebaseFirestore.instance
+          .collection('customers')
+          .doc(authProvider.user!.userID)
+          .update({
         'adverts': FieldValue.arrayUnion([docRef.id]), // Döküman ID'sini kullan
       });
       // İlan oluşturma işleminde
       final achievementService = AchievementService();
-      final earnedXp = await achievementService.handleListingCreation(authProvider.user!.userID!);
+      final earnedXp = await achievementService
+          .handleListingCreation(authProvider.user!.userID!);
       // XP kazanıldığında bildirim gösterme
       if (earnedXp > 0) {
-        ScaffoldMess.showSuccessSnackBar("Tebrikler! İlan oluşturarak $earnedXp XP kazandınız.");
+        ScaffoldMess.showSuccessSnackBar(
+            "Tebrikler! İlan oluşturarak $earnedXp XP kazandınız.");
       }
       if (await inAppReview.isAvailable()) {
         inAppReview.requestReview();

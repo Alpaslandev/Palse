@@ -153,6 +153,30 @@ export const notificationMessages: NotificationMessages = {
       },
     },
   },
+  joinRequest: {
+    title: {
+      tr: "Yeni Katılım İsteği",
+      en: "New Join Request",
+    },
+    body: {
+      nonPremium: {
+        tr: "Bir kullanıcı ilanınıza katılım istedi! Hemen göz atın!",
+        en: "A user wants to join your advert! Check it out!",
+      },
+    },
+  },
+  joinRequestAccepted: {
+    title: {
+      tr: "Katılım İsteği Kabul Edildi",
+      en: "Join Request Accepted",
+    },
+    body: {
+      nonPremium: {
+        tr: "Kullanıcı isteğinizi kabul etti!",
+        en: "The user accepted your request!",
+      },
+    },
+  },
 };
 
 // Bildirim için içerik seçme yardımcı fonksiyonu

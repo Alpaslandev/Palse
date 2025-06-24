@@ -188,17 +188,17 @@ class ProfileSetupViewModel extends ChangeNotifier {
 
   // Doğum tarihi için validasyon metodu
   bool isBirthdayValid() {
-    return _customer.birthday != null;
+    return true; // Doğum tarihi opsiyonel olduğu için her zaman geçerli
   }
 
   // Cinsiyet için validasyon metodu
   bool isGenderValid() {
-    return _customer.gender != null;
+    return true; // Cinsiyet opsiyonel olduğu için her zaman geçerli
   }
 
   // Doğum tarihi ve cinsiyet adımının validasyonu
   bool isBirthdayGenderStepValid() {
-    return isBirthdayValid() && isGenderValid();
+    return true; // Artık her zaman geçerli
   }
 
   void updateLocation(LocationModel location) {
@@ -208,12 +208,12 @@ class ProfileSetupViewModel extends ChangeNotifier {
 
   // Konum için validasyon metodu
   bool isLocationValid() {
-    return _customer.location != null && _customer.location!.geoPoint != null;
+    return true; // Konum opsiyonel olduğu için her zaman geçerli
   }
 
   // Konum adımının validasyonu
   bool isLocationStepValid() {
-    return isLocationValid();
+    return true; // Artık her zaman geçerli
   }
 
   // Takma ad için validasyon metodu

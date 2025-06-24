@@ -455,10 +455,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_meta_sdk
-      sha256: c4493f7d13f4ace6070ee65019992e70a2e5c8372e50321e36229383a11fff2f
+      sha256: fad1e29adf4fb13bdc0a1d7069d8bc89e240f8f3fd117f614d2653ad2d41d84b
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.4"
+    version: "1.0.5"
   flutter_multi_formatter:
     dependency: transitive
     description:

@@ -90,7 +90,10 @@ class HomeViewModel extends ChangeNotifier {
 
       if (newAdverts.isNotEmpty) {
         // Son dökümanı güncelle (filtrelenmemiş listeden alıyoruz)
-        _lastDocument = await _firestore.collection('events').doc(newAdverts.last.advertID).get();
+        _lastDocument = await _firestore
+            .collection('events')
+            .doc(newAdverts.last.advertID)
+            .get();
 
         // Yeni ilanları ekle
         _adverts.addAll(newAdverts);
@@ -100,7 +103,8 @@ class HomeViewModel extends ChangeNotifier {
       } else {
         // Eğer şehre göre veya ilgi alanlarına göre ilan bulunamadıysa ve bu ilk yüklemeyse
         if (_adverts.isEmpty && (tabIndex == 0 || tabIndex == 1)) {
-          debugPrint('${tabIndex == 0 ? "Şehre" : "İlgi alanlarına"} göre ilan bulunamadı, diğer sekmesine yönlendirme yapılacak.');
+          debugPrint(
+              '${tabIndex == 0 ? "Şehre" : "İlgi alanlarına"} göre ilan bulunamadı, diğer sekmesine yönlendirme yapılacak.');
 
           // Flag'i true yap - Diğer sekmesine yönlendirme yapılacak
           _shouldShowOtherTab = true;
@@ -110,7 +114,8 @@ class HomeViewModel extends ChangeNotifier {
       // Sayfa kontrolü - Filtreleme öncesi duruma göre hasMore değerini ayarla
       _hasMore = newAdverts.length >= _pageSize;
 
-      debugPrint('Yeni ilanlar yüklendi. Toplam: ${_adverts.length}, Yeni: ${newAdverts.length}, Daha fazla var mı: $_hasMore');
+      debugPrint(
+          'Yeni ilanlar yüklendi. Toplam: ${_adverts.length}, Yeni: ${newAdverts.length}, Daha fazla var mı: $_hasMore');
     } catch (e) {
       debugPrint('İlanlar yüklenirken hata: $e');
     } finally {
@@ -122,7 +127,6 @@ class HomeViewModel extends ChangeNotifier {
     try {
       // Önce yerel olarak güncelle
       final index = adverts.indexWhere((advert) => advert.advertID == advertId);
-      final advert = adverts[index];
       if (index != -1) {
         // Yerel listeyi güncelle
         final updatedLikers = [...adverts[index].likers, userId];
@@ -130,10 +134,10 @@ class HomeViewModel extends ChangeNotifier {
 
         // Sadece UI'ı bilgilendir
 
-        await _advertService.likeAdvert(advertId, userId, advert.creatorUserID);
-
-        // Kullanıcının belgesini de güncelle
-        await _customerService.likeAdvert(advertId, userId);
+        await _advertService.likeAdvert(
+          advertId: advertId,
+          userId: userId,
+        );
       }
     } catch (e) {
       debugPrint('İlan beğenme hatası: $e');
@@ -161,10 +165,10 @@ class HomeViewModel extends ChangeNotifier {
         adverts[index] = adverts[index].copyWith(likers: updatedLikers);
 
         // Ardından Firestore'u güncelle (arka planda)
-        await _advertService.unlikeAdvert(advertId, userId);
-
-        // Kullanıcının belgesini de güncelle
-        await _customerService.unlikeAdvert(advertId, userId);
+        await _advertService.unlikeAdvert(
+          advertId: advertId,
+          userId: userId,
+        );
       }
     } catch (e) {
       debugPrint('İlan beğenmeme hatası: $e');
@@ -174,6 +178,62 @@ class HomeViewModel extends ChangeNotifier {
         final updatedLikers = [...adverts[index].likers, userId];
         adverts[index] = adverts[index].copyWith(likers: updatedLikers);
         notifyListeners();
+      }
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<void> sendJoinRequest(String advertId, String userId) async {
+    try {
+      final index = adverts.indexWhere((a) => a.advertID == advertId);
+      if (index == -1) return;
+
+      // 1. Optimistik olarak UI'yı güncelle
+      final updatedJoiners = [...adverts[index].joinRequestIds, userId];
+      adverts[index] = adverts[index].copyWith(joinRequestIds: updatedJoiners);
+
+      debugPrint('Katılım isteği gönderildi: $updatedJoiners');
+
+      // 3. (Opsiyonel) Kullanıcının belgesini de güncelle
+      await _advertService.sendJoinRequest(advertId, userId);
+    } catch (e) {
+      debugPrint('Katılım isteği gönderme hatası: $e');
+
+      // 4. Hata olursa yerel değişikliği geri al
+      final index = adverts.indexWhere((a) => a.advertID == advertId);
+      if (index != -1) {
+        final updatedJoiners = [...adverts[index].joinRequestIds]
+          ..remove(userId);
+        adverts[index] =
+            adverts[index].copyWith(joinRequestIds: updatedJoiners);
+      }
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<void> cancelJoinRequest(String advertId, String userId) async {
+    try {
+      final index = adverts.indexWhere((a) => a.advertID == advertId);
+      if (index == -1) return;
+
+      // 1. UI'da optimistik olarak userId'yi listeden çıkar
+      final updatedJoiners = [...adverts[index].joinRequestIds];
+      updatedJoiners.remove(userId);
+
+      adverts[index] = adverts[index].copyWith(joinRequestIds: updatedJoiners);
+      debugPrint('Katılım isteği iptal edildi: $updatedJoiners');
+
+      await _advertService.rejectJoinRequest(advertId, userId);
+    } catch (e) {
+      debugPrint('Katılım isteği iptal hatası: $e');
+
+      // 4. Hata varsa rollback (geri alma)
+      final index = adverts.indexWhere((a) => a.advertID == advertId);
+      if (index != -1 && !adverts[index].joinRequestIds.contains(userId)) {
+        final revertedList = [...adverts[index].joinRequestIds, userId];
+        adverts[index] = adverts[index].copyWith(joinRequestIds: revertedList);
       }
     } finally {
       _setLoading(false);

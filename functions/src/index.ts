@@ -424,6 +424,102 @@ export const onAdvertLiked = onDocumentUpdated("events/{eventId}", async (event)
   }
 });
 
+export const onAdvertJoinRequest = onDocumentUpdated("events/{eventId}", async (event) => {
+  try {
+    const beforeData = event.data?.before.data();
+    const afterData = event.data?.after.data();
+    const eventId = event.params.eventId;
+
+    if (!beforeData || !afterData) {
+      logger.info(`Belge bulunamadı veya silindi: ${eventId}`);
+      return null;
+    }
+
+    // joinRequestIds array'ini kontrol et
+    const beforeJoinRequests = beforeData.joinRequestIds || [];
+    const afterJoinRequests = afterData.joinRequestIds || [];
+
+    // Yeni katılım istekleri varsa
+    if (afterJoinRequests.length > beforeJoinRequests.length) {
+      // Yeni katılım isteklerini bul
+      const newJoinRequests = afterJoinRequests.filter((joinRequest: string) => !beforeJoinRequests.includes(joinRequest));
+
+      if (newJoinRequests.length > 0) {
+        logger.info(`${eventId} etkinliği ${newJoinRequests.length} yeni kişi tarafından katılım isteği gönderildi`);
+
+        // İlan sahibinin ID'sini al
+        const creatorId = afterData.creatorUserID;
+        if (!creatorId) {
+          logger.error("İlan sahibi ID'si bulunamadı:", eventId);
+          return null;
+        }
+
+        // Kullanıcı bilgilerini al
+        const userDoc = await admin.firestore().collection("customers").doc(creatorId).get();
+        if (!userDoc.exists) {
+          logger.error("Kullanıcı bulunamadı:", creatorId);
+          return null;
+        }
+
+        const userData = userDoc.data();
+        const token = userData?.fcmToken;
+        const userLang = userData?.languagePreference || "tr";
+        const isPremium = userData?.isPremium === true;
+
+        if (!token) {
+          logger.error("Kullanıcı FCM tokeni bulunamadı:", creatorId);
+          return null;
+        }
+
+        // Bildirim içeriğini al
+        const {title, body} = getNotificationContent("joinRequest", userLang, isPremium);
+
+        // FCM mesajını oluştur
+        const message = {
+          token: token,
+          notification: {
+            title: title,
+            body: body,
+          },
+          data: {
+            type: "joinRequest",
+            eventId: eventId,
+            joinRequestCount: newJoinRequests.length.toString(),
+            joinRequestIds: JSON.stringify(newJoinRequests),
+            click_action: "FLUTTER_NOTIFICATION_CLICK",
+          },
+          android: {
+            priority: "high" as const,
+            notification: {
+              sound: "default",
+              priority: "high" as const,
+              channelId: "messages",
+            },
+          },
+          apns: {
+            payload: {
+              aps: {
+                sound: "default",
+                badge: 1,
+                contentAvailable: true,
+              },
+            },
+          },
+        };
+
+        // Bildirimi direkt gönder
+        const response = await admin.messaging().send(message);
+        logger.info("İlan katılım isteği bildirimi gönderildi:", response);
+      }
+    }
+
+    return null;
+  } catch (error) {
+    logger.error("Bildirim gönderme hatası:", error);
+    return null;
+  }
+});
+
 /**
  * Yeni bir ilan eklendiğinde, ilgili kullanıcılara bildirim gönderen fonksiyon
  * - Kullanıcının şehrine göre bildirim

@@ -28,7 +28,7 @@ class _LocationStepState extends State<LocationStep> {
   @override
   Widget build(BuildContext context) {
     // Konum seçilip seçilmediğini kontrol et
-    final bool isLocationSelected = widget.viewModel.isLocationValid();
+    final bool isLocationSelected = widget.viewModel.customer.location != null;
 
     return SingleChildScrollView(
       controller: _scrollController,
@@ -71,22 +71,24 @@ class _LocationStepState extends State<LocationStep> {
                               ),
                         ),
                       ),
-                      if (!isLocationSelected)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).brightness == Brightness.dark ? Colors.red.shade900.withOpacity(0.3) : Colors.red.shade100,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            context.tr('location_required'),
-                            style: TextStyle(
-                              color: Theme.of(context).brightness == Brightness.dark ? Colors.red.shade300 : Colors.red,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                            ),
-                          ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).brightness == Brightness.dark ? Colors.blue.shade900.withOpacity(0.3) : Colors.blue.shade100,
+                          borderRadius: BorderRadius.circular(8),
                         ),
+                        child: Text(
+                          context.tr('location_optional'),
+                          style: TextStyle(
+                            color: Theme.of(context).brightness == Brightness.dark ? Colors.blue.shade300 : Colors.blue,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                          softWrap: true,
+                          overflow: TextOverflow.visible,
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -104,17 +106,46 @@ class _LocationStepState extends State<LocationStep> {
               ],
             ),
 
-            // Konum seçilmediğinde uyarı mesajı göster
+            // Konum seçilmediğinde uyarı mesajı yerine bilgilendirme mesajı ekleniyor
             if (!isLocationSelected)
-              Padding(
-                padding: const EdgeInsets.only(top: 8.0, left: 4),
+              Container(
+                margin: const EdgeInsets.only(top: 16),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).brightness == Brightness.dark ? Colors.blue.shade900.withOpacity(0.2) : Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Theme.of(context).brightness == Brightness.dark ? Colors.blue.shade700 : Colors.blue.shade200,
+                  ),
+                ),
                 child: Row(
                   children: [
-                    Icon(Icons.info_outline, color: Colors.red.shade400, size: 16),
-                    const SizedBox(width: 4),
-                    Text(
-                      context.tr('location_please_select'),
-                      style: TextStyle(color: Colors.red.shade700, fontSize: 12),
+                    Icon(
+                      Icons.info_outline,
+                      color: Theme.of(context).brightness == Brightness.dark ? Colors.blue.shade300 : Colors.blue.shade700,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            context.tr('location_info'),
+                            style: TextStyle(
+                              color: Theme.of(context).brightness == Brightness.dark ? Colors.blue.shade300 : Colors.blue.shade700,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            context.tr('location_optional_info'),
+                            style: TextStyle(
+                              color: Theme.of(context).brightness == Brightness.dark ? Colors.blue.shade200 : Colors.blue.shade800,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -232,19 +263,15 @@ class _LocationStepState extends State<LocationStep> {
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(
-              color: !isLocationSelected
-                  ? Colors.red
-                  : Theme.of(context).brightness == Brightness.dark
-                      ? Colors.grey.shade700
-                      : Colors.grey.shade300,
+              color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade700 : Colors.grey.shade300,
               width: 1.5,
             ),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(
-              color: !isLocationSelected
-                  ? Colors.red
+              color: isLocationSelected
+                  ? Colors.green
                   : Theme.of(context).brightness == Brightness.dark
                       ? Colors.grey.shade700
                       : Colors.grey.shade300,

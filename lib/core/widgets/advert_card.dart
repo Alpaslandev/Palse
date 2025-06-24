@@ -30,6 +30,10 @@ class AdvertCard extends StatelessWidget {
     this.onSeeLikersTap,
     this.isMyLikes = false,
     this.isFriendProfile = false,
+    this.isJoinRequestSent = false,
+    this.isJoinRequestAccepted = true,
+    this.onJoinRequestTap,
+    this.onSeeJoinRequestsTap,
   });
 
   final Advert advert;
@@ -43,7 +47,10 @@ class AdvertCard extends StatelessWidget {
   final VoidCallback? onDeleteTap;
   final VoidCallback? onSeeLikersTap;
   final bool isLiked;
-
+  final bool isJoinRequestSent;
+  final bool isJoinRequestAccepted;
+  final VoidCallback? onJoinRequestTap;
+  final VoidCallback? onSeeJoinRequestsTap;
   @override
   Widget build(BuildContext context) {
     final currentCustomer = context.read<AuthProvider>().user!;
@@ -64,7 +71,8 @@ class AdvertCard extends StatelessWidget {
           _buildAdvertImage(),
 
           // Butonlar
-          if (!isFriendProfile) _buildActionButtons(context, currentCustomer, chatsService),
+          if (!isFriendProfile)
+            _buildActionButtons(context, currentCustomer, chatsService),
           const SizedBox(height: 20),
         ],
       ),
@@ -75,7 +83,10 @@ class AdvertCard extends StatelessWidget {
     Customer? customer;
     // Eğer creator bilgileri tam değilse FutureBuilder kullan
     return FutureBuilder(
-        future: FirebaseFirestore.instance.collection('customers').doc(advert.creatorUserID).get(),
+        future: FirebaseFirestore.instance
+            .collection('customers')
+            .doc(advert.creatorUserID)
+            .get(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return ListTile(
@@ -142,17 +153,20 @@ class AdvertCard extends StatelessWidget {
                         children: [
                           Text(
                             customer.firstName ?? '',
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 14),
                           ),
                           if (customer.verification ?? false)
                             const Padding(
                               padding: EdgeInsets.only(left: 2),
-                              child: Icon(Icons.verified, color: Colors.blue, size: 14),
+                              child: Icon(Icons.verified,
+                                  color: Colors.blue, size: 14),
                             ),
                           if (customer.isPremium ?? false)
                             const Padding(
                               padding: EdgeInsets.only(left: 2),
-                              child: Icon(Icons.verified, color: Colors.yellow, size: 14),
+                              child: Icon(Icons.verified,
+                                  color: Colors.yellow, size: 14),
                             ),
                           const Spacer(),
                           Row(
@@ -180,7 +194,8 @@ class AdvertCard extends StatelessWidget {
                         Material(
                           color: Colors.transparent,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
                               color: Colors.blue.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(10),
@@ -190,7 +205,8 @@ class AdvertCard extends StatelessWidget {
                               children: [
                                 // Kullanıcı rankını göster
                                 Builder(builder: (context) {
-                                  final rank = AchievementService().getUserRankFromXp(customer.totalXp);
+                                  final rank = AchievementService()
+                                      .getUserRankFromXp(customer.totalXp);
                                   return Text(
                                     "${rank.icon} ${AchievementService().getLocalizedRankTitle(rank, context)}",
                                     style: const TextStyle(
@@ -216,7 +232,8 @@ class AdvertCard extends StatelessWidget {
                           ),
                           Text(
                             DateFormat('dd/MM/yyyy').format(advert.createdAt),
-                            style: const TextStyle(fontSize: 12, color: Colors.grey),
+                            style: const TextStyle(
+                                fontSize: 12, color: Colors.grey),
                           ),
                         ],
                       ),
@@ -238,11 +255,14 @@ class AdvertCard extends StatelessWidget {
                       text: TextSpan(
                         children: [
                           const WidgetSpan(
-                            child: Icon(Icons.location_on_outlined, size: 12, color: Colors.blue),
+                            child: Icon(Icons.location_on_outlined,
+                                size: 12, color: Colors.blue),
                           ),
                           TextSpan(
-                            text: ' ${advert.location.displayStringWithDistance(currentCustomer.location!)}',
-                            style: const TextStyle(fontSize: 9, color: Colors.grey),
+                            text:
+                                ' ${advert.location.displayStringWithDistance(currentCustomer.location!)}',
+                            style: const TextStyle(
+                                fontSize: 9, color: Colors.grey),
                           ),
                         ],
                       ),
@@ -255,11 +275,14 @@ class AdvertCard extends StatelessWidget {
                     text: TextSpan(
                       children: [
                         const WidgetSpan(
-                          child: Icon(Icons.calendar_month_outlined, size: 12, color: Colors.blue),
+                          child: Icon(Icons.calendar_month_outlined,
+                              size: 12, color: Colors.blue),
                         ),
                         TextSpan(
-                          text: ' ${DateFormat('dd/MM/yyyy').format(advert.startEventDate)} - ${DateFormat('HH:mm').format(advert.startEventDate)}',
-                          style: const TextStyle(fontSize: 9, color: Colors.grey),
+                          text:
+                              ' ${DateFormat('dd/MM/yyyy').format(advert.startEventDate)} - ${DateFormat('HH:mm').format(advert.startEventDate)}',
+                          style:
+                              const TextStyle(fontSize: 9, color: Colors.grey),
                         ),
                       ],
                     ),
@@ -302,7 +325,9 @@ class AdvertCard extends StatelessWidget {
                   advert.description,
                   style: const TextStyle(fontSize: 12),
                   maxLines: showFullDescription.value ? null : 5,
-                  overflow: showFullDescription.value ? TextOverflow.visible : TextOverflow.ellipsis,
+                  overflow: showFullDescription.value
+                      ? TextOverflow.visible
+                      : TextOverflow.ellipsis,
                 ),
 
                 // Açıklama 5 satırdan uzunsa "Devamını Gör" butonu göster
@@ -316,7 +341,9 @@ class AdvertCard extends StatelessWidget {
                     child: Padding(
                       padding: const EdgeInsets.only(top: 4),
                       child: Text(
-                        showFullDescription.value ? context.tr('show_less') : context.tr('show_more'),
+                        showFullDescription.value
+                            ? context.tr('show_less')
+                            : context.tr('show_more'),
                         style: TextStyle(
                           color: Theme.of(context).primaryColor,
                           fontWeight: FontWeight.bold,
@@ -365,7 +392,8 @@ class AdvertCard extends StatelessWidget {
   }
 
   // Aksiyon butonlarını gösteren widget
-  Widget _buildActionButtons(BuildContext context, Customer currentCustomer, ChatService chatsService) {
+  Widget _buildActionButtons(BuildContext context, Customer currentCustomer,
+      ChatService chatsService) {
     // Kullanıcının kendi ilanı için butonlar
     if (isUserAdvert) {
       return Container(
@@ -374,12 +402,25 @@ class AdvertCard extends StatelessWidget {
           children: [
             Expanded(
               flex: 3,
-              child: _buildButton(context.tr('likers'), Icons.visibility_outlined, onSeeLikersTap ?? () {}),
+              child: _buildButton(context.tr('likers'),
+                  Icons.visibility_outlined, onSeeLikersTap ?? () {}),
             ),
             const SizedBox(width: 12),
             Expanded(
               flex: 2,
-              child: _buildButton(context.tr('delete'), Icons.delete_outlined, onDeleteTap ?? () {}, isDelete: true),
+              child: _buildButton(context.tr('delete'), Icons.delete_outlined,
+                  onDeleteTap ?? () {},
+                  isDelete: true),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              flex: 2,
+              child: _buildButton(
+                context.tr('join_request'),
+                Icons.person_add_alt_1_outlined,
+                onSeeJoinRequestsTap ?? () {},
+                compactMode: true,
+              ),
             ),
           ],
         ),
@@ -412,7 +453,26 @@ class AdvertCard extends StatelessWidget {
                   child: _buildButton(
                     context.tr('message'),
                     Icons.message_outlined,
-                    () => _handleMessageTap(context, currentCustomer, chatsService),
+                    () => _handleMessageTap(
+                        context, currentCustomer, chatsService),
+                    compactMode: true,
+                  ),
+                ),
+                if (!isMyLikes) const SizedBox(width: 4),
+                Expanded(
+                  flex: 3,
+                  child: _buildButton(
+                    isJoinRequestAccepted
+                        ? context.tr('joined')
+                        : isJoinRequestSent
+                            ? context.tr('waiting')
+                            : context.tr('join'),
+                    isJoinRequestAccepted
+                        ? Icons.check_circle_outline
+                        : isJoinRequestSent
+                            ? Icons.schedule_outlined
+                            : Icons.person_add_alt_1_outlined,
+                    !isJoinRequestAccepted ? onJoinRequestTap ?? () {} : () {},
                     compactMode: true,
                   ),
                 ),
@@ -436,7 +496,8 @@ class AdvertCard extends StatelessWidget {
   }
 
   // Mesaj gönderme işlemini handle eden metod
-  void _handleMessageTap(BuildContext context, Customer currentCustomer, ChatService chatsService) async {
+  void _handleMessageTap(BuildContext context, Customer currentCustomer,
+      ChatService chatsService) async {
     final userId = currentCustomer.userID;
     if (userId == null) return;
 
@@ -446,7 +507,8 @@ class AdvertCard extends StatelessWidget {
     );
 
     if (context.mounted) {
-      context.push('/chats/$chatId?otherId=${advert.creatorUserID}&currentId=$userId');
+      context.push(
+          '/chats/$chatId?otherId=${advert.creatorUserID}&currentId=$userId');
     }
   }
 
@@ -457,7 +519,8 @@ class AdvertCard extends StatelessWidget {
     final reportService = ReportService();
 
     // Kullanıcının engellenip engellenmediğini kontrol et
-    final bool isBlocked = currentUser != null && _isUserBlocked(currentUser, advert.creatorUserID);
+    final bool isBlocked = currentUser != null &&
+        _isUserBlocked(currentUser, advert.creatorUserID);
 
     showModalBottomSheet(
       context: context,
@@ -487,21 +550,26 @@ class AdvertCard extends StatelessWidget {
                 } catch (e) {
                   debugPrint('İlan şikayet edilirken hata: ${e.toString()}');
                   if (context.mounted) {
-                    ScaffoldMess.showErrorSnackBar(context.tr('error_occurred'));
+                    ScaffoldMess.showErrorSnackBar(
+                        context.tr('error_occurred'));
                   }
                 }
               },
             ),
             ListTile(
-              leading: Icon(isBlocked ? Icons.person_add : Icons.block, color: isBlocked ? Colors.green : Colors.orange),
-              title: Text(isBlocked ? context.tr('unblock_user') : context.tr('block_user')),
+              leading: Icon(isBlocked ? Icons.person_add : Icons.block,
+                  color: isBlocked ? Colors.green : Colors.orange),
+              title: Text(isBlocked
+                  ? context.tr('unblock_user')
+                  : context.tr('block_user')),
               onTap: () async {
                 Navigator.pop(context);
 
                 try {
                   // Kullanıcı modelini güncelle
                   if (currentUser != null && currentUser.userID != null) {
-                    final updatedBlockList = List<String>.from(currentUser.blockUsers ?? []);
+                    final updatedBlockList =
+                        List<String>.from(currentUser.blockUsers ?? []);
 
                     if (isBlocked) {
                       // Engeli kaldır
@@ -521,19 +589,25 @@ class AdvertCard extends StatelessWidget {
 
                     // Firestore'da güncelle
                     if (isBlocked) {
-                      await reportService.unblockUser(advert.creatorUserID, currentUserId: currentUser.userID!);
+                      await reportService.unblockUser(advert.creatorUserID,
+                          currentUserId: currentUser.userID!);
                     } else {
-                      await reportService.blockUser(advert.creatorUserID, currentUserId: currentUser.userID!);
+                      await reportService.blockUser(advert.creatorUserID,
+                          currentUserId: currentUser.userID!);
                     }
                   }
 
                   if (context.mounted) {
-                    ScaffoldMess.showSuccessSnackBar(isBlocked ? context.tr('user_unblocked') : context.tr('user_blocked'));
+                    ScaffoldMess.showSuccessSnackBar(isBlocked
+                        ? context.tr('user_unblocked')
+                        : context.tr('user_blocked'));
                   }
                 } catch (e) {
-                  debugPrint('Kullanıcı engelleme/engel kaldırma işleminde hata: ${e.toString()}');
+                  debugPrint(
+                      'Kullanıcı engelleme/engel kaldırma işleminde hata: ${e.toString()}');
                   if (context.mounted) {
-                    ScaffoldMess.showErrorSnackBar(context.tr('error_occurred'));
+                    ScaffoldMess.showErrorSnackBar(
+                        context.tr('error_occurred'));
                   }
                 }
               },
@@ -593,7 +667,9 @@ class AdvertCard extends StatelessWidget {
       child: TextButton.icon(
         onPressed: onPressed,
         style: TextButton.styleFrom(
-          padding: compactMode ? const EdgeInsets.symmetric(horizontal: 6) : const EdgeInsets.symmetric(horizontal: 8),
+          padding: compactMode
+              ? const EdgeInsets.symmetric(horizontal: 6)
+              : const EdgeInsets.symmetric(horizontal: 8),
         ),
         icon: Row(
           mainAxisSize: MainAxisSize.min,

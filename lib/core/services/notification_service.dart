@@ -15,12 +15,14 @@ class NotificationService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   // Flutter Local Notifications için plugin tanımla
-  final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
 
   // Bildirim kanalı ID'si
   static const String _channelId = 'high_importance_channel';
   static const String _channelName = 'Yüksek Öncelikli Bildirimler';
-  static const String _channelDescription = 'Bu kanal önemli bildirimler için kullanılır.';
+  static const String _channelDescription =
+      'Bu kanal önemli bildirimler için kullanılır.';
 
   // Servisi başlatma metodu
   Future<void> initialize() async {
@@ -45,22 +47,26 @@ class NotificationService {
   Future<void> _createHighPriorityChannel() async {
     if (Platform.isAndroid) {
       try {
-        debugPrint('📢 Android için yüksek öncelikli bildirim kanalı oluşturuluyor...');
+        debugPrint(
+            '📢 Android için yüksek öncelikli bildirim kanalı oluşturuluyor...');
 
         // Android bildirim kanalını tanımla
         const AndroidNotificationChannel channel = AndroidNotificationChannel(
           _channelId, // id
           _channelName, // title
           description: _channelDescription, // description
-          importance: Importance.max, // Yüksek öncelikli kanal (heads-up notification)
+          importance:
+              Importance.max, // Yüksek öncelikli kanal (heads-up notification)
         );
 
         // Kanalı oluştur (eğer varsa günceller)
         await _flutterLocalNotificationsPlugin
-            .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+            .resolvePlatformSpecificImplementation<
+                AndroidFlutterLocalNotificationsPlugin>()
             ?.createNotificationChannel(channel);
 
-        debugPrint('📢 Android için yüksek öncelikli bildirim kanalı oluşturuldu!');
+        debugPrint(
+            '📢 Android için yüksek öncelikli bildirim kanalı oluşturuldu!');
 
         // Not: AndroidManifest.xml dosyasına da aşağıdaki meta-data'yı eklemen gerekiyor:
         // <meta-data
@@ -78,17 +84,20 @@ class NotificationService {
   // Flutter Local Notifications'ı başlat
   Future<void> _initializeLocalNotifications() async {
     // Bildirim ikon ayarları
-    const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher'); // Android icon
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/ic_launcher'); // Android icon
 
     // iOS bildirim ayarları
-    const DarwinInitializationSettings initializationSettingsIOS = DarwinInitializationSettings(
+    const DarwinInitializationSettings initializationSettingsIOS =
+        DarwinInitializationSettings(
       requestAlertPermission: false, // İzinleri FCM ile alacağız
       requestBadgePermission: false,
       requestSoundPermission: false,
     );
 
     // Tüm platformlar için başlatma ayarları
-    const InitializationSettings initializationSettings = InitializationSettings(
+    const InitializationSettings initializationSettings =
+        InitializationSettings(
       android: initializationSettingsAndroid,
       iOS: initializationSettingsIOS,
     );
@@ -142,7 +151,8 @@ class NotificationService {
   Future<void> _checkFcmToken() async {
     try {
       final token = await _firebaseMessaging.getToken();
-      debugPrint('📢 FCM Token: ${token?.substring(0, 20)}... (ilk 20 karakter)');
+      debugPrint(
+          '📢 FCM Token: ${token?.substring(0, 20)}... (ilk 20 karakter)');
     } catch (e) {
       debugPrint('📢 Token kontrol hatası: $e');
     }
@@ -172,8 +182,10 @@ class NotificationService {
     // Ön planda bildirim işleme
     FirebaseMessaging.onMessage.listen((message) {
       debugPrint('📢 FCM onMessage tetiklendi!');
-      debugPrint('📢 Mesaj bilgileri: messageId=${message.messageId}, senderId=${message.senderId}');
-      debugPrint('📢 Bildirim: ${message.notification?.title ?? "başlık yok"} - ${message.notification?.body ?? "içerik yok"}');
+      debugPrint(
+          '📢 Mesaj bilgileri: messageId=${message.messageId}, senderId=${message.senderId}');
+      debugPrint(
+          '📢 Bildirim: ${message.notification?.title ?? "başlık yok"} - ${message.notification?.body ?? "içerik yok"}');
       debugPrint('📢 Data: ${message.data}');
 
       // Ön plandayken bildirim geldiği an kaydet
@@ -205,7 +217,8 @@ class NotificationService {
       debugPrint('📢 Mevcut bildirim izni: ${settings.authorizationStatus}');
 
       if (settings.authorizationStatus != AuthorizationStatus.authorized) {
-        debugPrint('📢 Bildirim izni eksik veya kısıtlı, yeniden izin isteniyor...');
+        debugPrint(
+            '📢 Bildirim izni eksik veya kısıtlı, yeniden izin isteniyor...');
         final newSettings = await _firebaseMessaging.requestPermission(
           alert: true,
           badge: true,
@@ -224,7 +237,8 @@ class NotificationService {
   // İlk açılıştaki bildirimi kontrol et
   Future<void> _getInitialMessage() async {
     try {
-      RemoteMessage? initialMessage = await FirebaseMessaging.instance.getInitialMessage();
+      RemoteMessage? initialMessage =
+          await FirebaseMessaging.instance.getInitialMessage();
       if (initialMessage != null) {
         debugPrint('📢 Uygulama bildirimden açıldı!');
 
@@ -242,8 +256,9 @@ class NotificationService {
   // Bildirimi yerel depolamaya kaydet
   void _saveNotification(RemoteMessage message) {
     try {
-      final NotificationType notificationType =
-          message.data['type'] != null ? NotificationType.values.byName(message.data['type']) : NotificationType.message;
+      final NotificationType notificationType = message.data['type'] != null
+          ? NotificationType.values.byName(message.data['type'])
+          : NotificationType.message;
 
       // Mesaj tipinde bildirimleri kaydetme, diğerlerini kaydet
       if (notificationType != NotificationType.message) {
@@ -265,9 +280,11 @@ class NotificationService {
   // Bildirim için yönlendirme yap
   void _navigateForNotification(RemoteMessage message) {
     try {
-      final NotificationType notificationType =
-          message.data['type'] != null ? NotificationType.values.byName(message.data['type']) : NotificationType.message;
-      debugPrint('📢 Bildirime tıklandı, yönlendirme yapılıyor: $notificationType');
+      final NotificationType notificationType = message.data['type'] != null
+          ? NotificationType.values.byName(message.data['type'])
+          : NotificationType.message;
+      debugPrint(
+          '📢 Bildirime tıklandı, yönlendirme yapılıyor: $notificationType');
       _navigateBasedOnNotificationType(notificationType, message.data);
     } catch (e) {
       debugPrint('📢 Bildirim yönlendirme hatası: $e');
@@ -275,14 +292,16 @@ class NotificationService {
   }
 
   // Bildirim türüne göre yönlendirme metodu
-  void _navigateBasedOnNotificationType(NotificationType notificationType, Map<String, dynamic> data) {
+  void _navigateBasedOnNotificationType(
+      NotificationType notificationType, Map<String, dynamic> data) {
     final chatId = data['chatId'];
     final senderId = data['senderId'];
     final receiverId = data['receiverId'];
 
     switch (notificationType) {
       case NotificationType.message:
-        AppRouter.router.push('/chats/$chatId?otherId=$senderId&currentId=$receiverId');
+        AppRouter.router
+            .push('/chats/$chatId?otherId=$senderId&currentId=$receiverId');
         break;
 
       case NotificationType.likeAdvert:
@@ -299,6 +318,10 @@ class NotificationService {
 
       case NotificationType.comment:
         AppRouter.router.pushNamed(Routes.comment);
+        break;
+
+      case NotificationType.joinRequest:
+        AppRouter.router.pushNamed(Routes.myAdverts);
         break;
 
       default:
@@ -366,7 +389,9 @@ class NotificationService {
       }
 
       // Bildirim tipini belirle
-      final notificationType = data['type'] != null ? NotificationType.values.byName(data['type']) : NotificationType.message;
+      final notificationType = data['type'] != null
+          ? NotificationType.values.byName(data['type'])
+          : NotificationType.message;
 
       // Kullanıcıyı bildirim tipine göre yönlendir
       _navigateBasedOnNotificationType(notificationType, data);

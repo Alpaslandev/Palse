@@ -42,7 +42,8 @@ class _FilterViewState extends State<FilterView> {
 
     // Tüm ilanları çek (filtrelerimizi backendde uygulayarak)
     final advertService = AdvertService();
-    List<Advert> allAdverts = await advertService.fetchAdvertsByFiltering(gender: _selectedGender?.name, category: _selectedCategory?.name);
+    List<Advert> allAdverts = await advertService.fetchAdvertsByFiltering(
+        gender: _selectedGender?.name, category: _selectedCategory?.name);
 
     // Orijinal listeyi kaydet (sıralamanın bozulmaması için)
     List<Advert> resultAdverts = List.from(allAdverts);
@@ -71,16 +72,22 @@ class _FilterViewState extends State<FilterView> {
           }
 
           // Mesafeyi hesapla
-          final distance = calculateDistance(latitude1: userLat, longitude1: userLng, latitude2: advertLat, longitude2: advertLng);
+          final distance = calculateDistance(
+              latitude1: userLat,
+              longitude1: userLng,
+              latitude2: advertLat,
+              longitude2: advertLng);
 
           // Debug mesajı
-          debugPrint('İlan ID: ${advert.advertID}, Mesafe: $distance km, Filtreleniyor mu: ${distance <= _distance!}');
+          debugPrint(
+              'İlan ID: ${advert.advertID}, Mesafe: $distance km, Filtreleniyor mu: ${distance <= _distance!}');
 
           // Mesafe filtresine göre kontrol
           return distance <= _distance!;
         }).toList();
 
-        debugPrint('Mesafe filtrelemesi sonucu kalan ilan sayısı: ${resultAdverts.length}');
+        debugPrint(
+            'Mesafe filtrelemesi sonucu kalan ilan sayısı: ${resultAdverts.length}');
       } else {
         debugPrint('Kullanıcı konumu bulunamadı, mesafe filtresi uygulanamadı');
       }
@@ -148,8 +155,10 @@ class _FilterViewState extends State<FilterView> {
             ),
             items: [
               DropdownMenuItem(value: null, child: Text(context.tr('all'))),
-              DropdownMenuItem(value: Gender.male, child: Text(context.tr('male'))),
-              DropdownMenuItem(value: Gender.female, child: Text(context.tr('female')))
+              DropdownMenuItem(
+                  value: Gender.male, child: Text(context.tr('male'))),
+              DropdownMenuItem(
+                  value: Gender.female, child: Text(context.tr('female')))
             ],
             onChanged: (value) {
               setState(() {
@@ -166,7 +175,8 @@ class _FilterViewState extends State<FilterView> {
               border: const OutlineInputBorder(),
             ),
             items: [
-              DropdownMenuItem<Categories?>(value: null, child: Text(context.tr('all'))),
+              DropdownMenuItem<Categories?>(
+                  value: null, child: Text(context.tr('all'))),
               ...Categories.values.map((category) {
                 return DropdownMenuItem<Categories?>(
                   value: category,
@@ -192,14 +202,17 @@ class _FilterViewState extends State<FilterView> {
     );
   }
 
-  Widget _filteredList({required List<Advert> adverts, required BuildContext context}) {
+  Widget _filteredList(
+      {required List<Advert> adverts, required BuildContext context}) {
     return ListView.builder(
       itemCount: adverts.length,
       itemBuilder: (context, index) {
         final advert = adverts[index];
         return AdvertCard(
           advert: advert,
-          isLiked: _currentUser != null ? advert.likers.contains(_currentUser?.userID) : false,
+          isLiked: _currentUser != null
+              ? advert.likers.contains(_currentUser?.userID)
+              : false,
           onLikeTap: _currentUser != null
               ? () async {
                   final userId = _currentUser?.userID;
@@ -207,9 +220,15 @@ class _FilterViewState extends State<FilterView> {
 
                   final advertService = AdvertService();
                   if (advert.likers.contains(userId)) {
-                    await advertService.unlikeAdvert(advert.advertID ?? '', userId);
+                    await advertService.unlikeAdvert(
+                      advertId: advert.advertID ?? '',
+                      userId: userId,
+                    );
                   } else {
-                    await advertService.likeAdvert(advert.advertID ?? '', userId, advert.creatorUserID);
+                    await advertService.likeAdvert(
+                      advertId: advert.advertID ?? '',
+                      userId: userId,
+                    );
                   }
 
                   // Filtreleri yeniden uygula

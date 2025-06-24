@@ -8,5 +8,6 @@ enum NotificationType {
   dailyTask,
   dailyTaskCompleted,
   welcomeNotification,
-  messageFromOldFriend
+  messageFromOldFriend,
+  joinRequest
 }

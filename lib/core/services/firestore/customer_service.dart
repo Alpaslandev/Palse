@@ -9,7 +9,10 @@ class CustomerService {
 
   Future<void> updateCustomerSubscription(String uuid, bool isPremium) async {
     try {
-      await _firestore.collection("customers").doc(uuid).update({'isPremium': isPremium});
+      await _firestore
+          .collection("customers")
+          .doc(uuid)
+          .update({'isPremium': isPremium});
     } catch (e) {
       debugPrint('Kullanıcı abonelik güncellenirken hata: $e');
     }
@@ -33,18 +36,26 @@ class CustomerService {
     }
   }
 
-  Future<void> updateCustomerCategories(String uuid, List<Categories> categories) async {
+  Future<void> updateCustomerCategories(
+      String uuid, List<Categories> categories) async {
     try {
-      await _firestore.collection("customers").doc(uuid).update({'favoriteCategories': categories.map((category) => category.name).toList()});
+      await _firestore.collection("customers").doc(uuid).update({
+        'favoriteCategories':
+            categories.map((category) => category.name).toList()
+      });
     } catch (e) {
       debugPrint('Kullanıcı kategorileri güncellenirken hata: $e');
       throw Exception('Kullanıcı kategorileri güncellenemedi: $e');
     }
   }
 
-  Future<void> updateCustomerVerifiedAndPhone(String uuid, bool verified, String phone) async {
+  Future<void> updateCustomerVerifiedAndPhone(
+      String uuid, bool verified, String phone) async {
     try {
-      await _firestore.collection("customers").doc(uuid).update({'verification': verified, 'phoneNumber': phone});
+      await _firestore
+          .collection("customers")
+          .doc(uuid)
+          .update({'verification': verified, 'phoneNumber': phone});
     } catch (e) {
       debugPrint('Kullanıcı doğrulama güncellenirken hata: $e');
       throw Exception('Kullanıcı doğrulama güncellenemedi: $e');
@@ -54,8 +65,11 @@ class CustomerService {
   // Firestore'dan kullanıcı verisini çeker
   Future<Customer?> fetchUserFromFirestore(String uid) async {
     try {
-      final userDocument = await _firestore.collection("customers").doc(uid).get();
-      return userDocument.exists ? Customer.fromJson(userDocument.data()!, uid) : null; // Kullanıcı verisi varsa Customer nesnesi döner
+      final userDocument =
+          await _firestore.collection("customers").doc(uid).get();
+      return userDocument.exists
+          ? Customer.fromJson(userDocument.data()!, uid)
+          : null; // Kullanıcı verisi varsa Customer nesnesi döner
     } catch (e) {
       debugPrint(e.toString());
       return null;
@@ -65,7 +79,8 @@ class CustomerService {
   // Kullanıcı bilgilerini getirir - getCustomer metodu
   Future<Customer?> getCustomer(String userId) async {
     try {
-      final userDocument = await _firestore.collection("customers").doc(userId).get();
+      final userDocument =
+          await _firestore.collection("customers").doc(userId).get();
       if (userDocument.exists) {
         return Customer.fromJson(userDocument.data()!, userId);
       }
@@ -74,26 +89,6 @@ class CustomerService {
     } catch (e) {
       debugPrint('Kullanıcı bilgileri getirme hatası: $e');
       return null;
-    }
-  }
-
-  Future<void> likeAdvert(String advertId, String userId) async {
-    try {
-      await _firestore.collection('customers').doc(userId).update({
-        'favoriteAdverts': FieldValue.arrayUnion([advertId])
-      });
-    } catch (e) {
-      debugPrint('İlan beğenme hatası: $e');
-    }
-  }
-
-  Future<void> unlikeAdvert(String advertId, String userId) async {
-    try {
-      await _firestore.collection('customers').doc(userId).update({
-        'favoriteAdverts': FieldValue.arrayRemove([advertId])
-      });
-    } catch (e) {
-      debugPrint('İlan beğenme hatası: $e');
     }
   }
 
@@ -113,7 +108,8 @@ class CustomerService {
     try {
       // Mevcut tüm ilan ID'lerini al
       final advertsSnapshot = await _firestore.collection('events').get();
-      final existingAdvertIds = advertsSnapshot.docs.map((doc) => doc.id).toSet();
+      final existingAdvertIds =
+          advertsSnapshot.docs.map((doc) => doc.id).toSet();
 
       // Tüm kullanıcıları çek
       final customersSnapshot = await _firestore.collection('customers').get();
@@ -127,14 +123,19 @@ class CustomerService {
 
         // Kullanıcının ilan listelerini al
         List<String> adverts = List<String>.from(data['adverts'] ?? []);
-        List<String> favoriteAdverts = List<String>.from(data['favoriteAdverts'] ?? []);
+        List<String> favoriteAdverts =
+            List<String>.from(data['favoriteAdverts'] ?? []);
 
         // Silinmiş ilanları filtrele
-        final newAdverts = adverts.where((id) => existingAdvertIds.contains(id)).toList();
-        final newFavorites = favoriteAdverts.where((id) => existingAdvertIds.contains(id)).toList();
+        final newAdverts =
+            adverts.where((id) => existingAdvertIds.contains(id)).toList();
+        final newFavorites = favoriteAdverts
+            .where((id) => existingAdvertIds.contains(id))
+            .toList();
 
         // Eğer herhangi bir değişiklik varsa güncelle
-        if (adverts.length != newAdverts.length || favoriteAdverts.length != newFavorites.length) {
+        if (adverts.length != newAdverts.length ||
+            favoriteAdverts.length != newFavorites.length) {
           batch.update(customerDoc.reference, {
             'adverts': newAdverts,
             'favoriteAdverts': newFavorites,
@@ -154,11 +155,10 @@ class CustomerService {
 
   // Kullanıcı bilgilerini stream olarak al
   Stream<Customer?> getUserStream(String userId) {
-    return _firestore
-        .collection('customers')
-        .doc(userId)
-        .snapshots()
-        .map((snapshot) => snapshot.data() != null ? Customer.fromJson(snapshot.data()!, userId) : null);
+    return _firestore.collection('customers').doc(userId).snapshots().map(
+        (snapshot) => snapshot.data() != null
+            ? Customer.fromJson(snapshot.data()!, userId)
+            : null);
   }
 
   // Firestore verilerini stream olarak dinleme
@@ -168,7 +168,10 @@ class CustomerService {
 
   Future<void> updateUserLastSeen(String userId) async {
     try {
-      await _firestore.collection('customers').doc(userId).update({'lastSeen': Timestamp.now()});
+      await _firestore
+          .collection('customers')
+          .doc(userId)
+          .update({'lastSeen': Timestamp.now()});
     } catch (e) {
       debugPrint('Kullanıcı görünümü güncellenirken hata: $e');
     }
@@ -176,7 +179,10 @@ class CustomerService {
 
   Future<void> resetFcmToken(String userId) async {
     try {
-      await _firestore.collection('customers').doc(userId).update({'fcmToken': null});
+      await _firestore
+          .collection('customers')
+          .doc(userId)
+          .update({'fcmToken': null});
     } catch (e) {
       debugPrint('Kullanıcı görünümü güncellenirken hata: $e');
     }
@@ -237,7 +243,8 @@ class CustomerService {
   Future<void> deleteChat(String userId, String otherUserId) async {
     try {
       // Kullanıcı belgesini al
-      final userDoc = await _firestore.collection('customers').doc(userId).get();
+      final userDoc =
+          await _firestore.collection('customers').doc(userId).get();
       if (!userDoc.exists) {
         throw Exception('Kullanıcı bulunamadı');
       }
@@ -249,14 +256,18 @@ class CustomerService {
       }
 
       // chatMap'ten ilgili sohbeti çıkar
-      final Map<String, dynamic> chatMap = Map<String, dynamic>.from(userData['chatMap']);
+      final Map<String, dynamic> chatMap =
+          Map<String, dynamic>.from(userData['chatMap']);
 
       // Doğrudan key (otherUserId) kullanarak sohbeti sil
       if (chatMap.containsKey(otherUserId)) {
         chatMap.remove(otherUserId);
 
         // Firestore'u güncelle
-        await _firestore.collection('customers').doc(userId).update({'chatMap': chatMap});
+        await _firestore
+            .collection('customers')
+            .doc(userId)
+            .update({'chatMap': chatMap});
 
         debugPrint('Sohbet başarıyla silindi: $otherUserId');
       } else {

@@ -20,13 +20,15 @@ class MyAdvertView extends StatefulWidget {
   State<MyAdvertView> createState() => _MyAdvertViewState();
 }
 
-class _MyAdvertViewState extends State<MyAdvertView> with TickerProviderStateMixin {
+class _MyAdvertViewState extends State<MyAdvertView>
+    with TickerProviderStateMixin {
   late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this, initialIndex: widget.initialTabIndex);
+    _tabController = TabController(
+        length: 3, vsync: this, initialIndex: widget.initialTabIndex);
   }
 
   @override
@@ -88,12 +90,27 @@ class _MyAdvertViewState extends State<MyAdvertView> with TickerProviderStateMix
                                   isUserAdvert: true,
                                   onDeleteTap: () async {
                                     debugPrint('sil');
-                                    await viewModel.deleteAdvert(advertId: advert.advertID ?? '', userId: authProvider.user?.userID ?? '');
+                                    await viewModel.deleteAdvert(
+                                        advertId: advert.advertID ?? '',
+                                        userId:
+                                            authProvider.user?.userID ?? '');
                                     if (!context.mounted) return;
-                                    ScaffoldMess.showSuccessSnackBar(context.tr('advert_deleted_successfully'));
+                                    ScaffoldMess.showSuccessSnackBar(context
+                                        .tr('advert_deleted_successfully'));
                                   },
                                   onSeeLikersTap: () {
-                                    context.pushNamed(Routes.seeLikers, extra: advert.likers);
+                                    context.pushNamed(Routes.userList, extra: {
+                                      'users': advert.likers,
+                                      'isLikers': true,
+                                      'advertId': advert.advertID,
+                                    });
+                                  },
+                                  onSeeJoinRequestsTap: () {
+                                    context.pushNamed(Routes.userList, extra: {
+                                      'users': advert.joinRequestIds,
+                                      'isLikers': false,
+                                      'advertId': advert.advertID,
+                                    });
                                   },
                                 );
                               },
@@ -104,17 +121,22 @@ class _MyAdvertViewState extends State<MyAdvertView> with TickerProviderStateMix
                           : ListView.builder(
                               itemCount: viewModel.favorites.length,
                               itemBuilder: (context, index) {
-                                debugPrint(viewModel.favorites.length.toString());
+                                debugPrint(
+                                    viewModel.favorites.length.toString());
                                 final advert = viewModel.favorites[index];
-                                final customer = viewModel.getCustomerForAdvert(advert);
+                                final customer =
+                                    viewModel.getCustomerForAdvert(advert);
 
                                 if (advert == null) return const SizedBox();
 
                                 return AdvertCard(
                                   advert: advert,
                                   isMyLikes: true,
-                                  isLiked: advert.likers.contains(authProvider.user?.userID ?? ''),
-                                  onProfileTap: () => context.pushNamed(Routes.friendProfile, extra: customer?.userID),
+                                  isLiked: advert.likers.contains(
+                                      authProvider.user?.userID ?? ''),
+                                  onProfileTap: () => context.pushNamed(
+                                      Routes.friendProfile,
+                                      extra: customer?.userID),
                                   onMessageTap: () => debugPrint('mesaj'),
                                 );
                               },
@@ -144,7 +166,8 @@ class _MyAdvertViewState extends State<MyAdvertView> with TickerProviderStateMix
           ? _buildEmptyAdvert()
           : RecentlyViewer(
               viewers: authProvider.user?.profileViewers ?? [],
-              onProfileTap: () => context.pushNamed(Routes.friendProfile, extra: authProvider.user?.userID),
+              onProfileTap: () => context.pushNamed(Routes.friendProfile,
+                  extra: authProvider.user?.userID),
             ),
     );
   }

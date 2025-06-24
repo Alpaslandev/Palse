@@ -11,7 +11,7 @@ import 'package:palseapp/core/provider/ads_provider.dart';
 import 'package:palseapp/core/widgets/faq_page.dart';
 import 'package:palseapp/core/widgets/landing_view.dart';
 import 'package:palseapp/core/widgets/notification_view.dart';
-import 'package:palseapp/core/widgets/see_likers.dart';
+import 'package:palseapp/features/my_advert/view/widgets/user_list_view.dart';
 import 'package:palseapp/features/achievement/achievement_test_page.dart';
 import 'package:palseapp/features/auth/views/login_view.dart';
 import 'package:palseapp/features/categories/view/categories_view.dart';
@@ -223,13 +223,15 @@ class AppRouter {
           pageBuilder: (context, state) => CustomTransitionPage(
             key: state.pageKey,
             child: const PaywallScreen(),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
               // Alttan yukarı doğru kaydırma animasyonu
               const begin = Offset(0, 1); // Başlangıç pozisyonu (alt)
               const end = Offset.zero; // Bitiş pozisyonu (üst)
               const curve = Curves.easeInOut;
 
-              var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+              var tween =
+                  Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
               return SlideTransition(
                 position: animation.drive(tween),
                 child: child,
@@ -247,9 +249,11 @@ class AppRouter {
               pageBuilder: (context, state) => CustomTransitionPage(
                 key: state.pageKey,
                 child: const HomeView(),
-                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                transitionsBuilder:
+                    (context, animation, secondaryAnimation, child) {
                   return FadeTransition(
-                    opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+                    opacity:
+                        CurveTween(curve: Curves.easeInOut).animate(animation),
                     child: child,
                   );
                 },
@@ -261,18 +265,27 @@ class AppRouter {
               pageBuilder: (context, state) => CustomTransitionPage(
                 key: state.pageKey,
                 child: const MyAdvertView(),
-                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                transitionsBuilder:
+                    (context, animation, secondaryAnimation, child) {
                   return FadeTransition(
-                    opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+                    opacity:
+                        CurveTween(curve: Curves.easeInOut).animate(animation),
                     child: child,
                   );
                 },
               ),
               routes: [
                 GoRoute(
-                  path: "/$seeLikers",
-                  name: seeLikers,
-                  builder: (context, state) => SeeLikersView(viewers: state.extra as List<String>? ?? []),
+                  path: "/$userList",
+                  name: userList,
+                  builder: (context, state) {
+                    final extra = state.extra as Map<String, dynamic>;
+                    return UserListView(
+                      users: extra['users'] as List<String>,
+                      isLikers: extra['isLikers'] as bool,
+                      advertId: extra['advertId'] as String?,
+                    );
+                  },
                 ),
               ],
             ),
@@ -281,10 +294,13 @@ class AppRouter {
               name: recentlyViewers,
               pageBuilder: (context, state) => CustomTransitionPage(
                 key: state.pageKey,
-                child: const MyAdvertView(initialTabIndex: 2), // 2 = Profilime Bakanlar tabı
-                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                child: const MyAdvertView(
+                    initialTabIndex: 2), // 2 = Profilime Bakanlar tabı
+                transitionsBuilder:
+                    (context, animation, secondaryAnimation, child) {
                   return FadeTransition(
-                    opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+                    opacity:
+                        CurveTween(curve: Curves.easeInOut).animate(animation),
                     child: child,
                   );
                 },
@@ -295,10 +311,13 @@ class AppRouter {
               name: byInterest,
               pageBuilder: (context, state) => CustomTransitionPage(
                 key: state.pageKey,
-                child: const HomeView(initialTabIndex: 1), // İlgi alanı-bazlı tab
-                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                child:
+                    const HomeView(initialTabIndex: 1), // İlgi alanı-bazlı tab
+                transitionsBuilder:
+                    (context, animation, secondaryAnimation, child) {
                   return FadeTransition(
-                    opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+                    opacity:
+                        CurveTween(curve: Curves.easeInOut).animate(animation),
                     child: child,
                   );
                 },
@@ -310,8 +329,12 @@ class AppRouter {
               pageBuilder: (context, state) => CustomTransitionPage(
                 key: state.pageKey,
                 child: const CategoriesView(),
-                transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                  return FadeTransition(opacity: CurveTween(curve: Curves.easeInOut).animate(animation), child: child);
+                transitionsBuilder:
+                    (context, animation, secondaryAnimation, child) {
+                  return FadeTransition(
+                      opacity: CurveTween(curve: Curves.easeInOut)
+                          .animate(animation),
+                      child: child);
                 },
               ),
             ),
@@ -321,9 +344,11 @@ class AppRouter {
               pageBuilder: (context, state) => CustomTransitionPage(
                 key: state.pageKey,
                 child: const ProfileView(),
-                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                transitionsBuilder:
+                    (context, animation, secondaryAnimation, child) {
                   return FadeTransition(
-                    opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+                    opacity:
+                        CurveTween(curve: Curves.easeInOut).animate(animation),
                     child: child,
                   );
                 },
@@ -350,12 +375,15 @@ class AppRouter {
       debugPrint('👤 Giriş Yapılmış: ${_authProvider.isAuthenticated}');
       debugPrint('👤 Firebase User: ${_authProvider.firebaseUser?.email}');
       debugPrint('👤 User: ${_authProvider.user?.userID}');
-      debugPrint('👤 Profil Kurulumu Tamamlanmış: ${_authProvider.isProfileSetupCompleted}');
-      debugPrint('👤 Firestore Verileri Yüklenmiş: ${_authProvider.isFirestoreDataLoaded}');
+      debugPrint(
+          '👤 Profil Kurulumu Tamamlanmış: ${_authProvider.isProfileSetupCompleted}');
+      debugPrint(
+          '👤 Firestore Verileri Yüklenmiş: ${_authProvider.isFirestoreDataLoaded}');
 
       final isSplashScreen = state.matchedLocation == '/$splash';
       final isAuthRoute = state.matchedLocation.startsWith('/$login');
-      final isUserSetupRoute = state.matchedLocation.startsWith('/$profileSetup');
+      final isUserSetupRoute =
+          state.matchedLocation.startsWith('/$profileSetup');
 
       // Loading durumunda redirect yok - Firestore verilerinin yüklenmesini bekle
       if (_authProvider.isLoading) {
@@ -396,11 +424,13 @@ class AppRouter {
       if (isAuthenticated && !isProfileSetup) {
         // Eğer zaten profil kurulum sayfasındaysa, orada kal
         if (isUserSetupRoute) {
-          debugPrint('👤 Kullanıcı zaten profil kurulum sayfasında, yönlendirme yok');
+          debugPrint(
+              '👤 Kullanıcı zaten profil kurulum sayfasında, yönlendirme yok');
           return null;
         }
         // Değilse profil kurulum sayfasına yönlendir
-        debugPrint('👤 Kullanıcı giriş yapmış ama profil kurulumu tamamlanmamış -> Profile Setup yönlendirmesi');
+        debugPrint(
+            '👤 Kullanıcı giriş yapmış ama profil kurulumu tamamlanmamış -> Profile Setup yönlendirmesi');
         return '/$profileSetup';
       }
 
@@ -408,7 +438,8 @@ class AppRouter {
       if (isAuthenticated && isProfileSetup) {
         // Eğer auth route veya profil kurulum veya splash screen sayfasındaysa, ana sayfaya yönlendir
         if (isAuthRoute || isUserSetupRoute || isSplashScreen) {
-          debugPrint('🏠 Kullanıcı giriş yapmış ve profil kurulumu tamamlanmış -> Home yönlendirmesi');
+          debugPrint(
+              '🏠 Kullanıcı giriş yapmış ve profil kurulumu tamamlanmış -> Home yönlendirmesi');
           return '/$home';
         }
       }
