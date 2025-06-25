@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/features/story/model/story_model.dart';
-import 'package:palseapp/core/routes/app_router.dart';
-import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/features/story/viewmodel/story_view_model.dart';
 import 'package:palseapp/features/story/widgets/story_viewers_sheet.dart';
@@ -31,7 +30,6 @@ class _StoryDisplayViewState extends State<StoryDisplayView>
   late PageController _pageController;
   late AnimationController _progressController;
   int _currentIndex = 0;
-  bool _isPaused = false;
 
   @override
   void initState() {
@@ -39,25 +37,23 @@ class _StoryDisplayViewState extends State<StoryDisplayView>
     _currentIndex = widget.initialIndex;
     _pageController = PageController(initialPage: widget.initialIndex);
 
-    // Progress animation controller - 5 saniye
     _progressController = AnimationController(
       duration: const Duration(seconds: 5),
       vsync: this,
     );
 
-    // initState içinde context.read kullanmak güvenlidir.
     final viewModel = context.read<StoryViewModel>();
     final authProvider = context.read<AuthProvider>();
 
-    // Widget oluşturulduktan hemen sonra ilk hikayeyi "görüldü" olarak işaretle.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _markAsViewed(viewModel, authProvider, widget.initialIndex);
-      _startTimer();
+      if (mounted) {
+        _markAsViewed(viewModel, authProvider, widget.initialIndex);
+        _startTimer();
+      }
     });
 
-    // Timer bittiğinde otomatik geçiş
     _progressController.addStatusListener((status) {
-      if (mounted && status == AnimationStatus.completed && !_isPaused) {
+      if (mounted && status == AnimationStatus.completed) {
         _nextStory();
       }
     });
@@ -65,10 +61,10 @@ class _StoryDisplayViewState extends State<StoryDisplayView>
 
   void _markAsViewed(
       StoryViewModel viewModel, AuthProvider authProvider, int index) {
+    if (index >= widget.stories.length) return;
     final story = widget.stories[index];
     final currentUserId = authProvider.user?.userID;
 
-    // Kullanıcı kendi hikayesini görüntülemiş sayılmaz.
     if (currentUserId != null && story.userId != currentUserId) {
       viewModel.markStoryAsViewed(
         storyId: story.id,
@@ -83,113 +79,75 @@ class _StoryDisplayViewState extends State<StoryDisplayView>
     final currentUserId = authProvider.user?.userID;
     if (currentUserId != null) {
       try {
-        // Silme işlemini başlat
         await viewModel.deleteStory(storyId: story.id, userId: currentUserId);
-
-        // Silme başarılı olursa ekranı kapat
-        if (mounted) {
-          context.pop();
-        }
+        if (mounted) context.pop();
       } catch (e) {
-        // Hata durumunda kullanıcıya bilgi ver
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Hikaye silinirken hata oluştu: $e'),
-              backgroundColor: Colors.red,
-            ),
+            SnackBar(content: Text('Hikaye silinirken hata oluştu: $e')),
           );
         }
       }
     }
   }
 
-  // Timer'ı başlatır
   void _startTimer() {
     if (!mounted || widget.isCurrentUserStory) return;
     _progressController.forward();
   }
 
-  // Timer'ı duraklatır
   void _pauseTimer() {
-    if (!mounted || _isPaused) return;
-    _isPaused = true;
+    if (!mounted) return;
     _progressController.stop();
   }
 
-  // Timer'ı devam ettirir
   void _resumeTimer() {
-    if (!mounted || !_isPaused) return;
-    _isPaused = false;
+    if (!mounted) return;
     _progressController.forward();
   }
 
-  // Sonraki hikayeye geçer
   void _nextStory() {
-    if (!mounted) return; // Widget dispose edilmişse işlem yapma
-
+    if (!mounted) return;
     if (_currentIndex < widget.stories.length - 1) {
-      _currentIndex++;
-      _progressController.reset();
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
-      _startTimer();
     } else {
-      // Son hikaye, ekranı kapat
-      if (mounted) {
-        context.pop();
-      }
+      context.pop();
     }
   }
 
-  // Önceki hikayeye geçer
   void _previousStory() {
+    if (!mounted) return;
     if (_currentIndex > 0) {
-      _currentIndex--;
-      _progressController.reset();
       _pageController.previousPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
-      _startTimer();
     }
   }
 
-  // Progress bar'ları oluşturur
   Widget _buildProgressBars() {
     return Row(
       children: List.generate(
         widget.stories.length,
         (index) => Expanded(
-          child: Container(
-            height: 3,
-            margin: const EdgeInsets.symmetric(horizontal: 1),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(2),
-              color: Colors.white.withValues(alpha: 0.3),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 1.5),
+            child: AnimatedBuilder(
+              animation: _progressController,
+              builder: (context, child) {
+                return LinearProgressIndicator(
+                  value: (index == _currentIndex)
+                      ? _progressController.value
+                      : (index < _currentIndex ? 1.0 : 0.0),
+                  backgroundColor: Colors.white.withValues(alpha: 0.5),
+                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                  borderRadius: BorderRadius.circular(2),
+                );
+              },
             ),
-            child: index == _currentIndex
-                ? AnimatedBuilder(
-                    animation: _progressController,
-                    builder: (context, child) {
-                      return LinearProgressIndicator(
-                        value: _progressController.value,
-                        backgroundColor: Colors.transparent,
-                        valueColor:
-                            const AlwaysStoppedAnimation<Color>(Colors.white),
-                        borderRadius: BorderRadius.circular(2),
-                      );
-                    },
-                  )
-                : LinearProgressIndicator(
-                    value: index < _currentIndex ? 1.0 : 0.0,
-                    backgroundColor: Colors.transparent,
-                    valueColor:
-                        const AlwaysStoppedAnimation<Color>(Colors.white),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
           ),
         ),
       ),
@@ -209,142 +167,98 @@ class _StoryDisplayViewState extends State<StoryDisplayView>
     final authProvider = context.read<AuthProvider>();
 
     return Scaffold(
-      body: GestureDetector(
-        onTapDown: (_) => _pauseTimer(),
-        onTapUp: (_) => _resumeTimer(),
-        onTapCancel: () => _resumeTimer(),
-        onLongPressStart: (_) => _pauseTimer(),
-        onLongPressEnd: (_) => _resumeTimer(),
-        child: Stack(
-          children: [
-            // Ana içerik
-            widget.isCurrentUserStory
-                ? _StoryPage(
-                    story: widget.stories[widget.initialIndex],
-                    onDelete: () => _deleteStory(
-                        viewModel, authProvider, widget.initialIndex),
-                  )
-                : PageView.builder(
-                    controller: _pageController,
-                    itemCount: widget.stories.length,
-                    onPageChanged: (index) {
-                      _currentIndex = index;
-                      _progressController.reset();
-                      _markAsViewed(viewModel, authProvider, index);
-                      _startTimer();
-                    },
-                    itemBuilder: (context, index) {
-                      return _StoryPage(
-                        story: widget.stories[index],
-                        onDelete: () =>
-                            _deleteStory(viewModel, authProvider, index),
-                      );
-                    },
-                  ),
-
-            // Progress bar (sadece başkalarının hikayeleri için)
-            if (!widget.isCurrentUserStory)
-              Positioned(
-                top: MediaQuery.of(context).padding.top + 2,
-                left: 8,
-                right: 8,
-                child: _buildProgressBars(),
-              ),
-
-            // Sol ve sağ touch alanları (sadece başkalarının hikayeleri için)
-            if (!widget.isCurrentUserStory)
-              Positioned.fill(
-                child: Row(
-                  children: [
-                    // Sol yarı - önceki hikaye
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: _previousStory,
-                        child: Container(color: Colors.transparent),
-                      ),
-                    ),
-                    // Sağ yarı - sonraki hikaye
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: _nextStory,
-                        child: Container(color: Colors.transparent),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-          ],
-        ),
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          PageView.builder(
+            controller: _pageController,
+            itemCount: widget.stories.length,
+            onPageChanged: (index) {
+              setState(() {
+                _currentIndex = index;
+              });
+              _progressController.reset();
+              _markAsViewed(viewModel, authProvider, index);
+              _startTimer();
+            },
+            itemBuilder: (context, index) {
+              return _StoryPage(
+                story: widget.stories[index],
+                isOwner:
+                    widget.stories[index].userId == authProvider.user?.userID,
+                onDelete: () => _deleteStory(viewModel, authProvider, index),
+                onNext: _nextStory,
+                onPrevious: _previousStory,
+                onPause: _pauseTimer,
+                onResume: _resumeTimer,
+                isSingleStory: widget.isCurrentUserStory,
+              );
+            },
+          ),
+          if (!widget.isCurrentUserStory)
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 10,
+              left: 12,
+              right: 12,
+              child: _buildProgressBars(),
+            ),
+        ],
       ),
     );
   }
 }
 
-// Tek bir hikayeyi gösteren sayfa widget'ı.
+// Tek bir hikayeyi ve tüm etkileşimlerini yöneten widget.
 class _StoryPage extends StatelessWidget {
   final StoryModel story;
+  final bool isOwner;
+  final bool isSingleStory;
   final VoidCallback? onDelete;
+  final VoidCallback onNext;
+  final VoidCallback onPrevious;
+  final VoidCallback onPause;
+  final VoidCallback onResume;
 
   const _StoryPage({
     required this.story,
+    required this.isOwner,
+    required this.isSingleStory,
     this.onDelete,
+    required this.onNext,
+    required this.onPrevious,
+    required this.onPause,
+    required this.onResume,
   });
 
   @override
   Widget build(BuildContext context) {
-    // AuthProvider'dan mevcut kullanıcı ID'sini alarak hikaye sahibini kontrol et.
-    final currentUserId = context.read<AuthProvider>().user?.userID;
-    final isOwner = story.userId == currentUserId;
+    return GestureDetector(
+      onTapDown: (_) => onPause(),
+      onTapUp: (_) => onResume(),
+      onLongPressStart: (_) => onPause(),
+      onLongPressEnd: (_) => onResume(),
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: SafeArea(
+          child: Stack(
+            children: [
+              // 1. Katman: Sonraki/Önceki hikaye için dokunma alanları
+              if (!isSingleStory)
+                Row(
+                  children: [
+                    Expanded(
+                        child: GestureDetector(
+                            onTap: onPrevious,
+                            child: Container(color: Colors.transparent))),
+                    Expanded(
+                        child: GestureDetector(
+                            onTap: onNext,
+                            child: Container(color: Colors.transparent))),
+                  ],
+                ),
 
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Üst Kısım: Zaman çizelgesi, kullanıcı bilgisi ve kapatma butonu
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: isOwner
-                        ? null
-                        : () {
-                            // Mevcut sayfayı kapat ve profil sayfasına git
-                            context.pop();
-                            context.pushNamed(friendProfile,
-                                extra: story.userId);
-                          },
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 20,
-                          backgroundImage: CachedNetworkImageProvider(
-                              story.profilePictureUrl),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          story.username,
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: () => context.pop(),
-                    icon: const Icon(Icons.close, color: Colors.white),
-                  ),
-                ],
-              ),
-            ),
-            // Ana İçerik: Hikaye görseli
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16.0),
+              // 2. Katman: Hikaye görseli
+              Center(
                 child: CachedNetworkImage(
                   imageUrl: story.imageUrl,
                   fit: BoxFit.contain,
@@ -354,47 +268,213 @@ class _StoryPage extends StatelessWidget {
                       const Icon(Icons.error, color: Colors.white),
                 ),
               ),
-            ),
-            // Alt Kısım: Sadece hikaye sahibine gösterilecek bölüm
-            if (isOwner)
-              GestureDetector(
-                onTap: () {
-                  // Görüntüleyenleri gösteren bottom sheet'i aç.
-                  showModalBottomSheet(
-                    context: context,
-                    builder: (_) =>
-                        StoryViewersSheet(viewerIds: story.viewedBy),
-                  );
-                },
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.visibility,
-                              color: Colors.white70, size: 20),
-                          const SizedBox(width: 8),
-                          Text(
-                            '${story.viewedBy.length} kişi tarafından görüldü',
-                            style: const TextStyle(color: Colors.white70),
-                          ),
-                        ],
+
+              // 3. Katman: Üst ve Alt UI elemanları (Header/Footer)
+              Column(
+                children: [
+                  const SizedBox(height: 10),
+                  // Header: Kullanıcı bilgisi ve kapatma butonu
+                  _buildHeader(context),
+                  const Spacer(),
+                  // Footer: Görüntüleyenler ve silme butonu (sadece sahipse)
+                  if (isOwner) _buildFooter(context),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    return Container(
+      // Gölge ve gradient arka plan
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Colors.black.withValues(alpha: 0.7),
+            Colors.black.withValues(alpha: 0.4),
+            Colors.black.withValues(alpha: 0.1),
+            Colors.transparent,
+          ],
+          stops: const [0.0, 0.4, 0.7, 1.0],
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+        child: Row(
+          children: [
+            GestureDetector(
+              onTap: isOwner
+                  ? null
+                  : () {
+                      context.pushNamed(friendProfile, extra: story.userId);
+                    },
+              child: Row(
+                children: [
+                  // Profil resmi için border efekti
+                  Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.3),
+                        width: 2,
                       ),
-                      IconButton(
-                        onPressed: () {
-                          // Silme mantığı
-                          debugPrint('${story.id} hikayesi silinecek.');
-                          onDelete?.call();
-                        },
-                        icon: const Icon(Icons.delete,
-                            color: Colors.red, size: 30),
+                    ),
+                    child: CircleAvatar(
+                      radius: 22,
+                      backgroundImage:
+                          CachedNetworkImageProvider(story.profilePictureUrl),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Kullanıcı adı ve altındaki çizgi
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        story.username,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          shadows: [
+                            Shadow(
+                              offset: Offset(0, 1),
+                              blurRadius: 3,
+                              color: Colors.black54,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      // Kullanıcı adının altındaki şık çizgi
+                      Container(
+                        height: 2,
+                        width: story.username.length * 8.5,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.white.withValues(alpha: 0.8),
+                              Colors.white.withValues(alpha: 0.3),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(1),
+                        ),
                       ),
                     ],
                   ),
+                ],
+              ),
+            ),
+            const Spacer(),
+            // Kapatma butonu için şık container
+            Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.black.withValues(alpha: 0.4),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  width: 1,
                 ),
               ),
+              child: IconButton(
+                onPressed: () => context.pop(),
+                icon: const Icon(
+                  Icons.close_rounded,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Hikaye silme onay dialogunu gösterir
+  void _showDeleteConfirmDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.grey[900],
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            'Hikayenizi Silin',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: const Text(
+            'Hikayeniz kalıcı olarak silinecektir. Bu işlem geri alınamaz. Emin misiniz?',
+            style: TextStyle(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text(
+                'İptal',
+                style: TextStyle(color: Colors.grey),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                if (onDelete != null) {
+                  onDelete!();
+                }
+              },
+              child: const Text(
+                'Sil',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildFooter(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        showModalBottomSheet(
+          context: context,
+          builder: (_) => StoryViewersSheet(viewerIds: story.viewedBy),
+        );
+      },
+      child: Container(
+        color: Colors.black.withValues(alpha: 0.3),
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.visibility, color: Colors.white70, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  '${story.viewedBy.length} kişi tarafından görüldü',
+                  style: const TextStyle(color: Colors.white70),
+                ),
+              ],
+            ),
+            IconButton(
+              onPressed: () => _showDeleteConfirmDialog(context),
+              icon: const Icon(Icons.delete, color: Colors.red, size: 30),
+            ),
           ],
         ),
       ),

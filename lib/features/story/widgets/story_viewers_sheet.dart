@@ -73,8 +73,7 @@ class _StoryViewersSheetState extends State<StoryViewersSheet> {
                       ),
                       title: Text(viewer.nickname ?? 'Bilinmeyen Kullanıcı'),
                       onTap: () {
-                        // Sayfayı kapat ve profil sayfasına git.
-                        Navigator.of(context).pop();
+                        // Profil sayfasına git, mevcut sayfayı kapatma
                         context.pushNamed(friendProfile, extra: viewer.userID);
                       },
                     );
