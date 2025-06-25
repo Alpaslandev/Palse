@@ -161,7 +161,7 @@ const Map<String, String> tr = {
   'explore': 'Keşfet',
   'messages': 'Mesajlar',
   'profile': 'Profil',
-  'city_based': 'Şehrine Göre',
+  'city_based': 'Şehrimdekiler',
   'interest_based': 'İlgine Göre',
   'other': 'Diğer',
   'favorites': 'Favoriler',

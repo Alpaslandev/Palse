@@ -8,6 +8,7 @@ import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
 import 'package:palseapp/core/widgets/advert_card.dart';
 import 'package:palseapp/features/home/viewmodel/home_view_model.dart';
+import 'package:palseapp/features/home/widgets/storys_view.dart';
 import 'package:provider/provider.dart';
 
 class HomeView extends StatefulWidget {
@@ -19,7 +20,8 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
-  late TabController _tabController;
+  late TabController _topTabController;
+  late TabController _exploreTabController;
   late HomeViewModel _viewModel;
   final ScrollController _scrollController = ScrollController();
 
@@ -29,10 +31,12 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(
+    _topTabController = TabController(length: 3, vsync: this);
+    _exploreTabController = TabController(
         length: 3, vsync: this, initialIndex: widget.initialTabIndex);
     _viewModel = HomeViewModel();
-    _tabController.addListener(_onTabChanged);
+    _topTabController.addListener(_onTopTabChanged);
+    _exploreTabController.addListener(_onExploreTabChanged);
 
     // Sayfalama için scroll dinleyicisi
     _scrollController.addListener(_onScroll);
@@ -45,7 +49,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
 
       // İlanları yükle
       if (authProvider.user != null) {
-        _viewModel.fetchAdvertsForTab(_user, _tabController.index);
+        _viewModel.fetchAdvertsForTab(_user, _exploreTabController.index);
       }
     });
   }
@@ -55,245 +59,327 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
             _scrollController.position.maxScrollExtent - 500 &&
         !_viewModel.isLoading &&
         _viewModel.hasMore) {
-      _viewModel.loadMore(_user, _tabController.index);
+      _viewModel.loadMore(_user, _exploreTabController.index);
     }
   }
 
-  void _onTabChanged() {
-    if (!_tabController.indexIsChanging) {
-      _viewModel.fetchAdvertsForTab(_user, _tabController.index);
+  void _onTopTabChanged() {
+    if (!_topTabController.indexIsChanging) {
+      // Üst tab değiştiğinde gerekli işlemler
+      if (_topTabController.index == 0) {
+        // Keşfet sekmesine geçildi, mevcut explore tab'ına göre yükle
+        _viewModel.fetchAdvertsForTab(_user, _exploreTabController.index);
+      } else {
+        // Takiptekiler veya Organizasyonlar sekmesi - şimdilik boş
+        // Bu kısımları daha sonra implement edebilirsiniz
+      }
+    }
+  }
+
+  void _onExploreTabChanged() {
+    if (!_exploreTabController.indexIsChanging &&
+        _topTabController.index == 0) {
+      _viewModel.fetchAdvertsForTab(_user, _exploreTabController.index);
     }
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
+    _topTabController.dispose();
+    _exploreTabController.dispose();
     _viewModel.dispose();
     _scrollController.dispose();
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildExploreContent() {
     return ChangeNotifierProvider.value(
       value: _viewModel,
       child: Consumer<HomeViewModel>(
         builder: (context, viewModel, child) {
-          return Scaffold(
-            appBar: PreferredSize(
-              preferredSize: const Size.fromHeight(48),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TabBar(
-                      isScrollable: false,
-                      padding: EdgeInsets.zero,
-                      labelPadding: const EdgeInsets.symmetric(horizontal: 10),
-                      indicatorWeight: 2,
-                      labelStyle: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      unselectedLabelStyle: const TextStyle(
-                        fontSize: 12,
-                      ),
-                      unselectedLabelColor: Colors.grey,
-                      controller: _tabController,
-                      tabs: [
-                        Tab(
-                            text: context.tr('city_based'),
-                            iconMargin: EdgeInsets.zero),
-                        Tab(
-                            text: context.tr('interest_based'),
-                            iconMargin: EdgeInsets.zero),
-                        Tab(
-                            text: context.tr('other'),
-                            iconMargin: EdgeInsets.zero),
-                      ],
-                    ),
+          return Column(
+            children: [
+              Container(
+                color: Colors.grey[50],
+                child: TabBar(
+                  controller: _exploreTabController,
+                  isScrollable: false,
+                  padding: EdgeInsets.zero,
+                  labelPadding: const EdgeInsets.symmetric(horizontal: 10),
+                  indicatorWeight: 2,
+                  labelStyle: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
                   ),
-                  IconButton(
-                    onPressed: () {
-                      context.pushNamed(filter);
-                    },
-                    icon: SvgPicture.asset(
-                      'assets/vectors/filter_x2.svg',
-                      width: 24,
-                      height: 24,
-                      colorFilter: const ColorFilter.mode(
-                          AppTheme.primaryColor, BlendMode.srcIn),
-                    ),
+                  unselectedLabelStyle: const TextStyle(
+                    fontSize: 12,
                   ),
-                ],
+                  unselectedLabelColor: Colors.grey,
+                  tabs: [
+                    Tab(
+                        text: context.tr('city_based'),
+                        iconMargin: EdgeInsets.zero),
+                    Tab(
+                        text: context.tr('interest_based'),
+                        iconMargin: EdgeInsets.zero),
+                    Tab(text: context.tr('other'), iconMargin: EdgeInsets.zero),
+                  ],
+                ),
               ),
-            ),
-            body: viewModel.isLoading && viewModel.adverts.isEmpty
-                ? const Center(child: CircularProgressIndicator())
-                : viewModel.adverts.isEmpty
-                    ? viewModel.shouldShowOtherTab
-                        ? Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Card(
-                              child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Center(
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        _tabController.index == 0
-                                            ? context
-                                                .tr('no_listings_in_your_city')
-                                            : context.tr(
-                                                'no_listings_in_your_interests'),
-                                        textAlign: TextAlign.center,
-                                        style: const TextStyle(fontSize: 16),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      TextButton(
-                                        onPressed: () {
-                                          _tabController.animateTo(2);
-                                        },
-                                        child: Text(
-                                          context.tr(
-                                              'click_to_see_other_listings'),
-                                          style: const TextStyle(
-                                            color: Colors.blue,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          )
-                        : Center(child: Text(context.tr('no_listings_yet')))
-                    : ListView.builder(
-                        padding: const EdgeInsets.only(bottom: 80, top: 12),
-                        controller: _scrollController,
-                        itemCount: viewModel.adverts.length + 1,
-                        itemBuilder: (context, index) {
-                          if (index == viewModel.adverts.length) {
-                            if (viewModel.isLoading) {
-                              return const Padding(
-                                padding: EdgeInsets.all(8.0),
-                                child:
-                                    Center(child: CircularProgressIndicator()),
-                              );
-                            }
-
-                            if ((!viewModel.hasMore &&
-                                    _tabController.index != 2) ||
-                                viewModel.shouldShowOtherTab) {
-                              return Padding(
+              Expanded(
+                child: viewModel.isLoading && viewModel.adverts.isEmpty
+                    ? const Center(child: CircularProgressIndicator())
+                    : viewModel.adverts.isEmpty
+                        ? viewModel.shouldShowOtherTab
+                            ? Padding(
                                 padding: const EdgeInsets.all(16.0),
                                 child: Card(
                                   child: Padding(
                                     padding: const EdgeInsets.all(16.0),
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          viewModel.shouldShowOtherTab
-                                              ? (_tabController.index == 0
-                                                  ? context.tr(
-                                                      'no_listings_in_your_city')
-                                                  : context.tr(
-                                                      'no_listings_in_your_interests'))
-                                              : context.tr(
-                                                  'no_more_listings_in_category'),
-                                          textAlign: TextAlign.center,
-                                          style: const TextStyle(fontSize: 16),
-                                        ),
-                                        const SizedBox(height: 8),
-                                        TextButton(
-                                          onPressed: () {
-                                            _tabController.animateTo(2);
-                                          },
-                                          child: Text(
-                                            context.tr(
-                                                'click_to_see_other_listings'),
-                                            style: const TextStyle(
-                                              color: Colors.blue,
-                                              fontWeight: FontWeight.bold,
+                                    child: Center(
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            _exploreTabController.index == 0
+                                                ? context.tr(
+                                                    'no_listings_in_your_city')
+                                                : context.tr(
+                                                    'no_listings_in_your_interests'),
+                                            textAlign: TextAlign.center,
+                                            style:
+                                                const TextStyle(fontSize: 16),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          TextButton(
+                                            onPressed: () {
+                                              _exploreTabController
+                                                  .animateTo(2);
+                                            },
+                                            child: Text(
+                                              context.tr(
+                                                  'click_to_see_other_listings'),
+                                              style: const TextStyle(
+                                                color: Colors.blue,
+                                                fontWeight: FontWeight.bold,
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),
+                              )
+                            : Center(child: Text(context.tr('no_listings_yet')))
+                        : ListView.builder(
+                            padding: const EdgeInsets.only(bottom: 80, top: 12),
+                            controller: _scrollController,
+                            itemCount: viewModel.adverts.length + 1,
+                            itemBuilder: (context, index) {
+                              if (index == viewModel.adverts.length) {
+                                if (viewModel.isLoading) {
+                                  return const Padding(
+                                    padding: EdgeInsets.all(8.0),
+                                    child: Center(
+                                        child: CircularProgressIndicator()),
+                                  );
+                                }
+
+                                if ((!viewModel.hasMore &&
+                                        _exploreTabController.index != 2) ||
+                                    viewModel.shouldShowOtherTab) {
+                                  return Padding(
+                                    padding: const EdgeInsets.all(16.0),
+                                    child: Card(
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(16.0),
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              viewModel.shouldShowOtherTab
+                                                  ? (_exploreTabController
+                                                              .index ==
+                                                          0
+                                                      ? context.tr(
+                                                          'no_listings_in_your_city')
+                                                      : context.tr(
+                                                          'no_listings_in_your_interests'))
+                                                  : context.tr(
+                                                      'no_more_listings_in_category'),
+                                              textAlign: TextAlign.center,
+                                              style:
+                                                  const TextStyle(fontSize: 16),
+                                            ),
+                                            const SizedBox(height: 8),
+                                            TextButton(
+                                              onPressed: () {
+                                                _exploreTabController
+                                                    .animateTo(2);
+                                              },
+                                              child: Text(
+                                                context.tr(
+                                                    'click_to_see_other_listings'),
+                                                style: const TextStyle(
+                                                  color: Colors.blue,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                }
+
+                                return const SizedBox.shrink();
+                              }
+
+                              final advert = viewModel.adverts[index];
+
+                              if (advert.creatorUserID == _user.userID ||
+                                  (_user.blockUsers != null &&
+                                      _user.blockUsers!
+                                          .contains(advert.creatorUserID))) {
+                                if (index >= viewModel.adverts.length - 5 &&
+                                    viewModel.hasMore &&
+                                    !viewModel.isLoading) {
+                                  WidgetsBinding.instance
+                                      .addPostFrameCallback((_) {
+                                    viewModel.loadMore(
+                                        _user, _exploreTabController.index);
+                                  });
+                                }
+                                return const SizedBox.shrink();
+                              }
+
+                              final isLiked =
+                                  advert.likers.contains(_user.userID);
+                              final isJoinRequestSent =
+                                  advert.joinRequestIds.contains(_user.userID);
+                              final isJoinRequestAccepted = advert
+                                  .joinRequestAcceptedIds
+                                  .contains(_user.userID);
+
+                              return AdvertCard(
+                                advert: advert,
+                                isLiked: isLiked,
+                                isJoinRequestSent: isJoinRequestSent,
+                                isJoinRequestAccepted: isJoinRequestAccepted,
+                                onLikeTap: () async {
+                                  if (isLiked) {
+                                    await viewModel.unlikeAdvert(
+                                        advert.advertID ?? '',
+                                        _user.userID ?? '');
+                                  } else {
+                                    await viewModel.likeAdvert(
+                                        advert.advertID ?? '',
+                                        _user.userID ?? '');
+                                  }
+                                },
+                                onJoinRequestTap: () async {
+                                  debugPrint('Katılım isteği gönderildi');
+                                  if (isJoinRequestSent) {
+                                    await viewModel.cancelJoinRequest(
+                                        advert.advertID ?? '',
+                                        _user.userID ?? '');
+                                  } else {
+                                    await viewModel.sendJoinRequest(
+                                        advert.advertID ?? '',
+                                        _user.userID ?? '');
+                                  }
+                                },
                               );
-                            }
-
-                            return const SizedBox.shrink();
-                          }
-
-                          final advert = viewModel.adverts[index];
-
-                          if (advert.creatorUserID == _user.userID ||
-                              (_user.blockUsers != null &&
-                                  _user.blockUsers!
-                                      .contains(advert.creatorUserID))) {
-                            if (index >= viewModel.adverts.length - 5 &&
-                                viewModel.hasMore &&
-                                !viewModel.isLoading) {
-                              WidgetsBinding.instance.addPostFrameCallback((_) {
-                                viewModel.loadMore(_user, _tabController.index);
-                              });
-                            }
-                            return const SizedBox.shrink();
-                          }
-
-                          final isLiked = advert.likers.contains(_user.userID);
-                          final isJoinRequestSent =
-                              advert.joinRequestIds.contains(_user.userID);
-                          final isJoinRequestAccepted = advert
-                              .joinRequestAcceptedIds
-                              .contains(_user.userID);
-
-                          return AdvertCard(
-                            advert: advert,
-                            isLiked: isLiked,
-                            isJoinRequestSent: isJoinRequestSent,
-                            isJoinRequestAccepted: isJoinRequestAccepted,
-                            onLikeTap: () async {
-                              if (isLiked) {
-                                await viewModel.unlikeAdvert(
-                                    advert.advertID ?? '', _user.userID ?? '');
-                              } else {
-                                await viewModel.likeAdvert(
-                                    advert.advertID ?? '', _user.userID ?? '');
-                              }
                             },
-                            onJoinRequestTap: () async {
-                              debugPrint('Katılım isteği gönderildi');
-                              if (isJoinRequestSent) {
-                                await viewModel.cancelJoinRequest(
-                                    advert.advertID ?? '', _user.userID ?? '');
-                              } else {
-                                await viewModel.sendJoinRequest(
-                                    advert.advertID ?? '', _user.userID ?? '');
-                              }
-                            },
-                          );
-                        },
-                      ),
-            floatingActionButton: FloatingActionButton.extended(
-              backgroundColor: AppTheme.primaryColor,
-              shape: const StadiumBorder(),
-              onPressed: () {
-                context.pushNamed(createAdvert);
-              },
-              label: Text(context.tr('create_listing'),
-                  style: const TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold)),
-            ),
+                          ),
+              ),
+            ],
           );
         },
       ),
+    );
+  }
+
+  Widget _buildFollowingContent() {
+    return const Center(
+      child: Text(
+        'Takiptekiler',
+        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+
+  Widget _buildOrganizationsContent() {
+    return const Center(
+      child: Text(
+        'Organizasyonlar',
+        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // Hikayeler görünümü - Sadece home view'da
+        const StorysView(),
+        // TabBar
+        Container(
+          height: 48,
+          child: Row(
+            children: [
+              Expanded(
+                child: TabBar(
+                  controller: _topTabController,
+                  isScrollable: false,
+                  padding: EdgeInsets.zero,
+                  labelPadding: const EdgeInsets.symmetric(horizontal: 10),
+                  indicatorWeight: 3,
+                  labelStyle: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  unselectedLabelStyle: const TextStyle(
+                    fontSize: 13,
+                  ),
+                  unselectedLabelColor: Colors.grey,
+                  tabs: const [
+                    Tab(text: 'Keşfet', iconMargin: EdgeInsets.zero),
+                    Tab(text: 'Takiptekiler', iconMargin: EdgeInsets.zero),
+                    Tab(text: 'Şehrimde Ne Var', iconMargin: EdgeInsets.zero),
+                  ],
+                ),
+              ),
+              IconButton(
+                onPressed: () {
+                  context.pushNamed(filter);
+                },
+                icon: SvgPicture.asset(
+                  'assets/vectors/filter_x2.svg',
+                  width: 24,
+                  height: 24,
+                  colorFilter: const ColorFilter.mode(
+                      AppTheme.primaryColor, BlendMode.srcIn),
+                ),
+              ),
+            ],
+          ),
+        ),
+        // TabBarView
+        Expanded(
+          child: TabBarView(
+            controller: _topTabController,
+            children: [
+              _buildExploreContent(),
+              _buildFollowingContent(),
+              _buildOrganizationsContent(),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

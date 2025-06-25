@@ -160,7 +160,7 @@ const Map<String, String> en = {
   'explore': 'Explore',
   'messages': 'Messages',
   'profile': 'Profile',
-  'city_based': 'By City',
+  'city_based': 'City Based',
   'interest_based': 'By Interest',
   'other': 'Other',
   'favorites': 'Favorites',

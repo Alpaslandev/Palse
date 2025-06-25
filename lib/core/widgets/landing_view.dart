@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
 import 'package:palseapp/core/widgets/project_app_bar.dart';
@@ -58,19 +59,42 @@ class _LandingViewState extends State<LandingView> {
     final iconSize = _getIconSize(navBarHeight);
     final selectedIndex = _getSelectedIndex(context);
 
+    // Home sayfasında mı kontrol et
+    final isHomePage = selectedIndex == 0;
+
     return Scaffold(
       appBar: const ProjectAppBar(),
       body: widget.child,
+      floatingActionButton: isHomePage
+          ? FloatingActionButton.extended(
+              backgroundColor: AppTheme.primaryColor,
+              shape: const StadiumBorder(),
+              onPressed: () {
+                context.pushNamed(createAdvert);
+              },
+              label: Text(
+                context.tr('create_listing'),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            )
+          : null,
       bottomNavigationBar: SafeArea(
         child: SizedBox(
           height: navBarHeight,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildNavItem(context, 0, 'assets/navbar_ic/home_1_x2.svg', iconSize, selectedIndex),
-              _buildNavItem(context, 1, 'assets/navbar_ic/category_1_x2.svg', iconSize, selectedIndex),
-              _buildNavItem(context, 2, 'assets/navbar_ic/ad_1_x2.svg', iconSize, selectedIndex),
-              _buildNavItem(context, 3, 'assets/navbar_ic/profile.svg', iconSize, selectedIndex),
+              _buildNavItem(context, 0, 'assets/navbar_ic/home_1_x2.svg',
+                  iconSize, selectedIndex),
+              _buildNavItem(context, 1, 'assets/navbar_ic/category_1_x2.svg',
+                  iconSize, selectedIndex),
+              _buildNavItem(context, 2, 'assets/navbar_ic/ad_1_x2.svg',
+                  iconSize, selectedIndex),
+              _buildNavItem(context, 3, 'assets/navbar_ic/profile.svg',
+                  iconSize, selectedIndex),
             ],
           ),
         ),
@@ -78,7 +102,8 @@ class _LandingViewState extends State<LandingView> {
     );
   }
 
-  Widget _buildNavItem(BuildContext context, int index, String iconPath, double iconSize, int selectedIndex) {
+  Widget _buildNavItem(BuildContext context, int index, String iconPath,
+      double iconSize, int selectedIndex) {
     final isSelected = selectedIndex == index;
     final Color svgColor = isSelected ? Colors.white : Colors.grey;
     final double currentIconSize = isSelected ? iconSize * 1.4 : iconSize;
