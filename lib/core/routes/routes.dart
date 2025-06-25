@@ -6,6 +6,8 @@ const String landing = 'landing';
 const String home = 'home';
 const String login = 'login';
 const String profileSetup = 'profileSetup';
+const String addStory = 'addStory';
+const String storyDisplay = 'storyDisplay';
 
 const String profile = 'profile';
 const String settings = 'settings';

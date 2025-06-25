@@ -280,5 +280,7 @@
 	</array>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>This app needs access to your photo library to share photos and save images.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs access to your camera to add photos to your stories.</string>
 </dict>
 </plist>

@@ -31,6 +31,8 @@ import 'package:palseapp/features/settings/view/language_settings_view.dart';
 import 'package:palseapp/features/settings/view/settings_view.dart';
 import 'package:palseapp/features/settings/view/widgets/verified_screen.dart';
 import 'package:palseapp/features/splash/splash_view.dart';
+import 'package:palseapp/features/story/view/add_story_view.dart';
+import 'package:palseapp/features/story/view/story_display_view.dart';
 import 'package:palseapp/features/subscription/view/paywall_screen.dart';
 
 // Router sınıfını oluştur
@@ -116,6 +118,19 @@ class AppRouter {
           builder: (context, state) => const ProfileSetupView(),
         ),
         GoRoute(
+          path: "/$storyDisplay",
+          name: storyDisplay,
+          parentNavigatorKey: _rootNavigatorKey,
+          builder: (context, state) {
+            final Map<String, dynamic> data =
+                state.extra as Map<String, dynamic>;
+            return StoryDisplayView(
+              stories: data['stories'],
+              initialIndex: data['initialIndex'],
+            );
+          },
+        ),
+        GoRoute(
           path: "/$chats",
           name: chats,
           parentNavigatorKey: _rootNavigatorKey,
@@ -137,6 +152,12 @@ class AppRouter {
               },
             ),
           ],
+        ),
+        GoRoute(
+          path: "/$addStory",
+          name: addStory,
+          parentNavigatorKey: _rootNavigatorKey,
+          builder: (context, state) => const AddStoryView(),
         ),
         GoRoute(
           name: xpEvents,

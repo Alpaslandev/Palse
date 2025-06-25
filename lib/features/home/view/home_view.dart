@@ -8,7 +8,8 @@ import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
 import 'package:palseapp/core/widgets/advert_card.dart';
 import 'package:palseapp/features/home/viewmodel/home_view_model.dart';
-import 'package:palseapp/features/home/widgets/storys_view.dart';
+import 'package:palseapp/features/home/widgets/explore_tab_bar.dart';
+import 'package:palseapp/features/story/view/storys_view.dart';
 import 'package:provider/provider.dart';
 
 class HomeView extends StatefulWidget {
@@ -99,33 +100,7 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
         builder: (context, viewModel, child) {
           return Column(
             children: [
-              Container(
-                color: Colors.grey[50],
-                child: TabBar(
-                  controller: _exploreTabController,
-                  isScrollable: false,
-                  padding: EdgeInsets.zero,
-                  labelPadding: const EdgeInsets.symmetric(horizontal: 10),
-                  indicatorWeight: 2,
-                  labelStyle: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  unselectedLabelStyle: const TextStyle(
-                    fontSize: 12,
-                  ),
-                  unselectedLabelColor: Colors.grey,
-                  tabs: [
-                    Tab(
-                        text: context.tr('city_based'),
-                        iconMargin: EdgeInsets.zero),
-                    Tab(
-                        text: context.tr('interest_based'),
-                        iconMargin: EdgeInsets.zero),
-                    Tab(text: context.tr('other'), iconMargin: EdgeInsets.zero),
-                  ],
-                ),
-              ),
+              ExploreTabBar(controller: _exploreTabController),
               Expanded(
                 child: viewModel.isLoading && viewModel.adverts.isEmpty
                     ? const Center(child: CircularProgressIndicator())
