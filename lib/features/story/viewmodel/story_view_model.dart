@@ -20,6 +20,8 @@ class StoryViewModel extends ChangeNotifier {
   Future<bool> uploadStory({
     required File imageFile,
     required String userId,
+    required String username,
+    required String profilePictureUrl,
     required bool isPublic,
   }) async {
     _setLoading(true);
@@ -27,6 +29,8 @@ class StoryViewModel extends ChangeNotifier {
       await _storyService.createStory(
         imageFile: imageFile,
         userId: userId,
+        username: username,
+        profilePictureUrl: profilePictureUrl,
         isPublic: isPublic,
       );
       _setLoading(false);

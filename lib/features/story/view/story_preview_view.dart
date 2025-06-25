@@ -99,9 +99,14 @@ class __StoryPreviewViewContentState extends State<_StoryPreviewViewContent> {
                   ? const CircularProgressIndicator(color: Colors.white)
                   : ElevatedButton.icon(
                       onPressed: () async {
+                        final currentUser = authProvider.user;
+                        if (currentUser == null) return;
+
                         final success = await viewModel.uploadStory(
                           imageFile: widget.imageFile,
-                          userId: authProvider.user!.userID!,
+                          userId: currentUser.userID!,
+                          username: currentUser.nickname!,
+                          profilePictureUrl: currentUser.profilePictureUrl!,
                           isPublic: _isPublic,
                         );
 

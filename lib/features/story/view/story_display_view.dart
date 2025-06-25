@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/features/story/model/story_model.dart';
+import 'package:palseapp/core/routes/app_router.dart';
+import 'package:go_router/go_router.dart';
 
 // Birden çok hikayeyi tam ekran gösteren ve aralarında geçiş sağlayan ana widget.
 class StoryDisplayView extends StatefulWidget {
@@ -66,17 +69,30 @@ class _StoryPage extends StatelessWidget {
               padding: const EdgeInsets.all(8.0),
               child: Row(
                 children: [
-                  const CircleAvatar(
-                    radius: 20,
-                    // backgroundImage: NetworkImage(story.userProfileUrl), // Kullanıcı profili için
-                  ),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'Kullanıcı Adı', // story.username
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16),
+                  GestureDetector(
+                    onTap: () {
+                      // Mevcut context'te Navigator'ın bir üst seviyeye çıkmasını sağla
+                      // ve sonra yeni sayfaya git.
+                      Navigator.of(context).pop();
+                      context.pushNamed(friendProfile, extra: story.userId);
+                    },
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 20,
+                          backgroundImage: CachedNetworkImageProvider(
+                              story.profilePictureUrl),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          story.username,
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16),
+                        ),
+                      ],
+                    ),
                   ),
                   const Spacer(),
                   IconButton(

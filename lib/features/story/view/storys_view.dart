@@ -6,6 +6,7 @@ import 'package:palseapp/core/utils/app_theme.dart';
 import 'package:palseapp/features/story/model/story_model.dart';
 import 'package:palseapp/features/story/viewmodel/story_view_model.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 // Hikayeleri listeleyen ve yeni hikaye ekleme butonu sunan ana widget.
 class StorysView extends StatelessWidget {
@@ -79,50 +80,13 @@ class _StorysViewContent extends StatelessWidget {
               // İlk eleman ya kullanıcının kendi hikayesi ya da ekleme butonu olacak.
               if (index == 0) {
                 return myStory != null
-                    ? GestureDetector(
-                        onTap: () {
-                          // Tıklanan hikayeyi ve diğerlerini görüntüleyiciye gönder
-                          final List<StoryModel> allVisibleStories = [
-                            ...otherStories
-                          ];
-                          if (myStory != null) {
-                            allVisibleStories.insert(0, myStory!);
-                          }
-
-                          context.pushNamed(
-                            storyDisplay,
-                            extra: {
-                              'stories': allVisibleStories,
-                              'initialIndex': 0,
-                            },
-                          );
-                        },
-                        child: _buildStoryItem(context, myStory!,
-                            isCurrentUser: true),
-                      )
+                    ? _buildStoryItem(context, myStory!, stories,
+                        isCurrentUser: true)
                     : _buildAddStoryItem(context);
               }
               // Diğer elemanlar
               final story = otherStories[index - 1];
-              return GestureDetector(
-                onTap: () {
-                  final List<StoryModel> allVisibleStories = [...otherStories];
-                  if (myStory != null) {
-                    allVisibleStories.insert(0, myStory!);
-                  }
-                  // Tıklanan hikayenin birleştirilmiş listedeki index'ini bul
-                  final tappedIndex = allVisibleStories.indexOf(story);
-
-                  context.pushNamed(
-                    storyDisplay,
-                    extra: {
-                      'stories': allVisibleStories,
-                      'initialIndex': tappedIndex,
-                    },
-                  );
-                },
-                child: _buildStoryItem(context, story),
-              );
+              return _buildStoryItem(context, story, stories);
             },
           );
         },
@@ -187,16 +151,25 @@ class _StorysViewContent extends StatelessWidget {
   }
 
   // Sunucudan gelen her bir hikaye için item widget'ı.
-  Widget _buildStoryItem(BuildContext context, StoryModel story,
+  Widget _buildStoryItem(
+      BuildContext context, StoryModel story, List<StoryModel> allStories,
       {bool isCurrentUser = false}) {
-    // Burada gerçek kullanıcı verileri kullanılabilir.
-    // isCurrentUser bayrağı, kullanıcının kendi hikayesi için farklı bir çerçeve vs. yapmak için kullanılabilir.
     final borderColor = isCurrentUser ? Colors.grey : Colors.purple;
 
-    return Padding(
-      padding: const EdgeInsets.only(right: 12),
-      child: GestureDetector(
-        onTap: () => debugPrint('${story.id} hikayesi açıldı'),
+    return GestureDetector(
+      onTap: () {
+        // Tıklanan hikayenin birleştirilmiş listedeki index'ini bul
+        final tappedIndex = allStories.indexOf(story);
+        context.pushNamed(
+          storyDisplay,
+          extra: {
+            'stories': allStories,
+            'initialIndex': tappedIndex,
+          },
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.only(right: 12),
         child: Column(
           children: [
             Container(
@@ -206,23 +179,22 @@ class _StorysViewContent extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: LinearGradient(
-                  colors: [borderColor, borderColor.withValues(alpha: 0.6)],
+                  colors: [borderColor, borderColor.withOpacity(0.6)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
               ),
               child: CircleAvatar(
                 radius: 30,
-                backgroundImage: NetworkImage(story.imageUrl),
+                backgroundImage:
+                    CachedNetworkImageProvider(story.profilePictureUrl),
               ),
             ),
             const SizedBox(height: 4),
             SizedBox(
               width: 64,
               child: Text(
-                isCurrentUser
-                    ? 'Hikayen'
-                    : 'Kullanıcı Adı', // `story.userId` ile kullanıcı bilgisi çekilebilir
+                isCurrentUser ? 'Hikayen' : story.username,
                 style:
                     const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
                 textAlign: TextAlign.center,

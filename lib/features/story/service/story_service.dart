@@ -15,6 +15,8 @@ class StoryService {
   Future<void> createStory({
     required File imageFile,
     required String userId,
+    required String username,
+    required String profilePictureUrl,
     required bool isPublic,
   }) async {
     try {
@@ -29,6 +31,8 @@ class StoryService {
       final newStory = StoryModel(
         id: storyId,
         userId: userId,
+        username: username,
+        profilePictureUrl: profilePictureUrl,
         imageUrl: imageUrl,
         createdAt: DateTime.now().toIso8601String(),
         viewedBy: [],
