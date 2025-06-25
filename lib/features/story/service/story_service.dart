@@ -34,7 +34,7 @@ class StoryService {
         username: username,
         profilePictureUrl: profilePictureUrl,
         imageUrl: imageUrl,
-        createdAt: DateTime.now().toIso8601String(),
+        createdAt: DateTime.now(),
         viewedBy: [],
         isPublic: isPublic,
       );
@@ -59,67 +59,139 @@ class StoryService {
     try {
       final twentyFourHoursAgo =
           DateTime.now().subtract(const Duration(hours: 24));
-      final timestamp = twentyFourHoursAgo.toIso8601String();
+      final timestampFilter = Timestamp.fromDate(twentyFourHoursAgo);
 
-      // Sorgu 1: Herkese açık tüm hikayeler
-      final publicStoriesQuery = _firestore
+      // Görülebilir kullanıcı ID'lerini hazırla (kendim + takip ettiklerim)
+      final visibleUserIds = [currentUserId, ...followingIds];
+
+      // Tek sorgu ile tüm hikayeleri çek
+      final querySnapshot = await _firestore
           .collection(_collectionPath)
-          .where('isPublic', isEqualTo: true)
-          .where('createdAt', isGreaterThan: timestamp)
+          .where('createdAt', isGreaterThan: timestampFilter)
+          .orderBy('createdAt', descending: true)
           .get();
 
-      // Sorgu 2: Takip edilenlerin özel hikayeleri
-      final privateStoriesQuery = followingIds.isEmpty
-          ? Future.value(null)
-          : _firestore
-              .collection(_collectionPath)
-              .where('isPublic', isEqualTo: false)
-              .where('userId', whereIn: followingIds)
-              .where('createdAt', isGreaterThan: timestamp)
-              .get();
+      final List<StoryModel> stories = [];
 
-      // Sorgu 3: Kullanıcının kendi hikayeleri (özel veya herkese açık)
-      final myStoriesQuery = _firestore
-          .collection(_collectionPath)
-          .where('userId', isEqualTo: currentUserId)
-          .where('createdAt', isGreaterThan: timestamp)
-          .get();
+      for (var doc in querySnapshot.docs) {
+        try {
+          final data = doc.data();
+          final story = StoryModel.fromJson(data);
 
-      // Üç sorguyu paralel olarak çalıştır
-      final results = await Future.wait(
-          [publicStoriesQuery, privateStoriesQuery, myStoriesQuery]);
+          // Filtreleme mantığı:
+          // 1. Kendi hikayelerim -> hep görünür
+          // 2. Herkese açık hikayeler -> hep görünür
+          // 3. Özel hikayeler -> sadece takip ettiklerimden
+          final isMyStory = story.userId == currentUserId;
+          final isPublicStory = story.isPublic;
+          final isFromFollowedUser = followingIds.contains(story.userId);
 
-      // Sonuçları bir Map kullanarak birleştirerek mükerrer kayıtları engelle
-      final Map<String, StoryModel> storyMap = {};
-
-      // Herkese açık hikayeler
-      for (var doc in (results[0] as QuerySnapshot).docs) {
-        final story = StoryModel.fromJson(doc.data() as Map<String, dynamic>);
-        storyMap[story.id] = story;
-      }
-
-      // Takip edilenlerin özel hikayeleri
-      if (results[1] != null) {
-        for (var doc in (results[1] as QuerySnapshot).docs) {
-          final story = StoryModel.fromJson(doc.data() as Map<String, dynamic>);
-          storyMap[story.id] = story;
+          if (isMyStory ||
+              isPublicStory ||
+              (isFromFollowedUser && !isPublicStory)) {
+            stories.add(story);
+          }
+        } catch (e) {
+          debugPrint('Hikaye parse hatası: $e');
+          // Hatalı hikayeyi atla, devam et
+          continue;
         }
       }
 
-      // Kullanıcının kendi hikayeleri
-      for (var doc in (results[2] as QuerySnapshot).docs) {
-        final story = StoryModel.fromJson(doc.data() as Map<String, dynamic>);
-        storyMap[story.id] = story;
+      return stories;
+    } catch (e) {
+      debugPrint('Hikayeler çekilirken hata: $e');
+      return [];
+    }
+  }
+
+  // Bir hikayenin 'viewedBy' listesine yeni bir kullanıcı ID'si ekler.
+  Future<void> addViewToStory(String storyId, String viewerId) async {
+    try {
+      await _firestore.collection(_collectionPath).doc(storyId).update({
+        'viewedBy': FieldValue.arrayUnion([viewerId])
+      });
+    } catch (e) {
+      // Bu hatayı loglamak önemli olabilir, ama kullanıcıya göstermek şart değil.
+      debugPrint('Hikaye görüntülemesi güncellenirken hata: $e');
+    }
+  }
+
+  // Hikayeyi siler (hem Firestore'dan hem Storage'dan)
+  Future<void> deleteStory({
+    required String storyId,
+    required String userId,
+  }) async {
+    try {
+      // 1. Önce hikaye verisini Firestore'dan çek
+      final storyDoc =
+          await _firestore.collection(_collectionPath).doc(storyId).get();
+
+      if (!storyDoc.exists) {
+        throw Exception('Hikaye bulunamadı');
       }
 
-      // Map'teki değerleri bir listeye çevir ve tarihe göre sırala
-      final allStories = storyMap.values.toList();
-      allStories.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      final storyData = storyDoc.data()!;
 
-      return allStories;
+      // 2. Hikaye sahibi kontrolü
+      if (storyData['userId'] != userId) {
+        throw Exception('Bu hikayeyi silme yetkiniz yok');
+      }
+
+      // 3. Storage'dan resmi sil
+      final imagePath = 'stories/$userId/$storyId.jpg';
+      try {
+        await _storage.ref(imagePath).delete();
+        debugPrint('Hikaye resmi Storage\'dan silindi: $imagePath');
+      } catch (e) {
+        // Storage'da dosya bulunamazsa devam et
+        debugPrint('Storage\'dan silme hatası (dosya bulunamayabilir): $e');
+      }
+
+      // 4. Firestore'dan hikayeyi sil
+      await _firestore.collection(_collectionPath).doc(storyId).delete();
+
+      debugPrint('Hikaye başarıyla silindi: $storyId');
     } catch (e) {
-      print('Hikayeler çekilirken hata: $e');
-      return [];
+      debugPrint('Hikaye silinirken hata: $e');
+      throw Exception('Hikaye silinemedi: $e');
+    }
+  }
+
+  // Kullanıcının tüm hikayelerini siler
+  Future<void> deleteAllUserStories(String userId) async {
+    try {
+      // Kullanıcının tüm hikayelerini çek
+      final userStoriesQuery = await _firestore
+          .collection(_collectionPath)
+          .where('userId', isEqualTo: userId)
+          .get();
+
+      // Batch işlemi için
+      final batch = _firestore.batch();
+
+      for (var doc in userStoriesQuery.docs) {
+        final storyId = doc.id;
+
+        // Storage'dan resmi sil
+        final imagePath = 'stories/$userId/$storyId.jpg';
+        try {
+          await _storage.ref(imagePath).delete();
+        } catch (e) {
+          debugPrint('Storage silme hatası: $e');
+        }
+
+        // Batch'e silme işlemini ekle
+        batch.delete(doc.reference);
+      }
+
+      // Batch işlemini çalıştır
+      await batch.commit();
+
+      debugPrint('Kullanıcının tüm hikayeleri silindi: $userId');
+    } catch (e) {
+      debugPrint('Kullanıcı hikayeleri silinirken hata: $e');
+      throw Exception('Kullanıcı hikayeleri silinemedi: $e');
     }
   }
 }

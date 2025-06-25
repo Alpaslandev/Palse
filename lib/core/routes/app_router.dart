@@ -31,9 +31,12 @@ import 'package:palseapp/features/settings/view/language_settings_view.dart';
 import 'package:palseapp/features/settings/view/settings_view.dart';
 import 'package:palseapp/features/settings/view/widgets/verified_screen.dart';
 import 'package:palseapp/features/splash/splash_view.dart';
+import 'package:palseapp/features/story/model/story_model.dart';
 import 'package:palseapp/features/story/view/add_story_view.dart';
 import 'package:palseapp/features/story/view/story_display_view.dart';
+import 'package:palseapp/features/story/viewmodel/story_view_model.dart';
 import 'package:palseapp/features/subscription/view/paywall_screen.dart';
+import 'package:provider/provider.dart';
 
 // Router sınıfını oluştur
 class AppRouter {
@@ -124,9 +127,21 @@ class AppRouter {
           builder: (context, state) {
             final Map<String, dynamic> data =
                 state.extra as Map<String, dynamic>;
-            return StoryDisplayView(
-              stories: data['stories'],
-              initialIndex: data['initialIndex'],
+
+            // JSON'dan StoryModel'lere çevir
+            final List<dynamic> storiesJson = data['stories'] as List<dynamic>;
+            final List<StoryModel> stories = storiesJson
+                .map((json) =>
+                    StoryModel.fromRouterJson(json as Map<String, dynamic>))
+                .toList();
+
+            return ChangeNotifierProvider(
+              create: (_) => StoryViewModel(),
+              child: StoryDisplayView(
+                stories: stories,
+                initialIndex: data['initialIndex'],
+                isCurrentUserStory: data['isCurrentUserStory'] ?? false,
+              ),
             );
           },
         ),

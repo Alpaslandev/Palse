@@ -4,6 +4,7 @@ import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
 import 'package:palseapp/features/story/model/story_model.dart';
+import 'package:palseapp/features/story/view/story_display_view.dart';
 import 'package:palseapp/features/story/viewmodel/story_view_model.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -80,13 +81,13 @@ class _StorysViewContent extends StatelessWidget {
               // İlk eleman ya kullanıcının kendi hikayesi ya da ekleme butonu olacak.
               if (index == 0) {
                 return myStory != null
-                    ? _buildStoryItem(context, myStory!, stories,
+                    ? _buildStoryItem(context, myStory!, stories, viewModel,
                         isCurrentUser: true)
                     : _buildAddStoryItem(context);
               }
               // Diğer elemanlar
               final story = otherStories[index - 1];
-              return _buildStoryItem(context, story, stories);
+              return _buildStoryItem(context, story, stories, viewModel);
             },
           );
         },
@@ -151,20 +152,41 @@ class _StorysViewContent extends StatelessWidget {
   }
 
   // Sunucudan gelen her bir hikaye için item widget'ı.
-  Widget _buildStoryItem(
-      BuildContext context, StoryModel story, List<StoryModel> allStories,
+  Widget _buildStoryItem(BuildContext context, StoryModel story,
+      List<StoryModel> allStories, StoryViewModel viewModel,
       {bool isCurrentUser = false}) {
     final borderColor = isCurrentUser ? Colors.grey : Colors.purple;
 
     return GestureDetector(
       onTap: () {
-        // Tıklanan hikayenin birleştirilmiş listedeki index'ini bul
-        final tappedIndex = allStories.indexOf(story);
+        // Eğer kendi hikayemizi açıyorsak, sadece kendi hikayemizi göster
+        // Eğer başkasının hikayesini açıyorsak, kendi hikayemizi listeden çıkar
+        List<StoryModel> displayStories;
+        int displayIndex;
+
+        if (isCurrentUser) {
+          // Kendi hikayemizi açıyorsak sadece kendi hikayemizi göster
+          displayStories = [story];
+          displayIndex = 0;
+        } else {
+          // Başkasının hikayesini açıyorsak kendi hikayemizi listeden çıkar
+          final authProvider = context.read<AuthProvider>();
+          final currentUserId = authProvider.user?.userID;
+          displayStories =
+              allStories.where((s) => s.userId != currentUserId).toList();
+          displayIndex = displayStories.indexOf(story);
+        }
+
+        // StoryModel'leri GoRouter için JSON'a çevir
+        final storiesJson =
+            displayStories.map((s) => s.toRouterJson()).toList();
+
         context.pushNamed(
           storyDisplay,
           extra: {
-            'stories': allStories,
-            'initialIndex': tappedIndex,
+            'stories': storiesJson,
+            'initialIndex': displayIndex,
+            'isCurrentUserStory': isCurrentUser,
           },
         );
       },
@@ -172,22 +194,25 @@ class _StorysViewContent extends StatelessWidget {
         padding: const EdgeInsets.only(right: 12),
         child: Column(
           children: [
-            Container(
-              width: 64,
-              height: 64,
-              padding: const EdgeInsets.all(2),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [borderColor, borderColor.withOpacity(0.6)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+            Hero(
+              tag: story.id, // Animasyon için benzersiz tag
+              child: Container(
+                width: 64,
+                height: 64,
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [borderColor, borderColor.withValues(alpha: 0.6)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                 ),
-              ),
-              child: CircleAvatar(
-                radius: 30,
-                backgroundImage:
-                    CachedNetworkImageProvider(story.profilePictureUrl),
+                child: CircleAvatar(
+                  radius: 30,
+                  backgroundImage:
+                      CachedNetworkImageProvider(story.profilePictureUrl),
+                ),
               ),
             ),
             const SizedBox(height: 4),

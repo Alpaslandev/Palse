@@ -37,7 +37,7 @@ class StoryViewModel extends ChangeNotifier {
       return true;
     } catch (e) {
       _setLoading(false);
-      print('ViewModelde hikaye yüklenirken hata: $e');
+      debugPrint('ViewModelde hikaye yüklenirken hata: $e');
       return false;
     }
   }
@@ -53,5 +53,21 @@ class StoryViewModel extends ChangeNotifier {
       currentUserId: currentUserId,
       followingIds: followingIds,
     );
+  }
+
+  // Bir hikayeyi "görüldü" olarak işaretler.
+  Future<void> markStoryAsViewed({
+    required String storyId,
+    required String viewerId,
+  }) async {
+    // Bu işlem arka planda sessizce yapılabilir, UI'ı bloklamaya gerek yok.
+    await _storyService.addViewToStory(storyId, viewerId);
+  }
+
+  Future<void> deleteStory({
+    required String storyId,
+    required String userId,
+  }) async {
+    await _storyService.deleteStory(storyId: storyId, userId: userId);
   }
 }

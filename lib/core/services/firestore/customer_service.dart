@@ -288,4 +288,25 @@ class CustomerService {
       debugPrint('Kullanıcı görünümü güncellenirken hata: $e');
     }
   }
+
+  // Verilen ID listesine göre birden çok kullanıcıyı getirir.
+  Future<List<Customer>> getUsersByIds(List<String> userIds) async {
+    if (userIds.isEmpty) {
+      return [];
+    }
+
+    try {
+      final querySnapshot = await _firestore
+          .collection('customers')
+          .where(FieldPath.documentId, whereIn: userIds)
+          .get();
+
+      return querySnapshot.docs
+          .map((doc) => Customer.fromJson(doc.data(), doc.id))
+          .toList();
+    } catch (e) {
+      debugPrint('Kullanıcılar getirilirken hata: $e');
+      return [];
+    }
+  }
 }

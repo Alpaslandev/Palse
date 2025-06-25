@@ -1,10 +1,12 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class StoryModel {
   final String id;
   final String userId;
   final String username;
   final String profilePictureUrl;
   final String imageUrl;
-  final String createdAt;
+  final DateTime createdAt;
   final List<String> viewedBy;
   final bool isPublic;
 
@@ -27,9 +29,11 @@ class StoryModel {
       username: json['username'] as String,
       profilePictureUrl: json['profilePictureUrl'] as String,
       imageUrl: json['imageUrl'] as String,
-      createdAt: json['createdAt'] as String,
-      viewedBy: List<String>.from(json['viewedBy'] as List),
-      isPublic: json['isPublic'] as bool,
+      createdAt: (json['createdAt'] is Timestamp)
+          ? (json['createdAt'] as Timestamp).toDate()
+          : DateTime.now(),
+      viewedBy: List<String>.from(json['viewedBy'] ?? []),
+      isPublic: json['isPublic'] as bool? ?? true,
     );
   }
 
@@ -41,9 +45,40 @@ class StoryModel {
       'username': username,
       'profilePictureUrl': profilePictureUrl,
       'imageUrl': imageUrl,
-      'createdAt': createdAt,
+      'createdAt': Timestamp.fromDate(createdAt),
       'viewedBy': viewedBy,
       'isPublic': isPublic,
     };
   }
+
+  // GoRouter için JSON serialization (primitive tipler)
+  Map<String, dynamic> toRouterJson() {
+    return {
+      'id': id,
+      'userId': userId,
+      'username': username,
+      'profilePictureUrl': profilePictureUrl,
+      'imageUrl': imageUrl,
+      'createdAt': createdAt.toIso8601String(), // String olarak
+      'viewedBy': viewedBy,
+      'isPublic': isPublic,
+    };
+  }
+
+  // GoRouter JSON'dan oluşturmak için
+  factory StoryModel.fromRouterJson(Map<String, dynamic> json) {
+    return StoryModel(
+      id: json['id'] as String,
+      userId: json['userId'] as String,
+      username: json['username'] as String,
+      profilePictureUrl: json['profilePictureUrl'] as String,
+      imageUrl: json['imageUrl'] as String,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      viewedBy: List<String>.from(json['viewedBy'] ?? []),
+      isPublic: json['isPublic'] as bool? ?? true,
+    );
+  }
+
+  // Firestore query'leri için timestamp değeri
+  Timestamp get createdAtTimestamp => Timestamp.fromDate(createdAt);
 }
