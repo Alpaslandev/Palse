@@ -11,7 +11,7 @@ import 'package:palseapp/core/provider/ads_provider.dart';
 import 'package:palseapp/core/widgets/faq_page.dart';
 import 'package:palseapp/core/widgets/landing_view.dart';
 import 'package:palseapp/core/widgets/notification_view.dart';
-import 'package:palseapp/features/my_advert/view/widgets/user_list_view.dart';
+import 'package:palseapp/core/widgets/advert/widgets/user_list_view.dart';
 import 'package:palseapp/features/achievement/achievement_test_page.dart';
 import 'package:palseapp/features/auth/views/login_view.dart';
 import 'package:palseapp/features/categories/view/categories_view.dart';

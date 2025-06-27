@@ -5,39 +5,37 @@ import 'package:intl/intl.dart';
 import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/models/advert.dart';
 import 'package:palseapp/core/models/customer.dart';
-import 'package:palseapp/core/routes/routes.dart';
-import 'package:palseapp/core/services/firestore/follow_service.dart';
+// ignore: library_prefixes
+import 'package:palseapp/core/routes/routes.dart' as Routes;
 import 'package:palseapp/core/widgets/circle_profile_picture.dart';
-import 'package:palseapp/core/widgets/scaffold_mess.dart';
 import 'package:palseapp/features/achievement/achievement_service.dart';
 
 // İlan kart profil başlık widget'ı
-class AdvertProfileHeader extends StatefulWidget {
+class AdvertProfileHeader extends StatelessWidget {
   const AdvertProfileHeader({
     super.key,
     required this.customer,
     required this.currentCustomer,
     required this.advert,
+    required this.isFollowing,
+    required this.isFollowRequestSent,
+    required this.isLoading,
+    required this.onFollowTap,
   });
 
   final Customer customer;
   final Customer currentCustomer;
   final Advert advert;
-
-  @override
-  State<AdvertProfileHeader> createState() => _AdvertProfileHeaderState();
-}
-
-class _AdvertProfileHeaderState extends State<AdvertProfileHeader> {
-  final FollowService _followService = FollowService();
-  bool _isLoading = false;
+  final bool isFollowing;
+  final bool isFollowRequestSent;
+  final bool isLoading;
+  final VoidCallback onFollowTap;
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () {
-        context.pushNamed(friendProfile, extra: widget.advert.creatorUserID);
-      },
+      onTap: () =>
+          context.pushNamed(Routes.friendProfile, extra: customer.userID),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8.0),
         child: Column(
@@ -49,7 +47,7 @@ class _AdvertProfileHeaderState extends State<AdvertProfileHeader> {
               children: [
                 // Sol taraf - Profil resmi
                 CircleProfilePicture(
-                  imageUrl: widget.customer.profilePictureUrl,
+                  imageUrl: customer.profilePictureUrl,
                   radius: 30,
                 ),
 
@@ -64,17 +62,17 @@ class _AdvertProfileHeaderState extends State<AdvertProfileHeader> {
                       Row(
                         children: [
                           Text(
-                            widget.customer.firstName ?? '',
+                            customer.firstName ?? '',
                             style: const TextStyle(
                                 fontWeight: FontWeight.bold, fontSize: 14),
                           ),
-                          if (widget.customer.verification ?? false)
+                          if (customer.verification ?? false)
                             const Padding(
                               padding: EdgeInsets.only(left: 2),
                               child: Icon(Icons.verified,
                                   color: Colors.blue, size: 14),
                             ),
-                          if (widget.customer.isPremium ?? false)
+                          if (customer.isPremium ?? false)
                             const Padding(
                               padding: EdgeInsets.only(left: 2),
                               child: Icon(Icons.verified,
@@ -83,9 +81,8 @@ class _AdvertProfileHeaderState extends State<AdvertProfileHeader> {
                           const Spacer(),
 
                           // Takip butonu - kendi profilinde gösterme
-                          if (widget.customer.userID !=
-                              widget.currentCustomer.userID)
-                            _buildFollowButton(),
+                          if (customer.userID != currentCustomer.userID)
+                            _buildFollowButton(context),
 
                           const SizedBox(width: 8),
 
@@ -99,7 +96,7 @@ class _AdvertProfileHeaderState extends State<AdvertProfileHeader> {
                               ),
                               const SizedBox(width: 2),
                               Text(
-                                widget.customer.getAverage().toInt().toString(),
+                                customer.getAverage().toInt().toString(),
                                 style: const TextStyle(fontSize: 12),
                               ),
                             ],
@@ -110,7 +107,7 @@ class _AdvertProfileHeaderState extends State<AdvertProfileHeader> {
                       const SizedBox(height: 4),
 
                       // 2. Satır: Kullanıcı rütbesi
-                      if (widget.customer.totalXp > 0)
+                      if (customer.totalXp > 0)
                         Material(
                           color: Colors.transparent,
                           child: Container(
@@ -125,8 +122,7 @@ class _AdvertProfileHeaderState extends State<AdvertProfileHeader> {
                               children: [
                                 Builder(builder: (context) {
                                   final rank = AchievementService()
-                                      .getUserRankFromXp(
-                                          widget.customer.totalXp);
+                                      .getUserRankFromXp(customer.totalXp);
                                   return Text(
                                     "${rank.icon} ${AchievementService().getLocalizedRankTitle(rank, context)}",
                                     style: const TextStyle(
@@ -147,12 +143,11 @@ class _AdvertProfileHeaderState extends State<AdvertProfileHeader> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            widget.advert.advertType.getText(context),
+                            advert.advertType.getText(context),
                             style: const TextStyle(fontSize: 12),
                           ),
                           Text(
-                            DateFormat('dd/MM/yyyy')
-                                .format(widget.advert.createdAt),
+                            DateFormat('dd/MM/yyyy').format(advert.createdAt),
                             style: const TextStyle(
                                 fontSize: 12, color: Colors.grey),
                           ),
@@ -181,7 +176,7 @@ class _AdvertProfileHeaderState extends State<AdvertProfileHeader> {
                           ),
                           TextSpan(
                             text:
-                                ' ${widget.advert.location.displayStringWithDistance(widget.currentCustomer.location!)}',
+                                ' ${advert.location.displayStringWithDistance(currentCustomer.location!)}',
                             style: const TextStyle(
                                 fontSize: 9, color: Colors.grey),
                           ),
@@ -201,7 +196,7 @@ class _AdvertProfileHeaderState extends State<AdvertProfileHeader> {
                         ),
                         TextSpan(
                           text:
-                              ' ${DateFormat('dd/MM/yyyy').format(widget.advert.startEventDate)} - ${DateFormat('HH:mm').format(widget.advert.startEventDate)}',
+                              ' ${DateFormat('dd/MM/yyyy').format(advert.startEventDate)} - ${DateFormat('HH:mm').format(advert.startEventDate)}',
                           style:
                               const TextStyle(fontSize: 9, color: Colors.grey),
                         ),
@@ -219,12 +214,7 @@ class _AdvertProfileHeaderState extends State<AdvertProfileHeader> {
   }
 
   // Takip butonunu oluşturan metod
-  Widget _buildFollowButton() {
-    final isFollowing = FollowService.isFollowing(
-        widget.currentCustomer, widget.customer.userID!);
-    final isRequestSent = FollowService.isFollowRequestSent(
-        widget.customer, widget.currentCustomer.userID!);
-
+  Widget _buildFollowButton(BuildContext context) {
     String buttonText;
     IconData buttonIcon;
     Color buttonColor = Colors.blue;
@@ -233,11 +223,11 @@ class _AdvertProfileHeaderState extends State<AdvertProfileHeader> {
       buttonText = context.tr('unfollow');
       buttonIcon = Icons.person_remove_outlined;
       buttonColor = Colors.red;
-    } else if (widget.customer.isPrivate == true && isRequestSent) {
+    } else if (customer.isPrivate == true && isFollowRequestSent) {
       buttonText = context.tr('request_sent');
       buttonIcon = Icons.schedule_outlined;
       buttonColor = Colors.orange;
-    } else if (widget.customer.isPrivate == true) {
+    } else if (customer.isPrivate == true) {
       buttonText = context.tr('send_request');
       buttonIcon = Icons.person_add_outlined;
     } else {
@@ -245,7 +235,7 @@ class _AdvertProfileHeaderState extends State<AdvertProfileHeader> {
       buttonIcon = Icons.person_add_outlined;
     }
 
-    return _isLoading
+    return isLoading
         ? SizedBox(
             width: 16,
             height: 16,
@@ -263,7 +253,7 @@ class _AdvertProfileHeaderState extends State<AdvertProfileHeader> {
               borderRadius: BorderRadius.circular(15),
             ),
             child: TextButton.icon(
-              onPressed: () => _handleFollowTap(isFollowing, isRequestSent),
+              onPressed: onFollowTap,
               style: TextButton.styleFrom(
                 padding: EdgeInsets.zero,
                 minimumSize: Size.zero,
@@ -276,58 +266,5 @@ class _AdvertProfileHeaderState extends State<AdvertProfileHeader> {
               ),
             ),
           );
-  }
-
-  // Takip butonuna tıklandığında çalışan metod
-  Future<void> _handleFollowTap(bool isFollowing, bool isRequestSent) async {
-    if (_isLoading) return;
-
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      final currentUserId = widget.currentCustomer.userID!;
-      final targetUserId = widget.customer.userID!;
-
-      if (isFollowing) {
-        // Takipten çık
-        await _followService.unfollowUser(currentUserId, targetUserId);
-        if (mounted) {
-          ScaffoldMess.showSuccessSnackBar(context.tr('unfollowed_user'));
-        }
-      } else if (widget.customer.isPrivate == true && isRequestSent) {
-        // İsteği iptal et - followingRequests'ten çıkar
-        await _followService.rejectFollowRequest(targetUserId, currentUserId);
-        if (mounted) {
-          ScaffoldMess.showSuccessSnackBar(context.tr('request_cancelled'));
-        }
-      } else {
-        // Takip et veya istek gönder
-        await _followService.followUser(currentUserId, targetUserId);
-        if (widget.customer.isPrivate == true) {
-          if (mounted) {
-            ScaffoldMess.showSuccessSnackBar(context.tr('follow_request_sent'));
-          }
-        } else {
-          if (mounted) {
-            ScaffoldMess.showSuccessSnackBar(context.tr('user_followed'));
-          }
-        }
-      }
-
-      // Auth provider stream otomatik olarak güncellenecek
-    } catch (e) {
-      debugPrint('Takip işlemi hatası: $e');
-      if (mounted) {
-        ScaffoldMess.showErrorSnackBar(context.tr('error_occurred'));
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
   }
 }

@@ -1,3 +1,4 @@
+/*
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -110,6 +111,16 @@ class AdvertCard extends StatelessWidget {
             customer: customer,
             currentCustomer: currentCustomer,
             advert: advert,
+            isFollowing:
+                currentCustomer.followings?.contains(advert.creatorUserID) ??
+                    false,
+            isFollowRequestSent:
+                customer.followingRequests?.contains(currentCustomer.userID) ??
+                    false,
+            isLoading: false,
+            onFollowTap: () {
+              // TODO: Follow functionality - bu eski widget'ta implement edilmeli
+            },
           );
         });
   }
@@ -526,3 +537,4 @@ class AdvertCard extends StatelessWidget {
     return blockList.contains(userId);
   }
 }
+*/

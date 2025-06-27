@@ -6,7 +6,8 @@ import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
-import 'package:palseapp/core/widgets/advert_card.dart';
+import 'package:palseapp/core/widgets/advert/advert_card_view.dart';
+import 'package:palseapp/core/widgets/advert/advert_card_view_model.dart';
 import 'package:palseapp/features/home/viewmodel/home_view_model.dart';
 import 'package:palseapp/features/home/widgets/explore_tab_bar.dart';
 import 'package:palseapp/features/story/view/storys_view.dart';
@@ -228,42 +229,9 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                                 return const SizedBox.shrink();
                               }
 
-                              final isLiked =
-                                  advert.likers.contains(_user.userID);
-                              final isJoinRequestSent =
-                                  advert.joinRequestIds.contains(_user.userID);
-                              final isJoinRequestAccepted = advert
-                                  .joinRequestAcceptedIds
-                                  .contains(_user.userID);
-
-                              return AdvertCard(
+                              return AdvertCardView(
                                 advert: advert,
-                                isLiked: isLiked,
-                                isJoinRequestSent: isJoinRequestSent,
-                                isJoinRequestAccepted: isJoinRequestAccepted,
-                                onLikeTap: () async {
-                                  if (isLiked) {
-                                    await viewModel.unlikeAdvert(
-                                        advert.advertID ?? '',
-                                        _user.userID ?? '');
-                                  } else {
-                                    await viewModel.likeAdvert(
-                                        advert.advertID ?? '',
-                                        _user.userID ?? '');
-                                  }
-                                },
-                                onJoinRequestTap: () async {
-                                  debugPrint('Katılım isteği gönderildi');
-                                  if (isJoinRequestSent) {
-                                    await viewModel.cancelJoinRequest(
-                                        advert.advertID ?? '',
-                                        _user.userID ?? '');
-                                  } else {
-                                    await viewModel.sendJoinRequest(
-                                        advert.advertID ?? '',
-                                        _user.userID ?? '');
-                                  }
-                                },
+                                mode: AdvertCardMode.home,
                               );
                             },
                           ),

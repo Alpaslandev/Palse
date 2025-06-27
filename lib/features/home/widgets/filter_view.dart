@@ -7,7 +7,8 @@ import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/services/firestore/advert_service.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
-import 'package:palseapp/core/widgets/advert_card.dart';
+import 'package:palseapp/core/widgets/advert/advert_card_view.dart';
+import 'package:palseapp/core/widgets/advert/advert_card_view_model.dart';
 import 'package:palseapp/core/widgets/premium_overlay.dart';
 import 'package:palseapp/core/helper/calculate_distance.dart';
 import 'package:provider/provider.dart';
@@ -208,33 +209,9 @@ class _FilterViewState extends State<FilterView> {
       itemCount: adverts.length,
       itemBuilder: (context, index) {
         final advert = adverts[index];
-        return AdvertCard(
+        return AdvertCardView(
           advert: advert,
-          isLiked: _currentUser != null
-              ? advert.likers.contains(_currentUser?.userID)
-              : false,
-          onLikeTap: _currentUser != null
-              ? () async {
-                  final userId = _currentUser?.userID;
-                  if (userId == null) return;
-
-                  final advertService = AdvertService();
-                  if (advert.likers.contains(userId)) {
-                    await advertService.unlikeAdvert(
-                      advertId: advert.advertID ?? '',
-                      userId: userId,
-                    );
-                  } else {
-                    await advertService.likeAdvert(
-                      advertId: advert.advertID ?? '',
-                      userId: userId,
-                    );
-                  }
-
-                  // Filtreleri yeniden uygula
-                  _applyFilters();
-                }
-              : null,
+          mode: AdvertCardMode.home,
         );
       },
     );

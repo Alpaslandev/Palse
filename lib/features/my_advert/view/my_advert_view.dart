@@ -3,10 +3,10 @@ import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/routes/routes.dart' as Routes;
-import 'package:palseapp/core/widgets/advert_card.dart';
+import 'package:palseapp/core/widgets/advert/advert_card_view.dart';
+import 'package:palseapp/core/widgets/advert/advert_card_view_model.dart';
 import 'package:palseapp/core/widgets/premium_overlay.dart';
 import 'package:palseapp/core/widgets/recently_viewer.dart';
-import 'package:palseapp/core/widgets/scaffold_mess.dart';
 import 'package:palseapp/features/my_advert/viewmodel/my_advert_view_model.dart';
 import 'package:provider/provider.dart';
 
@@ -89,33 +89,9 @@ class _MyAdvertViewState extends State<MyAdvertView>
                               itemBuilder: (context, index) {
                                 final advert = viewModel.myAdverts[index];
                                 if (advert == null) return const SizedBox();
-                                return AdvertCard(
+                                return AdvertCardView(
                                   advert: advert,
-                                  isUserAdvert: true,
-                                  onDeleteTap: () async {
-                                    debugPrint('sil');
-                                    await viewModel.deleteAdvert(
-                                        advertId: advert.advertID ?? '',
-                                        userId:
-                                            authProvider.user?.userID ?? '');
-                                    if (!context.mounted) return;
-                                    ScaffoldMess.showSuccessSnackBar(context
-                                        .tr('advert_deleted_successfully'));
-                                  },
-                                  onSeeLikersTap: () {
-                                    context.pushNamed(Routes.userList, extra: {
-                                      'users': advert.likers,
-                                      'isLikers': true,
-                                      'advertId': advert.advertID,
-                                    });
-                                  },
-                                  onSeeJoinRequestsTap: () {
-                                    context.pushNamed(Routes.userList, extra: {
-                                      'users': advert.joinRequestIds,
-                                      'isLikers': false,
-                                      'advertId': advert.advertID,
-                                    });
-                                  },
+                                  mode: AdvertCardMode.myAdvert,
                                 );
                               },
                             ),
@@ -128,20 +104,12 @@ class _MyAdvertViewState extends State<MyAdvertView>
                                 debugPrint(
                                     viewModel.favorites.length.toString());
                                 final advert = viewModel.favorites[index];
-                                final customer =
-                                    viewModel.getCustomerForAdvert(advert);
 
                                 if (advert == null) return const SizedBox();
 
-                                return AdvertCard(
+                                return AdvertCardView(
                                   advert: advert,
-                                  isMyLikes: true,
-                                  isLiked: advert.likers.contains(
-                                      authProvider.user?.userID ?? ''),
-                                  onProfileTap: () => context.pushNamed(
-                                      Routes.friendProfile,
-                                      extra: customer?.userID),
-                                  onMessageTap: () => debugPrint('mesaj'),
+                                  mode: AdvertCardMode.myAdvert,
                                 );
                               },
                             ),
@@ -156,22 +124,12 @@ class _MyAdvertViewState extends State<MyAdvertView>
                                 debugPrint(
                                     viewModel.joinedEvents.length.toString());
                                 final advert = viewModel.joinedEvents[index];
-                                final customer =
-                                    viewModel.getCustomerForAdvert(advert);
 
                                 if (advert == null) return const SizedBox();
 
-                                return AdvertCard(
+                                return AdvertCardView(
                                   advert: advert,
-                                  isMyLikes: true,
-                                  isLiked: advert.likers.contains(
-                                      authProvider.user?.userID ?? ''),
-                                  onProfileTap: () => context.pushNamed(
-                                      Routes.friendProfile,
-                                      extra: customer?.userID),
-                                  onMessageTap: () => debugPrint('mesaj'),
-                                  leaveEventTap: () => viewModel
-                                      .leaveEvent(advert.advertID ?? ''),
+                                  mode: AdvertCardMode.myAdvert,
                                 );
                               },
                             ),

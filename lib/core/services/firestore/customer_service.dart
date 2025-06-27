@@ -92,17 +92,6 @@ class CustomerService {
     }
   }
 
-  Future<void> deleteAdvertFromCustomer(String advertId, String userId) async {
-    try {
-      await _firestore.collection('customers').doc(userId).update({
-        'adverts': FieldValue.arrayRemove([advertId])
-      });
-      debugPrint('İlan başarıyla silindi');
-    } catch (e) {
-      debugPrint('İlan silme hatası: $e');
-    }
-  }
-
   // Silinen ilanlara ait referansları kullanıcılardan temizle
   Future<void> cleanupDeletedAdvertReferences() async {
     try {

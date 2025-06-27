@@ -31,7 +31,10 @@ class CircleProfilePicture extends StatelessWidget {
         color: backgroundColor ?? Theme.of(context).cardColor,
         shape: BoxShape.circle,
         image: DecorationImage(
-          image: isPhoto ? CachedNetworkImageProvider(imageUrl!) : const AssetImage('assets/images/dostum_olsana_trimmed.png') as ImageProvider,
+          image: isPhoto
+              ? CachedNetworkImageProvider(imageUrl!)
+              : const AssetImage('assets/images/dostum_olsana_trimmed.png')
+                  as ImageProvider,
           fit: BoxFit.cover,
         ),
       ),

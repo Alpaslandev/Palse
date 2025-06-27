@@ -5,12 +5,13 @@ import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/services/chat_service.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
-import 'package:palseapp/core/widgets/advert_card.dart';
+import 'package:palseapp/core/widgets/advert/advert_card_view.dart';
 import 'package:palseapp/core/widgets/circle_profile_picture.dart';
 import 'package:palseapp/core/widgets/scaffold_mess.dart';
 import 'package:palseapp/features/friend_profile/friend_profile_view_model.dart';
 import 'package:provider/provider.dart';
 import 'package:palseapp/features/achievement/achievement_service.dart';
+import 'package:palseapp/core/widgets/advert/advert_card_view_model.dart';
 
 class FriendProfileView extends StatelessWidget {
   const FriendProfileView({super.key, required this.customerID});
@@ -57,9 +58,9 @@ class FriendProfileView extends StatelessWidget {
                                 itemBuilder: (context, index) {
                                   debugPrint(
                                       'İlan gösteriliyor: ${viewModel.adverts[index].toString()}');
-                                  return AdvertCard(
+                                  return AdvertCardView(
                                     advert: viewModel.adverts[index],
-                                    isFriendProfile: true,
+                                    mode: AdvertCardMode.friendProfile,
                                   );
                                 },
                               ),

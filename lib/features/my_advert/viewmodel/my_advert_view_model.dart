@@ -69,21 +69,6 @@ class MyAdvertViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> deleteAdvert(
-      {required String advertId, required String userId}) async {
-    try {
-      await _advertService.deleteAdvert(advertId);
-      await _customerService.deleteAdvertFromCustomer(advertId, userId);
-      _myAdverts.removeWhere((advert) => advert?.advertID == advertId);
-      // fetchAdvertsWithCustomers();
-    } catch (e) {
-      debugPrint('İlan silme hatası: ${e.toString()}');
-    } finally {
-      notifyListeners();
-    }
-  }
-
-  // Kullanıcı UID'leri ile kullanıcıları çekiyoruz
   Future<void> fetchRecentlyViewed() async {
     if (_authProvider.user?.profileViewers != null) {
       final List<Future<Customer?>> futures = _authProvider
@@ -140,11 +125,6 @@ class MyAdvertViewModel extends ChangeNotifier {
 
       _favorites.addAll(adverts.where((advert) => advert != null));
     }
-  }
-
-  Customer? getCustomerForAdvert(Advert? advert) {
-    if (advert == null) return null;
-    return _customers[advert.creatorUserID];
   }
 
   void _setLoading(bool value) {

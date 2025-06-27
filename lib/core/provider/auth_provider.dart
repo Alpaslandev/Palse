@@ -17,7 +17,8 @@ class AuthProvider extends ChangeNotifier implements Listenable {
   final AdvertService _advertService = AdvertService();
 
   bool _isLoading = true;
-  bool _isFirestoreDataLoaded = false; // Firestore verilerinin yüklenme durumunu takip eden flag
+  bool _isFirestoreDataLoaded =
+      false; // Firestore verilerinin yüklenme durumunu takip eden flag
   User? _firebaseUser;
   Customer? _user;
   bool _isFirstTime = true;
@@ -26,7 +27,8 @@ class AuthProvider extends ChangeNotifier implements Listenable {
   String? _appleLastName;
 
   // Getterlar
-  bool get isLoading => _isLoading || (_firebaseUser != null && !_isFirestoreDataLoaded);
+  bool get isLoading =>
+      _isLoading || (_firebaseUser != null && !_isFirestoreDataLoaded);
   bool get isProfileSetupCompleted => _user != null && _isFirestoreDataLoaded;
   Customer? get user => _user;
   User? get firebaseUser => _firebaseUser;
@@ -55,9 +57,11 @@ class AuthProvider extends ChangeNotifier implements Listenable {
         _firebaseUser = user;
 
         if (user == null) {
-          _isFirestoreDataLoaded = true; // Kullanıcı yoksa veri yükleme tamamlandı sayılır
+          _isFirestoreDataLoaded =
+              true; // Kullanıcı yoksa veri yükleme tamamlandı sayılır
         } else {
-          _isFirestoreDataLoaded = false; // Kullanıcı varsa veri yükleme başlıyor
+          _isFirestoreDataLoaded =
+              false; // Kullanıcı varsa veri yükleme başlıyor
         }
 
         notifyListeners();
@@ -87,12 +91,15 @@ class AuthProvider extends ChangeNotifier implements Listenable {
   void _startFirestoreStream(String userId) {
     debugPrint('Starting user stream for user: $userId');
 
-    _userStreamSubscription = _userService.streamFirestore(userId).listen((userData) {
+    _userStreamSubscription =
+        _userService.streamFirestore(userId).listen((userData) {
       debugPrint('Firestore verisi alındı: exists=${userData.exists}');
 
       if (userData.exists && userData.data() != null) {
-        final newUser = Customer.fromJson(userData.data() as Map<String, dynamic>, userId);
-        debugPrint('Customer objesi oluşturuldu: id=${newUser.userID}, firstName=${newUser.firstName}');
+        final newUser =
+            Customer.fromJson(userData.data() as Map<String, dynamic>, userId);
+        debugPrint(
+            'Customer objesi oluşturuldu: id=${newUser.userID}, firstName=${newUser.firstName}');
 
         _user = newUser;
         _isFirestoreDataLoaded = true; // Firestore verisi yüklendi
@@ -110,14 +117,16 @@ class AuthProvider extends ChangeNotifier implements Listenable {
       } else {
         debugPrint('User data not found');
         _user = null;
-        _isFirestoreDataLoaded = true; // Veri bulunamadı ama yükleme işlemi tamamlandı
+        _isFirestoreDataLoaded =
+            true; // Veri bulunamadı ama yükleme işlemi tamamlandı
         notifyListeners();
       }
       debugPrint('User data updated: ${_user?.userID}');
     }, onError: (error) {
       debugPrint('User stream error: $error');
       _isLoading = false;
-      _isFirestoreDataLoaded = true; // Hata durumunda da yükleme işlemi tamamlandı sayılır
+      _isFirestoreDataLoaded =
+          true; // Hata durumunda da yükleme işlemi tamamlandı sayılır
       notifyListeners();
     });
   }
@@ -152,7 +161,8 @@ class AuthProvider extends ChangeNotifier implements Listenable {
       _isFirestoreDataLoaded = false; // Kayıt yaparken false olarak ayarla
       notifyListeners();
 
-      final user = await _authService.signUpWithEmailAndPassword(email, password);
+      final user =
+          await _authService.signUpWithEmailAndPassword(email, password);
       if (user != null) {
         _firebaseUser = user;
       }
@@ -169,7 +179,8 @@ class AuthProvider extends ChangeNotifier implements Listenable {
     try {
       debugPrint('Google ile giriş başlatılıyor...');
       _isLoading = true;
-      _isFirestoreDataLoaded = false; // Google ile giriş yaparken false olarak ayarla
+      _isFirestoreDataLoaded =
+          false; // Google ile giriş yaparken false olarak ayarla
       notifyListeners();
 
       final user = await _authService.signInWithGoogle();
@@ -197,7 +208,8 @@ class AuthProvider extends ChangeNotifier implements Listenable {
   Future<void> loginWithApple() async {
     try {
       _isLoading = true;
-      _isFirestoreDataLoaded = false; // Apple ile giriş yaparken false olarak ayarla
+      _isFirestoreDataLoaded =
+          false; // Apple ile giriş yaparken false olarak ayarla
       notifyListeners();
 
       final user = await _authService.signInWithApple();
@@ -207,11 +219,14 @@ class AuthProvider extends ChangeNotifier implements Listenable {
       if (user != null) {
         // DisplayName formatı genellikle "Ad Soyad" şeklindedir
         final displayName = user.displayName;
-        if (displayName != null && displayName.isNotEmpty && displayName.contains(' ')) {
+        if (displayName != null &&
+            displayName.isNotEmpty &&
+            displayName.contains(' ')) {
           final nameParts = displayName.split(' ');
           _appleFirstName = nameParts.first;
           _appleLastName = nameParts.length > 1 ? nameParts.last : '';
-          debugPrint('Apple ile giriş: Ad: $_appleFirstName, Soyad: $_appleLastName');
+          debugPrint(
+              'Apple ile giriş: Ad: $_appleFirstName, Soyad: $_appleLastName');
         }
       }
     } catch (e) {
@@ -232,7 +247,7 @@ class AuthProvider extends ChangeNotifier implements Listenable {
     try {
       if (user != null && user!.adverts != null) {
         for (var advert in user!.adverts!) {
-          await _advertService.deleteAdvert(advert);
+          await _advertService.deleteAdvert(advert, user!.userID!);
         }
       }
       await _userService.deleteAccount(user!.userID!);

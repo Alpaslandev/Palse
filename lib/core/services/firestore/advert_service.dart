@@ -3,11 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:palseapp/core/constant/categories.dart';
 import 'package:palseapp/core/models/advert.dart';
 import 'package:palseapp/core/models/customer.dart';
-import 'package:palseapp/core/services/notification_service.dart';
 
 class AdvertService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final NotificationService notificationService = NotificationService();
 
   // Şehre göre ilanları getir (index gerekmeden)
   Future<List<Advert>> fetchAdvertsByCity(
@@ -275,12 +273,19 @@ class AdvertService {
     }
   }
 
-  Future<void> deleteAdvert(String advertId) async {
+  Future<void> deleteAdvert(String advertId, String userId) async {
     try {
-      await _firestore.collection('events').doc(advertId).delete();
+      final batch = _firestore.batch();
+      batch.delete(_firestore.collection('events').doc(advertId));
+      batch.update(_firestore.collection('customers').doc(userId), {
+        'adverts': FieldValue.arrayRemove([advertId])
+      });
+
+      await batch.commit();
       debugPrint('İlan başarıyla silindi');
     } catch (e) {
       debugPrint('İlan silme hatası: $e');
+      rethrow;
     }
   }
 
@@ -301,6 +306,7 @@ class AdvertService {
       });
     } catch (e) {
       debugPrint('Katılım isteği gönderme hatası: $e');
+      rethrow;
     }
   }
 
@@ -321,6 +327,7 @@ class AdvertService {
       });
     } catch (e) {
       debugPrint('Katılım isteği kabul hatası: $e');
+      rethrow;
     }
   }
 
@@ -341,6 +348,7 @@ class AdvertService {
       });
     } catch (e) {
       debugPrint('Katılım isteği reddetme hatası: $e');
+      rethrow;
     }
   }
 }
