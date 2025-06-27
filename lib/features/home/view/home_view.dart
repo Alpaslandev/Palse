@@ -24,7 +24,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   late TabController _topTabController;
   late TabController _exploreTabController;
   late HomeViewModel _viewModel;
-  final ScrollController _scrollController = ScrollController();
 
   // Kullanıcı verilerini saklayacağız
   late final Customer _user;
@@ -39,9 +38,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     _topTabController.addListener(_onTopTabChanged);
     _exploreTabController.addListener(_onExploreTabChanged);
 
-    // Sayfalama için scroll dinleyicisi
-    _scrollController.addListener(_onScroll);
-
     // İlk yüklemeyi yap
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Kullanıcının sadece ID'sini kaydet
@@ -53,15 +49,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
         _viewModel.fetchAdvertsForTab(_user, _exploreTabController.index);
       }
     });
-  }
-
-  void _onScroll() {
-    if (_scrollController.position.pixels >=
-            _scrollController.position.maxScrollExtent - 500 &&
-        !_viewModel.isLoading &&
-        _viewModel.hasMore) {
-      _viewModel.loadMore(_user, _exploreTabController.index);
-    }
   }
 
   void _onTopTabChanged() {
@@ -89,8 +76,20 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     _topTabController.dispose();
     _exploreTabController.dispose();
     _viewModel.dispose();
-    _scrollController.dispose();
     super.dispose();
+  }
+
+  // NestedScrollView için sayfalama kontrolü
+  bool _onScrollNotification(ScrollNotification notification) {
+    if (notification is ScrollEndNotification) {
+      final metrics = notification.metrics;
+      if (metrics.pixels >= metrics.maxScrollExtent - 500 &&
+          !_viewModel.isLoading &&
+          _viewModel.hasMore) {
+        _viewModel.loadMore(_user, _exploreTabController.index);
+      }
+    }
+    return false;
   }
 
   Widget _buildExploreContent() {
@@ -149,7 +148,6 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                             : Center(child: Text(context.tr('no_listings_yet')))
                         : ListView.builder(
                             padding: const EdgeInsets.only(bottom: 80, top: 12),
-                            controller: _scrollController,
                             itemCount: viewModel.adverts.length + 1,
                             itemBuilder: (context, index) {
                               if (index == viewModel.adverts.length) {
@@ -297,64 +295,102 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // Hikayeler görünümü - Sadece home view'da
-        const StorysView(),
-        // TabBar
-        Container(
-          height: 48,
-          child: Row(
-            children: [
-              Expanded(
-                child: TabBar(
-                  controller: _topTabController,
-                  isScrollable: false,
-                  padding: EdgeInsets.zero,
-                  labelPadding: const EdgeInsets.symmetric(horizontal: 10),
-                  indicatorWeight: 3,
-                  labelStyle: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
+    return NotificationListener<ScrollNotification>(
+      onNotification: _onScrollNotification,
+      child: NestedScrollView(
+        headerSliverBuilder: (context, innerBoxIsScrolled) {
+          return [
+            // Hikayeler için SliverToBoxAdapter
+            const SliverToBoxAdapter(
+              child: StorysView(),
+            ),
+            // TabBar için SliverPersistentHeader
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _TabBarDelegate(
+                tabBar: Container(
+                  color: Theme.of(context).scaffoldBackgroundColor,
+                  height: 48,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TabBar(
+                          controller: _topTabController,
+                          isScrollable: false,
+                          padding: EdgeInsets.zero,
+                          labelPadding:
+                              const EdgeInsets.symmetric(horizontal: 10),
+                          indicatorWeight: 3,
+                          labelStyle: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          unselectedLabelStyle: const TextStyle(
+                            fontSize: 13,
+                          ),
+                          unselectedLabelColor: Colors.grey,
+                          tabs: const [
+                            Tab(text: 'Keşfet', iconMargin: EdgeInsets.zero),
+                            Tab(
+                                text: 'Takiptekiler',
+                                iconMargin: EdgeInsets.zero),
+                            Tab(
+                                text: 'Şehrimde Ne Var',
+                                iconMargin: EdgeInsets.zero),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () {
+                          context.pushNamed(filter);
+                        },
+                        icon: SvgPicture.asset(
+                          'assets/vectors/filter_x2.svg',
+                          width: 24,
+                          height: 24,
+                          colorFilter: const ColorFilter.mode(
+                              AppTheme.primaryColor, BlendMode.srcIn),
+                        ),
+                      ),
+                    ],
                   ),
-                  unselectedLabelStyle: const TextStyle(
-                    fontSize: 13,
-                  ),
-                  unselectedLabelColor: Colors.grey,
-                  tabs: const [
-                    Tab(text: 'Keşfet', iconMargin: EdgeInsets.zero),
-                    Tab(text: 'Takiptekiler', iconMargin: EdgeInsets.zero),
-                    Tab(text: 'Şehrimde Ne Var', iconMargin: EdgeInsets.zero),
-                  ],
                 ),
               ),
-              IconButton(
-                onPressed: () {
-                  context.pushNamed(filter);
-                },
-                icon: SvgPicture.asset(
-                  'assets/vectors/filter_x2.svg',
-                  width: 24,
-                  height: 24,
-                  colorFilter: const ColorFilter.mode(
-                      AppTheme.primaryColor, BlendMode.srcIn),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ];
+        },
+        body: TabBarView(
+          controller: _topTabController,
+          children: [
+            _buildExploreContent(),
+            _buildFollowingContent(),
+            _buildOrganizationsContent(),
+          ],
         ),
-        // TabBarView
-        Expanded(
-          child: TabBarView(
-            controller: _topTabController,
-            children: [
-              _buildExploreContent(),
-              _buildFollowingContent(),
-              _buildOrganizationsContent(),
-            ],
-          ),
-        ),
-      ],
+      ),
     );
+  }
+}
+
+// TabBar için özel delegate sınıfı
+class _TabBarDelegate extends SliverPersistentHeaderDelegate {
+  final Widget tabBar;
+
+  _TabBarDelegate({required this.tabBar});
+
+  @override
+  Widget build(context, double shrinkOffset, bool overlapsContent) {
+    return tabBar;
+  }
+
+  @override
+  double get maxExtent => 48;
+
+  @override
+  double get minExtent => 48;
+
+  @override
+  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) {
+    return false;
   }
 }

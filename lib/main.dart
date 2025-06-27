@@ -16,6 +16,7 @@ import 'package:palseapp/core/provider/locale_provider.dart';
 import 'package:palseapp/core/provider/theme_provider.dart';
 import 'package:palseapp/core/routes/app_router.dart';
 import 'package:palseapp/core/services/firestore_service.dart';
+import 'package:palseapp/core/services/update_service.dart';
 import 'package:palseapp/features/achievement/achievement_service.dart';
 import 'package:palseapp/core/services/notification_service.dart';
 import 'package:palseapp/core/services/shared_pref_service.dart';
@@ -35,7 +36,8 @@ void main() async {
   ]);
 
   try {
-    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform);
   } catch (e) {
     if (e.toString().contains('duplicate-app')) {
       debugPrint('Firebase already initialized');
@@ -48,7 +50,8 @@ void main() async {
   Future<void> deleteCustomersWithoutFirstName() async {
     try {
       // firstName alanı olmayan belgeleri bul
-      final querySnapshot = await FirebaseFirestore.instance.collection('customers').get();
+      final querySnapshot =
+          await FirebaseFirestore.instance.collection('customers').get();
 
       int silinecekBelgeSayisi = 0;
 
@@ -83,9 +86,11 @@ void main() async {
 
   // RevenueCat ayarlarını platform bazlı ayarlama
   if (Platform.isIOS) {
-    await Purchases.configure(PurchasesConfiguration('appl_nqgFBnNbiUeCvilAmLqKsvbZNal'));
+    await Purchases.configure(
+        PurchasesConfiguration('appl_nqgFBnNbiUeCvilAmLqKsvbZNal'));
   } else if (Platform.isAndroid) {
-    await Purchases.configure(PurchasesConfiguration('goog_PEygpHUWqHBCeYbZdjULShUAQfz'));
+    await Purchases.configure(
+        PurchasesConfiguration('goog_PEygpHUWqHBCeYbZdjULShUAQfz'));
     debugPrint('RevenueCat gecikmeli başlatıldı');
   }
 
@@ -156,7 +161,8 @@ class MyApp extends StatelessWidget {
       darkTheme: AppTheme.darkTheme, // Koyu tema
       themeMode: themeProvider.themeMode, // Tema modunu provider'dan al
       routerConfig: AppRouter.router,
-      scaffoldMessengerKey: GlobalKeys.instance.scaffoldMessengerKey, // Burada router'ın navigatorKey'ini kullanıyoruz
+      scaffoldMessengerKey: GlobalKeys.instance
+          .scaffoldMessengerKey, // Burada router'ın navigatorKey'ini kullanıyoruz
       locale: localeProvider.locale, // Dil ayarını provider'dan al
       localizationsDelegates: const [
         AppLocalizations.delegate, // Kendi localization delegemiz
@@ -166,8 +172,33 @@ class MyApp extends StatelessWidget {
       ],
       supportedLocales: AppLocalizations.supportedLocales,
       builder: (context, child) {
-        return child!;
+        return UpdateWrapper(child: child!);
       },
     );
+  }
+}
+
+class UpdateWrapper extends StatefulWidget {
+  final Widget child;
+  const UpdateWrapper({super.key, required this.child});
+
+  @override
+  State<UpdateWrapper> createState() => _UpdateWrapperState();
+}
+
+class _UpdateWrapperState extends State<UpdateWrapper> {
+  final UpdateService _updateService = UpdateService();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _updateService.checkForUpdate();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return widget.child;
   }
 }

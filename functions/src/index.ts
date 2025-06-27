@@ -242,6 +242,42 @@ export const onCustomerProfileViewed = onDocumentUpdated("customers/{userId}", a
       }
     }
 
+    // 3. followingRequests array'ini kontrol et - Yeni takip istekleri
+    const beforeFollowRequests = beforeData.followingRequests || [];
+    const afterFollowRequests = afterData.followingRequests || [];
+
+    if (afterFollowRequests.length > beforeFollowRequests.length) {
+      const newFollowRequests = afterFollowRequests.filter((requester: string) => !beforeFollowRequests.includes(requester));
+
+      if (newFollowRequests.length > 0) {
+        logger.info(`${userId} kullanıcısına ${newFollowRequests.length} yeni takip isteği geldi`);
+
+        // Ortak fonksiyon ile bildirim gönder
+        await sendNotificationToUser(userId, "followRequest", {
+          followerCount: newFollowRequests.length.toString(),
+          followerIds: JSON.stringify(newFollowRequests),
+        });
+      }
+    }
+
+    // 4. followers array'ini kontrol et - Yeni takipçiler (direkt takip)
+    const beforeFollowers = beforeData.followers || [];
+    const afterFollowers = afterData.followers || [];
+
+    if (afterFollowers.length > beforeFollowers.length) {
+      const newFollowers = afterFollowers.filter((follower: string) => !beforeFollowers.includes(follower));
+
+      if (newFollowers.length > 0) {
+        logger.info(`${userId} kullanıcısını ${newFollowers.length} yeni kişi takip etti`);
+
+        // Ortak fonksiyon ile bildirim gönder
+        await sendNotificationToUser(userId, "newFollower", {
+          followerCount: newFollowers.length.toString(),
+          followerIds: JSON.stringify(newFollowers),
+        });
+      }
+    }
+
     return null;
   } catch (error) {
     logger.error("Bildirim gönderme hatası:", error);

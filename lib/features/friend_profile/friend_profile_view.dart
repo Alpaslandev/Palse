@@ -20,7 +20,8 @@ class FriendProfileView extends StatelessWidget {
   Widget build(BuildContext context) {
     final userID = context.read<AuthProvider>().user!.userID;
     return ChangeNotifierProvider<FriendProfileViewModel>(
-      create: (context) => FriendProfileViewModel(customerID: customerID, authProvider: context.read<AuthProvider>()),
+      create: (context) => FriendProfileViewModel(
+          customerID: customerID, authProvider: context.read<AuthProvider>()),
       child: Consumer<FriendProfileViewModel>(
         builder: (context, viewModel, child) {
           return Scaffold(
@@ -38,8 +39,10 @@ class FriendProfileView extends StatelessWidget {
                             _subHeader(viewModel, context),
                             _ratingCard(viewModel, context),
                             Divider(),
-                            Text('${context.tr('listings')} (${viewModel.adverts.length})',
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                            Text(
+                                '${context.tr('listings')} (${viewModel.adverts.length})',
+                                style: TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold)),
                           ],
                         ),
                       ),
@@ -52,7 +55,8 @@ class FriendProfileView extends StatelessWidget {
                                 itemCount: viewModel.adverts.length,
                                 shrinkWrap: true,
                                 itemBuilder: (context, index) {
-                                  debugPrint('İlan gösteriliyor: ${viewModel.adverts[index].toString()}');
+                                  debugPrint(
+                                      'İlan gösteriliyor: ${viewModel.adverts[index].toString()}');
                                   return AdvertCard(
                                     advert: viewModel.adverts[index],
                                     isFriendProfile: true,
@@ -77,7 +81,8 @@ class FriendProfileView extends StatelessWidget {
                           );
 
                           if (context.mounted) {
-                            context.push('/chats/$chatId?otherId=$customerID&currentId=$userID');
+                            context.push(
+                                '/chats/$chatId?otherId=$customerID&currentId=$userID');
                           }
                         },
                         child: Text(context.tr('send_message')),
@@ -106,9 +111,15 @@ class FriendProfileView extends StatelessWidget {
       children: [
         Text(
           '${rank.icon} ${achievementService.getLocalizedRankTitle(rank, context)} ($xp XP)',
-          style: TextStyle(fontSize: 11, color: AppTheme.primaryColor, fontWeight: FontWeight.bold),
+          style: TextStyle(
+              fontSize: 11,
+              color: AppTheme.primaryColor,
+              fontWeight: FontWeight.bold),
         ),
-        Text(viewModel.customer?.location?.displayStringWithDistance(authProvider.user!.location!) ?? '',
+        Text(
+            viewModel.customer?.location
+                    ?.displayStringWithDistance(authProvider.user!.location!) ??
+                '',
             style: TextStyle(
               fontSize: 9,
               color: AppTheme.primaryColor,
@@ -117,13 +128,16 @@ class FriendProfileView extends StatelessWidget {
     );
   }
 
-  Widget _profileHeader(BuildContext context, FriendProfileViewModel viewModel) {
+  Widget _profileHeader(
+      BuildContext context, FriendProfileViewModel viewModel) {
     return ListTile(
       contentPadding: EdgeInsets.zero,
       title: Row(
         children: [
-          Text('${viewModel.customer?.firstName!} (${viewModel.customer?.getAge()})'),
-          if (viewModel.customer?.verification == true && viewModel.customer?.phoneNumber != null)
+          Text(
+              '${viewModel.customer?.firstName!} (${viewModel.customer?.getAge()})'),
+          if (viewModel.customer?.verification == true &&
+              viewModel.customer?.phoneNumber != null)
             const Padding(
               padding: EdgeInsets.only(left: 4),
               child: Icon(Icons.verified, color: Colors.blue, size: 16),
@@ -146,7 +160,8 @@ class FriendProfileView extends StatelessWidget {
                 context.pop();
 
                 // Rapor açıklaması için dialog göster
-                final TextEditingController reportController = TextEditingController();
+                final TextEditingController reportController =
+                    TextEditingController();
                 String? reportReason;
 
                 if (context.mounted) {
@@ -187,16 +202,20 @@ class FriendProfileView extends StatelessWidget {
                 }
 
                 // Eğer açıklama varsa rapor et
-                if (reportReason != null && reportReason!.isNotEmpty && context.mounted) {
+                if (reportReason != null &&
+                    reportReason!.isNotEmpty &&
+                    context.mounted) {
                   try {
                     await viewModel.reportUser(reportReason!);
                     if (context.mounted) {
-                      ScaffoldMess.showSuccessSnackBar(context.tr('report_sent'));
+                      ScaffoldMess.showSuccessSnackBar(
+                          context.tr('report_sent'));
                       context.go('/home');
                     }
                   } catch (e) {
                     if (context.mounted) {
-                      ScaffoldMess.showErrorSnackBar(context.tr('error_occurred'));
+                      ScaffoldMess.showErrorSnackBar(
+                          context.tr('error_occurred'));
                     }
                   }
                 }
@@ -206,8 +225,12 @@ class FriendProfileView extends StatelessWidget {
           PopupMenuItem(
             value: 'block',
             child: ListTile(
-              leading: Icon(viewModel.isUserBlocked() ? Icons.person_add : Icons.block, color: Colors.red),
-              title: Text(viewModel.isUserBlocked() ? context.tr('unblock_user') : context.tr('block_user')),
+              leading: Icon(
+                  viewModel.isUserBlocked() ? Icons.person_add : Icons.block,
+                  color: Colors.red),
+              title: Text(viewModel.isUserBlocked()
+                  ? context.tr('unblock_user')
+                  : context.tr('block_user')),
               onTap: () async {
                 context.pop();
 
@@ -216,15 +239,18 @@ class FriendProfileView extends StatelessWidget {
 
                   if (context.mounted) {
                     if (viewModel.isUserBlocked()) {
-                      ScaffoldMess.showSuccessSnackBar(context.tr('user_blocked'));
+                      ScaffoldMess.showSuccessSnackBar(
+                          context.tr('user_blocked'));
                       context.go('/home');
                     } else {
-                      ScaffoldMess.showSuccessSnackBar(context.tr('user_unblocked'));
+                      ScaffoldMess.showSuccessSnackBar(
+                          context.tr('user_unblocked'));
                     }
                   }
                 } catch (e) {
                   if (context.mounted) {
-                    ScaffoldMess.showErrorSnackBar(context.tr('error_occurred'));
+                    ScaffoldMess.showErrorSnackBar(
+                        context.tr('error_occurred'));
                   }
                 }
               },
@@ -248,20 +274,27 @@ Widget _ratingCard(FriendProfileViewModel viewModel, BuildContext context) {
             Row(
               children: [
                 Icon(Icons.star, color: Colors.amber),
-                Text('${context.tr('comments')} (${viewModel.customer?.comments?.length ?? 0})'),
+                Text(
+                    '${context.tr('comments')} (${viewModel.customer?.comments?.length ?? 0})'),
               ],
             ),
           ],
         ),
         trailing: Container(
           decoration: BoxDecoration(
-            border: Border(left: BorderSide(color: Colors.grey, width: 1)), // Sol kenara gri çizgi ekleniyor
+            border: Border(
+                left: BorderSide(
+                    color: Colors.grey,
+                    width: 1)), // Sol kenara gri çizgi ekleniyor
           ),
           child: Padding(
             padding: const EdgeInsets.only(left: 8.0),
             child: Text(
               viewModel.customer?.getAverage().toStringAsFixed(1) ?? '0.0',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.orange),
+              style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.orange),
             ),
           ),
         ),

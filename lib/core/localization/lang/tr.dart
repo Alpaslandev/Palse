@@ -198,6 +198,17 @@ const Map<String, String> tr = {
   'listings': 'İlanlar',
   'send_message': 'Mesaj Gönder',
   'report_abuse': 'Kötüye Kullanım Bildir',
+
+  // Takip İşlemleri
+  'follow': 'Takip Et',
+  'unfollow': 'Takibi Bırak',
+  'send_request': 'İstek Gönder',
+  'request_sent': 'İstek Gönderildi',
+  'request_cancelled': 'İstek iptal edildi',
+  'follow_request_sent': 'Takip isteği gönderildi',
+  'user_followed': 'Kullanıcı takip edildi',
+  'unfollowed_user': 'Kullanıcı takipten çıkarıldı',
+  'leave': 'Ayrıl',
   'comments': 'Yorumlar',
   'add_comment': 'Yorum Ekle',
   'advert_deleted_successfully': 'İlan başarıyla silindi',

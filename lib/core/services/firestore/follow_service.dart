@@ -2,18 +2,46 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:palseapp/core/models/customer.dart';
+import 'package:palseapp/core/models/customer.dart';
 
 class FollowService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Kullanıcıyı takip et
+  // Kullanıcının profil gizliliğini kontrol et ve uygun takip işlemini yap
   Future<void> followUser(String currentUserId, String targetUserId) async {
+    try {
+      // Hedef kullanıcının profil bilgilerini al
+      final targetUserDoc =
+          await _firestore.collection('customers').doc(targetUserId).get();
+      if (!targetUserDoc.exists) {
+        throw Exception('Kullanıcı bulunamadı');
+      }
+
+      final targetUserData = targetUserDoc.data()!;
+      final isPrivateProfile = targetUserData['isPrivate'] ?? false;
+
+      if (isPrivateProfile) {
+        // Profil gizli ise takip isteği gönder
+        await sendFollowRequest(currentUserId, targetUserId);
+      } else {
+        // Profil açık ise direkt takip et
+        await followUserDirectly(currentUserId, targetUserId);
+      }
+    } catch (e) {
+      debugPrint('Takip etme hatası: $e');
+      throw Exception('Kullanıcı takip edilemedi: $e');
+    }
+  }
+
+  // Direkt takip etme (profil açık kullanıcılar için)
+  Future<void> followUserDirectly(
+      String currentUserId, String targetUserId) async {
     try {
       final batch = _firestore.batch();
 
-      // Current user'ın following listesine ekle
+      // Current user'ın followings listesine ekle
       batch.update(_firestore.collection('customers').doc(currentUserId), {
-        'following': FieldValue.arrayUnion([targetUserId]),
+        'followings': FieldValue.arrayUnion([targetUserId]),
       });
 
       // Target user'ın followers listesine ekle
@@ -22,10 +50,67 @@ class FollowService {
       });
 
       await batch.commit();
-      debugPrint('Kullanıcı takip edildi: $targetUserId');
+      debugPrint('Kullanıcı direkt takip edildi: $targetUserId');
     } catch (e) {
-      debugPrint('Takip etme hatası: $e');
+      debugPrint('Direkt takip etme hatası: $e');
       throw Exception('Kullanıcı takip edilemedi: $e');
+    }
+  }
+
+  // Takip isteği gönder (profil gizli kullanıcılar için)
+  Future<void> sendFollowRequest(
+      String currentUserId, String targetUserId) async {
+    try {
+      // Target user'ın followingRequests listesine ekle
+      await _firestore.collection('customers').doc(targetUserId).update({
+        'followingRequests': FieldValue.arrayUnion([currentUserId]),
+      });
+
+      debugPrint('Takip isteği gönderildi: $targetUserId');
+    } catch (e) {
+      debugPrint('Takip isteği gönderme hatası: $e');
+      throw Exception('Takip isteği gönderilemedi: $e');
+    }
+  }
+
+  // Takip isteğini onayla
+  Future<void> acceptFollowRequest(
+      String currentUserId, String requesterUserId) async {
+    try {
+      final batch = _firestore.batch();
+
+      // Current user'ın followingRequests listesinden çıkar ve followers listesine ekle
+      batch.update(_firestore.collection('customers').doc(currentUserId), {
+        'followingRequests': FieldValue.arrayRemove([requesterUserId]),
+        'followers': FieldValue.arrayUnion([requesterUserId]),
+      });
+
+      // Requester user'ın followings listesine ekle
+      batch.update(_firestore.collection('customers').doc(requesterUserId), {
+        'followings': FieldValue.arrayUnion([currentUserId]),
+      });
+
+      await batch.commit();
+      debugPrint('Takip isteği onaylandı: $requesterUserId');
+    } catch (e) {
+      debugPrint('Takip isteği onaylama hatası: $e');
+      throw Exception('Takip isteği onaylanamadı: $e');
+    }
+  }
+
+  // Takip isteğini reddet
+  Future<void> rejectFollowRequest(
+      String currentUserId, String requesterUserId) async {
+    try {
+      // Current user'ın followingRequests listesinden çıkar
+      await _firestore.collection('customers').doc(currentUserId).update({
+        'followingRequests': FieldValue.arrayRemove([requesterUserId]),
+      });
+
+      debugPrint('Takip isteği reddedildi: $requesterUserId');
+    } catch (e) {
+      debugPrint('Takip isteği reddetme hatası: $e');
+      throw Exception('Takip isteği reddedilemedi: $e');
     }
   }
 
@@ -34,16 +119,14 @@ class FollowService {
     try {
       final batch = _firestore.batch();
 
-      // Current user'ın following listesinden çıkar
+      // Current user'ın followings listesinden çıkar
       batch.update(_firestore.collection('customers').doc(currentUserId), {
-        'following': FieldValue.arrayRemove([targetUserId]),
-        'followingCount': FieldValue.increment(-1),
+        'followings': FieldValue.arrayRemove([targetUserId]),
       });
 
       // Target user'ın followers listesinden çıkar
       batch.update(_firestore.collection('customers').doc(targetUserId), {
         'followers': FieldValue.arrayRemove([currentUserId]),
-        'followerCount': FieldValue.increment(-1),
       });
 
       await batch.commit();
@@ -54,78 +137,12 @@ class FollowService {
     }
   }
 
-  // Takip durumunu kontrol et
-  Future<bool> isFollowing(String currentUserId, String targetUserId) async {
-    try {
-      final userDoc =
-          await _firestore.collection('customers').doc(currentUserId).get();
-
-      if (userDoc.exists) {
-        final following = List<String>.from(userDoc.data()?['following'] ?? []);
-        return following.contains(targetUserId);
-      }
-      return false;
-    } catch (e) {
-      debugPrint('Takip durumu kontrolü hatası: $e');
-      return false;
-    }
+  // UI'da kullanım için statik yardımcı metodlar
+  static bool isFollowing(Customer currentUser, String targetUserId) {
+    return currentUser.followings?.contains(targetUserId) ?? false;
   }
 
-  // Takipçileri getir
-  Future<List<Customer>> getFollowers(String userId) async {
-    try {
-      final userDoc =
-          await _firestore.collection('customers').doc(userId).get();
-
-      if (userDoc.exists) {
-        final followers = List<String>.from(userDoc.data()?['followers'] ?? []);
-        final List<Customer> followerUsers = [];
-
-        for (String followerId in followers) {
-          final followerDoc =
-              await _firestore.collection('customers').doc(followerId).get();
-
-          if (followerDoc.exists) {
-            followerUsers
-                .add(Customer.fromJson(followerDoc.data()!, followerId));
-          }
-        }
-
-        return followerUsers;
-      }
-      return [];
-    } catch (e) {
-      debugPrint('Takipçi listesi getirme hatası: $e');
-      return [];
-    }
-  }
-
-  // Takip edilenleri getir
-  Future<List<Customer>> getFollowing(String userId) async {
-    try {
-      final userDoc =
-          await _firestore.collection('customers').doc(userId).get();
-
-      if (userDoc.exists) {
-        final following = List<String>.from(userDoc.data()?['following'] ?? []);
-        final List<Customer> followingUsers = [];
-
-        for (String followingId in following) {
-          final followingDoc =
-              await _firestore.collection('customers').doc(followingId).get();
-
-          if (followingDoc.exists) {
-            followingUsers
-                .add(Customer.fromJson(followingDoc.data()!, followingId));
-          }
-        }
-
-        return followingUsers;
-      }
-      return [];
-    } catch (e) {
-      debugPrint('Takip edilen listesi getirme hatası: $e');
-      return [];
-    }
+  static bool isFollowRequestSent(Customer targetUser, String currentUserId) {
+    return targetUser.followingRequests?.contains(currentUserId) ?? false;
   }
 }

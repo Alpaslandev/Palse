@@ -60,6 +60,7 @@ class Customer {
   List<String>? blockUsers;
   List<String>? favoriteAdverts;
   List<String>? profileViewers;
+  bool? isPrivate; // Profil gizliliği
 
   List<String>? followings;
   List<String>? followers;
@@ -96,6 +97,7 @@ class Customer {
     this.favoriteAdverts = const [],
     this.chatMap = const {},
     this.profileViewers = const [],
+    this.isPrivate = false,
     this.comments = const [],
     this.location,
     this.totalXp = 0,
@@ -201,6 +203,7 @@ class Customer {
         profileViewers: parsedJson['profileViewers'] != null
             ? List<String>.from(parsedJson['profileViewers'])
             : [],
+        isPrivate: parsedJson['isPrivate'] ?? false,
         comments: parsedJson['comments'] != null
             ? List<Comment>.from(parsedJson['comments']
                 .map((comment) => Comment.fromJson(comment)))
@@ -258,6 +261,7 @@ class Customer {
       'isPremium': isPremium ?? false,
       'blockUsers': blockUsers ?? [],
       'profileViewers': profileViewers ?? [],
+      'isPrivate': isPrivate ?? false,
       'gender': gender?.name.toLowerCase() ?? Gender.others.name.toLowerCase(),
       'birthday': birthday != null ? Timestamp.fromDate(birthday!) : null,
       'favoriteCategories':
@@ -297,6 +301,7 @@ class Customer {
     List<String>? blockUsers,
     List<String>? favoriteAdverts,
     List<String>? profileViewers,
+    bool? isPrivate,
     List<Comment>? comments,
     LocationModel? location,
     int? totalXp,
@@ -338,6 +343,7 @@ class Customer {
       followings: followings ?? this.followings,
       followers: followers ?? this.followers,
       followingRequests: followingRequests ?? this.followingRequests,
+      isPrivate: isPrivate ?? this.isPrivate,
     );
   }
 }

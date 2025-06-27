@@ -207,6 +207,17 @@ const Map<String, String> en = {
   'listings': 'Listings',
   'send_message': 'Send Message',
   'report_abuse': 'Report Abuse',
+
+  // Follow Features
+  'follow': 'Follow',
+  'unfollow': 'Unfollow',
+  'send_request': 'Send Request',
+  'request_sent': 'Request Sent',
+  'request_cancelled': 'Request cancelled',
+  'follow_request_sent': 'Follow request sent',
+  'user_followed': 'User followed',
+  'unfollowed_user': 'User unfollowed',
+  'leave': 'Leave',
   'comments': 'Comments',
   'add_comment': 'Add Comment',
   'advert_deleted_successfully': 'Listing successfully deleted',

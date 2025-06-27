@@ -12,10 +12,8 @@ import 'package:palseapp/core/widgets/scaffold_mess.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-// Kullanıcı ilanlarını gösteren kart tasarımı
-@Deprecated('Use AdvertCardView instead')
-class AdvertCard extends StatelessWidget {
-  const AdvertCard({
+class AdvertCardView extends StatelessWidget {
+  const AdvertCardView({
     super.key,
     required this.advert,
     this.isUserAdvert = false,

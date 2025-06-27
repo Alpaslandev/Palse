@@ -177,6 +177,42 @@ export const notificationMessages: NotificationMessages = {
       },
     },
   },
+  followRequest: {
+    title: {
+      tr: "Yeni Takip İsteği",
+      en: "New Follow Request",
+    },
+    body: {
+      nonPremium: {
+        tr: "Birisi sizi takip etmek istiyor! Hemen kontrol edin.",
+        en: "Someone wants to follow you! Check it out now.",
+      },
+    },
+  },
+  newFollower: {
+    title: {
+      tr: "Yeni Takipçi",
+      en: "New Follower",
+    },
+    body: {
+      nonPremium: {
+        tr: "Yeni bir takipçiniz var! 🎉",
+        en: "You have a new follower! 🎉",
+      },
+    },
+  },
+  followRequestAccepted: {
+    title: {
+      tr: "Takip İsteği Kabul Edildi",
+      en: "Follow Request Accepted",
+    },
+    body: {
+      nonPremium: {
+        tr: "Takip isteğiniz kabul edildi! 🎉",
+        en: "Your follow request was accepted! 🎉",
+      },
+    },
+  },
 };
 
 // Bildirim için içerik seçme yardımcı fonksiyonu
