@@ -59,6 +59,9 @@ class AdvertCardViewModel extends ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
+  bool _disposed = false;
+  bool get isDisposed => _disposed;
+
   // UI'a özel bool'lar ve veriler
 
   bool get isMyAdvert => advert.creatorUserID == currentCustomer.userID;
@@ -79,13 +82,16 @@ class AdvertCardViewModel extends ChangeNotifier {
       false;
 
   void _setLoading(bool value) {
+    if (_disposed) return; // Widget dispose edildiyse işlem yapma
     _isLoading = value;
     notifyListeners();
   }
 
   Future<void> _fetchCreatorCustomer() async {
+    if (_disposed) return; // Widget dispose edildiyse işlem yapma
     _setLoading(true);
     _creatorCustomer = await _customerService.getCustomer(advert.creatorUserID);
+    if (_disposed) return; // Async işlem sonrası tekrar kontrol et
     _setLoading(false);
   }
 
@@ -114,7 +120,7 @@ class AdvertCardViewModel extends ChangeNotifier {
         }
       },
     );
-    notifyListeners();
+    if (!_disposed) notifyListeners();
   }
 
   // Aksiyonlar
@@ -140,7 +146,7 @@ class AdvertCardViewModel extends ChangeNotifier {
         }
       },
     );
-    notifyListeners();
+    if (!_disposed) notifyListeners();
   }
 
   Future<void> toggleJoinRequest() async {
@@ -170,7 +176,7 @@ class AdvertCardViewModel extends ChangeNotifier {
       },
     );
 
-    notifyListeners();
+    if (!_disposed) notifyListeners();
   }
 
   // Beğenenleri görüntüleme
@@ -190,7 +196,7 @@ class AdvertCardViewModel extends ChangeNotifier {
     } catch (e) {
       debugPrint('İlan silme hatası: $e');
     } finally {
-      _setLoading(false);
+      if (!_disposed) _setLoading(false);
     }
   }
 
@@ -249,7 +255,7 @@ class AdvertCardViewModel extends ChangeNotifier {
 
       return revertedAdvert;
     } finally {
-      _setLoading(false);
+      if (!_disposed) _setLoading(false);
     }
   }
 
@@ -303,7 +309,7 @@ class AdvertCardViewModel extends ChangeNotifier {
       authProvider.updateUser(revertedCustomer);
       currentCustomer = revertedCustomer;
     } finally {
-      _setLoading(false);
+      if (!_disposed) _setLoading(false);
     }
   }
 
@@ -346,6 +352,12 @@ class AdvertCardViewModel extends ChangeNotifier {
         }
       },
     );
-    notifyListeners();
+    if (!_disposed) notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _disposed = true; // Dispose flag'ini set et
+    super.dispose();
   }
 }

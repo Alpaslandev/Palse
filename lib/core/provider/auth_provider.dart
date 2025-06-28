@@ -245,8 +245,8 @@ class AuthProvider extends ChangeNotifier implements Listenable {
     notifyListeners();
 
     try {
-      if (user != null && user!.adverts != null) {
-        for (var advert in user!.adverts!) {
+      if (user != null && user!.events != null) {
+        for (var advert in user!.events!) {
           await _advertService.deleteAdvert(advert, user!.userID!);
         }
       }

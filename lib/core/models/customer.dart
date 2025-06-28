@@ -49,7 +49,7 @@ class Customer {
   String? userID;
   String? appIdentifier;
   String? languagePreference;
-  List<String>? adverts;
+  List<String>? events;
   bool? verification;
   bool? isPremium;
   Gender? gender;
@@ -85,7 +85,7 @@ class Customer {
     this.languagePreference = 'tr',
     this.nickname,
     this.favoriteCategories = const [],
-    this.adverts = const [],
+    this.events = const [],
     this.blockUsers = const [],
     this.verification,
     this.isPremium,
@@ -184,7 +184,7 @@ class Customer {
         favoriteAdverts: parsedJson['favoriteAdverts'] != null
             ? List<String>.from(parsedJson['favoriteAdverts'])
             : [],
-        adverts: parsedJson['adverts'] != null
+        events: parsedJson['adverts'] != null
             ? List<String>.from(parsedJson['adverts'])
             : [],
         verification: parsedJson['verification'] ?? false,
@@ -252,7 +252,7 @@ class Customer {
       'nickname': nickname ?? '',
       'appIdentifier': appIdentifier ?? '',
       'languagePreference': languagePreference ?? 'tr',
-      'adverts': adverts ?? [],
+      'adverts': events ?? [],
       'createdAt':
           createdAt != null ? Timestamp.fromDate(createdAt!) : Timestamp.now(),
       'lastSeen':
@@ -290,7 +290,7 @@ class Customer {
     String? userID,
     String? appIdentifier,
     String? languagePreference,
-    List<String>? adverts,
+    List<String>? events,
     bool? verification,
     bool? isPremium,
     Gender? gender,
@@ -321,7 +321,7 @@ class Customer {
       languagePreference: languagePreference ?? this.languagePreference,
       favoriteCategories: favoriteCategories ?? this.favoriteCategories,
       favoriteAdverts: favoriteAdverts ?? this.favoriteAdverts,
-      adverts: adverts ?? this.adverts,
+      events: events ?? this.events,
       verification: verification ?? this.verification,
       isPremium: isPremium ?? this.isPremium,
       gender: gender ?? this.gender,

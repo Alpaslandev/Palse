@@ -46,12 +46,10 @@ class _FilterViewState extends State<FilterView> {
     List<Advert> allAdverts = await advertService.fetchAdvertsByFiltering(
         gender: _selectedGender?.name, category: _selectedCategory?.name);
 
-    // Orijinal listeyi kaydet (sıralamanın bozulmaması için)
-    List<Advert> resultAdverts = List.from(allAdverts);
-
     debugPrint('Toplam çekilen ilan sayısı: ${allAdverts.length}');
 
     // Mesafe filtresi uygula (eğer belirtilmişse)
+    List<Advert> resultAdverts = allAdverts;
     if (_distance != null && _distance! > 0 && _currentUser?.location != null) {
       // Kullanıcının konumu
       final userLat = _currentUser?.location?.lat;
@@ -61,8 +59,8 @@ class _FilterViewState extends State<FilterView> {
         debugPrint('Kullanıcı konumu: $userLat, $userLng');
         debugPrint('Mesafe filtresi uygulanıyor: $_distance km');
 
-        // Orijinal listeden filtreye uymayanları çıkar
-        resultAdverts = resultAdverts.where((advert) {
+        // Mesafe filtresine göre ilanları filtrele
+        resultAdverts = allAdverts.where((advert) {
           // İlanın konumu
           final advertLat = advert.location?.lat;
           final advertLng = advert.location?.lon;

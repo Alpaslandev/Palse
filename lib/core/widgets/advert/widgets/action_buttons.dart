@@ -3,8 +3,10 @@ import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/services/firestore/report_service.dart';
 import 'package:palseapp/core/widgets/advert/advert_card_view_model.dart';
+import 'package:palseapp/core/widgets/animated_like_button.dart';
 import 'package:palseapp/core/widgets/scaffold_mess.dart';
 import 'package:provider/provider.dart';
+import 'package:vibration/vibration.dart';
 
 // İlan kartı için aksiyon butonlarını içeren widget
 class ActionButtons extends StatelessWidget {
@@ -61,14 +63,7 @@ class ActionButtons extends StatelessWidget {
               if (viewModel.mode == AdvertCardMode.home)
                 Expanded(
                   flex: 3,
-                  child: _buildButton(
-                    context,
-                    context.tr('like'),
-                    viewModel.isLiked ? Icons.favorite : Icons.favorite_border,
-                    () async => await viewModel.toggleLike(),
-                    showCount: true,
-                    compactMode: true,
-                  ),
+                  child: _buildLikeButton(context, viewModel),
                 ),
               if (viewModel.mode == AdvertCardMode.home)
                 const SizedBox(width: 4),
@@ -117,6 +112,60 @@ class ActionButtons extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  // Animasyonlu like butonu oluşturur
+  Widget _buildLikeButton(BuildContext context, AdvertCardViewModel viewModel) {
+    return GestureDetector(
+      onTap: () async {
+        // Sadece like yapılıyorsa vibration ekle (unlike'ta değil)
+        if (!viewModel.isLiked) {
+          _triggerHapticFeedback();
+        }
+        await viewModel.toggleLike();
+      },
+      child: Container(
+        height: 40,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: Colors.grey),
+          borderRadius: const BorderRadius.all(Radius.circular(50)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AnimatedLikeButton(
+              isLiked: viewModel.isLiked,
+              likeCount: viewModel.likeCount,
+              onTap: () {}, // Boş bırak, üst GestureDetector handle edecek
+              size: 18,
+              fontSize: 11,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              '| ${context.tr('like')}',
+              style: const TextStyle(
+                color: Colors.black,
+                fontSize: 11,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Hafif titreşim efekti
+  Future<void> _triggerHapticFeedback() async {
+    try {
+      if (await Vibration.hasVibrator() ?? false) {
+        // Çok hafif titreşim (3ms) - like için minimal
+        Vibration.vibrate(duration: 3);
+      }
+    } catch (e) {
+      // Titreşim desteklenmiyorsa sessizce devam et
+      debugPrint('Titreşim desteklenmiyor: $e');
+    }
   }
 
   // Mesaj gönderme işlemini handle eden metod

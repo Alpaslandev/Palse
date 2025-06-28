@@ -41,11 +41,10 @@ import 'package:provider/provider.dart';
 // Router sınıfını oluştur
 class AppRouter {
   // NavigatorKey'i public yapalım
-  static final _shellNavigatorKey = GlobalKey<NavigatorState>();
+  static final _rootNavigatorKey = GlobalKeys.instance.navigatorKey;
   // Tek bir AuthProvider instance'ı tutacağız
   static late final AuthProvider _authProvider;
   static late final AdsProvider _adsProvider;
-  static late final GlobalKey<NavigatorState> _rootNavigatorKey;
   // Router instance'ı oluştur
   static late final GoRouter router;
 
@@ -53,7 +52,6 @@ class AppRouter {
   static void initialize(AuthProvider authProvider, AdsProvider adsProvider) {
     _authProvider = authProvider;
     _adsProvider = adsProvider;
-    _rootNavigatorKey = GlobalKeys.instance.navigatorKey;
 
     router = GoRouter(
       navigatorKey: _rootNavigatorKey,
@@ -230,7 +228,7 @@ class AppRouter {
           builder: (context, state) => const SettingsView(),
           routes: [
             GoRoute(
-              path: "/$editProfile",
+              path: "editProfile", // relative path
               name: editProfile,
               builder: (context, state) {
                 final user = state.extra! as Customer;
@@ -238,12 +236,12 @@ class AppRouter {
               },
             ),
             GoRoute(
-              path: "/$faq",
+              path: "faq", // relative path
               name: faq,
               builder: (context, state) => const FAQPage(),
             ),
             GoRoute(
-              path: "/$languageSettings",
+              path: "languageSettings", // relative path
               name: languageSettings,
               builder: (context, state) => const LanguageSettingsView(),
             ),
@@ -262,11 +260,9 @@ class AppRouter {
             child: const PaywallScreen(),
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
-              // Alttan yukarı doğru kaydırma animasyonu
-              const begin = Offset(0, 1); // Başlangıç pozisyonu (alt)
-              const end = Offset.zero; // Bitiş pozisyonu (üst)
+              const begin = Offset(0, 1);
+              const end = Offset.zero;
               const curve = Curves.easeInOut;
-
               var tween =
                   Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
               return SlideTransition(
@@ -276,120 +272,86 @@ class AppRouter {
             },
           ),
         ),
-        ShellRoute(
-          navigatorKey: _shellNavigatorKey,
-          builder: (context, state, child) => LandingView(child: child),
-          routes: [
-            GoRoute(
-              path: "/$home",
-              name: home,
-              pageBuilder: (context, state) => CustomTransitionPage(
-                key: state.pageKey,
-                child: const HomeView(),
-                transitionsBuilder:
-                    (context, animation, secondaryAnimation, child) {
-                  return FadeTransition(
-                    opacity:
-                        CurveTween(curve: Curves.easeInOut).animate(animation),
-                    child: child,
-                  );
-                },
-              ),
-            ),
-            GoRoute(
-              path: "/$myAdverts",
-              name: myAdverts,
-              pageBuilder: (context, state) => CustomTransitionPage(
-                key: state.pageKey,
-                child: const MyAdvertView(),
-                transitionsBuilder:
-                    (context, animation, secondaryAnimation, child) {
-                  return FadeTransition(
-                    opacity:
-                        CurveTween(curve: Curves.easeInOut).animate(animation),
-                    child: child,
-                  );
-                },
-              ),
+        StatefulShellRoute.indexedStack(
+          builder: (context, state, navigationShell) {
+            return LandingView(navigationShell: navigationShell);
+          },
+          branches: [
+            // Branch 1: Home
+            StatefulShellBranch(
               routes: [
                 GoRoute(
-                  path: "/$userList",
-                  name: userList,
-                  builder: (context, state) {
-                    final extra = state.extra as Map<String, dynamic>;
-                    return UserListView(
-                      users: extra['users'] as List<String>,
-                      isLikers: extra['isLikers'] as bool,
-                      advertId: extra['advertId'] as String?,
-                    );
-                  },
+                  path: "/$home",
+                  name: home,
+                  pageBuilder: (context, state) => NoTransitionPage(
+                    child: HomeView(key: GlobalKeys.instance.homeViewKey),
+                  ),
+                ),
+                GoRoute(
+                  path: "/$byInterest",
+                  name: byInterest,
+                  pageBuilder: (context, state) => const NoTransitionPage(
+                    child: HomeView(initialTabIndex: 1),
+                  ),
                 ),
               ],
             ),
-            GoRoute(
-              path: "/$recentlyViewers",
-              name: recentlyViewers,
-              pageBuilder: (context, state) => CustomTransitionPage(
-                key: state.pageKey,
-                child: const MyAdvertView(
-                    initialTabIndex: 2), // 2 = Profilime Bakanlar tabı
-                transitionsBuilder:
-                    (context, animation, secondaryAnimation, child) {
-                  return FadeTransition(
-                    opacity:
-                        CurveTween(curve: Curves.easeInOut).animate(animation),
-                    child: child,
-                  );
-                },
-              ),
+            // Branch 2: Categories
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: "/$categories",
+                  name: categories,
+                  pageBuilder: (context, state) => const NoTransitionPage(
+                    child: CategoriesView(),
+                  ),
+                ),
+              ],
             ),
-            GoRoute(
-              path: "/$byInterest",
-              name: byInterest,
-              pageBuilder: (context, state) => CustomTransitionPage(
-                key: state.pageKey,
-                child:
-                    const HomeView(initialTabIndex: 1), // İlgi alanı-bazlı tab
-                transitionsBuilder:
-                    (context, animation, secondaryAnimation, child) {
-                  return FadeTransition(
-                    opacity:
-                        CurveTween(curve: Curves.easeInOut).animate(animation),
-                    child: child,
-                  );
-                },
-              ),
+            // Branch 3: My Adverts
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: "/$myAdverts",
+                  name: myAdverts,
+                  pageBuilder: (context, state) => const NoTransitionPage(
+                    child: MyAdvertView(),
+                  ),
+                  routes: [
+                    GoRoute(
+                      path: "userList", // relative path
+                      name: userList,
+                      builder: (context, state) {
+                        final extra = state.extra as Map<String, dynamic>;
+                        return UserListView(
+                          users: extra['users'] as List<String>,
+                          isLikers: extra['isLikers'] as bool,
+                          advertId: extra['advertId'] as String?,
+                        );
+                      },
+                    ),
+                  ],
+                ),
+                GoRoute(
+                  path: "/$recentlyViewers",
+                  name: recentlyViewers,
+                  pageBuilder: (context, state) => const NoTransitionPage(
+                    child: MyAdvertView(initialTabIndex: 2),
+                  ),
+                ),
+              ],
             ),
-            GoRoute(
-              path: "/$categories",
-              name: categories,
-              pageBuilder: (context, state) => CustomTransitionPage(
-                key: state.pageKey,
-                child: const CategoriesView(),
-                transitionsBuilder:
-                    (context, animation, secondaryAnimation, child) {
-                  return FadeTransition(
-                      opacity: CurveTween(curve: Curves.easeInOut)
-                          .animate(animation),
-                      child: child);
-                },
-              ),
-            ),
-            GoRoute(
-              path: "/$profile",
-              name: profile,
-              pageBuilder: (context, state) => CustomTransitionPage(
-                key: state.pageKey,
-                child: const ProfileView(),
-                transitionsBuilder:
-                    (context, animation, secondaryAnimation, child) {
-                  return FadeTransition(
-                    opacity:
-                        CurveTween(curve: Curves.easeInOut).animate(animation),
-                    child: child,
-                  );
-                },
-              ),
+            // Branch 4: Profile
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: "/$profile",
+                  name: profile,
+                  pageBuilder: (context, state) => const NoTransitionPage(
+                    child: ProfileView(),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

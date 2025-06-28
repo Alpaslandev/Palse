@@ -7,7 +7,8 @@ import 'package:palseapp/core/widgets/advert/advert_card_view.dart';
 import 'package:palseapp/core/widgets/advert/advert_card_view_model.dart';
 import 'package:palseapp/core/widgets/premium_overlay.dart';
 import 'package:palseapp/core/widgets/recently_viewer.dart';
-import 'package:palseapp/features/my_advert/viewmodel/my_advert_view_model.dart';
+import 'package:palseapp/core/services/firestore/advert_service.dart';
+import 'package:palseapp/core/models/advert.dart';
 import 'package:provider/provider.dart';
 
 class MyAdvertView extends StatefulWidget {
@@ -23,6 +24,7 @@ class MyAdvertView extends StatefulWidget {
 class _MyAdvertViewState extends State<MyAdvertView>
     with TickerProviderStateMixin {
   late TabController _tabController;
+  final AdvertService _advertService = AdvertService();
 
   @override
   void initState() {
@@ -33,114 +35,115 @@ class _MyAdvertViewState extends State<MyAdvertView>
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = context.read<AuthProvider>();
-    return ChangeNotifierProvider<MyAdvertViewModel>(
-      create: (context) => MyAdvertViewModel(authProvider: authProvider),
-      child: Consumer<MyAdvertViewModel>(
-        builder: (context, viewModel, child) {
-          return Scaffold(
-            body: Column(
-              children: [
-                TabBar(
+    return Selector<
+        AuthProvider,
+        ({
+          List<String>? favoriteAdverts,
+          List<String>? joinedAdvertIds,
+          List<String>? events,
+          List<String>? profileViewers,
+        })>(
+      selector: (context, authProvider) => (
+        favoriteAdverts: authProvider.user?.favoriteAdverts,
+        joinedAdvertIds: authProvider.user?.joinedAdvertIds,
+        events: authProvider.user?.events,
+        profileViewers: authProvider.user?.profileViewers,
+      ),
+      builder: (context, userLists, child) {
+        return Scaffold(
+          body: Column(
+            children: [
+              TabBar(
+                controller: _tabController,
+                isScrollable: false,
+                padding: EdgeInsets.zero,
+                labelPadding: const EdgeInsets.symmetric(horizontal: 10),
+                indicatorWeight: 2,
+                indicatorColor: Colors.blue,
+                labelStyle: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+                unselectedLabelStyle: const TextStyle(
+                  fontSize: 12,
+                ),
+                labelColor: Colors.blue,
+                unselectedLabelColor: Colors.grey,
+                tabs: [
+                  Tab(
+                    text: context.tr('my_listings'),
+                    iconMargin: EdgeInsets.zero,
+                  ),
+                  Tab(
+                    text: context.tr('my_likes'),
+                    iconMargin: EdgeInsets.zero,
+                  ),
+                  Tab(
+                    text: context.tr('profile_viewers'),
+                    iconMargin: EdgeInsets.zero,
+                  ),
+                  Tab(
+                    text: context.tr('joined_events'),
+                    iconMargin: EdgeInsets.zero,
+                  ),
+                ],
+              ),
+              Expanded(
+                child: TabBarView(
+                  physics: const NeverScrollableScrollPhysics(),
                   controller: _tabController,
-                  isScrollable: false,
-                  padding: EdgeInsets.zero,
-                  labelPadding: const EdgeInsets.symmetric(horizontal: 10),
-                  indicatorWeight: 2,
-                  indicatorColor: Colors.blue,
-                  labelStyle: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  unselectedLabelStyle: const TextStyle(
-                    fontSize: 12,
-                  ),
-                  labelColor: Colors.blue,
-                  unselectedLabelColor: Colors.grey,
-                  tabs: [
-                    Tab(
-                      text: context.tr('my_listings'),
-                      iconMargin: EdgeInsets.zero,
-                    ),
-                    Tab(
-                      text: context.tr('my_likes'),
-                      iconMargin: EdgeInsets.zero,
-                    ),
-                    Tab(
-                      text: context.tr('profile_viewers'),
-                      iconMargin: EdgeInsets.zero,
-                    ),
-                    Tab(
-                      text: context.tr('joined_events'),
-                      iconMargin: EdgeInsets.zero,
-                    ),
+                  children: [
+                    // İlanlarım sekmesi
+                    _buildAdvertList(userLists.events ?? []),
+                    // Beğendiklerim
+                    _buildAdvertList(userLists.favoriteAdverts ?? []),
+                    // Profilime Bakanlar
+                    _buildProfileViewersTab(context.read<AuthProvider>()),
+                    // Katıldığım etkinlikler
+                    _buildAdvertList(userLists.joinedAdvertIds ?? []),
                   ],
                 ),
-                Expanded(
-                  child: TabBarView(
-                    physics: const NeverScrollableScrollPhysics(),
-                    controller: _tabController,
-                    children: [
-                      // İlanlarım sekmesi
-                      viewModel.myAdverts.isEmpty
-                          ? _buildEmptyAdvert()
-                          : ListView.builder(
-                              itemCount: viewModel.myAdverts.length,
-                              itemBuilder: (context, index) {
-                                final advert = viewModel.myAdverts[index];
-                                if (advert == null) return const SizedBox();
-                                return AdvertCardView(
-                                  advert: advert,
-                                  mode: AdvertCardMode.myAdvert,
-                                );
-                              },
-                            ),
-                      // Beğendiklerim
-                      viewModel.favorites.isEmpty
-                          ? _buildEmptyAdvert()
-                          : ListView.builder(
-                              itemCount: viewModel.favorites.length,
-                              itemBuilder: (context, index) {
-                                debugPrint(
-                                    viewModel.favorites.length.toString());
-                                final advert = viewModel.favorites[index];
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
-                                if (advert == null) return const SizedBox();
+  // ID listesinden AdvertCardView listesi oluşturan widget
+  Widget _buildAdvertList(List<String> advertIds) {
+    if (advertIds.isEmpty) {
+      return _buildEmptyAdvert();
+    }
 
-                                return AdvertCardView(
-                                  advert: advert,
-                                  mode: AdvertCardMode.myAdvert,
-                                );
-                              },
-                            ),
-                      // Profilime Bakanlar
-                      _buildProfileViewersTab(authProvider),
-                      // Katıldığım etkinlikler
-                      viewModel.joinedEvents.isEmpty
-                          ? _buildEmptyAdvert()
-                          : ListView.builder(
-                              itemCount: viewModel.joinedEvents.length,
-                              itemBuilder: (context, index) {
-                                debugPrint(
-                                    viewModel.joinedEvents.length.toString());
-                                final advert = viewModel.joinedEvents[index];
+    return ListView.builder(
+      itemCount: advertIds.length,
+      itemBuilder: (context, index) {
+        final advertId = advertIds[index];
+        return FutureBuilder<Advert?>(
+          future: _advertService.fetchAdvertById(advertId),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const SizedBox(
+                height: 100,
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
 
-                                if (advert == null) return const SizedBox();
+            if (snapshot.hasError ||
+                !snapshot.hasData ||
+                snapshot.data == null) {
+              return const SizedBox(); // Hatalı veya null veri durumunda boş widget döndür
+            }
 
-                                return AdvertCardView(
-                                  advert: advert,
-                                  mode: AdvertCardMode.myAdvert,
-                                );
-                              },
-                            ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
+            return AdvertCardView(
+              advert: snapshot.data!,
+              mode: AdvertCardMode.myAdvert,
+            );
+          },
+        );
+      },
     );
   }
 

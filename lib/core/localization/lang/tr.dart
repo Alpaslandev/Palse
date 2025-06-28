@@ -183,7 +183,7 @@ const Map<String, String> tr = {
   'delete': 'Sil',
   'like': 'Beğen',
   'join': 'Katıl',
-  'waiting': 'Beklemede',
+  'waiting': 'Bekliyor',
   'joined': 'Katıldı',
   'join_request': 'Katılım İstekleri',
   'message': 'Mesaj',

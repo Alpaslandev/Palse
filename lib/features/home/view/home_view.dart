@@ -13,62 +13,99 @@ import 'package:palseapp/features/home/widgets/explore_tab_bar.dart';
 import 'package:palseapp/features/story/view/storys_view.dart';
 import 'package:provider/provider.dart';
 
+// Ana sayfa view'i - IndexedStack mantığı ile her tab ayrı state tutar
 class HomeView extends StatefulWidget {
   final int initialTabIndex;
   const HomeView({super.key, this.initialTabIndex = 0});
 
   @override
-  State<HomeView> createState() => _HomeViewState();
+  State<HomeView> createState() => HomeViewState();
 }
 
-class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
+class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   late TabController _topTabController;
   late TabController _exploreTabController;
   late HomeViewModel _viewModel;
+  late Customer _user;
 
-  // Kullanıcı verilerini saklayacağız
-  late final Customer _user;
+  // Her tab için scroll controller'ları
+  final List<ScrollController> _scrollControllers = [
+    ScrollController(),
+    ScrollController(),
+    ScrollController(),
+  ];
 
   @override
   void initState() {
     super.initState();
-    _topTabController = TabController(length: 3, vsync: this);
+    _topTabController = TabController(length: 1, vsync: this);
     _exploreTabController = TabController(
         length: 3, vsync: this, initialIndex: widget.initialTabIndex);
     _viewModel = HomeViewModel();
-    _topTabController.addListener(_onTopTabChanged);
     _exploreTabController.addListener(_onExploreTabChanged);
 
     // İlk yüklemeyi yap
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Kullanıcının sadece ID'sini kaydet
       final authProvider = context.read<AuthProvider>();
       _user = authProvider.user!;
 
-      // İlanları yükle
-      if (authProvider.user != null) {
-        _viewModel.fetchAdvertsForTab(_user, _exploreTabController.index);
-      }
+      // İlk tab'ı initialize et
+      _viewModel.initializeTab(_user, _exploreTabController.index);
     });
   }
 
-  void _onTopTabChanged() {
-    if (!_topTabController.indexIsChanging) {
-      // Üst tab değiştiğinde gerekli işlemler
-      if (_topTabController.index == 0) {
-        // Keşfet sekmesine geçildi, mevcut explore tab'ına göre yükle
-        _viewModel.fetchAdvertsForTab(_user, _exploreTabController.index);
-      } else {
-        // Takiptekiler veya Organizasyonlar sekmesi - şimdilik boş
-        // Bu kısımları daha sonra implement edebilirsiniz
-      }
+  // Tab değiştiğinde sadece o tab'ı initialize et (eğer edilmemişse)
+  void _onExploreTabChanged() {
+    if (!_exploreTabController.indexIsChanging) {
+      _viewModel.initializeTab(_user, _exploreTabController.index);
     }
   }
 
-  void _onExploreTabChanged() {
-    if (!_exploreTabController.indexIsChanging &&
-        _topTabController.index == 0) {
-      _viewModel.fetchAdvertsForTab(_user, _exploreTabController.index);
+  // Refresh butonuna basıldığında aktif tab'ı yenile
+  void _refreshCurrentTab() async {
+    _scrollToTopSmoothly(_exploreTabController.index);
+    // Scroll animasyonunun bitmesini bekle
+    await Future.delayed(const Duration(milliseconds: 200));
+    _viewModel.refreshTab(_user, _exploreTabController.index);
+  }
+
+  // Tüm tab'ları yenile (anasayfa butonuna basınca)
+  void _refreshAllTabs() async {
+    _scrollToTopSmoothly(_exploreTabController.index);
+    // Scroll animasyonunun bitmesini bekle
+    await Future.delayed(const Duration(milliseconds: 200));
+    _viewModel.refreshAllTabs(_user);
+  }
+
+  // Instagram tarzı yumuşak kaydırma - loading sırasında üste kay
+  void _scrollToTopSmoothly(int tabIndex) {
+    final controller = _scrollControllers[tabIndex];
+
+    debugPrint(
+        '🔄 Scroll başlatılıyor - Tab: $tabIndex, HasClients: ${controller.hasClients}');
+
+    // Controller hazır değilse kısa bir süre bekle
+    if (!controller.hasClients) {
+      debugPrint('⏳ Controller hazır değil, bekleniyor...');
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (controller.hasClients) {
+          debugPrint('✅ Controller hazır, scroll başlıyor');
+          controller.animateTo(
+            0.0,
+            duration: const Duration(milliseconds: 800),
+            curve: Curves.easeInOutCubic,
+          );
+        } else {
+          debugPrint('❌ Controller hala hazır değil');
+        }
+      });
+    } else {
+      debugPrint('✅ Controller hazır, direkt scroll başlıyor');
+      controller.animateTo(
+        0.0,
+        duration: const Duration(milliseconds: 800),
+        curve: Curves.easeInOutCubic,
+      );
     }
   }
 
@@ -77,266 +114,221 @@ class _HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     _topTabController.dispose();
     _exploreTabController.dispose();
     _viewModel.dispose();
+    // Scroll controller'ları temizle
+    for (var controller in _scrollControllers) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
-  // NestedScrollView için sayfalama kontrolü
-  bool _onScrollNotification(ScrollNotification notification) {
-    if (notification is ScrollEndNotification) {
-      final metrics = notification.metrics;
-      if (metrics.pixels >= metrics.maxScrollExtent - 500 &&
-          !_viewModel.isLoading &&
-          _viewModel.hasMore) {
-        _viewModel.loadMore(_user, _exploreTabController.index);
-      }
-    }
-    return false;
-  }
-
-  Widget _buildExploreContent() {
+  // Belirli bir tab için liste widget'ı oluştur
+  Widget _buildTabContent(int tabIndex) {
     return ChangeNotifierProvider.value(
       value: _viewModel,
       child: Consumer<HomeViewModel>(
         builder: (context, viewModel, child) {
-          return Column(
-            children: [
-              ExploreTabBar(controller: _exploreTabController),
-              Expanded(
-                child: viewModel.isLoading && viewModel.adverts.isEmpty
-                    ? const Center(child: CircularProgressIndicator())
-                    : viewModel.adverts.isEmpty
-                        ? viewModel.shouldShowOtherTab
-                            ? Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Card(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(16.0),
-                                    child: Center(
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text(
-                                            _exploreTabController.index == 0
-                                                ? context.tr(
-                                                    'no_listings_in_your_city')
-                                                : context.tr(
-                                                    'no_listings_in_your_interests'),
-                                            textAlign: TextAlign.center,
-                                            style:
-                                                const TextStyle(fontSize: 16),
-                                          ),
-                                          const SizedBox(height: 8),
-                                          TextButton(
-                                            onPressed: () {
-                                              _exploreTabController
-                                                  .animateTo(2);
-                                            },
-                                            child: Text(
-                                              context.tr(
-                                                  'click_to_see_other_listings'),
-                                              style: const TextStyle(
-                                                color: Colors.blue,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              )
-                            : Center(child: Text(context.tr('no_listings_yet')))
-                        : ListView.builder(
-                            padding: const EdgeInsets.only(bottom: 80, top: 12),
-                            itemCount: viewModel.adverts.length + 1,
-                            itemBuilder: (context, index) {
-                              if (index == viewModel.adverts.length) {
-                                if (viewModel.isLoading) {
-                                  return const Padding(
-                                    padding: EdgeInsets.all(8.0),
-                                    child: Center(
-                                        child: CircularProgressIndicator()),
-                                  );
-                                }
+          final adverts = viewModel.getAdvertsForTab(tabIndex);
+          final isLoading = viewModel.isTabLoading(tabIndex);
+          final isInitialized = viewModel.isTabInitialized(tabIndex);
 
-                                if ((!viewModel.hasMore &&
-                                        _exploreTabController.index != 2) ||
-                                    viewModel.shouldShowOtherTab) {
-                                  return Padding(
-                                    padding: const EdgeInsets.all(16.0),
-                                    child: Card(
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(16.0),
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(
-                                              viewModel.shouldShowOtherTab
-                                                  ? (_exploreTabController
-                                                              .index ==
-                                                          0
-                                                      ? context.tr(
-                                                          'no_listings_in_your_city')
-                                                      : context.tr(
-                                                          'no_listings_in_your_interests'))
-                                                  : context.tr(
-                                                      'no_more_listings_in_category'),
-                                              textAlign: TextAlign.center,
-                                              style:
-                                                  const TextStyle(fontSize: 16),
-                                            ),
-                                            const SizedBox(height: 8),
-                                            TextButton(
-                                              onPressed: () {
-                                                _exploreTabController
-                                                    .animateTo(2);
-                                              },
-                                              child: Text(
-                                                context.tr(
-                                                    'click_to_see_other_listings'),
-                                                style: const TextStyle(
-                                                  color: Colors.blue,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                }
+          // İlk yükleme durumu
+          if (!isInitialized && isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-                                return const SizedBox.shrink();
-                              }
+          // Boş liste durumu
+          if (adverts.isEmpty && !isLoading) {
+            return _buildEmptyState(tabIndex);
+          }
 
-                              final advert = viewModel.adverts[index];
+          // İlan listesi
+          return RefreshIndicator(
+            onRefresh: () async {
+              _scrollToTopSmoothly(tabIndex);
+              // Scroll animasyonunun bitmesini bekle
+              await Future.delayed(const Duration(milliseconds: 200));
+              return _viewModel.refreshTab(_user, tabIndex);
+            },
+            child: ListView.builder(
+              controller:
+                  _scrollControllers[tabIndex], // Scroll controller ekle
+              padding: const EdgeInsets.only(bottom: 80, top: 12),
+              itemCount: adverts.length +
+                  (isLoading ? 1 : 0), // Loading durumunda +1 item
+              itemBuilder: (context, index) {
+                // Loading indicator'ı listenin sonunda göster
+                if (index == adverts.length && isLoading) {
+                  return Container(
+                    padding: const EdgeInsets.all(20),
+                    alignment: Alignment.center,
+                    child: const CircularProgressIndicator(),
+                  );
+                }
 
-                              if (advert.creatorUserID == _user.userID ||
-                                  (_user.blockUsers != null &&
-                                      _user.blockUsers!
-                                          .contains(advert.creatorUserID))) {
-                                if (index >= viewModel.adverts.length - 5 &&
-                                    viewModel.hasMore &&
-                                    !viewModel.isLoading) {
-                                  WidgetsBinding.instance
-                                      .addPostFrameCallback((_) {
-                                    viewModel.loadMore(
-                                        _user, _exploreTabController.index);
-                                  });
-                                }
-                                return const SizedBox.shrink();
-                              }
+                final advert = adverts[index];
 
-                              return AdvertCardView(
-                                advert: advert,
-                                mode: AdvertCardMode.home,
-                              );
-                            },
-                          ),
-              ),
-            ],
+                // Kullanıcının kendi ilanını veya bloklu kullanıcıları gösterme
+                if (advert.creatorUserID == _user.userID ||
+                    (_user.blockUsers != null &&
+                        _user.blockUsers!.contains(advert.creatorUserID))) {
+                  return const SizedBox.shrink();
+                }
+
+                return AdvertCardView(
+                  advert: advert,
+                  mode: AdvertCardMode.home,
+                );
+              },
+            ),
           );
         },
       ),
     );
   }
 
-  Widget _buildFollowingContent() {
-    return const Center(
-      child: Text(
-        'Takiptekiler',
-        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+  // Boş durum widget'ı
+  Widget _buildEmptyState(int tabIndex) {
+    String message;
+    switch (tabIndex) {
+      case 0:
+        message = context.tr('no_listings_in_your_city');
+        break;
+      case 1:
+        message = context.tr('no_listings_in_your_interests');
+        break;
+      case 2:
+        message = context.tr('no_other_listings');
+        break;
+      default:
+        message = context.tr('no_listings_yet');
+    }
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 16),
+                ),
+                const SizedBox(height: 8),
+                if (tabIndex != 2) // Diğer tab'ı için buton gösterme
+                  TextButton(
+                    onPressed: () => _exploreTabController.animateTo(2),
+                    child: Text(
+                      context.tr('click_to_see_other_listings'),
+                      style: const TextStyle(
+                        color: Colors.blue,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildOrganizationsContent() {
-    return const Center(
-      child: Text(
-        'Organizasyonlar',
-        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-      ),
+  Widget _buildExploreContent() {
+    return Column(
+      children: [
+        ExploreTabBar(controller: _exploreTabController),
+        Expanded(
+          // IndexedStack kullanarak her tab'ın state'ini koru
+          child: IndexedStack(
+            index: _exploreTabController.index,
+            children: [
+              _buildTabContent(0), // Şehir
+              _buildTabContent(1), // İlgi alanları
+              _buildTabContent(2), // Diğer
+            ],
+          ),
+        ),
+      ],
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return NotificationListener<ScrollNotification>(
-      onNotification: _onScrollNotification,
-      child: NestedScrollView(
-        headerSliverBuilder: (context, innerBoxIsScrolled) {
-          return [
-            // Hikayeler için SliverToBoxAdapter
-            const SliverToBoxAdapter(
-              child: StorysView(),
-            ),
-            // TabBar için SliverPersistentHeader
-            SliverPersistentHeader(
-              pinned: true,
-              delegate: _TabBarDelegate(
-                tabBar: Container(
-                  color: Theme.of(context).scaffoldBackgroundColor,
-                  height: 48,
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TabBar(
-                          controller: _topTabController,
-                          isScrollable: false,
-                          padding: EdgeInsets.zero,
-                          labelPadding:
-                              const EdgeInsets.symmetric(horizontal: 10),
-                          indicatorWeight: 3,
-                          labelStyle: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          unselectedLabelStyle: const TextStyle(
-                            fontSize: 13,
-                          ),
-                          unselectedLabelColor: Colors.grey,
-                          tabs: const [
-                            Tab(text: 'Keşfet', iconMargin: EdgeInsets.zero),
-                            Tab(
-                                text: 'Takiptekiler',
-                                iconMargin: EdgeInsets.zero),
-                            Tab(
-                                text: 'Şehrimde Ne Var',
-                                iconMargin: EdgeInsets.zero),
-                          ],
+    return NestedScrollView(
+      headerSliverBuilder: (context, innerBoxIsScrolled) {
+        return [
+          // Hikayeler için SliverToBoxAdapter
+          const SliverToBoxAdapter(
+            child: StorysView(),
+          ),
+          // TabBar için SliverPersistentHeader
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _TabBarDelegate(
+              tabBar: Container(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                height: 48,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TabBar(
+                        controller: _topTabController,
+                        isScrollable: true,
+                        padding: EdgeInsets.zero,
+                        labelPadding:
+                            const EdgeInsets.symmetric(horizontal: 10),
+                        indicatorWeight: 3,
+                        tabAlignment: TabAlignment.start,
+                        labelStyle: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
                         ),
+                        unselectedLabelStyle: const TextStyle(fontSize: 13),
+                        unselectedLabelColor: Colors.grey,
+                        tabs: const [
+                          Tab(text: 'Keşfet', iconMargin: EdgeInsets.zero),
+                        ],
                       ),
-                      IconButton(
-                        onPressed: () {
-                          context.pushNamed(filter);
-                        },
-                        icon: SvgPicture.asset(
-                          'assets/vectors/filter_x2.svg',
-                          width: 24,
-                          height: 24,
-                          colorFilter: const ColorFilter.mode(
-                              AppTheme.primaryColor, BlendMode.srcIn),
-                        ),
+                    ),
+                    // Refresh butonu ekle
+                    IconButton(
+                      onPressed: _refreshCurrentTab,
+                      icon: const Icon(Icons.refresh),
+                      tooltip: 'Yenile',
+                    ),
+                    IconButton(
+                      onPressed: () => context.pushNamed(filter),
+                      icon: SvgPicture.asset(
+                        'assets/vectors/filter_x2.svg',
+                        width: 24,
+                        height: 24,
+                        colorFilter: const ColorFilter.mode(
+                            AppTheme.primaryColor, BlendMode.srcIn),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
-          ];
-        },
-        body: TabBarView(
-          controller: _topTabController,
-          children: [
-            _buildExploreContent(),
-            _buildFollowingContent(),
-            _buildOrganizationsContent(),
-          ],
-        ),
+          ),
+        ];
+      },
+      body: TabBarView(
+        controller: _topTabController,
+        children: [
+          _buildExploreContent(),
+        ],
       ),
     );
+  }
+
+  // Ana sayfa butonuna basıldığında çağrılacak metod (dışarıdan erişim için)
+  void refreshFromNavigation() {
+    _refreshAllTabs();
   }
 }
 

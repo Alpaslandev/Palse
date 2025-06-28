@@ -5,133 +5,122 @@ import 'package:palseapp/core/services/firestore/advert_service.dart';
 import 'package:palseapp/core/services/firestore/customer_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+// Ana sayfa view model'i - IndexedStack mantığı ile her tab ayrı state tutar
 class HomeViewModel extends ChangeNotifier {
   final AdvertService _advertService = AdvertService();
   final CustomerService _customerService = CustomerService();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  List<Advert> _adverts = [];
-  bool _isLoading = false;
-  bool _hasMore = true; // Daha fazla ilan var mı?
-  bool _shouldShowOtherTab = false; // Diğer sekmesine yönlendirme yapılmalı mı?
-  static const int _pageSize = 25; // Sayfa başına ilan sayısı
+  // Her tab için ayrı liste ve durum tutma
+  final List<List<Advert>> _tabAdverts = [[], [], []]; // 3 tab için
+  final List<bool> _tabLoadingStates = [false, false, false];
+  final List<bool> _tabInitialized = [false, false, false];
 
-  final Map<String, Customer> _customers = {}; // Kullanıcı önbelleği
+  // Getter'lar - aktif tab'a göre veri döndür
+  List<Advert> getAdvertsForTab(int tabIndex) {
+    if (tabIndex < 0 || tabIndex >= _tabAdverts.length) return [];
+    return _tabAdverts[tabIndex];
+  }
 
-  int? _filterDistance;
-  String? _filterGender;
+  bool isTabLoading(int tabIndex) {
+    if (tabIndex < 0 || tabIndex >= _tabLoadingStates.length) return false;
+    return _tabLoadingStates[tabIndex];
+  }
 
-  DocumentSnapshot? _lastDocument; // Son dökümanı tut
+  bool isTabInitialized(int tabIndex) {
+    if (tabIndex < 0 || tabIndex >= _tabInitialized.length) return false;
+    return _tabInitialized[tabIndex];
+  }
 
-  // Getter'lar
-  List<Advert> get adverts => _adverts;
-  bool get isLoading => _isLoading;
-  bool get hasMore => _hasMore;
-  bool get shouldShowOtherTab => _shouldShowOtherTab;
-  int? get filterDistance => _filterDistance;
-  String? get filterGender => _filterGender;
+  // Belirli bir tab'ı ilk kez yükle
+  Future<void> initializeTab(Customer? user, int tabIndex) async {
+    if (user == null || isTabInitialized(tabIndex)) return;
 
-  // Tab değiştiğinde ilanları getir (ilk yükleme)
-  Future<void> fetchAdvertsForTab(Customer? user, int tabIndex) async {
+    await _loadTabData(user, tabIndex);
+    _tabInitialized[tabIndex] = true;
+  }
+
+  // Tab verilerini yenile (refresh)
+  Future<void> refreshTab(Customer? user, int tabIndex) async {
     if (user == null) return;
 
-    // Yeni tab'e geçildiğinde listeyi ve son dökümanı sıfırla
-    _adverts = [];
-    _lastDocument = null;
-    _hasMore = true;
-    _shouldShowOtherTab = false; // Flag'i sıfırla
+    // Tab'ı sıfırla ve yeniden yükle
+    _tabAdverts[tabIndex].clear();
+    _tabInitialized[tabIndex] = false;
 
-    await _loadMoreAdverts(user, tabIndex);
+    await _loadTabData(user, tabIndex);
+    _tabInitialized[tabIndex] = true;
   }
 
-  // Daha fazla ilan yükle
-  Future<void> loadMore(Customer? user, int tabIndex) async {
-    if (user == null || _isLoading || !_hasMore) return;
-    await _loadMoreAdverts(user, tabIndex);
-  }
+  // Tüm tab'ları yenile
+  Future<void> refreshAllTabs(Customer? user) async {
+    if (user == null) return;
 
-  // İlanları yükle
-  Future<void> _loadMoreAdverts(Customer? user, int tabIndex) async {
-    if (_isLoading || !_hasMore) return;
+    // Tüm tab'ları sıfırla
+    for (int i = 0; i < _tabAdverts.length; i++) {
+      _tabAdverts[i].clear();
+      _tabInitialized[i] = false;
+    }
 
-    _setLoading(true);
-    try {
-      List<Advert> newAdverts = [];
-      //  await _advertService.checkDatabaseConsistencyForQueries();
+    // Paralel olarak tüm tab'ları yükle
+    await Future.wait([
+      _loadTabData(user, 0),
+      _loadTabData(user, 1),
+      _loadTabData(user, 2),
+    ]);
 
-      switch (tabIndex) {
-        case 0:
-          newAdverts = await _advertService.fetchAdvertsByCity(
-            user?.location?.city ?? '',
-            lastDocument: _lastDocument,
-            limit: _pageSize,
-          );
-          break;
-        case 1:
-          newAdverts = await _advertService.fetchAdvertsByInterests(
-            user?.favoriteCategories ?? [],
-            lastDocument: _lastDocument,
-            limit: _pageSize,
-          );
-          break;
-        case 2: // Other sekmesi
-          newAdverts = await _advertService.fetchOtherAdverts(
-            user: user,
-            lastDocument: _lastDocument,
-            limit: _pageSize,
-          );
-          break;
-        default:
-          newAdverts = await _advertService.fetchAdvertsByFiltering(
-            lastDocument: _lastDocument,
-            limit: _pageSize,
-          );
-      }
-
-      if (newAdverts.isNotEmpty) {
-        // Son dökümanı güncelle (filtrelenmemiş listeden alıyoruz)
-        _lastDocument = await _firestore
-            .collection('events')
-            .doc(newAdverts.last.advertID)
-            .get();
-
-        // Yeni ilanları ekle
-        _adverts.addAll(newAdverts);
-
-        // İlanlar bulundu, flag'i false yap
-        _shouldShowOtherTab = false;
-      } else {
-        // Eğer şehre göre veya ilgi alanlarına göre ilan bulunamadıysa ve bu ilk yüklemeyse
-        if (_adverts.isEmpty && (tabIndex == 0 || tabIndex == 1)) {
-          debugPrint(
-              '${tabIndex == 0 ? "Şehre" : "İlgi alanlarına"} göre ilan bulunamadı, diğer sekmesine yönlendirme yapılacak.');
-
-          // Flag'i true yap - Diğer sekmesine yönlendirme yapılacak
-          _shouldShowOtherTab = true;
-        }
-      }
-
-      // Sayfa kontrolü - Filtreleme öncesi duruma göre hasMore değerini ayarla
-      _hasMore = newAdverts.length >= _pageSize;
-
-      debugPrint(
-          'Yeni ilanlar yüklendi. Toplam: ${_adverts.length}, Yeni: ${newAdverts.length}, Daha fazla var mı: $_hasMore');
-    } catch (e) {
-      debugPrint('İlanlar yüklenirken hata: $e');
-    } finally {
-      _setLoading(false);
+    // Tüm tab'ları initialized olarak işaretle
+    for (int i = 0; i < _tabInitialized.length; i++) {
+      _tabInitialized[i] = true;
     }
   }
 
-  void _setLoading(bool value) {
-    _isLoading = value;
+  // Tab verilerini yükle
+  Future<void> _loadTabData(Customer user, int tabIndex) async {
+    if (_tabLoadingStates[tabIndex]) return;
+
+    _setTabLoading(tabIndex, true);
+
+    try {
+      List<Advert> newAdverts = [];
+
+      switch (tabIndex) {
+        case 0: // Şehir bazlı ilanlar
+          newAdverts = await _advertService.fetchAdvertsByCity(
+            user.location?.city ?? '',
+          );
+          break;
+        case 1: // İlgi alanlarına göre ilanlar
+          newAdverts = await _advertService.fetchAdvertsByInterests(
+            user.favoriteCategories ?? [],
+          );
+          break;
+        case 2: // Diğer ilanlar
+          newAdverts = await _advertService.fetchOtherAdverts(user: user);
+          break;
+      }
+
+      _tabAdverts[tabIndex] = newAdverts;
+      debugPrint('Tab $tabIndex yüklendi: ${newAdverts.length} ilan');
+    } catch (e) {
+      debugPrint('Tab $tabIndex yüklenirken hata: $e');
+    } finally {
+      _setTabLoading(tabIndex, false);
+    }
+  }
+
+  // Tab loading durumunu güncelle
+  void _setTabLoading(int tabIndex, bool isLoading) {
+    _tabLoadingStates[tabIndex] = isLoading;
     notifyListeners();
   }
 
   @override
   void dispose() {
-    _adverts.clear();
-    _customers.clear();
+    // Tüm tab verilerini temizle
+    for (var tabList in _tabAdverts) {
+      tabList.clear();
+    }
     super.dispose();
   }
 }

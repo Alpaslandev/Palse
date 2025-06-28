@@ -18,7 +18,8 @@ class FriendProfileViewModel extends ChangeNotifier {
   List<Advert> adverts = [];
   bool isLoading = false;
 
-  FriendProfileViewModel({required this.customerID, required this.authProvider}) {
+  FriendProfileViewModel(
+      {required this.customerID, required this.authProvider}) {
     getCustomer();
     addProfileViewers();
   }
@@ -55,7 +56,8 @@ class FriendProfileViewModel extends ChangeNotifier {
 
       if (isUserBlocked()) {
         // Engeli kaldır
-        await reportService.unblockUser(customerID, currentUserId: currentUser.userID!);
+        await reportService.unblockUser(customerID,
+            currentUserId: currentUser.userID!);
 
         // Kullanıcı modelini güncelle
         if (currentUser.blockUsers != null) {
@@ -70,10 +72,13 @@ class FriendProfileViewModel extends ChangeNotifier {
         }
       } else {
         // Kullanıcıyı engelle
-        await reportService.blockUser(customerID, currentUserId: currentUser.userID!);
+        await reportService.blockUser(customerID,
+            currentUserId: currentUser.userID!);
 
         // Kullanıcı modelini güncelle
-        final updatedBlockList = currentUser.blockUsers != null ? List<String>.from(currentUser.blockUsers!) : <String>[];
+        final updatedBlockList = currentUser.blockUsers != null
+            ? List<String>.from(currentUser.blockUsers!)
+            : <String>[];
 
         updatedBlockList.add(customerID);
 
@@ -86,7 +91,8 @@ class FriendProfileViewModel extends ChangeNotifier {
 
       notifyListeners();
     } catch (e) {
-      debugPrint('Kullanıcı engelleme/engel kaldırma işleminde hata: ${e.toString()}');
+      debugPrint(
+          'Kullanıcı engelleme/engel kaldırma işleminde hata: ${e.toString()}');
       rethrow;
     }
   }
@@ -109,11 +115,11 @@ class FriendProfileViewModel extends ChangeNotifier {
 
   Future<void> getAdverts() async {
     adverts.clear();
-    if (customer?.adverts == null || customer?.adverts!.isEmpty == true) {
+    if (customer?.events == null || customer?.events!.isEmpty == true) {
       debugPrint('Kullanıcının ilanı bulunmuyor');
       return;
     }
-    for (var eventId in customer?.adverts ?? []) {
+    for (var eventId in customer?.events ?? []) {
       debugPrint('İlan yükleniyor: $eventId');
       final advert = await advertService.fetchAdvertById(eventId);
       if (advert != null) {
@@ -125,7 +131,8 @@ class FriendProfileViewModel extends ChangeNotifier {
 
   Future<void> addProfileViewers() async {
     try {
-      await customerService.addProfileViewers(customerID, authProvider.user?.userID ?? '');
+      await customerService.addProfileViewers(
+          customerID, authProvider.user?.userID ?? '');
       debugPrint('Kullanıcı görünümü güncellendi');
     } catch (e) {
       debugPrint('Kullanıcı görünümü güncellenirken hata: $e');
