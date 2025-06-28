@@ -93,24 +93,6 @@ class AdvertCardView extends StatelessWidget {
   Widget _profileHeader(BuildContext context) {
     final viewModel = context.watch<AdvertCardViewModel>();
 
-    // Loading durumu
-    if (viewModel.isLoading) {
-      return const ListTile(
-        contentPadding: EdgeInsets.zero,
-        leading: CircleAvatar(child: CircularProgressIndicator()),
-        title: Text('Yükleniyor...'),
-      );
-    }
-
-    // Error durumu - customer bulunamadı
-    if (viewModel.creatorCustomer == null) {
-      return const ListTile(
-        contentPadding: EdgeInsets.zero,
-        leading: CircleAvatar(child: Icon(Icons.error)),
-        title: Text('Kullanıcı bulunamadı'),
-      );
-    }
-
     // Success durumu - normal header göster
     return AdvertProfileHeader(
       customer: viewModel.creatorCustomer!,

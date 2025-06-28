@@ -25,6 +25,7 @@ class HomeView extends StatefulWidget {
 class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   late TabController _topTabController;
   late TabController _exploreTabController;
+  late PageController _pageController;
   late HomeViewModel _viewModel;
   late Customer _user;
 
@@ -41,6 +42,7 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     _topTabController = TabController(length: 1, vsync: this);
     _exploreTabController = TabController(
         length: 3, vsync: this, initialIndex: widget.initialTabIndex);
+    _pageController = PageController(initialPage: widget.initialTabIndex);
     _viewModel = HomeViewModel();
     _exploreTabController.addListener(_onExploreTabChanged);
 
@@ -54,10 +56,25 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     });
   }
 
-  // Tab değiştiğinde sadece o tab'ı initialize et (eğer edilmemişse)
+  // Tab'e tıklandığında PageView'ı senkronize et ve tab'ı yükle
   void _onExploreTabChanged() {
-    if (!_exploreTabController.indexIsChanging) {
-      _viewModel.initializeTab(_user, _exploreTabController.index);
+    // Sadece TabBar'a dokunulduğunda PageView'ı animasyonla değiştir.
+    // PageView kaydırıldığında bu listener tetiklenir ama `indexIsChanging` false olur.
+    if (_exploreTabController.indexIsChanging) {
+      _pageController.animateToPage(
+        _exploreTabController.index,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+      );
+    }
+    // Yeni seçilen tab'ı (eğer yüklenmediyse) yükle.
+    _viewModel.initializeTab(_user, _exploreTabController.index);
+  }
+
+  // PageView kaydırıldığında TabBar'ı senkronize et.
+  void _onPageChanged(int index) {
+    if (_exploreTabController.index != index) {
+      _exploreTabController.index = index;
     }
   }
 
@@ -112,7 +129,9 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   @override
   void dispose() {
     _topTabController.dispose();
+    _exploreTabController.removeListener(_onExploreTabChanged);
     _exploreTabController.dispose();
+    _pageController.dispose();
     _viewModel.dispose();
     // Scroll controller'ları temizle
     for (var controller in _scrollControllers) {
@@ -242,9 +261,10 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       children: [
         ExploreTabBar(controller: _exploreTabController),
         Expanded(
-          // IndexedStack kullanarak her tab'ın state'ini koru
-          child: IndexedStack(
-            index: _exploreTabController.index,
+          // PageView ile kaydırılabilir sekmeler ve state koruma
+          child: PageView(
+            controller: _pageController,
+            onPageChanged: _onPageChanged,
             children: [
               _buildTabContent(0), // Şehir
               _buildTabContent(1), // İlgi alanları

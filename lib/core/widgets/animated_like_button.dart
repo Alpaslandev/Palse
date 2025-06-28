@@ -23,6 +23,9 @@ class AnimatedLikeButton extends StatefulWidget {
 
 class _AnimatedLikeButtonState extends State<AnimatedLikeButton>
     with TickerProviderStateMixin {
+  // --- Ortak Animasyon Süresi ---
+  static const _animationDuration = Duration(milliseconds: 200);
+
   late AnimationController _scaleController;
   late AnimationController _colorController;
   late Animation<double> _scaleAnimation;
@@ -37,24 +40,24 @@ class _AnimatedLikeButtonState extends State<AnimatedLikeButton>
     _previousLikedState = widget.isLiked;
     _previousLikeCount = widget.likeCount;
 
-    // Scale animasyonu - Twitter tarzı bounce efekti
+    // Scale animasyonu - yumuşak ve akıcı
     _scaleController = AnimationController(
-      duration: const Duration(milliseconds: 200),
+      duration: _animationDuration, // Ortak süre kullanımı
       vsync: this,
     );
 
     // Renk animasyonu - smooth geçiş
     _colorController = AnimationController(
-      duration: const Duration(milliseconds: 150),
+      duration: _animationDuration, // Ortak süre kullanımı
       vsync: this,
     );
 
     _scaleAnimation = Tween<double>(
       begin: 1.0,
-      end: 1.3,
+      end: 1.25, // Daha az büyüme
     ).animate(CurvedAnimation(
       parent: _scaleController,
-      curve: Curves.elasticOut,
+      curve: Curves.easeOutCubic, // Yumuşak, zıplamayan curve
     ));
 
     _colorAnimation = ColorTween(
@@ -135,8 +138,7 @@ class _AnimatedLikeButtonState extends State<AnimatedLikeButton>
               animation: _scaleController, // Kalp ile aynı controller
               builder: (context, child) {
                 return AnimatedSwitcher(
-                  duration:
-                      const Duration(milliseconds: 200), // Kalp ile senkron
+                  duration: _animationDuration, // Ortak süre kullanımı
                   transitionBuilder: (child, animation) {
                     // Çark mantığı: artarken yukarıdan, azalırken aşağıdan
                     final isIncreasing = widget.likeCount > _previousLikeCount;
@@ -150,7 +152,7 @@ class _AnimatedLikeButtonState extends State<AnimatedLikeButton>
                         end: Offset.zero,
                       ).animate(CurvedAnimation(
                         parent: animation,
-                        curve: Curves.elasticOut, // Kalp ile aynı curve
+                        curve: Curves.easeOutCubic, // Kalp ile aynı curve
                       )),
                       child: FadeTransition(
                         opacity: animation,
