@@ -103,6 +103,10 @@ class AuthProvider extends ChangeNotifier implements Listenable {
 
         _user = newUser;
         _isFirestoreDataLoaded = true; // Firestore verisi yüklendi
+
+        // Ödül premium süresinin dolup dolmadığını kontrol et
+        _checkPremiumExpiry();
+
         notifyListeners(); // Her durumda notifyListeners() çağrılması gerekiyor
 
         if (_isFirstTime) {
@@ -293,5 +297,32 @@ class AuthProvider extends ChangeNotifier implements Listenable {
   void dispose() {
     _userStreamSubscription?.cancel();
     super.dispose();
+  }
+
+  // Ödül premium süresinin dolup dolmadığını kontrol eden metod
+  Future<void> _checkPremiumExpiry() async {
+    if (_user != null &&
+        _user!.isPremium == true &&
+        _user!.premiumEndDate != null) {
+      // Ödül premium süresinin geçip geçmediğini kontrol et
+      if (_user!.premiumEndDate!.isBefore(DateTime.now())) {
+        debugPrint(
+            '🎁 Ödül premium süresi doldu, premium statüsü kaldırılıyor...');
+
+        // Premium durumunu false yap ve premiumEndDate'i null yap
+        final updatedUser = _user!.copyWith(
+          isPremium: false,
+          premiumEndDate: null,
+        );
+
+        // Firestore'da güncelle
+        await _userService.updateCustomer(_user!.userID!, updatedUser);
+
+        // Lokal kullanıcı modelini de güncelle
+        _user = updatedUser;
+
+        debugPrint('✅ Ödül premium statüsü başarıyla kaldırıldı');
+      }
+    }
   }
 }

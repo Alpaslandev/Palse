@@ -13,7 +13,7 @@ import 'package:palseapp/features/home/widgets/explore_tab_bar.dart';
 import 'package:palseapp/features/story/view/storys_view.dart';
 import 'package:provider/provider.dart';
 
-// Ana sayfa view'i - IndexedStack mantığı ile her tab ayrı state tutar
+// Ana sayfa view'i - PageView ile animasyonlu tab geçişi
 class HomeView extends StatefulWidget {
   final int initialTabIndex;
   const HomeView({super.key, this.initialTabIndex = 0});
@@ -28,6 +28,7 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   late PageController _pageController;
   late HomeViewModel _viewModel;
   late Customer _user;
+  bool _isInitialized = false;
 
   // Her tab için scroll controller'ları
   final List<ScrollController> _scrollControllers = [
@@ -45,35 +46,38 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     _pageController = PageController(initialPage: widget.initialTabIndex);
     _viewModel = HomeViewModel();
     _exploreTabController.addListener(_onExploreTabChanged);
+  }
 
-    // İlk yüklemeyi yap
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_isInitialized) {
       final authProvider = context.read<AuthProvider>();
       _user = authProvider.user!;
 
       // İlk tab'ı initialize et
       _viewModel.initializeTab(_user, _exploreTabController.index);
-    });
+      _isInitialized = true;
+    }
   }
 
   // Tab'e tıklandığında PageView'ı senkronize et ve tab'ı yükle
   void _onExploreTabChanged() {
     // Sadece TabBar'a dokunulduğunda PageView'ı animasyonla değiştir.
-    // PageView kaydırıldığında bu listener tetiklenir ama `indexIsChanging` false olur.
     if (_exploreTabController.indexIsChanging) {
-      _pageController.animateToPage(
-        _exploreTabController.index,
-        duration: const Duration(milliseconds: 400),
-        curve: Curves.easeInOut,
-      );
+      debugPrint('🔄 Tab değişiyor: ${_exploreTabController.index}');
+      // jumpToPage kullan - animasyonsuz ama garantili çalışır
+      _pageController.jumpToPage(_exploreTabController.index);
     }
-    // Yeni seçilen tab'ı (eğer yüklenmediyse) yükle.
+    // Yeni seçilen tab'ı yükle.
     _viewModel.initializeTab(_user, _exploreTabController.index);
   }
 
   // PageView kaydırıldığında TabBar'ı senkronize et.
   void _onPageChanged(int index) {
+    debugPrint('📄 PageView değişti: $index');
     if (_exploreTabController.index != index) {
+      debugPrint('🔄 TabController güncelleniyor: $index');
       _exploreTabController.index = index;
     }
   }
@@ -81,43 +85,21 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   // Refresh butonuna basıldığında aktif tab'ı yenile
   void _refreshCurrentTab() async {
     _scrollToTopSmoothly(_exploreTabController.index);
-    // Scroll animasyonunun bitmesini bekle
     await Future.delayed(const Duration(milliseconds: 200));
     _viewModel.refreshTab(_user, _exploreTabController.index);
   }
 
-  // Tüm tab'ları yenile (anasayfa butonuna basınca)
+  // Tüm tab'ları yenile
   void _refreshAllTabs() async {
     _scrollToTopSmoothly(_exploreTabController.index);
-    // Scroll animasyonunun bitmesini bekle
     await Future.delayed(const Duration(milliseconds: 200));
     _viewModel.refreshAllTabs(_user);
   }
 
-  // Instagram tarzı yumuşak kaydırma - loading sırasında üste kay
+  // Yumuşak kaydırma
   void _scrollToTopSmoothly(int tabIndex) {
     final controller = _scrollControllers[tabIndex];
-
-    debugPrint(
-        '🔄 Scroll başlatılıyor - Tab: $tabIndex, HasClients: ${controller.hasClients}');
-
-    // Controller hazır değilse kısa bir süre bekle
-    if (!controller.hasClients) {
-      debugPrint('⏳ Controller hazır değil, bekleniyor...');
-      Future.delayed(const Duration(milliseconds: 100), () {
-        if (controller.hasClients) {
-          debugPrint('✅ Controller hazır, scroll başlıyor');
-          controller.animateTo(
-            0.0,
-            duration: const Duration(milliseconds: 800),
-            curve: Curves.easeInOutCubic,
-          );
-        } else {
-          debugPrint('❌ Controller hala hazır değil');
-        }
-      });
-    } else {
-      debugPrint('✅ Controller hazır, direkt scroll başlıyor');
+    if (controller.hasClients) {
       controller.animateTo(
         0.0,
         duration: const Duration(milliseconds: 800),
@@ -133,14 +115,13 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     _exploreTabController.dispose();
     _pageController.dispose();
     _viewModel.dispose();
-    // Scroll controller'ları temizle
     for (var controller in _scrollControllers) {
       controller.dispose();
     }
     super.dispose();
   }
 
-  // Belirli bir tab için liste widget'ı oluştur
+  // Basit tab içeriği - performanslı
   Widget _buildTabContent(int tabIndex) {
     return ChangeNotifierProvider.value(
       value: _viewModel,
@@ -150,32 +131,25 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
           final isLoading = viewModel.isTabLoading(tabIndex);
           final isInitialized = viewModel.isTabInitialized(tabIndex);
 
-          // İlk yükleme durumu
           if (!isInitialized && isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          // Boş liste durumu
           if (adverts.isEmpty && !isLoading) {
             return _buildEmptyState(tabIndex);
           }
 
-          // İlan listesi
           return RefreshIndicator(
             onRefresh: () async {
               _scrollToTopSmoothly(tabIndex);
-              // Scroll animasyonunun bitmesini bekle
               await Future.delayed(const Duration(milliseconds: 200));
               return _viewModel.refreshTab(_user, tabIndex);
             },
             child: ListView.builder(
-              controller:
-                  _scrollControllers[tabIndex], // Scroll controller ekle
+              controller: _scrollControllers[tabIndex],
               padding: const EdgeInsets.only(bottom: 80, top: 12),
-              itemCount: adverts.length +
-                  (isLoading ? 1 : 0), // Loading durumunda +1 item
+              itemCount: adverts.length + (isLoading ? 1 : 0),
               itemBuilder: (context, index) {
-                // Loading indicator'ı listenin sonunda göster
                 if (index == adverts.length && isLoading) {
                   return Container(
                     padding: const EdgeInsets.all(20),
@@ -186,13 +160,13 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
 
                 final advert = adverts[index];
 
-                // Kullanıcının kendi ilanını veya bloklu kullanıcıları gösterme
                 if (advert.creatorUserID == _user.userID ||
                     (_user.blockUsers != null &&
                         _user.blockUsers!.contains(advert.creatorUserID))) {
                   return const SizedBox.shrink();
                 }
 
+                // Basit AdvertCardView - performanslı
                 return AdvertCardView(
                   advert: advert,
                   mode: AdvertCardMode.home,
@@ -237,7 +211,7 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                   style: const TextStyle(fontSize: 16),
                 ),
                 const SizedBox(height: 8),
-                if (tabIndex != 2) // Diğer tab'ı için buton gösterme
+                if (tabIndex != 2)
                   TextButton(
                     onPressed: () => _exploreTabController.animateTo(2),
                     child: Text(
@@ -261,14 +235,16 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       children: [
         ExploreTabBar(controller: _exploreTabController),
         Expanded(
-          // PageView ile kaydırılabilir sekmeler ve state koruma
+          // PageView ile animasyonlu geçiş - sadece tab'lara tıklanarak geçiş
           child: PageView(
             controller: _pageController,
+            physics:
+                const NeverScrollableScrollPhysics(), // Parmakla kaydırmayı engelle
             onPageChanged: _onPageChanged,
             children: [
-              _buildTabContent(0), // Şehir
-              _buildTabContent(1), // İlgi alanları
-              _buildTabContent(2), // Diğer
+              _buildTabContent(0),
+              _buildTabContent(1),
+              _buildTabContent(2),
             ],
           ),
         ),
@@ -281,11 +257,9 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     return NestedScrollView(
       headerSliverBuilder: (context, innerBoxIsScrolled) {
         return [
-          // Hikayeler için SliverToBoxAdapter
           const SliverToBoxAdapter(
             child: StorysView(),
           ),
-          // TabBar için SliverPersistentHeader
           SliverPersistentHeader(
             pinned: true,
             delegate: _TabBarDelegate(
@@ -314,7 +288,6 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                         ],
                       ),
                     ),
-                    // Refresh butonu ekle
                     IconButton(
                       onPressed: _refreshCurrentTab,
                       icon: const Icon(Icons.refresh),
@@ -346,13 +319,12 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     );
   }
 
-  // Ana sayfa butonuna basıldığında çağrılacak metod (dışarıdan erişim için)
   void refreshFromNavigation() {
     _refreshAllTabs();
   }
 }
 
-// TabBar için özel delegate sınıfı
+// TabBar delegate
 class _TabBarDelegate extends SliverPersistentHeaderDelegate {
   final Widget tabBar;
 

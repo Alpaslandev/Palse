@@ -23,7 +23,7 @@ class AdvertProfileHeader extends StatelessWidget {
     required this.onFollowTap,
   });
 
-  final Customer customer;
+  final Customer? customer;
   final Customer currentCustomer;
   final Advert advert;
   final bool isFollowing;
@@ -33,9 +33,14 @@ class AdvertProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Null durumunda skeleton loading göster
+    if (customer == null) {
+      return _buildSkeletonLoading();
+    }
+
     return InkWell(
       onTap: () =>
-          context.pushNamed(Routes.friendProfile, extra: customer.userID),
+          context.pushNamed(Routes.friendProfile, extra: customer!.userID),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8.0),
         child: Column(
@@ -47,7 +52,7 @@ class AdvertProfileHeader extends StatelessWidget {
               children: [
                 // Sol taraf - Profil resmi
                 CircleProfilePicture(
-                  imageUrl: customer.profilePictureUrl,
+                  imageUrl: customer!.profilePictureUrl,
                   radius: 30,
                 ),
 
@@ -62,17 +67,17 @@ class AdvertProfileHeader extends StatelessWidget {
                       Row(
                         children: [
                           Text(
-                            customer.firstName ?? '',
+                            customer!.firstName ?? '',
                             style: const TextStyle(
                                 fontWeight: FontWeight.bold, fontSize: 14),
                           ),
-                          if (customer.verification ?? false)
+                          if (customer!.verification ?? false)
                             const Padding(
                               padding: EdgeInsets.only(left: 2),
                               child: Icon(Icons.verified,
                                   color: Colors.blue, size: 14),
                             ),
-                          if (customer.isPremium ?? false)
+                          if (customer!.isPremium ?? false)
                             const Padding(
                               padding: EdgeInsets.only(left: 2),
                               child: Icon(Icons.verified,
@@ -81,7 +86,7 @@ class AdvertProfileHeader extends StatelessWidget {
                           const Spacer(),
 
                           // Takip butonu - kendi profilinde gösterme
-                          if (customer.userID != currentCustomer.userID)
+                          if (customer!.userID != currentCustomer.userID)
                             _buildFollowButton(context),
 
                           const SizedBox(width: 8),
@@ -96,7 +101,7 @@ class AdvertProfileHeader extends StatelessWidget {
                               ),
                               const SizedBox(width: 2),
                               Text(
-                                customer.getAverage().toInt().toString(),
+                                customer!.getAverage().toInt().toString(),
                                 style: const TextStyle(fontSize: 12),
                               ),
                             ],
@@ -107,7 +112,7 @@ class AdvertProfileHeader extends StatelessWidget {
                       const SizedBox(height: 4),
 
                       // 2. Satır: Kullanıcı rütbesi
-                      if (customer.totalXp > 0)
+                      if (customer!.totalXp > 0)
                         Material(
                           color: Colors.transparent,
                           child: Container(
@@ -122,7 +127,7 @@ class AdvertProfileHeader extends StatelessWidget {
                               children: [
                                 Builder(builder: (context) {
                                   final rank = AchievementService()
-                                      .getUserRankFromXp(customer.totalXp);
+                                      .getUserRankFromXp(customer!.totalXp);
                                   return Text(
                                     "${rank.icon} ${AchievementService().getLocalizedRankTitle(rank, context)}",
                                     style: const TextStyle(
@@ -213,6 +218,165 @@ class AdvertProfileHeader extends StatelessWidget {
     );
   }
 
+  // Skeleton loading widget'ı - gerçek boyutlarla eşleştirilmiş
+  Widget _buildSkeletonLoading() {
+    return InkWell(
+      onTap: () {}, // Boş onTap - gerçek widget ile aynı yapı
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Ana kullanıcı bilgileri satırı
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Profil resmi skeleton - gerçek boyut
+                CircleAvatar(
+                  radius: 30,
+                  backgroundColor: Colors.grey[300],
+                ),
+                const SizedBox(width: 10),
+
+                // Sağ taraf - 3 satır bilgi
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 1. Satır: İsim, rozetler ve takip butonu + rating
+                      Row(
+                        children: [
+                          // İsim
+                          Container(
+                            height: 14,
+                            width: 60,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[300],
+                              borderRadius: BorderRadius.circular(7),
+                            ),
+                          ),
+                          // Rozetler için boşluk (verification + premium)
+                          const SizedBox(width: 4),
+                          Container(
+                            height: 14,
+                            width: 14,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[300],
+                              borderRadius: BorderRadius.circular(7),
+                            ),
+                          ),
+                          const SizedBox(width: 2),
+                          Container(
+                            height: 14,
+                            width: 14,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[300],
+                              borderRadius: BorderRadius.circular(7),
+                            ),
+                          ),
+                          const Spacer(),
+
+                          // Takip butonu skeleton
+                          Container(
+                            height: 30,
+                            width: 70,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[300],
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+
+                          // Rating skeleton
+                          Container(
+                            height: 14,
+                            width: 25,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[300],
+                              borderRadius: BorderRadius.circular(7),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+
+                      // 2. Satır: Rütbe badge - Material wrapper ile
+                      Material(
+                        color: Colors.transparent,
+                        child: Container(
+                          height: 22, // padding dahil gerçek yükseklik
+                          width: 80,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+
+                      // 3. Satır: Etkinlik türü ve tarih
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            height: 12,
+                            width: 80,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[300],
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                          ),
+                          Container(
+                            height: 12,
+                            width: 70,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[300],
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            // Alt kısım - Konum ve etkinlik tarihi (gerçek yapıyla aynı)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Konum bilgisi - Expanded ile
+                  Expanded(
+                    child: Container(
+                      height: 9,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 20), // Gerçek boşluk
+                  // Etkinlik tarihi
+                  Container(
+                    height: 9,
+                    width: 120,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   // Takip butonunu oluşturan metod
   Widget _buildFollowButton(BuildContext context) {
     String buttonText;
@@ -223,11 +387,11 @@ class AdvertProfileHeader extends StatelessWidget {
       buttonText = context.tr('unfollow');
       buttonIcon = Icons.person_remove_outlined;
       buttonColor = Colors.red;
-    } else if (customer.isPrivate == true && isFollowRequestSent) {
+    } else if (customer!.isPrivate == true && isFollowRequestSent) {
       buttonText = context.tr('request_sent');
       buttonIcon = Icons.schedule_outlined;
       buttonColor = Colors.orange;
-    } else if (customer.isPrivate == true) {
+    } else if (customer!.isPrivate == true) {
       buttonText = context.tr('send_request');
       buttonIcon = Icons.person_add_outlined;
     } else {

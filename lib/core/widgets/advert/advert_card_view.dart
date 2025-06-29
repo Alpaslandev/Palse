@@ -71,7 +71,15 @@ class AdvertCardView extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Üst kısım - Kullanıcı bilgileri ve konum/tarih
-                _profileHeader(context),
+                AdvertProfileHeader(
+                  customer: viewModel.creatorCustomer,
+                  currentCustomer: viewModel.currentCustomer,
+                  advert: advert,
+                  isFollowing: viewModel.isFollowing,
+                  isFollowRequestSent: viewModel.isFollowRequestSent,
+                  isLoading: viewModel.isLoading,
+                  onFollowTap: () async => await viewModel.toggleFollow(),
+                ),
 
                 // İlan Detayları
                 AdvertDetails(advert: advert),
@@ -87,21 +95,6 @@ class AdvertCardView extends StatelessWidget {
           );
         },
       ),
-    );
-  }
-
-  Widget _profileHeader(BuildContext context) {
-    final viewModel = context.watch<AdvertCardViewModel>();
-
-    // Success durumu - normal header göster
-    return AdvertProfileHeader(
-      customer: viewModel.creatorCustomer!,
-      currentCustomer: viewModel.currentCustomer,
-      advert: advert,
-      isFollowing: viewModel.isFollowing,
-      isFollowRequestSent: viewModel.isFollowRequestSent,
-      isLoading: viewModel.isLoading,
-      onFollowTap: () async => await viewModel.toggleFollow(),
     );
   }
 }

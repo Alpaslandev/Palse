@@ -56,7 +56,7 @@ class AppRouter {
     router = GoRouter(
       navigatorKey: _rootNavigatorKey,
       initialLocation: "/$splash",
-      debugLogDiagnostics: true,
+      debugLogDiagnostics: false,
       refreshListenable: _authProvider,
       redirect: _handleRedirect,
       extraCodec: CustomGoRouterCodec(),
