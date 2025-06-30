@@ -1,0 +1,2 @@
+/Volumes/Okantosh/projects/palseapp/android/app/.cxx/RelWithDebInfo/5048673n/x86/CMakeFiles/edit_cache.dir
+/Volumes/Okantosh/projects/palseapp/android/app/.cxx/RelWithDebInfo/5048673n/x86/CMakeFiles/rebuild_cache.dir

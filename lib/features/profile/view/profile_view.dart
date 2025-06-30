@@ -187,6 +187,7 @@ class _ProfileViewState extends State<ProfileView> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
+          /*
           // Takipçiler
           _buildStatItem(
             context: context,
@@ -215,6 +216,7 @@ class _ProfileViewState extends State<ProfileView> {
               _showFollowList(context, user.userID!, false);
             },
           ),
+          */
         ],
       ),
     );

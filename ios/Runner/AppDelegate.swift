@@ -2,34 +2,57 @@ import UIKit
 import Flutter
 import FBSDKCoreKit
 import AppTrackingTransparency
-import AdSupport
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
+
+  private var attAsked = false     // ATT yalnızca bir kez tetiklensin
 
   override func application(
       _ application: UIApplication,
       didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
 
-    // Facebook SDK başlatılıyor
+    // 1) Facebook SDK init (gereken “initialize” adımı budur)
     ApplicationDelegate.shared.application(
         application,
         didFinishLaunchingWithOptions: launchOptions)
 
-    // ATT isteği — iOS 14+
-    if #available(iOS 14, *) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            ATTrackingManager.requestTrackingAuthorization { status in
-                print("📢 ATT durumu: \(status.rawValue)") // 0:notDetermined, 1:restricted, 2:denied, 3:authorized
-                // FB v17+ zaten status'u otomatik alıyor
-            }
-        }
-    }
-
+    // 2) Flutter plug-in’leri
     GeneratedPluginRegistrant.register(with: self)
-    AppEvents.shared.activateApp() // App install / open event
 
-    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+    // 3) İlk App Activate (IDFA'sız da olsa install sayımı yapar)
+    AppEvents.shared.activateApp()
+
+    return super.application(
+      application,
+      didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  /// ATT popup’ını yalnızca uygulama aktif olduğunda göster.
+  override func applicationDidBecomeActive(_ application: UIApplication) {
+    super.applicationDidBecomeActive(application)
+
+    guard #available(iOS 14, *), attAsked == false else { return }
+    attAsked = true
+
+    let current = ATTrackingManager.trackingAuthorizationStatus
+    if current == .notDetermined {
+      ATTrackingManager.requestTrackingAuthorization { status in
+        print("📢 ATT sonucu:", status.rawValue)   // 0‒3
+
+        // ⚠️ FBSDK v17+: iOS 17+’de bu setter KULLANILMAZ.
+        //      iOS 14–16'da hâlâ geçerli → koşullu çağır.
+        if #available(iOS 17, *) {
+          // hiçbir şey yapma, SDK kendi okuyor
+        } else {
+          Settings.shared.isAdvertiserTrackingEnabled = (status == .authorized)
+        }
+          AppEvents.shared.activateApp()
+
+        // İzin çıktıktan sonra event’leri flush etmek istersen:
+          AppEvents.shared.flush()
+      }
+    }
   }
 }

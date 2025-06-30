@@ -160,7 +160,7 @@ class ActionButtons extends StatelessWidget {
     try {
       if (await Vibration.hasVibrator() ?? false) {
         // Çok hafif titreşim (3ms) - like için minimal
-        Vibration.vibrate(duration: 3);
+        Vibration.vibrate(duration: 5);
       }
     } catch (e) {
       // Titreşim desteklenmiyorsa sessizce devam et

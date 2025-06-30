@@ -185,6 +185,7 @@ const Map<String, String> tr = {
   'join': 'Katıl',
   'waiting': 'Bekliyor',
   'joined': 'Katıldı',
+  'joined_events': 'Katıldığım Etkinlikler',
   'join_request': 'Katılım İstekleri',
   'message': 'Mesaj',
   'report_listing': 'İlanı Şikayet Et',

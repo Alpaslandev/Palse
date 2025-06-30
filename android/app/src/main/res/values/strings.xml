@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="facebook_app_id">3895145207420009</string>
-    <string name="facebook_client_token">2843f950e5c5e93f3cab035b49236914</string>
-    <string name="app_name">Palse</string>
+    <string name="facebook_app_id">1259126958800438</string>
+    <string name="facebook_client_token">81249d5cc6aa60e5f58bbecdd556bcac</string>
+    <string name="app_name">Palse App</string>
 
 </resources> 

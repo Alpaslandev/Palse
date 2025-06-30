@@ -194,6 +194,7 @@ const Map<String, String> en = {
   'join': 'Join',
   'waiting': 'Waiting',
   'joined': 'Joined',
+  'joined_events': 'Joined Events',
   'join_request': 'Join Requests',
   'message': 'Message',
   'report_listing': 'Report Listing',

@@ -2,7 +2,7 @@ name: palseapp
 description: "A new Flutter project."
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 41.0.1+11
+version: 41.2.0+56
 
 environment:
   sdk: ^3.6.1
@@ -38,7 +38,7 @@ dependencies:
   flutter_svg: ^2.0.17
 
   url_launcher: ^6.3.1
-  flutter_local_notifications: ^19.0.0
+  flutter_local_notifications: ^19.3.0
   in_app_review: ^2.0.10
 
   cached_network_image: ^3.4.1

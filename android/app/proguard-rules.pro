@@ -12,3 +12,12 @@
 
 # Kendi uygulamanızın package'ı için (bunu kendi paket adınızla değiştirin)
 # -keep class com.orderbros.palse.** { *; }
+
+# Facebook SDK için gerekli korumalar
+-keep class com.facebook.** { *; }
+-keepclassmembers class com.facebook.** { *; }
+-dontwarn com.facebook.**
+
+# Google Play Services için (opsiyonel ama önerilir)
+-keep class com.google.android.gms.** { *; }
+-dontwarn com.google.android.gms.**
