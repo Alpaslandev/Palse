@@ -14,7 +14,7 @@ class AdvertImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Debug için URL'yi logla
-    debugPrint('🖼️ AdvertImage yükleniyor: $imageUrl');
+    //  debugPrint('🖼️ AdvertImage yükleniyor: $imageUrl');
 
     if (!imageUrl.contains('assets/images/')) {
       return ClipRRect(
@@ -36,7 +36,7 @@ class AdvertImage extends StatelessWidget {
             ),
           ),
           placeholder: (context, url) {
-            debugPrint('🔄 CachedNetworkImage placeholder: $url');
+            //  debugPrint('🔄 CachedNetworkImage placeholder: $url');
             return Container(
               width: double.infinity,
               height: 250,
@@ -48,14 +48,14 @@ class AdvertImage extends StatelessWidget {
           },
           errorWidget: (context, url, error) {
             // Hata durumunda detaylı log
-            debugPrint('❌ CachedNetworkImage HATA!');
-            debugPrint('   URL: $url');
-            debugPrint('   Hata: $error');
-            debugPrint('   Hata Tipi: ${error.runtimeType}');
+            // debugPrint('❌ CachedNetworkImage HATA!');
+            //  debugPrint('   URL: $url');
+            //  debugPrint('   Hata: $error');
+            //  debugPrint('   Hata Tipi: ${error.runtimeType}');
 
             // Decompress hatası ise direkt hata ikonu göster
             if (error.toString().contains('Could not decompress image')) {
-              debugPrint('🚫 Decompress hatası - Image.network denenmeyecek');
+              //  debugPrint('🚫 Decompress hatası - Image.network denenmeyecek');
               return Container(
                 width: double.infinity,
                 height: 250,
@@ -68,7 +68,7 @@ class AdvertImage extends StatelessWidget {
               );
             }
 
-            debugPrint('🔄 Image.network ile tekrar deneniyor...');
+            //  debugPrint('🔄 Image.network ile tekrar deneniyor...');
 
             return ClipRRect(
               borderRadius: BorderRadius.circular(8),
@@ -79,11 +79,11 @@ class AdvertImage extends StatelessWidget {
                 fit: BoxFit.cover,
                 loadingBuilder: (context, child, loadingProgress) {
                   if (loadingProgress == null) {
-                    debugPrint('✅ Image.network başarılı: $imageUrl');
+                    //    debugPrint('✅ Image.network başarılı: $imageUrl');
                     return child;
                   }
-                  debugPrint(
-                      '🔄 Image.network yükleniyor: ${loadingProgress.cumulativeBytesLoaded}/${loadingProgress.expectedTotalBytes}');
+                  //  debugPrint(
+                  //      '🔄 Image.network yükleniyor: ${loadingProgress.cumulativeBytesLoaded}/${loadingProgress.expectedTotalBytes}');
                   return Container(
                     width: double.infinity,
                     height: 250,
@@ -94,10 +94,10 @@ class AdvertImage extends StatelessWidget {
                   );
                 },
                 errorBuilder: (context, error, stackTrace) {
-                  debugPrint('💥 Image.network da BAŞARISIZ!');
-                  debugPrint('   URL: $imageUrl');
-                  debugPrint('   Hata: $error');
-                  debugPrint('   Stack: $stackTrace');
+                  //  debugPrint('💥 Image.network da BAŞARISIZ!');
+                  //  debugPrint('   URL: $imageUrl');
+                  //  debugPrint('   Hata: $error');
+                  //  debugPrint('   Stack: $stackTrace');
                   return Container(
                     width: double.infinity,
                     height: 250,
@@ -116,7 +116,7 @@ class AdvertImage extends StatelessWidget {
       );
     }
 
-    debugPrint('🖼️ Asset image yükleniyor: $imageUrl');
+    //   debugPrint('🖼️ Asset image yükleniyor: $imageUrl');
     return ClipRRect(
       borderRadius: BorderRadius.circular(8),
       child: Image.asset(
@@ -125,7 +125,7 @@ class AdvertImage extends StatelessWidget {
         height: 250,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
-          debugPrint('❌ Asset image hatası: $imageUrl - $error');
+          //  debugPrint('❌ Asset image hatası: $imageUrl - $error');
           return Container(
             width: double.infinity,
             height: 250,

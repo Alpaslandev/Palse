@@ -11,6 +11,8 @@ import 'package:palseapp/features/profile/view/widgets/verify_profile_button.dar
 import 'package:palseapp/features/profile/view/widgets/xp_system_button.dart';
 import 'package:palseapp/features/profile/view/widgets/leader_board.dart';
 import 'package:palseapp/features/profile/view/widgets/xp_progress_card.dart';
+import 'package:palseapp/features/profile/view/widgets/follow_list_modal.dart';
+import 'package:palseapp/features/profile/view/widgets/profile_header.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -123,7 +125,8 @@ class _ProfileViewState extends State<ProfileView> {
               spacing: 10,
               children: [
                 // Profil başlığı
-                profileHeader(context, authProvider),
+                if (authProvider.user != null)
+                  ProfileHeader(user: authProvider.user!),
 
                 // Takipçi/Takip istatistikleri
                 _buildFollowStats(context, authProvider.user!),
@@ -187,7 +190,6 @@ class _ProfileViewState extends State<ProfileView> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          /*
           // Takipçiler
           _buildStatItem(
             context: context,
@@ -195,7 +197,11 @@ class _ProfileViewState extends State<ProfileView> {
             label: 'Takipçi',
             onTap: () {
               // Takipçi listesi sayfasına git
-              _showFollowList(context, user.userID!, true);
+              FollowListModal.show(
+                context: context,
+                title: 'Takipçiler',
+                userIds: user.followers ?? [],
+              );
             },
           ),
 
@@ -213,10 +219,13 @@ class _ProfileViewState extends State<ProfileView> {
             label: 'Takip',
             onTap: () {
               // Takip edilen listesi sayfasına git
-              _showFollowList(context, user.userID!, false);
+              FollowListModal.show(
+                context: context,
+                title: 'Takip Edilenler',
+                userIds: user.followings ?? [],
+              );
             },
           ),
-          */
         ],
       ),
     );
@@ -259,120 +268,6 @@ class _ProfileViewState extends State<ProfileView> {
       ),
     );
   }
-
-  // Takipçi/takip listesi modal'ını gösteren fonksiyon
-  void _showFollowList(
-      BuildContext context, String userId, bool showFollowers) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.7,
-        minChildSize: 0.5,
-        maxChildSize: 0.9,
-        builder: (context, scrollController) => Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).scaffoldBackgroundColor,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: Column(
-            children: [
-              // Modal handle
-              Container(
-                margin: const EdgeInsets.only(top: 8),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade400,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-
-              // Başlık
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text(
-                  showFollowers ? 'Takipçiler' : 'Takip Edilenler',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-              ),
-
-              // Liste içeriği - şimdilik placeholder
-              Expanded(
-                child: ListView.builder(
-                  controller: scrollController,
-                  itemCount: 5, // Placeholder count
-                  itemBuilder: (context, index) => ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: Colors.grey.shade300,
-                      child: const Icon(Icons.person),
-                    ),
-                    title: Text('Kullanıcı ${index + 1}'),
-                    subtitle: Text('@kullanici${index + 1}'),
-                    trailing: OutlinedButton(
-                      onPressed: () {},
-                      child: const Text('Takip Et'),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// Profil başlığı bileşeni
-Widget profileHeader(BuildContext context, AuthProvider authProvider) {
-  final theme = Theme.of(context);
-  final colorScheme = theme.colorScheme;
-
-  return Row(
-    children: [
-      CircleProfilePicture(
-        radius: 30,
-        imageUrl: authProvider.user?.profilePictureUrl ?? '',
-      ),
-      const SizedBox(width: 12),
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                '${authProvider.user?.fullName()} (${authProvider.user?.getAge()})',
-                style: theme.textTheme.titleMedium,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(width: 2),
-              if (authProvider.user?.isPremium == true)
-                const Icon(Icons.verified, color: Colors.yellow, size: 16),
-              if (authProvider.user?.verification == true)
-                Icon(Icons.verified, color: colorScheme.primary, size: 16),
-              IconButton(
-                icon:
-                    Icon(Icons.settings_outlined, color: colorScheme.onSurface),
-                onPressed: () {
-                  context.pushNamed(settings);
-                },
-              ),
-            ],
-          ),
-          Text(
-            '@${authProvider.user?.nickname}',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
-    ],
-  );
 }
 
 // Yorumlar kartı
@@ -474,8 +369,6 @@ class _DailyTaskCardState extends State<DailyTaskCard> {
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
-    final user = authProvider.user;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 

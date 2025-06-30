@@ -72,7 +72,7 @@ class _LandingViewState extends State<LandingView>
     // Mevcut tab'a tekrar tıklandıysa ve bu anasayfa ise yenile
     if (widget.navigationShell.currentIndex == index) {
       if (index == 0) {
-        GlobalKeys.instance.homeViewKey.currentState?.refreshFromNavigation();
+        // GlobalKeys.instance.homeViewKey.currentState?.refreshFromNavigation();
       }
     } else {
       // Değilse, o dala geçiş yap

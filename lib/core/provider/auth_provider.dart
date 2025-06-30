@@ -116,7 +116,7 @@ class AuthProvider extends ChangeNotifier implements Listenable {
           debugPrint('User token saved');
         }
 
-        debugPrint('User data: ${_user?.toJson()}');
+        //      debugPrint('User data: ${_user?.toJson()}');
         debugPrint('Firestore data loaded: $_isFirestoreDataLoaded');
       } else {
         debugPrint('User data not found');

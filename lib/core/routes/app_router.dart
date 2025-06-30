@@ -361,6 +361,7 @@ class AppRouter {
 
   static String? _handleRedirect(BuildContext context, GoRouterState state) {
     try {
+      /*
       debugPrint('🔄 YÖNLENDİRME KONTROLÜ:');
       debugPrint('📍 Mevcut Konum: ${state.matchedLocation}');
       debugPrint('📍 URI: ${state.uri}');
@@ -378,7 +379,7 @@ class AppRouter {
           '👤 Profil Kurulumu Tamamlanmış: ${_authProvider.isProfileSetupCompleted}');
       debugPrint(
           '👤 Firestore Verileri Yüklenmiş: ${_authProvider.isFirestoreDataLoaded}');
-
+      */
       final isSplashScreen = state.matchedLocation == '/$splash';
       final isAuthRoute = state.matchedLocation.startsWith('/$login');
       final isUserSetupRoute =
