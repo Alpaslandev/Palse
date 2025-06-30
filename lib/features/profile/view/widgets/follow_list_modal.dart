@@ -1,17 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/widgets/circle_profile_picture.dart';
+import 'package:palseapp/core/models/customer.dart';
+import 'package:palseapp/core/services/firestore/customer_service.dart';
 
 // Takipçi/takip listesi modal'ını gösteren widget
 class FollowListModal extends StatelessWidget {
   final String title;
   final List<String> userIds;
   final bool showFollowButton;
+  final CustomerService _customerService = CustomerService();
+  final Function(String userId) onNavigateTap;
 
-  const FollowListModal({
+  FollowListModal({
     super.key,
     required this.title,
     required this.userIds,
     this.showFollowButton = true,
+    required this.onNavigateTap,
   });
 
   // Static metod ile modal'ı gösterme
@@ -20,6 +26,7 @@ class FollowListModal extends StatelessWidget {
     required String title,
     required List<String> userIds,
     bool showFollowButton = true,
+    required Function(String userId) onNavigateTap,
   }) {
     showModalBottomSheet(
       context: context,
@@ -29,6 +36,7 @@ class FollowListModal extends StatelessWidget {
         title: title,
         userIds: userIds,
         showFollowButton: showFollowButton,
+        onNavigateTap: onNavigateTap,
       ),
     );
   }
@@ -72,14 +80,40 @@ class FollowListModal extends StatelessWidget {
             Expanded(
               child: userIds.isEmpty
                   ? _buildEmptyState(context)
-                  : ListView.builder(
-                      controller: scrollController,
-                      itemCount: userIds.length,
-                      itemBuilder: (context, index) => _buildUserListItem(
-                        context,
-                        userIds[index],
-                        index,
-                      ),
+                  : FutureBuilder<List<Customer>>(
+                      future: _customerService.getUsersByIds(userIds),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        }
+
+                        if (snapshot.hasError) {
+                          return Center(
+                            child: Text(
+                              'Kullanıcılar yüklenirken hata oluştu',
+                              style: TextStyle(color: Colors.red.shade600),
+                            ),
+                          );
+                        }
+
+                        final customers = snapshot.data ?? [];
+
+                        if (customers.isEmpty) {
+                          return _buildEmptyState(context);
+                        }
+
+                        return ListView.builder(
+                          controller: scrollController,
+                          itemCount: customers.length,
+                          itemBuilder: (context, index) => _buildUserListItem(
+                            context,
+                            customers[index],
+                          ),
+                        );
+                      },
                     ),
             ),
           ],
@@ -112,41 +146,37 @@ class FollowListModal extends StatelessWidget {
   }
 
   // Kullanıcı liste öğesi
-  Widget _buildUserListItem(BuildContext context, String userId, int index) {
-    // TODO: Gerçek kullanıcı verilerini userId ile çekmek gerekecek
-    // Şimdilik placeholder data kullanıyoruz
+  Widget _buildUserListItem(BuildContext context, Customer customer) {
     return ListTile(
       leading: CircleProfilePicture(
         radius: 20,
-        imageUrl: '', // TODO: Gerçek profil resmi URL'i
+        imageUrl: customer.profilePictureUrl ?? '',
       ),
-      title: Text('Kullanıcı ${index + 1}'), // TODO: Gerçek kullanıcı adı
-      subtitle:
-          Text('@kullanici${index + 1}'), // TODO: Gerçek kullanıcı nickname
-      trailing: showFollowButton
-          ? OutlinedButton(
-              onPressed: () {
-                // TODO: Takip etme/bırakma işlemi
-                _handleFollowAction(context, userId);
-              },
-              child: const Text(
-                  'Takip Et'), // TODO: Dinamik metin (Takip Et/Takibi Bırak)
-            )
+      title: Text(
+        customer.fullName().trim().isNotEmpty
+            ? customer.fullName()
+            : customer.nickname ?? 'İsimsiz Kullanıcı',
+        style: const TextStyle(fontWeight: FontWeight.w500),
+      ),
+      subtitle: customer.nickname != null && customer.nickname!.isNotEmpty
+          ? Text('@${customer.nickname}')
           : null,
-    );
-  }
+      trailing: IconButton(
+        onPressed: () {
+          Navigator.of(context).pop(); // Modal'ı kapat
 
-  // Takip etme/bırakma işlemi
-  void _handleFollowAction(BuildContext context, String userId) {
-    // TODO: Takip etme/bırakma servisi ile işlem yapılacak
-    debugPrint('Takip işlemi: $userId');
-
-    // Geçici olarak SnackBar göster
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Takip işlemi: $userId'),
-        duration: const Duration(seconds: 1),
+          onNavigateTap(customer.userID!);
+        },
+        icon: const Icon(Icons.arrow_forward_ios),
       ),
+      onTap: () {
+        // Kullanıcı profiline git
+        Navigator.of(context).pop(); // Modal'ı kapat
+        // TODO: Profil sayfasına yönlendirme eklenebilir
+        onNavigateTap(customer.userID!);
+
+        debugPrint('Kullanıcı profiline git: ${customer.userID}');
+      },
     );
   }
 }
