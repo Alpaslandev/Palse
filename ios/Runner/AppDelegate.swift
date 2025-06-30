@@ -1,44 +1,35 @@
 import UIKit
 import Flutter
-import FBSDKCoreKit          // CocoaPods: FBSDKCoreKit 16+
+import FBSDKCoreKit
 import AppTrackingTransparency
+import AdSupport
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
 
   override func application(
-    _ application: UIApplication,
-    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
+      _ application: UIApplication,
+      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
 
-    // Facebook SDK başlat
+    // Facebook SDK başlatılıyor
     ApplicationDelegate.shared.application(
-      application,
-      didFinishLaunchingWithOptions: launchOptions)
+        application,
+        didFinishLaunchingWithOptions: launchOptions)
 
-    // ATT penceresi • iOS 14+
-    ATTrackingManager.requestTrackingAuthorization { status in
-        Settings.shared.isAdvertiserTrackingEnabled = (status == .authorized)
+    // ATT isteği — iOS 14+
+    if #available(iOS 14, *) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            ATTrackingManager.requestTrackingAuthorization { status in
+                print("📢 ATT durumu: \(status.rawValue)") // 0:notDetermined, 1:restricted, 2:denied, 3:authorized
+                // FB v17+ zaten status'u otomatik alıyor
+            }
+        }
     }
 
-    // Flutter plug-in’leri
     GeneratedPluginRegistrant.register(with: self)
+    AppEvents.shared.activateApp() // App install / open event
 
-    // App Install / Activate olayı
-    AppEvents.shared.activateApp()
-
-    return super.application(
-      application,
-      didFinishLaunchingWithOptions: launchOptions)
-  }
-
-  // (Opsiyonel ama bırakmak güvenli – Login/Share kullanırsan lazım)
-  override func application(
-    _ app: UIApplication,
-    open url: URL,
-    options: [UIApplication.OpenURLOptionsKey : Any] = [:]
-  ) -> Bool {
-    return ApplicationDelegate.shared.application(app, open: url, options: options) ||
-           super.application(app, open: url, options: options)
+    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 }
