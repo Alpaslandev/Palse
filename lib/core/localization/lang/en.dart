@@ -54,16 +54,16 @@ const Map<String, String> en = {
   // Step 1: User Info
   'user_info_welcome': 'Welcome!',
   'user_info_description': 'We need a few details to prepare your experience.',
-  'user_info_first_name': 'First Name',
+  'user_info_first_name': 'Your Name',
   'user_info_last_name': 'Last Name',
-  'user_info_first_name_hint': 'Enter your first name',
+  'user_info_first_name_hint': 'Enter your name',
   'user_info_last_name_hint': 'Enter your last name',
   'user_info_perfect': 'Perfect!',
   'user_info_hello':
-      'Hello {firstName} {lastName}, now you can proceed to the next steps.',
-  'user_info_info': 'Information',
+      'Hello {firstName}, you can now proceed to the next steps.',
+  'user_info_info': 'Info',
   'user_info_please_enter':
-      'Please enter your first and last name. This information will appear on your profile.',
+      'Please enter your name. This information will appear on your profile.',
 
   // Step 2: Birthday and Gender
   'birthday_gender_title': 'Let\'s get to know you',
@@ -208,7 +208,11 @@ const Map<String, String> en = {
   'listings': 'Listings',
   'send_message': 'Send Message',
   'report_abuse': 'Report Abuse',
-
+  'followers': 'Followers',
+  'following': 'Following',
+  'error_loading_users': 'Error loading users',
+  'no_one_yet': 'No one yet',
+  'anonymous_user': 'Anonymous User',
   // Follow Features
   'follow': 'Follow',
   'unfollow': 'Unfollow',
@@ -222,6 +226,26 @@ const Map<String, String> en = {
   'comments': 'Comments',
   'add_comment': 'Add Comment',
   'advert_deleted_successfully': 'Listing successfully deleted',
+
+  // Stories
+  'add_story': 'Add Story',
+  'story_preview': 'Story Preview',
+  'story_preview_description': 'Tap to preview your story',
+  'story_preview_title': 'Story Preview',
+  'no_images_found': 'No images found in the gallery.',
+  'gallery_permission_denied': 'Gallery permission denied.',
+  'story_deletion_error': 'Error deleting story: {error}',
+  'delete_story': 'Delete Story',
+  'delete_story_confirmation':
+      'Your story will be permanently deleted. This action cannot be undone. Are you sure?',
+  'people_viewed': 'people viewed',
+  'story_upload_error': 'Story upload error.',
+  'story_upload_success': 'Story uploaded successfully.',
+  'public': 'Public',
+  'private': 'Private',
+  'share': 'Share',
+  'my_story': 'My Story',
+  'discover': 'Discover',
   // Create Advert
   'create_advert': 'Create Advert',
   'event_type': 'Event Type',
@@ -537,7 +561,6 @@ const Map<String, String> en = {
   'profile_evaluation': 'Profile Evaluation',
   'max_50_characters': 'You can enter up to 50 characters!',
   'write_your_comment': 'Write your comment...',
-  'share': 'Share',
   'no_comments_yet': 'No comments yet',
   'viewmodel_comments_debug': 'Comments',
   'received_comment_debug': 'Received comment',

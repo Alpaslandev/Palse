@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
+import 'package:palseapp/core/keys/global_keys.dart';
 import 'package:palseapp/features/story/viewmodel/story_view_model.dart';
 import 'package:provider/provider.dart';
 
@@ -89,7 +91,7 @@ class __StoryPreviewViewContentState extends State<_StoryPreviewViewContent> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    _isPublic ? 'Herkese Açık' : 'Takipçilere Özel',
+                    _isPublic ? context.tr('public') : context.tr('private'),
                     style: const TextStyle(color: Colors.white, fontSize: 16),
                   ),
                 ],
@@ -111,19 +113,23 @@ class __StoryPreviewViewContentState extends State<_StoryPreviewViewContent> {
                         );
 
                         if (success && mounted) {
+                          // Hikaye başarıyla yüklendikten sonra ana sayfadaki hikayeleri yenile
+                          GlobalKeys.instance.storysViewKey.currentState
+                              ?.refreshStories();
                           // Başarılı olursa tüm ekranları kapatıp ana ekrana dön
                           Navigator.of(context)
                               .popUntil((route) => route.isFirst);
                         } else if (mounted) {
                           // Hata olursa kullanıcıya bilgi ver
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('Hikaye yüklenemedi.')),
+                            SnackBar(
+                                content:
+                                    Text(context.tr('story_upload_error'))),
                           );
                         }
                       },
                       icon: const Icon(Icons.send),
-                      label: const Text('Paylaş'),
+                      label: Text(context.tr('share')),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue,
                         foregroundColor: Colors.white,

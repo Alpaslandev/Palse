@@ -55,16 +55,15 @@ const Map<String, String> tr = {
   'user_info_welcome': 'Hoşgeldin!',
   'user_info_description':
       'Deneyimini hazırlamak için birkaç bilgi girmeni rica ediyoruz.',
-  'user_info_first_name': 'Ad',
+  'user_info_first_name': 'Adınız',
   'user_info_last_name': 'Soyad',
   'user_info_first_name_hint': 'Adınızı girin',
   'user_info_last_name_hint': 'Soyadınızı girin',
   'user_info_perfect': 'Mükemmel!',
-  'user_info_hello':
-      'Merhaba {firstName} {lastName}, şimdi diğer adımlara geçebilirsin.',
+  'user_info_hello': 'Merhaba {firstName}, şimdi diğer adımlara geçebilirsin.',
   'user_info_info': 'Bilgi',
   'user_info_please_enter':
-      'Lütfen adınızı ve soyadınızı girin. Bu bilgiler profilinizde görünecektir.',
+      'Lütfen adınızı girin. Bu bilgi profilinizde görünecektir.',
 
   // 2. Adım: Doğum Tarihi ve Cinsiyet
   'birthday_gender_title': 'Sizi tanıyalım',
@@ -171,6 +170,7 @@ const Map<String, String> tr = {
   'no_more_listings_in_category': 'Bu kategoride başka ilan bulunmamaktadır.',
   'click_to_see_other_listings': 'Diğer ilanları görmek için tıklayın',
   'create_listing': 'İlan Ver',
+  'discover': 'Keşfet',
 
   // İlanlar ve Profil
   'my_listings': 'İlanlarım',
@@ -199,6 +199,8 @@ const Map<String, String> tr = {
   'listings': 'İlanlar',
   'send_message': 'Mesaj Gönder',
   'report_abuse': 'Kötüye Kullanım Bildir',
+  'followers': 'Takipçiler',
+  'following': 'Takip Edilenler',
 
   // Takip İşlemleri
   'follow': 'Takip Et',
@@ -213,6 +215,25 @@ const Map<String, String> tr = {
   'comments': 'Yorumlar',
   'add_comment': 'Yorum Ekle',
   'advert_deleted_successfully': 'İlan başarıyla silindi',
+
+  // Hikayeler
+  'add_story': 'Hikaye Ekle',
+  'story_preview': 'Hikaye Ön İzleme',
+  'story_preview_description': 'Hikayenizi ön izlemek için tıklayın',
+  'story_preview_title': 'Hikaye Ön İzleme',
+  'no_images_found': 'Galeride hiç fotoğraf bulunamadı.',
+  'gallery_permission_denied': 'Galeri izni verilmedi.',
+  'story_deletion_error': 'Hikaye silinirken hata oluştu: {error}',
+  'delete_story': 'Hikayenizi Silin',
+  'delete_story_confirmation':
+      'Hikayeniz kalıcı olarak silinecektir. Bu işlem geri alınamaz. Emin misiniz?',
+  'cancel': 'İptal',
+  'people_viewed': 'kişi tarafından görüldü',
+  'story_upload_error': 'Hikaye yüklenemedi.',
+  'story_upload_success': 'Hikaye başarıyla yüklendi.',
+  'public': 'Herkese Açık',
+  'private': 'Takipçilere Özel',
+  'my_story': 'Hikayen',
 
   // Etkinlik Oluşturma
   'create_advert': 'Etkinlik Oluştur',
@@ -259,7 +280,9 @@ const Map<String, String> tr = {
   'complete_task': 'Görevi Tamamla',
   'verify_profile_text':
       'Gerçek bir profil olduğunu doğrula ve\nekstra görünürlük kazan!',
-
+  'error_loading_users': 'Kullanıcılar yüklenirken hata oluştu',
+  'no_one_yet': 'Henüz kimse yok',
+  'anonymous_user': 'İsimsiz Kullanıcı',
   // XP Sistemi
   'xp_system': 'XP Sistemi ve Ünvanlar',
   'ranks': 'Unvanlar',
@@ -470,7 +493,6 @@ const Map<String, String> tr = {
   'please_explain_reason': 'Lütfen şikayet nedeninizi açıklayın',
   'report_reason_hint': 'Şikayet nedeninizi buraya yazın...',
   'submit': 'Gönder',
-  'cancel': 'İptal',
 
   // Sohbet
   'chats': 'Sohbetler',

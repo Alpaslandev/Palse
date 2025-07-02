@@ -194,12 +194,12 @@ class _ProfileViewState extends State<ProfileView> {
           _buildStatItem(
             context: context,
             count: followersCount,
-            label: 'Takipçi',
+            label: context.tr('followers'),
             onTap: () {
               // Takipçi listesi sayfasına git
               FollowListModal.show(
                 context: context,
-                title: 'Takipçiler',
+                title: context.tr('followers'),
                 userIds: user.followers ?? [],
                 onNavigateTap: (userId) {
                   context.pushNamed(friendProfile, extra: userId);
@@ -219,12 +219,12 @@ class _ProfileViewState extends State<ProfileView> {
           _buildStatItem(
             context: context,
             count: followingCount,
-            label: 'Takip',
+            label: context.tr('following'),
             onTap: () {
               // Takip edilen listesi sayfasına git
               FollowListModal.show(
                 context: context,
-                title: 'Takip Edilenler',
+                title: context.tr('following'),
                 userIds: user.followings ?? [],
                 onNavigateTap: (userId) {
                   context.pushNamed(friendProfile, extra: userId);

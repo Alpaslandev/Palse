@@ -32,19 +32,10 @@ class _UserInfoStepState extends State<UserInfoStep> {
     debugPrint('Apple Display Name: $appleDisplayName');
 
     if (appleDisplayName != null && appleDisplayName.isNotEmpty) {
-      final nameParts = appleDisplayName.split(' ');
-
-      final firstName = nameParts.first;
-      final lastName = nameParts.length > 1 ? nameParts.last : '';
-
-      if (firstName.isNotEmpty && widget.viewModel.firstNameController.text.isEmpty) {
-        widget.viewModel.firstNameController.text = firstName;
-        widget.viewModel.updateFirstName(firstName);
-      }
-
-      if (lastName.isNotEmpty && widget.viewModel.lastNameController.text.isEmpty) {
-        widget.viewModel.lastNameController.text = lastName;
-        widget.viewModel.updateLastName(lastName);
+      if (appleDisplayName.isNotEmpty &&
+          widget.viewModel.firstNameController.text.isEmpty) {
+        widget.viewModel.firstNameController.text = appleDisplayName;
+        widget.viewModel.updateFirstName(appleDisplayName);
       }
     }
   }
@@ -52,9 +43,9 @@ class _UserInfoStepState extends State<UserInfoStep> {
   @override
   Widget build(BuildContext context) {
     // Validasyon durumunu kontrol et
-    final bool isFirstNameValid = widget.viewModel.firstNameController.text.length >= 3;
-    final bool isLastNameValid = widget.viewModel.lastNameController.text.length >= 3;
-    final bool isAllValid = isFirstNameValid && isLastNameValid;
+    final bool isFirstNameValid =
+        widget.viewModel.firstNameController.text.length >= 3;
+    final bool isAllValid = isFirstNameValid;
 
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
@@ -69,7 +60,9 @@ class _UserInfoStepState extends State<UserInfoStep> {
               decoration: BoxDecoration(
                 border: Border(
                   bottom: BorderSide(
-                    color: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade700 : Colors.grey.shade200,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey.shade700
+                        : Colors.grey.shade200,
                     width: 1.0,
                   ),
                 ),
@@ -107,18 +100,6 @@ class _UserInfoStepState extends State<UserInfoStep> {
               onChanged: widget.viewModel.updateFirstName,
             ),
 
-            const SizedBox(height: 16),
-
-            // Soyisim giriş alanı
-            _buildTextFieldWithValidation(
-              context,
-              controller: widget.viewModel.lastNameController,
-              labelText: context.tr('user_info_last_name'),
-              hintText: context.tr('user_info_last_name_hint'),
-              isValid: isLastNameValid,
-              onChanged: widget.viewModel.updateLastName,
-            ),
-
             const SizedBox(height: 32),
 
             // Bilgi ve onay mesajı
@@ -126,10 +107,14 @@ class _UserInfoStepState extends State<UserInfoStep> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).brightness == Brightness.dark ? Colors.green.shade900.withOpacity(0.2) : Colors.green.shade50,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.green.shade900.withOpacity(0.2)
+                      : Colors.green.shade50,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: Theme.of(context).brightness == Brightness.dark ? Colors.green.shade700 : Colors.green.shade200,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.green.shade700
+                        : Colors.green.shade200,
                   ),
                 ),
                 child: Row(
@@ -149,12 +134,14 @@ class _UserInfoStepState extends State<UserInfoStep> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            context
-                                .tr('user_info_hello')
-                                .replaceAll('{firstName}', widget.viewModel.firstNameController.text)
-                                .replaceAll('{lastName}', widget.viewModel.lastNameController.text),
+                            context.tr('user_info_hello').replaceAll(
+                                '{firstName}',
+                                widget.viewModel.firstNameController.text),
                             style: TextStyle(
-                              color: Theme.of(context).brightness == Brightness.dark ? Colors.green.shade300 : Colors.green.shade800,
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.green.shade300
+                                  : Colors.green.shade800,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -168,17 +155,23 @@ class _UserInfoStepState extends State<UserInfoStep> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).brightness == Brightness.dark ? Colors.blue.shade900.withOpacity(0.2) : Colors.blue.shade50,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.blue.shade900.withOpacity(0.2)
+                      : Colors.blue.shade50,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: Theme.of(context).brightness == Brightness.dark ? Colors.blue.shade700 : Colors.blue.shade200,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.blue.shade700
+                        : Colors.blue.shade200,
                   ),
                 ),
                 child: Row(
                   children: [
                     Icon(
                       Icons.info_outline,
-                      color: Theme.of(context).brightness == Brightness.dark ? Colors.blue.shade300 : Colors.blue.shade700,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.blue.shade300
+                          : Colors.blue.shade700,
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -188,7 +181,10 @@ class _UserInfoStepState extends State<UserInfoStep> {
                           Text(
                             context.tr('user_info_info'),
                             style: TextStyle(
-                              color: Theme.of(context).brightness == Brightness.dark ? Colors.blue.shade300 : Colors.blue.shade700,
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.blue.shade300
+                                  : Colors.blue.shade700,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -196,7 +192,10 @@ class _UserInfoStepState extends State<UserInfoStep> {
                           Text(
                             context.tr('user_info_please_enter'),
                             style: TextStyle(
-                              color: Theme.of(context).brightness == Brightness.dark ? Colors.blue.shade200 : Colors.blue.shade800,
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.blue.shade200
+                                  : Colors.blue.shade800,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -276,11 +275,14 @@ class _UserInfoStepState extends State<UserInfoStep> {
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: controller.text.isNotEmpty ? (isValid ? Colors.green : Colors.red) : Theme.of(context).primaryColor,
+                color: controller.text.isNotEmpty
+                    ? (isValid ? Colors.green : Colors.red)
+                    : Theme.of(context).primaryColor,
                 width: 2.0,
               ),
             ),
-            errorText: controller.text.isNotEmpty && !isValid ? errorText : null,
+            errorText:
+                controller.text.isNotEmpty && !isValid ? errorText : null,
             suffixIcon: controller.text.isNotEmpty
                 ? Icon(
                     isValid ? Icons.check_circle : Icons.cancel,

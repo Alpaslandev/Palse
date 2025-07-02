@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:palseapp/core/provider/ads_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
+import 'package:palseapp/core/keys/global_keys.dart';
 import 'package:provider/provider.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 
@@ -15,6 +16,7 @@ class NavigationObserver extends NavigatorObserver {
     profileSetup,
     paywall, // Ödeme sayfasında reklam gösterme
     messages, // Mesajlar sayfasında reklam gösterme
+    storyDisplay
   ];
 
   NavigationObserver(this.adsProvider);
@@ -25,7 +27,8 @@ class NavigationObserver extends NavigatorObserver {
     try {
       debugPrint('🔍 NAVIGASYON: didPush - ${_getRouteInfo(route)}');
       if (previousRoute != null) {
-        debugPrint('🔍 NAVIGASYON: önceki sayfa - ${_getRouteInfo(previousRoute)}');
+        debugPrint(
+            '🔍 NAVIGASYON: önceki sayfa - ${_getRouteInfo(previousRoute)}');
       }
       _maybeShowAd(route, previousRoute);
     } catch (e) {
@@ -39,7 +42,12 @@ class NavigationObserver extends NavigatorObserver {
     try {
       debugPrint('🔍 NAVIGASYON: didPop - ${_getRouteInfo(route)}');
       if (previousRoute != null) {
-        debugPrint('🔍 NAVIGASYON: geri dönülen sayfa - ${_getRouteInfo(previousRoute)}');
+        debugPrint(
+            '🔍 NAVIGASYON: geri dönülen sayfa - ${_getRouteInfo(previousRoute)}');
+
+        // Hikaye sayfalarından ana sayfaya dönüldüğünde hikayeleri yenile
+        _checkStoryRefresh(route, previousRoute);
+
         // Geri dönüşlerde reklam göstermeyi devre dışı bırakıyoruz
         // Eğer geri dönüşlerde de reklam göstermek isterseniz, aşağıdaki satırı aktif edebilirsiniz
         // _maybeShowAd(previousRoute, route);
@@ -55,7 +63,8 @@ class NavigationObserver extends NavigatorObserver {
     try {
       debugPrint('🔍 NAVIGASYON: didRemove - ${_getRouteInfo(route)}');
       if (previousRoute != null) {
-        debugPrint('🔍 NAVIGASYON: aktif sayfa - ${_getRouteInfo(previousRoute)}');
+        debugPrint(
+            '🔍 NAVIGASYON: aktif sayfa - ${_getRouteInfo(previousRoute)}');
       }
     } catch (e) {
       debugPrint('❌ NAVIGASYON HATASI (didRemove): $e');
@@ -81,7 +90,8 @@ class NavigationObserver extends NavigatorObserver {
   // Rota bilgilerini string olarak döndüren yardımcı metod
   String _getRouteInfo(Route<dynamic> route) {
     final name = route.settings.name ?? 'isimsiz';
-    final arguments = route.settings.arguments != null ? '(argümanlar var)' : '(argüman yok)';
+    final arguments =
+        route.settings.arguments != null ? '(argümanlar var)' : '(argüman yok)';
     return '$name $arguments';
   }
 
@@ -123,7 +133,8 @@ class NavigationObserver extends NavigatorObserver {
       }
 
       // Derin URL yolları için kontrol (örn: "/chats/abc123?otherId=xyz")
-      final bool isDeepUrl = routeName.contains('?') || (routeName.contains('/') && routeName.lastIndexOf('/') > 0);
+      final bool isDeepUrl = routeName.contains('?') ||
+          (routeName.contains('/') && routeName.lastIndexOf('/') > 0);
       if (isDeepUrl) {
         debugPrint('🔍 Derin URL yolu tespit edildi: $routeName');
 
@@ -141,7 +152,8 @@ class NavigationObserver extends NavigatorObserver {
 
       // Hariç tutulan sayfalarda reklam gösterme
       if (_excludedRoutes.contains(pageName)) {
-        debugPrint('🚫 Reklam gösterilmedi: "$pageName" sayfası hariç tutulan sayfalar listesinde');
+        debugPrint(
+            '🚫 Reklam gösterilmedi: "$pageName" sayfası hariç tutulan sayfalar listesinde');
         return;
       }
 
@@ -151,19 +163,22 @@ class NavigationObserver extends NavigatorObserver {
         debugPrint('🔍 Önceki sayfa adı: $previousPageName');
 
         if (previousPageName == pageName) {
-          debugPrint('🚫 Reklam gösterilmedi: Aynı sayfaya geçiş yapıldı ($pageName)');
+          debugPrint(
+              '🚫 Reklam gösterilmedi: Aynı sayfaya geçiş yapıldı ($pageName)');
           return;
         }
 
         // Chat sayfasından mesaj sayfasına geçişlerde reklam gösterme
         if (_isChatRelatedTransition(previousPageName, pageName)) {
-          debugPrint('🚫 Reklam gösterilmedi: Chat ile ilgili geçiş ($previousPageName -> $pageName)');
+          debugPrint(
+              '🚫 Reklam gösterilmedi: Chat ile ilgili geçiş ($previousPageName -> $pageName)');
           return;
         }
       }
 
       // Diğer sayfalarda normal reklam gösterme mantığı ile devam et
-      debugPrint('🔄 Reklam gösterme denemesi: "$pageName" sayfası için normal reklam mantığı');
+      debugPrint(
+          '🔄 Reklam gösterme denemesi: "$pageName" sayfası için normal reklam mantığı');
       _safeShowAd();
     } catch (e) {
       debugPrint('❌ Reklam gösterme hatası: $e');
@@ -178,7 +193,8 @@ class NavigationObserver extends NavigatorObserver {
     }
 
     // Alt sayfa kontrolü
-    if (routeName.startsWith("/$messages/") || routeName.contains("?otherId=")) {
+    if (routeName.startsWith("/$messages/") ||
+        routeName.contains("?otherId=")) {
       return true;
     }
 
@@ -188,11 +204,36 @@ class NavigationObserver extends NavigatorObserver {
   // Chat ile ilgili geçiş olup olmadığını kontrol eden yardımcı metod
   bool _isChatRelatedTransition(String previousPage, String currentPage) {
     // Chat sayfasından mesaj sayfasına veya tersi
-    if ((previousPage == chats && currentPage == messages) || (previousPage == messages && currentPage == chats)) {
+    if ((previousPage == chats && currentPage == messages) ||
+        (previousPage == messages && currentPage == chats)) {
       return true;
     }
 
     return false;
+  }
+
+  // Hikaye sayfalarından ana sayfaya dönüldüğünde hikayeleri yenileme kontrolü
+  void _checkStoryRefresh(
+      Route<dynamic> poppedRoute, Route<dynamic> currentRoute) {
+    try {
+      final poppedRouteName = poppedRoute.settings.name;
+      final currentRouteName = currentRoute.settings.name;
+
+      if (poppedRouteName == null || currentRouteName == null) return;
+
+      final poppedPageName = _extractPageName(poppedRouteName);
+      final currentPageName = _extractPageName(currentRouteName);
+
+      // Hikaye sayfalarından (addStory, storyDisplay) ana sayfaya (home) dönüldüğünde
+      if ((poppedPageName == addStory || poppedPageName == storyDisplay) &&
+          currentPageName == home) {
+        debugPrint(
+            '🔄 Hikaye sayfasından ana sayfaya dönüldü, hikayeleri yenileniyor...');
+        GlobalKeys.instance.storysViewKey.currentState?.refreshStories();
+      }
+    } catch (e) {
+      debugPrint('❌ Hikaye refresh kontrolü hatası: $e');
+    }
   }
 
   // Güvenli reklam gösterme metodu
@@ -203,7 +244,8 @@ class NavigationObserver extends NavigatorObserver {
         if (shown) {
           debugPrint('✅ Reklam gösterildi');
         } else {
-          debugPrint('❌ Reklam gösterilemedi: Muhtemelen zaman aralığı dolmadı veya reklam hazır değil');
+          debugPrint(
+              '❌ Reklam gösterilemedi: Muhtemelen zaman aralığı dolmadı veya reklam hazır değil');
         }
       }).catchError((error) {
         debugPrint('❌ Reklam gösterme hatası: $error');

@@ -10,10 +10,29 @@ class StoryViewModel extends ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
+  List<StoryModel>? _cachedStories;
+  String? _lastUserId;
+  List<String>? _lastFollowingIds;
+
   // Yükleme durumunu günceller ve dinleyicileri bilgilendirir.
   void _setLoading(bool loading) {
     _isLoading = loading;
     notifyListeners();
+  }
+
+  // Cache'i temizler ve hikayeleri yeniden yükler
+  Future<void> refreshStories({
+    required String currentUserId,
+    required List<String> followingIds,
+  }) async {
+    _cachedStories = null;
+    _lastUserId = null;
+    _lastFollowingIds = null;
+    await fetchStories(
+      currentUserId: currentUserId,
+      followingIds: followingIds,
+      forceRefresh: true,
+    );
   }
 
   // Yeni bir hikaye yükler.
@@ -33,6 +52,8 @@ class StoryViewModel extends ChangeNotifier {
         profilePictureUrl: profilePictureUrl,
         isPublic: isPublic,
       );
+      // Hikaye eklendikten sonra cache'i temizle
+      _cachedStories = null;
       _setLoading(false);
       return true;
     } catch (e) {
@@ -46,13 +67,38 @@ class StoryViewModel extends ChangeNotifier {
   Future<List<StoryModel>> fetchStories({
     required String currentUserId,
     required List<String> followingIds,
+    bool forceRefresh = false,
   }) async {
-    // Bu metod doğrudan FutureBuilder tarafından kullanılacağı için
-    // kendi içinde bir loading state yönetmesine gerek yok.
-    return await _storyService.fetchStories(
+    // Cache kontrolü - eğer aynı kullanıcı ve takip listesi ise cached veriyi döndür
+    if (!forceRefresh &&
+        _cachedStories != null &&
+        _lastUserId == currentUserId &&
+        _listEquals(_lastFollowingIds, followingIds)) {
+      return _cachedStories!;
+    }
+
+    final stories = await _storyService.fetchStories(
       currentUserId: currentUserId,
       followingIds: followingIds,
     );
+
+    // Cache'e kaydet
+    _cachedStories = stories;
+    _lastUserId = currentUserId;
+    _lastFollowingIds = List.from(followingIds);
+
+    return stories;
+  }
+
+  // İki listenin eşit olup olmadığını kontrol eder
+  bool _listEquals(List<String>? a, List<String>? b) {
+    if (a == null && b == null) return true;
+    if (a == null || b == null) return false;
+    if (a.length != b.length) return false;
+    for (int i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
   }
 
   // Bir hikayeyi "görüldü" olarak işaretler.
@@ -69,5 +115,7 @@ class StoryViewModel extends ChangeNotifier {
     required String userId,
   }) async {
     await _storyService.deleteStory(storyId: storyId, userId: userId);
+    // Hikaye silindikten sonra cache'i temizle
+    _cachedStories = null;
   }
 }

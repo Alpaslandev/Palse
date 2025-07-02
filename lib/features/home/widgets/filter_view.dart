@@ -109,13 +109,13 @@ class _FilterViewState extends State<FilterView> {
       appBar: AppBar(
         title: Text(context.tr('filtering')),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : !_isFiltered
-              ? PremiumOverlay(
-                  child: _filterView(context),
-                )
-              : _filteredList(adverts: _filteredAdverts, context: context),
+      body: PremiumOverlay(
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : !_isFiltered
+                ? _filterView(context)
+                : _filteredList(adverts: _filteredAdverts, context: context),
+      ),
     );
   }
 

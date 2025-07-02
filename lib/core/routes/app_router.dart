@@ -61,8 +61,7 @@ class AppRouter {
       redirect: _handleRedirect,
       extraCodec: CustomGoRouterCodec(),
       observers: [
-        // TODO: Uncomment this when we have a ads provider
-        // NavigationObserver(_adsProvider),
+        NavigationObserver(_adsProvider),
       ],
       errorBuilder: (context, state) {
         debugPrint('❌ ROUTER HATASI: ${state.error}');

@@ -303,16 +303,16 @@ class AuthProvider extends ChangeNotifier implements Listenable {
   Future<void> _checkPremiumExpiry() async {
     if (_user != null &&
         _user!.isPremium == true &&
-        _user!.premiumEndDate != null) {
+        _user!.premiumRewardEnd != null) {
       // Ödül premium süresinin geçip geçmediğini kontrol et
-      if (_user!.premiumEndDate!.isBefore(DateTime.now())) {
+      if (_user!.premiumRewardEnd!.isBefore(DateTime.now())) {
         debugPrint(
             '🎁 Ödül premium süresi doldu, premium statüsü kaldırılıyor...');
 
         // Premium durumunu false yap ve premiumEndDate'i null yap
         final updatedUser = _user!.copyWith(
           isPremium: false,
-          premiumEndDate: null,
+          premiumRewardEnd: null,
         );
 
         // Firestore'da güncelle

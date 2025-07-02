@@ -73,7 +73,7 @@ class Customer {
   List<Comment>? comments;
   LocationModel? location;
 
-  DateTime? premiumEndDate;
+  DateTime? premiumRewardEnd;
 
   final int totalXp;
   final Map<String, int> completedTasks;
@@ -109,7 +109,7 @@ class Customer {
     this.followings = const [],
     this.followers = const [],
     this.followingRequests = const [],
-    this.premiumEndDate,
+    this.premiumRewardEnd,
   }) : appIdentifier = 'Customer App';
 
   String fullName() => '$firstName $lastName';
@@ -233,8 +233,8 @@ class Customer {
         followingRequests: parsedJson['followingRequests'] != null
             ? List<String>.from(parsedJson['followingRequests'])
             : [],
-        premiumEndDate: parsedJson['premiumEndDate'] != null
-            ? (parsedJson['premiumEndDate'] as Timestamp).toDate()
+        premiumRewardEnd: parsedJson['premiumRewardEnd'] != null
+            ? (parsedJson['premiumRewardEnd'] as Timestamp).toDate()
             : null,
       );
     } catch (e) {
@@ -283,8 +283,9 @@ class Customer {
       'followings': followings ?? [],
       'followers': followers ?? [],
       'followingRequests': followingRequests ?? [],
-      'premiumEndDate':
-          premiumEndDate != null ? Timestamp.fromDate(premiumEndDate!) : null,
+      'premiumRewardEnd': premiumRewardEnd != null
+          ? Timestamp.fromDate(premiumRewardEnd!)
+          : null,
     };
   }
 
@@ -320,7 +321,7 @@ class Customer {
     List<String>? followings,
     List<String>? followers,
     List<String>? followingRequests,
-    DateTime? premiumEndDate,
+    DateTime? premiumRewardEnd,
   }) {
     return Customer(
       profilePictureUrl: profilePictureUrl ?? this.profilePictureUrl,
@@ -353,7 +354,7 @@ class Customer {
       followers: followers ?? this.followers,
       followingRequests: followingRequests ?? this.followingRequests,
       isPrivate: isPrivate ?? this.isPrivate,
-      premiumEndDate: premiumEndDate ?? this.premiumEndDate,
+      premiumRewardEnd: premiumRewardEnd,
     );
   }
 }

@@ -93,7 +93,7 @@ class FollowListModal extends StatelessWidget {
                         if (snapshot.hasError) {
                           return Center(
                             child: Text(
-                              'Kullanıcılar yüklenirken hata oluştu',
+                              context.tr('error_loading_users'),
                               style: TextStyle(color: Colors.red.shade600),
                             ),
                           );
@@ -135,7 +135,7 @@ class FollowListModal extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Henüz kimse yok',
+            context.tr('no_one_yet'),
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   color: Colors.grey.shade600,
                 ),
@@ -155,7 +155,7 @@ class FollowListModal extends StatelessWidget {
       title: Text(
         customer.fullName().trim().isNotEmpty
             ? customer.fullName()
-            : customer.nickname ?? 'İsimsiz Kullanıcı',
+            : customer.nickname ?? context.tr('anonymous_user'),
         style: const TextStyle(fontWeight: FontWeight.w500),
       ),
       subtitle: customer.nickname != null && customer.nickname!.isNotEmpty

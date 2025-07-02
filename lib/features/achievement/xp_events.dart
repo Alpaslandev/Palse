@@ -18,7 +18,8 @@ enum XpEvent {
   dailyLogin(10, 'daily_login_description', false, true);
 
   /// Constructor
-  const XpEvent(this.xpAmount, this.descriptionKey, this.isRepeatable, this.isDaily);
+  const XpEvent(
+      this.xpAmount, this.descriptionKey, this.isRepeatable, this.isDaily);
 
   /// Kazanılan XP miktarı
   final int xpAmount;
@@ -35,7 +36,8 @@ enum XpEvent {
   /// Görevi adından bulur
   static XpEvent? fromName(String name) {
     try {
-      return XpEvent.values.firstWhere((event) => event.name == name || event.descriptionKey == name);
+      return XpEvent.values.firstWhere(
+          (event) => event.name == name || event.descriptionKey == name);
     } catch (e) {
       return null;
     }
@@ -103,7 +105,8 @@ enum XpEventGroup {
   /// Başlık anahtarına göre grup bulur
   static XpEventGroup? fromTitleKey(String titleKey) {
     try {
-      return XpEventGroup.values.firstWhere((group) => group.titleKey == titleKey);
+      return XpEventGroup.values
+          .firstWhere((group) => group.titleKey == titleKey);
     } catch (e) {
       return null;
     }

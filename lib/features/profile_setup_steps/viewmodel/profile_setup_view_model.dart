@@ -15,11 +15,11 @@ class ProfileSetupViewModel extends ChangeNotifier {
   final Customer _customer = Customer();
   final PageController _pageController = PageController();
   final TextEditingController _firstNameController = TextEditingController();
-  final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _nicknameController = TextEditingController();
   final TextEditingController _cityController = TextEditingController();
   final TextEditingController _districtController = TextEditingController();
-  final TextEditingController _profilePictureUrlController = TextEditingController();
+  final TextEditingController _profilePictureUrlController =
+      TextEditingController();
   final TextEditingController _birthdayController = TextEditingController();
   final TextEditingController _genderController = TextEditingController();
 
@@ -31,11 +31,13 @@ class ProfileSetupViewModel extends ChangeNotifier {
   // AuthProvider'ı tanımlayıp, yapıcıda gerekli atamayı yapıyoruz
   final AuthProvider _authProvider;
 
-  ProfileSetupViewModel({required AuthProvider authProvider}) : _authProvider = authProvider;
+  ProfileSetupViewModel({required AuthProvider authProvider})
+      : _authProvider = authProvider;
 
   int get currentStep => _currentStep; // Mevcut adımı döndürür
   Customer get customer => _customer; // Müşteri bilgilerini döndürür
-  PageController get pageController => _pageController; // Sayfa kontrolcüsünü döndürür
+  PageController get pageController =>
+      _pageController; // Sayfa kontrolcüsünü döndürür
   bool get isLastStep => _currentStep == 5;
 
   LocationModel? _location;
@@ -44,11 +46,11 @@ class ProfileSetupViewModel extends ChangeNotifier {
   bool get isLoading => _authProvider.isLoading;
 
   TextEditingController get firstNameController => _firstNameController;
-  TextEditingController get lastNameController => _lastNameController;
   TextEditingController get nicknameController => _nicknameController;
   TextEditingController get cityController => _cityController;
   TextEditingController get districtController => _districtController;
-  TextEditingController get profilePictureUrlController => _profilePictureUrlController;
+  TextEditingController get profilePictureUrlController =>
+      _profilePictureUrlController;
   TextEditingController get birthdayController => _birthdayController;
   TextEditingController get genderController => _genderController;
 
@@ -69,8 +71,10 @@ class ProfileSetupViewModel extends ChangeNotifier {
     debugPrint(_authProvider.firebaseUser?.uid ?? 'User ID not found');
 
     debugPrint(_customer.toJson().toString());
-    debugPrint(_customer.location?.geoPoint?.latitude.toString() ?? 'GeoPoint not found');
-    debugPrint(_customer.location?.geoPoint?.longitude.toString() ?? 'GeoPoint not found');
+    debugPrint(_customer.location?.geoPoint?.latitude.toString() ??
+        'GeoPoint not found');
+    debugPrint(_customer.location?.geoPoint?.longitude.toString() ??
+        'GeoPoint not found');
 
     String? storageUrl;
 
@@ -87,7 +91,8 @@ class ProfileSetupViewModel extends ChangeNotifier {
 
       _customer.userID = _authProvider.firebaseUser!.uid;
       _customer.languagePreference = locale;
-      await _customerService.updateCustomer(_authProvider.firebaseUser!.uid, _customer);
+      await _customerService.updateCustomer(
+          _authProvider.firebaseUser!.uid, _customer);
       debugPrint('Profile setup completed');
       return true;
     } catch (e) {
@@ -110,7 +115,8 @@ class ProfileSetupViewModel extends ChangeNotifier {
   }
 
   void handleCategorySelection(Categories category, bool selected) {
-    final categories = List<Categories>.from(_customer.favoriteCategories ?? []);
+    final categories =
+        List<Categories>.from(_customer.favoriteCategories ?? []);
     if (selected) {
       categories.add(category);
     } else {
@@ -131,24 +137,16 @@ class ProfileSetupViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void updateLastName(String lastName) {
-    _customer.lastName = lastName;
-    notifyListeners();
-  }
-
   // Ad için validasyon metodu
   bool isFirstNameValid() {
-    return _customer.firstName != null && _customer.firstName!.isNotEmpty && _customer.firstName!.length >= 3;
-  }
-
-  // Soyad için validasyon metodu
-  bool isLastNameValid() {
-    return _customer.lastName != null && _customer.lastName!.isNotEmpty && _customer.lastName!.length >= 3;
+    return _customer.firstName != null &&
+        _customer.firstName!.isNotEmpty &&
+        _customer.firstName!.length >= 3;
   }
 
   // Kullanıcı bilgileri adımının validasyonu
   bool isUserInfoStepValid() {
-    return isFirstNameValid() && isLastNameValid();
+    return isFirstNameValid();
   }
 
   void updateNickname(String nickname) {
@@ -218,7 +216,9 @@ class ProfileSetupViewModel extends ChangeNotifier {
 
   // Takma ad için validasyon metodu
   bool isNicknameValid() {
-    return _customer.nickname != null && _customer.nickname!.isNotEmpty && _customer.nickname!.length >= 3;
+    return _customer.nickname != null &&
+        _customer.nickname!.isNotEmpty &&
+        _customer.nickname!.length >= 3;
   }
 
   // Takma ad adımının validasyonu
@@ -228,7 +228,8 @@ class ProfileSetupViewModel extends ChangeNotifier {
 
   // Favori kategoriler için validasyon metodu
   bool areFavoriteCategoriesValid() {
-    return _customer.favoriteCategories != null && _customer.favoriteCategories!.length >= 3;
+    return _customer.favoriteCategories != null &&
+        _customer.favoriteCategories!.length >= 3;
   }
 
   // Favori kategoriler adımının validasyonu

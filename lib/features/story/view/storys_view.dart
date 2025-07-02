@@ -1,34 +1,88 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
 import 'package:palseapp/features/story/model/story_model.dart';
-import 'package:palseapp/features/story/view/story_display_view.dart';
 import 'package:palseapp/features/story/viewmodel/story_view_model.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 // Hikayeleri listeleyen ve yeni hikaye ekleme butonu sunan ana widget.
-class StorysView extends StatelessWidget {
+class StorysView extends StatefulWidget {
   const StorysView({super.key});
 
   @override
+  State<StorysView> createState() => StorysViewState();
+}
+
+class StorysViewState extends State<StorysView> {
+  late StoryViewModel _viewModel;
+  Future<List<StoryModel>>? _storiesFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _viewModel = StoryViewModel();
+    _loadStories();
+  }
+
+  void _loadStories() {
+    final authProvider = context.read<AuthProvider>();
+    final currentUser = authProvider.user;
+    if (currentUser != null) {
+      final followingIds = currentUser.followings ?? [];
+      setState(() {
+        _storiesFuture = _viewModel.fetchStories(
+          currentUserId: currentUser.userID!,
+          followingIds: followingIds,
+        );
+      });
+    }
+  }
+
+  // Hikayeleri yeniler
+  void refreshStories() {
+    final authProvider = context.read<AuthProvider>();
+    final currentUser = authProvider.user;
+    if (currentUser != null) {
+      final followingIds = currentUser.followings ?? [];
+      setState(() {
+        _storiesFuture = _viewModel
+            .refreshStories(
+              currentUserId: currentUser.userID!,
+              followingIds: followingIds,
+            )
+            .then((_) => _viewModel.fetchStories(
+                  currentUserId: currentUser.userID!,
+                  followingIds: followingIds,
+                  forceRefresh: true,
+                ));
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _viewModel.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // ViewModel'i ve AuthProvider'ı sağlamak için.
-    return ChangeNotifierProvider(
-      create: (_) => StoryViewModel(),
-      // Navigator'ı doğru context'te bulmak için Builder kullanıyoruz.
-      child: Builder(builder: (context) {
-        return const _StorysViewContent();
-      }),
+    return ChangeNotifierProvider.value(
+      value: _viewModel,
+      child: _StorysViewContent(storiesFuture: _storiesFuture),
     );
   }
 }
 
 // FutureBuilder ve ListView'ı içeren esas UI widget'ı.
 class _StorysViewContent extends StatelessWidget {
-  const _StorysViewContent();
+  final Future<List<StoryModel>>? storiesFuture;
+
+  const _StorysViewContent({required this.storiesFuture});
 
   @override
   Widget build(BuildContext context) {
@@ -37,20 +91,16 @@ class _StorysViewContent extends StatelessWidget {
 
     // AuthProvider'dan kullanıcı bilgilerini ve takip listesini al.
     final currentUser = authProvider.user;
-    if (currentUser == null) {
+    if (currentUser == null || storiesFuture == null) {
       // Kullanıcı yoksa boş bir görünüm döndür.
       return const SizedBox(height: 102);
     }
-    final followingIds = currentUser.followings ?? [];
 
     return Container(
       height: 102,
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: FutureBuilder<List<StoryModel>>(
-        future: viewModel.fetchStories(
-          currentUserId: currentUser.userID!,
-          followingIds: followingIds,
-        ),
+        future: storiesFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return _buildLoadingSkeleton();
@@ -143,7 +193,7 @@ class _StorysViewContent extends StatelessWidget {
                   const Icon(Icons.add, size: 32, color: AppTheme.primaryColor),
             ),
             const SizedBox(height: 4),
-            const Text('Hikaye Ekle',
+            Text(context.tr('add_story'),
                 style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
           ],
         ),
@@ -219,7 +269,7 @@ class _StorysViewContent extends StatelessWidget {
             SizedBox(
               width: 64,
               child: Text(
-                isCurrentUser ? 'Hikayen' : story.username,
+                isCurrentUser ? context.tr('my_story') : story.username,
                 style:
                     const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
                 textAlign: TextAlign.center,

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
+import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/features/story/model/story_model.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
+import 'package:palseapp/core/keys/global_keys.dart';
 import 'package:palseapp/features/story/viewmodel/story_view_model.dart';
 import 'package:palseapp/features/story/widgets/story_viewers_sheet.dart';
 import 'package:provider/provider.dart';
@@ -80,11 +82,16 @@ class _StoryDisplayViewState extends State<StoryDisplayView>
     if (currentUserId != null) {
       try {
         await viewModel.deleteStory(storyId: story.id, userId: currentUserId);
+        // Hikaye silindikten sonra ana sayfadaki hikayeleri yenile
+        GlobalKeys.instance.storysViewKey.currentState?.refreshStories();
         if (mounted) context.pop();
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Hikaye silinirken hata oluştu: $e')),
+            SnackBar(
+                content: Text(context.tr(
+              'story_deletion_error',
+            ))),
           );
         }
       }
@@ -407,22 +414,22 @@ class _StoryPage extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          title: const Text(
-            'Hikayenizi Silin',
+          title: Text(
+            context.tr('delete_story'),
             style: TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.bold,
             ),
           ),
-          content: const Text(
-            'Hikayeniz kalıcı olarak silinecektir. Bu işlem geri alınamaz. Emin misiniz?',
+          content: Text(
+            context.tr('delete_story_confirmation'),
             style: TextStyle(color: Colors.white70),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text(
-                'İptal',
+              child: Text(
+                context.tr('cancel'),
                 style: TextStyle(color: Colors.grey),
               ),
             ),
@@ -433,8 +440,8 @@ class _StoryPage extends StatelessWidget {
                   onDelete!();
                 }
               },
-              child: const Text(
-                'Sil',
+              child: Text(
+                context.tr('delete'),
                 style: TextStyle(
                   color: Colors.red,
                   fontWeight: FontWeight.bold,
@@ -466,7 +473,7 @@ class _StoryPage extends StatelessWidget {
                 const Icon(Icons.visibility, color: Colors.white70, size: 20),
                 const SizedBox(width: 8),
                 Text(
-                  '${story.viewedBy.length} kişi tarafından görüldü',
+                  '${story.viewedBy.length} ${context.tr('people_viewed')}',
                   style: const TextStyle(color: Colors.white70),
                 ),
               ],

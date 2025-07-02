@@ -8,6 +8,7 @@ import 'package:palseapp/core/routes/routes.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
 import 'package:palseapp/core/widgets/advert/advert_card_view.dart';
 import 'package:palseapp/core/widgets/advert/advert_card_view_model.dart';
+import 'package:palseapp/core/keys/global_keys.dart';
 import 'package:palseapp/features/home/viewmodel/home_view_model.dart';
 import 'package:palseapp/features/home/widgets/explore_tab_bar.dart';
 import 'package:palseapp/features/story/view/storys_view.dart';
@@ -58,6 +59,8 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
 
   Future<void> _refreshData() async {
     _scrollToTopSmoothly();
+    // Hikayeleri yenile
+    GlobalKeys.instance.storysViewKey.currentState?.refreshStories();
     await _viewModel.refreshAllTabs(_user);
   }
 
@@ -90,7 +93,9 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
           child: CustomScrollView(
             controller: _scrollController,
             slivers: [
-              const SliverToBoxAdapter(child: StorysView()),
+              SliverToBoxAdapter(
+                child: StorysView(key: GlobalKeys.instance.storysViewKey),
+              ),
               SliverPersistentHeader(
                 pinned: true,
                 delegate: _StickyHeaderDelegate(
@@ -123,7 +128,7 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text('Keşfet',
+          Text(context.tr('discover'),
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
           Row(
             children: [

@@ -3,6 +3,8 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:palseapp/core/localization/app_localizations.dart';
+import 'package:palseapp/core/widgets/premium_overlay.dart';
 import 'package:palseapp/features/story/view/story_preview_view.dart';
 import 'package:photo_manager/photo_manager.dart';
 
@@ -40,7 +42,7 @@ class _AddStoryViewState extends State<AddStoryView> {
     if (!permitted.isAuth) {
       // İzin verilmediyse kullanıcıya bir uyarı gösterilebilir.
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Galeri izni verilmedi.')),
+        SnackBar(content: Text(context.tr('gallery_permission_denied'))),
       );
       setState(() => _isLoading = false);
       return;
@@ -128,49 +130,57 @@ class _AddStoryViewState extends State<AddStoryView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Yeni Hikaye'),
+        title: Text(context.tr('add_story')),
         centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _mediaList.isEmpty
-              ? const Center(child: Text('Galeride hiç fotoğraf bulunamadı.'))
-              : GridView.builder(
-                  padding: const EdgeInsets.all(4),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    crossAxisSpacing: 4,
-                    mainAxisSpacing: 4,
-                    childAspectRatio: 3 / 4,
-                  ),
-                  itemCount: _mediaList.length + 1, // +1 kamera butonu için
-                  itemBuilder: (context, index) {
-                    if (index == 0) {
-                      return _buildCameraButton();
-                    }
-                    final asset = _mediaList[index - 1];
-                    return GestureDetector(
-                      onTap: () async {
-                        final file = await asset.file;
-                        if (file != null && mounted) {
-                          // Galeriden seçilen fotoğrafı önizleme ekranına gönder.
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => StoryPreviewView(
-                                imageFile: file,
-                                heroTag: asset.id,
+      body: PremiumOverlay(
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _mediaList.isEmpty
+                ? Center(
+                    child: Text(
+                      context.tr('no_images_found'),
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  )
+                : GridView.builder(
+                    padding: const EdgeInsets.all(4),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      crossAxisSpacing: 4,
+                      mainAxisSpacing: 4,
+                      childAspectRatio: 3 / 4,
+                    ),
+                    itemCount: _mediaList.length + 1, // +1 kamera butonu için
+                    itemBuilder: (context, index) {
+                      if (index == 0) {
+                        return _buildCameraButton();
+                      }
+                      final asset = _mediaList[index - 1];
+                      return GestureDetector(
+                        onTap: () async {
+                          final file = await asset.file;
+                          if (file != null && mounted) {
+                            // Galeriden seçilen fotoğrafı önizleme ekranına gönder.
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => StoryPreviewView(
+                                  imageFile: file,
+                                  heroTag: asset.id,
+                                ),
                               ),
-                            ),
-                          );
-                        }
-                      },
-                      child: _buildMediaItem(asset),
-                    );
-                  },
-                ),
+                            );
+                          }
+                        },
+                        child: _buildMediaItem(asset),
+                      );
+                    },
+                  ),
+      ),
     );
   }
 }

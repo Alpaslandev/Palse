@@ -22,7 +22,7 @@ class PremiumOverlay extends StatelessWidget {
       builder: (context, isPremium, _) {
         debugPrint('isPremium: $isPremium');
         // Kullanıcı premium ise doğrudan child widget'ı göster TODO: premium değilse child widget'ı göster
-        if (!isPremium) {
+        if (isPremium) {
           return child;
         }
 
