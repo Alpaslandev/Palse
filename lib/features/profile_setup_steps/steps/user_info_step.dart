@@ -13,16 +13,13 @@ class UserInfoStep extends StatefulWidget {
 }
 
 class _UserInfoStepState extends State<UserInfoStep> {
-  bool _isInitialized = false;
-
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Fill Apple User Info If Available
-    if (!_isInitialized) {
+  void initState() {
+    super.initState();
+    // Build tamamlandıktan sonra çalışması için Future.microtask kullanıyoruz
+    Future.microtask(() {
       _fillAppleUserInfoIfAvailable();
-      _isInitialized = true;
-    }
+    });
   }
 
   // Fill Apple User Info If Available

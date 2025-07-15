@@ -56,8 +56,6 @@ void main() async {
   }
   await Future.delayed(const Duration(milliseconds: 200));
 
-  // await metaSdk.activateApp();
-
   // Kritik işlemleri önce başlat
   final authProvider = AuthProvider();
   await authProvider.initializeAuth();

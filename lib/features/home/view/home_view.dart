@@ -30,6 +30,9 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   bool _isInitialized = false;
   final ScrollController _scrollController = ScrollController();
 
+  // Ana başlık seçimi için
+  int _selectedHeaderIndex = 0;
+
   @override
   void initState() {
     super.initState();
@@ -52,9 +55,18 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
 
   void _onExploreTabChanged() {
     if (_exploreTabController.indexIsChanging) {
-      setState(() {});
+      setState(() {
+        // Tab değişikliğinde UI'ı güncelle
+      });
       _viewModel.initializeTab(_user, _exploreTabController.index);
     }
+  }
+
+  // Ana başlık seçimi değiştiğinde çağrılır
+  void _onHeaderSelected(int index) {
+    setState(() {
+      _selectedHeaderIndex = index;
+    });
   }
 
   Future<void> _refreshData() async {
@@ -99,8 +111,8 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
               SliverPersistentHeader(
                 pinned: true,
                 delegate: _StickyHeaderDelegate(
-                  minHeight: 115,
-                  maxHeight: 115,
+                  minHeight: _selectedHeaderIndex == 0 ? 115 : 70,
+                  maxHeight: _selectedHeaderIndex == 0 ? 115 : 70,
                   child: Container(
                     color: Theme.of(context).scaffoldBackgroundColor,
                     padding: const EdgeInsets.symmetric(vertical: 4),
@@ -108,7 +120,9 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         _buildDiscoverHeader(),
-                        ExploreTabBar(controller: _exploreTabController),
+                        // Sadece Keşfet başlığı seçiliyken ExploreTabBar'ı göster
+                        if (_selectedHeaderIndex == 0)
+                          ExploreTabBar(controller: _exploreTabController),
                       ],
                     ),
                   ),
@@ -128,8 +142,60 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(context.tr('discover'),
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          Row(
+            children: [
+              GestureDetector(
+                onTap: () {
+                  // Keşfet başlığına geçiş
+                  _onHeaderSelected(0);
+                },
+                child: Text("Keşfet",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: _selectedHeaderIndex == 0
+                          ? FontWeight.bold
+                          : FontWeight.w400,
+                      color: _selectedHeaderIndex == 0
+                          ? AppTheme.primaryColor
+                          : Theme.of(context).textTheme.bodyLarge?.color,
+                    )),
+              ),
+              const SizedBox(width: 16),
+              GestureDetector(
+                onTap: () {
+                  // Takiptekiler başlığına geçiş
+                  _onHeaderSelected(1);
+                },
+                child: Text("Takiptekiler",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: _selectedHeaderIndex == 1
+                          ? FontWeight.bold
+                          : FontWeight.w400,
+                      color: _selectedHeaderIndex == 1
+                          ? AppTheme.primaryColor
+                          : Theme.of(context).textTheme.bodyLarge?.color,
+                    )),
+              ),
+              const SizedBox(width: 16),
+              GestureDetector(
+                onTap: () {
+                  // Şehrimde Ne Var başlığına geçiş
+                  _onHeaderSelected(2);
+                },
+                child: Text("Şehrimde Ne Var",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: _selectedHeaderIndex == 2
+                          ? FontWeight.bold
+                          : FontWeight.w400,
+                      color: _selectedHeaderIndex == 2
+                          ? AppTheme.primaryColor
+                          : Theme.of(context).textTheme.bodyLarge?.color,
+                    )),
+              ),
+            ],
+          ),
           Row(
             children: [
               IconButton(
@@ -158,52 +224,108 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   Widget _buildSliverContentForTab() {
     return Consumer<HomeViewModel>(
       builder: (context, viewModel, child) {
-        final tabIndex = _exploreTabController.index;
-        final adverts = viewModel.getAdvertsForTab(tabIndex);
-        final isLoading = viewModel.isTabLoading(tabIndex);
-        final isInitialized = viewModel.isTabInitialized(tabIndex);
+        // Ana başlık seçimine göre içerik göster
+        if (_selectedHeaderIndex == 0) {
+          // Keşfet başlığı - ExploreTabBar içeriği
+          final tabIndex = _exploreTabController.index;
+          final adverts = viewModel.getAdvertsForTab(tabIndex);
+          final isLoading = viewModel.isTabLoading(tabIndex);
+          final isInitialized = viewModel.isTabInitialized(tabIndex);
 
-        if (!isInitialized && isLoading) {
-          return const SliverFillRemaining(
-            child: Center(child: CircularProgressIndicator()),
-          );
-        }
+          if (!isInitialized && isLoading) {
+            return const SliverFillRemaining(
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
 
-        if (adverts.isEmpty) {
-          return SliverFillRemaining(
-            child: _buildEmptyState(tabIndex),
-          );
-        }
+          if (adverts.isEmpty) {
+            return SliverFillRemaining(
+              child: _buildEmptyState(tabIndex),
+            );
+          }
 
-        return SliverPadding(
-          padding: const EdgeInsets.fromLTRB(0, 12, 0, 80),
-          sliver: SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                if (index == adverts.length) {
-                  return isLoading
-                      ? const Padding(
-                          padding: EdgeInsets.all(20),
-                          child: Center(child: CircularProgressIndicator()),
-                        )
-                      : const SizedBox.shrink();
-                }
-                final advert = adverts[index];
-                if (advert.creatorUserID == _user.userID ||
-                    (_user.blockUsers != null &&
-                        _user.blockUsers!.contains(advert.creatorUserID))) {
-                  return const SizedBox.shrink();
-                }
-                return AdvertCardView(
-                  key: ValueKey('${advert.advertID}_tab_$tabIndex'),
-                  advert: advert,
-                  mode: AdvertCardMode.home,
-                );
-              },
-              childCount: adverts.length + 1,
+          return SliverPadding(
+            padding: const EdgeInsets.fromLTRB(0, 12, 0, 80),
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  if (index == adverts.length) {
+                    return isLoading
+                        ? const Padding(
+                            padding: EdgeInsets.all(20),
+                            child: Center(child: CircularProgressIndicator()),
+                          )
+                        : const SizedBox.shrink();
+                  }
+                  final advert = adverts[index];
+                  if (advert.creatorUserID == _user.userID ||
+                      (_user.blockUsers != null &&
+                          _user.blockUsers!.contains(advert.creatorUserID))) {
+                    return const SizedBox.shrink();
+                  }
+                  return AdvertCardView(
+                    key: ValueKey('${advert.advertID}_tab_$tabIndex'),
+                    advert: advert,
+                    mode: AdvertCardMode.home,
+                  );
+                },
+                childCount: adverts.length + 1,
+              ),
             ),
-          ),
-        );
+          );
+        } else if (_selectedHeaderIndex == 1) {
+          // Takiptekiler başlığı - kendi içeriği
+          return SliverFillRemaining(
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.people_outline,
+                      size: 64, color: AppTheme.primaryColor),
+                  const SizedBox(height: 16),
+                  Text(
+                    "Takiptekiler",
+                    style: const TextStyle(
+                        fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Takip ettiğin kişilerin ilanları burada görünecek',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        color: Theme.of(context).textTheme.bodySmall?.color),
+                  ),
+                ],
+              ),
+            ),
+          );
+        } else {
+          // Şehrimde Ne Var başlığı - kendi içeriği
+          return SliverFillRemaining(
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.location_city,
+                      size: 64, color: AppTheme.primaryColor),
+                  const SizedBox(height: 16),
+                  Text(
+                    "Şehrimde Ne Var",
+                    style: const TextStyle(
+                        fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Şehrinizdeki etkinlikler burada görünecek',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        color: Theme.of(context).textTheme.bodySmall?.color),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
       },
     );
   }
@@ -264,14 +386,3 @@ class _StickyHeaderDelegate extends SliverPersistentHeaderDelegate {
         child != oldDelegate.child;
   }
 }
-
-// refreshFromNavigation metodunu HomeView'ın dışına taşıdık veya kaldırdık
-// Eğer hala bir yerden çağrılıyorsa, GlobalKey kullanarak HomeViewState'e erişmek gerekir.
-// Örneğin: final GlobalKey<HomeViewState> homeViewKey = GlobalKey<HomeViewState>();
-// homeViewKey.currentState?.refreshFromNavigation();
-// Şimdilik bu metodu yorum satırına alıyorum.
-/*
-void refreshFromNavigation() {
-  // Bu metoda erişim için GlobalKey kullanılması gerekir.
-}
-*/

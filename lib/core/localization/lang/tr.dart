@@ -89,6 +89,7 @@ const Map<String, String> tr = {
       'Doğum tarihiniz ve cinsiyetiniz size uygun etkinlikleri önerirken kullanılacaktır.',
 
   // 3. Adım: Konum
+  'location_info': 'Bilgi',
   'location_title': 'Konumunuz',
   'location_description': 'Size yakın etkinlik ve aktiviteleri göstereceğiz',
   'location_current': 'Mevcut Konumu Kullan',

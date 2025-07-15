@@ -89,6 +89,8 @@ const Map<String, String> en = {
       'Your birth date and gender will be used to recommend suitable events for you.',
 
   // Step 3: Location
+  'location_info': 'Info',
+
   'location_title': 'Your Location',
   'location_description': 'We\'ll show you events and activities near you',
   'location_current': 'Use Current Location',

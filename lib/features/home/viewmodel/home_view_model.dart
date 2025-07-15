@@ -2,14 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:palseapp/core/models/advert.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/services/firestore/advert_service.dart';
-import 'package:palseapp/core/services/firestore/customer_service.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 // Ana sayfa view model'i - IndexedStack mantığı ile her tab ayrı state tutar
 class HomeViewModel extends ChangeNotifier {
   final AdvertService _advertService = AdvertService();
-  final CustomerService _customerService = CustomerService();
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Her tab için ayrı liste ve durum tutma
   final List<List<Advert>> _tabAdverts = [[], [], []]; // 3 tab için
