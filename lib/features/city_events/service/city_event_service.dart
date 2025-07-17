@@ -31,10 +31,10 @@ class CityEventService {
   }
 
   // Kullanıcının şehrini API şehirleriyle eşleştiren metod
-  Future<String?> findMatchingCityId(String userCity) async {
+  Future<int?> findMatchingCityId(String userCity) async {
     try {
       final cities = await getEventCities();
-      String? matchedCityId;
+      int? matchedCityId;
       double highestSimilarity = 0.0;
 
       for (var city in cities) {
@@ -42,7 +42,7 @@ class CityEventService {
 
         if (similarity > 0.9 && similarity > highestSimilarity) {
           highestSimilarity = similarity;
-          matchedCityId = city.id.toString();
+          matchedCityId = city.id;
           debugPrint(
               'Eşleşen şehir bulundu: ${city.name} (ID: ${city.id}) - Benzerlik: ${(similarity * 100).toStringAsFixed(2)}%');
         }
@@ -120,8 +120,8 @@ class CityEventService {
   }
 
   Future<List<EventModel>> getEvents({
-    required String categoryId,
-    required String cityId,
+    required int categoryId,
+    required int cityId,
   }) async {
     final url = "https://backend.etkinlik.io/api/v2/events";
 

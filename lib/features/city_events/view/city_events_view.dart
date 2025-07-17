@@ -254,15 +254,16 @@ class _CityEventsViewState extends State<CityEventsView>
                 hintText: 'Kategori Seç',
               ),
               Expanded(
-                child: ListView.builder(
-                  itemCount: viewModel.events.length,
-                  shrinkWrap: true,
-                  itemBuilder: (context, index) {
-                    final event = viewModel.events[index];
-                    debugPrint(event.name);
-                    return CityEventView(event: event);
-                  },
-                ),
+                child: viewModel.events.isEmpty
+                    ? _buildEmptyEventsState()
+                    : ListView.builder(
+                        itemCount: viewModel.events.length,
+                        shrinkWrap: true,
+                        itemBuilder: (context, index) {
+                          final event = viewModel.events[index];
+                          return CityEventView(event: event);
+                        },
+                      ),
               ),
             ],
           );
@@ -285,6 +286,30 @@ class _CityEventsViewState extends State<CityEventsView>
           const SizedBox(height: 8),
           Text(
             'Filtreni değiştirerek yeni mekanlar keşfet',
+            textAlign: TextAlign.center,
+            style:
+                TextStyle(color: Theme.of(context).textTheme.bodySmall?.color),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Etkinlik bulunamadığında gösterilecek widget
+  Widget _buildEmptyEventsState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.event_busy, size: 64, color: AppTheme.primaryColor),
+          const SizedBox(height: 16),
+          const Text(
+            "Bu Kategoride Etkinlik Bulunamadı",
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Farklı bir kategori seçerek yeni etkinlikler keşfet',
             textAlign: TextAlign.center,
             style:
                 TextStyle(color: Theme.of(context).textTheme.bodySmall?.color),

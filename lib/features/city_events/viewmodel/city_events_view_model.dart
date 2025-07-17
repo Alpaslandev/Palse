@@ -13,7 +13,7 @@ class CityEventsViewModel extends ChangeNotifier {
   List<EventModel> _events = [];
   bool _isLoading = false;
   String? _selectedEventCategory;
-  String? _matchedCityId;
+  int? _matchedCityId;
 
   // Getters
   List<Map<String, dynamic>> get cityEvents => _cityVenues;
@@ -22,40 +22,44 @@ class CityEventsViewModel extends ChangeNotifier {
   List<EventModel> get events => _events;
   bool get isLoading => _isLoading;
   String? get selectedEventCategory => _selectedEventCategory;
-  String? get matchedCityId => _matchedCityId;
+  int? get matchedCityId => _matchedCityId;
 
   // Etkinlik kategorilerini ve şehir etkinliklerini yükle
   Future<void> loadEventCategories(Customer user) async {
     try {
       _isLoading = true;
       notifyListeners();
+      debugPrint("Etkinlik kategorileri ve etkinlikler yükleniyor...");
 
       // Önce kategorileri yükle
       _eventCategories = await _service.getEventsCategories();
+      debugPrint("Kategoriler yüklendi: ${_eventCategories.length} adet");
 
       // Kullanıcının şehrini eşleştir
       if (user.location?.city != null) {
+        debugPrint("Kullanıcı şehri: ${user.location!.city}");
         _matchedCityId = await _service.findMatchingCityId(user.location!.city);
 
         if (_matchedCityId != null) {
           debugPrint('Kullanıcının şehri eşleşti. Şehir ID: $_matchedCityId');
 
-          // Rastgele bir kategori seç
+          // Bir kategori seç
           if (_eventCategories.isNotEmpty) {
-            final randomCategory = _eventCategories[0]; // İlk kategoriyi alalım
-            _selectedEventCategory = randomCategory.name;
+            final firstCategory = _eventCategories.first;
+            _selectedEventCategory = firstCategory.name;
+            debugPrint(
+                "Başlangıç kategorisi seçildi: ${_selectedEventCategory} (ID: ${firstCategory.id})");
 
             // Etkinlikleri çek
-            final events = await _service.getEvents(
-              categoryId: randomCategory.id.toString(),
-              cityId: _matchedCityId!,
-            );
-
-            debugPrint('Etkinlikler yüklendi. Toplam: ${events.length}');
-            _events = events;
-            notifyListeners();
+            await loadEventsForCategory(firstCategory.id, _matchedCityId!);
+          } else {
+            debugPrint("Hiç etkinlik kategorisi bulunamadı.");
           }
+        } else {
+          debugPrint("Eşleşen şehir bulunamadı.");
         }
+      } else {
+        debugPrint("Kullanıcı lokasyon veya şehir bilgisi bulunamadı.");
       }
 
       _isLoading = false;
@@ -67,10 +71,43 @@ class CityEventsViewModel extends ChangeNotifier {
     }
   }
 
-  // Seçili kategoriyi güncelle
-  void updateSelectedEventCategory(String category) {
-    _selectedEventCategory = category;
+  // Seçili kategoriyi güncelle ve etkinlikleri yeniden yükle
+  Future<void> updateSelectedEventCategory(String categoryName) async {
+    _selectedEventCategory = categoryName;
     notifyListeners();
+
+    final selectedCategory = _eventCategories.firstWhere(
+      (c) => c.name == categoryName,
+      orElse: () => _eventCategories.first,
+    );
+
+    if (_matchedCityId != null) {
+      await loadEventsForCategory(selectedCategory.id, _matchedCityId!);
+    }
+  }
+
+  // Belirli bir kategori için etkinlikleri yükle
+  Future<void> loadEventsForCategory(int categoryId, int cityId) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      _events = await _service.getEvents(
+        categoryId: categoryId,
+        cityId: cityId,
+      );
+
+      debugPrint(
+          'Yeni kategori için etkinlikler yüklendi. Kategori ID: $categoryId, Toplam: ${_events.length}');
+
+      _isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Etkinlikler yüklenirken hata: $e');
+      _events = []; // Hata durumunda listeyi boşalt
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   // Mevcut metodlar...
