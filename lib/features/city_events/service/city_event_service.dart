@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:palseapp/features/city_events/model/event_category_model.dart';
+import 'package:palseapp/features/city_events/model/event_model.dart';
 
 class CityEventService {
   final Dio _dio = Dio();
@@ -118,7 +119,7 @@ class CityEventService {
     }
   }
 
-  Future<List<Map<String, dynamic>>> getEvents({
+  Future<List<EventModel>> getEvents({
     required String categoryId,
     required String cityId,
   }) async {
@@ -137,15 +138,21 @@ class CityEventService {
         queryParameters: {'category_ids': categoryId, 'city_ids': cityId},
       );
       debugPrint('Etkinlik.io API yanıtı: ${response.data}');
+
       if (response.statusCode == 200) {
         if (response.data != null) {
-          return List<Map<String, dynamic>>.from(
-            (response.data as List).map((e) => e),
-          );
+          // API yanıtı bir Map olarak geliyor, içindeki items listesini alalım
+          final Map<String, dynamic> responseData = response.data;
+          if (responseData.containsKey('items')) {
+            return List<EventModel>.from(
+              responseData['items'].map((e) => EventModel.fromJson(e)),
+            );
+          }
+          return [];
         }
       }
 
-      throw Exception("Kategori verisi alınamadı: ${response.statusCode}");
+      throw Exception("Etkinlik verisi alınamadı: ${response.statusCode}");
     } catch (e) {
       debugPrint('Etkinlik.io API hatası: $e');
       rethrow;

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
+import 'package:palseapp/features/city_events/view/widgets/city_event_view.dart';
 import 'package:palseapp/features/city_events/viewmodel/city_events_view_model.dart';
 import 'package:palseapp/features/city_events/view/widgets/city_venue_view.dart';
 import 'package:provider/provider.dart';
@@ -50,7 +51,7 @@ class _CityEventsViewState extends State<CityEventsView>
   }
 
   Future<void> _loadCityEvents() async {
-    await _viewModel.loadCityEvents(widget.user, type: selectedType);
+    await _viewModel.loadCityVenues(widget.user, type: selectedType);
   }
 
   Future<void> _loadEventCategories() async {
@@ -169,7 +170,7 @@ class _CityEventsViewState extends State<CityEventsView>
                     setState(() {
                       selectedType = newValue;
                     });
-                    await _viewModel.loadCityEvents(widget.user,
+                    await _viewModel.loadCityVenues(widget.user,
                         type: selectedType);
                   }
                 },
@@ -252,15 +253,15 @@ class _CityEventsViewState extends State<CityEventsView>
                 },
                 hintText: 'Kategori Seç',
               ),
-              const Expanded(
-                child: Center(
-                  child: Text(
-                    'Etkinlikler yakında burada listelenecek!',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey,
-                    ),
-                  ),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: viewModel.events.length,
+                  shrinkWrap: true,
+                  itemBuilder: (context, index) {
+                    final event = viewModel.events[index];
+                    debugPrint(event.name);
+                    return CityEventView(event: event);
+                  },
                 ),
               ),
             ],
