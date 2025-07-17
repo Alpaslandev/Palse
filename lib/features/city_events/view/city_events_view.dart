@@ -40,6 +40,9 @@ class _CityEventsViewState extends State<CityEventsView>
     super.initState();
     _viewModel = CityEventsViewModel();
     _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      setState(() {}); // Tab değiştiğinde widget'ı yeniden build et
+    });
     _loadCityEvents();
     _loadEventCategories();
   }
@@ -62,16 +65,23 @@ class _CityEventsViewState extends State<CityEventsView>
   Widget build(BuildContext context) {
     return Column(
       children: [
-        TabBar(
-          controller: _tabController,
-          // Özel stil için varsayılan indicator'ı kaldır.
-          indicator: const BoxDecoration(),
-          dividerColor: Colors.transparent,
-          labelPadding: const EdgeInsets.symmetric(horizontal: 4),
-          tabs: [
-            _buildTab('Şehrimdeki mekanlar', 0),
-            _buildTab('Şehrimdeki etkinlikler', 1),
-          ],
+        Container(
+          color: Colors.grey[50],
+          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+          child: SizedBox(
+            height: 40,
+            child: TabBar(
+              controller: _tabController,
+              // Özel stil için varsayılan indicator'ı kaldır.
+              indicator: const BoxDecoration(),
+              dividerColor: Colors.transparent,
+              labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+              tabs: [
+                _buildTab('Şehrimdeki mekanlar', 0),
+                _buildTab('Şehrimdeki etkinlikler', 1),
+              ],
+            ),
+          ),
         ),
         Expanded(
           child: TabBarView(

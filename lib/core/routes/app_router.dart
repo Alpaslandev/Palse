@@ -21,6 +21,7 @@ import 'package:palseapp/features/comment/view/comment_view.dart';
 import 'package:palseapp/features/friend_profile/friend_profile_view.dart';
 import 'package:palseapp/features/home/view/home_view.dart';
 import 'package:palseapp/features/home/widgets/filter_view.dart';
+import 'package:palseapp/features/matching/match_view.dart';
 import 'package:palseapp/features/messages/view/messages_view.dart';
 import 'package:palseapp/features/my_advert/view/my_advert_view.dart';
 import 'package:palseapp/features/profile/view/profile_view.dart';
@@ -270,6 +271,11 @@ class AppRouter {
               );
             },
           ),
+        ),
+        GoRoute(
+          path: "/$match",
+          name: match,
+          builder: (context, state) => const MatchView(),
         ),
         StatefulShellRoute.indexedStack(
           builder: (context, state, navigationShell) {

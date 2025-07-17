@@ -40,6 +40,7 @@ const String createAdvert = 'createAdvert';
 const String createAdvertStep1 = 'createAdvertStep1';
 const String createAdvertStep2 = 'createAdvertStep2';
 const String createAdvertStep3 = 'createAdvertStep3';
+const String match = 'match';
 
 const String friendProfile = 'friendProfile';
 const String comment = 'comment';

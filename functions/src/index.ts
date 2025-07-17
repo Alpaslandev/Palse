@@ -1034,3 +1034,5 @@ function chunkArray<T>(array: T[], chunkSize: number): T[][] {
   }
   return chunks;
 }
+
+export {getSmartMatches} from "./getSmartMatches";

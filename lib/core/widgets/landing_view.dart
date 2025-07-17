@@ -106,19 +106,36 @@ class _LandingViewState extends State<LandingView>
       appBar: const ProjectAppBar(),
       body: widget.navigationShell,
       floatingActionButton: isHomePage
-          ? FloatingActionButton.extended(
-              backgroundColor: AppTheme.primaryColor,
-              shape: const StadiumBorder(),
-              onPressed: () {
-                context.pushNamed(createAdvert);
-              },
-              label: Text(
-                context.tr('create_listing'),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+          ? Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                FloatingActionButton.extended(
+                  heroTag: 'match',
+                  backgroundColor: Colors.grey[800],
+                  shape: const StadiumBorder(),
+                  onPressed: () => context.pushNamed(match),
+                  label: const Text(
+                    'Eşleş',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
-              ),
+                FloatingActionButton.extended(
+                  heroTag: 'create_advert',
+                  backgroundColor: AppTheme.primaryColor,
+                  shape: const StadiumBorder(),
+                  onPressed: () => context.pushNamed(createAdvert),
+                  label: Text(
+                    context.tr('create_listing'),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
             )
           : null,
       bottomNavigationBar: SafeArea(
@@ -128,7 +145,7 @@ class _LandingViewState extends State<LandingView>
             color: Theme.of(context).scaffoldBackgroundColor,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 8,
                 offset: const Offset(0, -2),
               ),
