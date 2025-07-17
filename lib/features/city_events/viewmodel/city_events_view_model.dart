@@ -33,6 +33,11 @@ class CityEventsViewModel extends ChangeNotifier {
 
       // Önce kategorileri yükle
       _eventCategories = await _service.getEventsCategories();
+
+      // Hepsi kategorisini başa ekle
+      _eventCategories.insert(
+          0, EventCategoryModel(id: -1, name: "Hepsi", slug: "hepsi"));
+
       debugPrint("Kategoriler yüklendi: ${_eventCategories.length} adet");
 
       // Kullanıcının şehrini eşleştir
@@ -43,18 +48,12 @@ class CityEventsViewModel extends ChangeNotifier {
         if (_matchedCityId != null) {
           debugPrint('Kullanıcının şehri eşleşti. Şehir ID: $_matchedCityId');
 
-          // Bir kategori seç
-          if (_eventCategories.isNotEmpty) {
-            final firstCategory = _eventCategories.first;
-            _selectedEventCategory = firstCategory.name;
-            debugPrint(
-                "Başlangıç kategorisi seçildi: ${_selectedEventCategory} (ID: ${firstCategory.id})");
+          // İlk açılışta kategori seçili olmasın (Hepsi)
+          _selectedEventCategory = "Hepsi";
+          debugPrint("Başlangıç kategorisi: Hepsi");
 
-            // Etkinlikleri çek
-            await loadEventsForCategory(firstCategory.id, _matchedCityId!);
-          } else {
-            debugPrint("Hiç etkinlik kategorisi bulunamadı.");
-          }
+          // Tüm etkinlikleri çek
+          await loadEventsForCategory(null, _matchedCityId!);
         } else {
           debugPrint("Eşleşen şehir bulunamadı.");
         }
@@ -77,17 +76,22 @@ class CityEventsViewModel extends ChangeNotifier {
       _selectedEventCategory = categoryName;
       notifyListeners();
 
-      // Seçilen kategorinin ID'sini bul
-      final selectedCategory = _eventCategories.firstWhere(
-        (c) => c.name == categoryName,
-        orElse: () => _eventCategories.first,
-      );
-
-      debugPrint(
-          'Seçilen kategori: ${selectedCategory.name} (ID: ${selectedCategory.id})');
-
       if (_matchedCityId != null) {
-        await loadEventsForCategory(selectedCategory.id, _matchedCityId!);
+        if (categoryName == "Hepsi") {
+          // Hepsi seçiliyse categoryId null olarak gönder
+          await loadEventsForCategory(null, _matchedCityId!);
+        } else {
+          // Seçilen kategorinin ID'sini bul
+          final selectedCategory = _eventCategories.firstWhere(
+            (c) => c.name == categoryName,
+            orElse: () => _eventCategories.first,
+          );
+
+          debugPrint(
+              'Seçilen kategori: ${selectedCategory.name} (ID: ${selectedCategory.id})');
+
+          await loadEventsForCategory(selectedCategory.id, _matchedCityId!);
+        }
       } else {
         debugPrint('Şehir ID bulunamadı, etkinlikler yüklenemedi.');
       }
@@ -97,10 +101,10 @@ class CityEventsViewModel extends ChangeNotifier {
   }
 
   // Belirli bir kategori için etkinlikleri yükle
-  Future<void> loadEventsForCategory(int categoryId, int cityId) async {
+  Future<void> loadEventsForCategory(int? categoryId, int cityId) async {
     try {
       debugPrint(
-          'Etkinlikler yükleniyor... Kategori ID: $categoryId, Şehir ID: $cityId');
+          'Etkinlikler yükleniyor... Kategori ID: ${categoryId ?? "Hepsi"}, Şehir ID: $cityId');
       _isLoading = true;
       notifyListeners();
 
@@ -110,7 +114,7 @@ class CityEventsViewModel extends ChangeNotifier {
       );
 
       debugPrint(
-          'Yeni kategori için etkinlikler yüklendi. Kategori ID: $categoryId, Toplam: ${_events.length}');
+          'Etkinlikler yüklendi. Kategori: ${categoryId ?? "Hepsi"}, Toplam: ${_events.length}');
 
       _isLoading = false;
       notifyListeners();

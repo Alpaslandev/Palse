@@ -94,20 +94,6 @@ class CityEventView extends StatelessWidget {
                       ),
                     ],
                   ),
-                  if (event.venueAddress != null) ...[
-                    const SizedBox(height: 4),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 20),
-                      child: Text(
-                        event.venueAddress!,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 8),
                 ],
 
                 // Tarih bilgisi
@@ -138,17 +124,14 @@ class CityEventView extends StatelessWidget {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: event.isFree
-                            ? Colors.green[50]
-                            : AppTheme.primaryColor.withOpacity(0.1),
+                        color:
+                            AppTheme.darkHintTextColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        event.isFree ? 'Ücretsiz' : 'Ücretli',
+                        'Etkinlik.io',
                         style: TextStyle(
-                          color: event.isFree
-                              ? Colors.green[700]
-                              : AppTheme.primaryColor,
+                          color: AppTheme.darkHintTextColor,
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                         ),
@@ -164,7 +147,7 @@ class CityEventView extends StatelessWidget {
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child: const Text('Bilet Al'),
+                      child: const Text('Detaylı Bilgi'),
                     ),
                   ],
                 ),

@@ -120,12 +120,21 @@ class CityEventService {
   }
 
   Future<List<EventModel>> getEvents({
-    required int categoryId,
+    int? categoryId,
     required int cityId,
   }) async {
     final url = "https://backend.etkinlik.io/api/v2/events";
 
     try {
+      final queryParameters = <String, dynamic>{
+        'city_ids': cityId,
+      };
+
+      // Eğer kategori ID'si varsa, sorgu parametrelerine ekle
+      if (categoryId != null) {
+        queryParameters['category_ids'] = categoryId;
+      }
+
       final response = await _dio.get(
         url,
         options: Options(
@@ -135,7 +144,7 @@ class CityEventService {
             'Accept': 'application/json',
           },
         ),
-        queryParameters: {'category_ids': categoryId, 'city_ids': cityId},
+        queryParameters: queryParameters,
       );
       debugPrint('Etkinlik.io API yanıtı: ${response.data}');
 

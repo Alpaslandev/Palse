@@ -64,12 +64,13 @@ class _CityEventsViewState extends State<CityEventsView>
       children: [
         TabBar(
           controller: _tabController,
-          labelColor: AppTheme.primaryColor,
-          unselectedLabelColor: Colors.grey,
-          indicatorColor: AppTheme.primaryColor,
-          tabs: const [
-            Tab(text: 'Şehrimdeki mekanlar'),
-            Tab(text: 'Şehrimdeki etkinlikler'),
+          // Özel stil için varsayılan indicator'ı kaldır.
+          indicator: const BoxDecoration(),
+          dividerColor: Colors.transparent,
+          labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+          tabs: [
+            _buildTab('Şehrimdeki mekanlar', 0),
+            _buildTab('Şehrimdeki etkinlikler', 1),
           ],
         ),
         Expanded(
@@ -268,6 +269,34 @@ class _CityEventsViewState extends State<CityEventsView>
             ],
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildTab(String text, int index) {
+    final isSelected = _tabController.index == index;
+
+    return Tab(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? AppTheme.primaryColor : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          border: isSelected
+              ? null
+              : Border.all(color: Colors.grey.shade300, width: 1.5),
+        ),
+        child: Center(
+          child: Text(
+            text,
+            style: TextStyle(
+              fontSize: 13,
+              color: isSelected ? Colors.white : Colors.grey[700],
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+            ),
+          ),
+        ),
       ),
     );
   }
