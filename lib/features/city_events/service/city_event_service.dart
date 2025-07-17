@@ -52,6 +52,8 @@ class CityEventService {
         options: Options(
           headers: {
             'X-Etkinlik-Token': _etkinlikIoKey,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
           },
         ),
       );
@@ -59,10 +61,9 @@ class CityEventService {
       debugPrint('Etkinlik.io API yanıtı: ${response.data}');
 
       if (response.statusCode == 200) {
-        final data = response.data;
-        if (data != null && data['data'] != null) {
+        if (response.data != null) {
           return List<EventCategoryModel>.from(
-            data['data'].map((e) => EventCategoryModel.fromJson(e)),
+            (response.data as List).map((e) => EventCategoryModel.fromJson(e)),
           );
         }
       }
