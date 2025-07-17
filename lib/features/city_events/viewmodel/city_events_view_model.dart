@@ -11,6 +11,7 @@ class CityEventsViewModel extends ChangeNotifier {
   List<EventCategoryModel> _eventCities = [];
   bool _isLoading = false;
   String? _selectedEventCategory;
+  String? _matchedCityId;
 
   // Getters
   List<Map<String, dynamic>> get cityEvents => _cityEvents;
@@ -18,6 +19,7 @@ class CityEventsViewModel extends ChangeNotifier {
   List<EventCategoryModel> get eventCities => _eventCities;
   bool get isLoading => _isLoading;
   String? get selectedEventCategory => _selectedEventCategory;
+  String? get matchedCityId => _matchedCityId;
 
   // Etkinlik kategorilerini yükle
   Future<void> loadEventCategories(Customer user) async {
@@ -33,6 +35,18 @@ class CityEventsViewModel extends ChangeNotifier {
       if (_eventCategories.isNotEmpty) {
         _selectedEventCategory = _eventCategories.first.name;
         debugPrint('Seçili kategori: $_selectedEventCategory');
+      }
+
+      // Kullanıcının şehrini eşleştir
+      if (user.location?.city != null) {
+        _matchedCityId =
+            await _service.findMatchingCityId(user.location!.city!);
+        if (_matchedCityId != null) {
+          debugPrint('Kullanıcının şehri için eşleşen ID: $_matchedCityId');
+        } else {
+          debugPrint(
+              'Kullanıcının şehri için eşleşme bulunamadı: ${user.location!.city}');
+        }
       }
     } catch (e) {
       debugPrint('Kategoriler yüklenirken hata: $e');

@@ -11,6 +11,49 @@ class CityEventService {
     _dio.options.headers['Content-Type'] = 'application/json';
   }
 
+  // String benzerlik oranını hesaplayan yardımcı metod
+  double _calculateSimilarity(String s1, String s2) {
+    s1 = s1.toLowerCase().trim();
+    s2 = s2.toLowerCase().trim();
+
+    if (s1 == s2) return 1.0;
+    if (s1.isEmpty || s2.isEmpty) return 0.0;
+
+    int matches = 0;
+    int maxLength = s1.length > s2.length ? s1.length : s2.length;
+
+    for (int i = 0; i < s1.length && i < s2.length; i++) {
+      if (s1[i] == s2[i]) matches++;
+    }
+
+    return matches / maxLength;
+  }
+
+  // Kullanıcının şehrini API şehirleriyle eşleştiren metod
+  Future<String?> findMatchingCityId(String userCity) async {
+    try {
+      final cities = await getEventCities();
+      String? matchedCityId;
+      double highestSimilarity = 0.0;
+
+      for (var city in cities) {
+        double similarity = _calculateSimilarity(userCity, city.name);
+
+        if (similarity > 0.9 && similarity > highestSimilarity) {
+          highestSimilarity = similarity;
+          matchedCityId = city.id.toString();
+          debugPrint(
+              'Eşleşen şehir bulundu: ${city.name} (ID: ${city.id}) - Benzerlik: ${(similarity * 100).toStringAsFixed(2)}%');
+        }
+      }
+
+      return matchedCityId;
+    } catch (e) {
+      debugPrint('Şehir eşleştirme hatası: $e');
+      return null;
+    }
+  }
+
   Future<List<Map<String, dynamic>>> getNearbyPlaces({
     required double lat,
     required double lng,
