@@ -8,12 +8,14 @@ class CityEventsViewModel extends ChangeNotifier {
   final CityEventService _service = CityEventService();
   List<Map<String, dynamic>> _cityEvents = [];
   List<EventCategoryModel> _eventCategories = [];
+  List<EventCategoryModel> _eventCities = [];
   bool _isLoading = false;
   String? _selectedEventCategory;
 
   // Getters
   List<Map<String, dynamic>> get cityEvents => _cityEvents;
   List<EventCategoryModel> get eventCategories => _eventCategories;
+  List<EventCategoryModel> get eventCities => _eventCities;
   bool get isLoading => _isLoading;
   String? get selectedEventCategory => _selectedEventCategory;
 
@@ -25,6 +27,7 @@ class CityEventsViewModel extends ChangeNotifier {
 
       debugPrint('Kategoriler yükleniyor...');
       _eventCategories = await _service.getEventsCategories();
+      _eventCities = await _service.getEventCities();
       debugPrint('Yüklenen kategori sayısı: ${_eventCategories.length}');
 
       if (_eventCategories.isNotEmpty) {

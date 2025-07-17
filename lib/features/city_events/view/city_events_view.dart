@@ -84,6 +84,61 @@ class _CityEventsViewState extends State<CityEventsView>
     );
   }
 
+  // Ortak başlık ve dropdown widget'ı
+  Widget _buildHeaderWithDropdown({
+    required String title,
+    required String value,
+    required List<String> items,
+    required Function(String?) onChanged,
+    String hintText = 'Seçiniz',
+    Widget Function(String)? itemBuilder,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Row(
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Container(
+              height: 40,
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.shade300),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: value,
+                  isExpanded: true,
+                  hint: Text(hintText),
+                  items: items.map((item) {
+                    return DropdownMenuItem<String>(
+                      value: item,
+                      child: itemBuilder?.call(item) ??
+                          Text(
+                            item,
+                            style: const TextStyle(fontSize: 14),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                    );
+                  }).toList(),
+                  onChanged: onChanged,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // Şehrimdeki mekanları gösteren sekme
   Widget _buildVenuesTab() {
     return ChangeNotifierProvider.value(
@@ -103,49 +158,25 @@ class _CityEventsViewState extends State<CityEventsView>
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: Row(
-                  children: [
-                    const Text(
-                      "Şehrimde Gidilecek Yerler",
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const Spacer(),
-                    Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey.shade300),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: DropdownButton<String>(
-                        value: selectedType,
-                        underline: const SizedBox(),
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        items: placeTypes.map((type) {
-                          return DropdownMenuItem<String>(
-                            value: type,
-                            child: Text(
-                              type[0].toUpperCase() + type.substring(1),
-                              style: const TextStyle(fontSize: 14),
-                            ),
-                          );
-                        }).toList(),
-                        onChanged: (String? newValue) async {
-                          if (newValue != null) {
-                            setState(() {
-                              selectedType = newValue;
-                            });
-                            await _viewModel.loadCityEvents(widget.user,
-                                type: selectedType);
-                          }
-                        },
-                      ),
-                    ),
-                  ],
+              _buildHeaderWithDropdown(
+                title: "Şehrimde Gidilecek Yerler",
+                value: selectedType,
+                items: placeTypes
+                    .map((type) => type)
+                    .toList(), // Değerleri olduğu gibi bırakıyoruz
+                onChanged: (String? newValue) async {
+                  if (newValue != null) {
+                    setState(() {
+                      selectedType = newValue;
+                    });
+                    await _viewModel.loadCityEvents(widget.user,
+                        type: selectedType);
+                  }
+                },
+                itemBuilder: (String type) => Text(
+                  type[0].toUpperCase() + type.substring(1),
+                  style: const TextStyle(fontSize: 14),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               Expanded(
@@ -195,9 +226,6 @@ class _CityEventsViewState extends State<CityEventsView>
       value: _viewModel,
       child: Consumer<CityEventsViewModel>(
         builder: (context, viewModel, child) {
-          debugPrint('Events tab building... Loading: ${viewModel.isLoading}');
-          debugPrint('Categories count: ${viewModel.eventCategories.length}');
-
           if (viewModel.isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
@@ -213,50 +241,16 @@ class _CityEventsViewState extends State<CityEventsView>
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  children: [
-                    const Text(
-                      "Şehrimde Ne Var?",
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const Spacer(),
-                    Container(
-                      constraints: const BoxConstraints(minWidth: 150),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey.shade300),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: viewModel.selectedEventCategory,
-                          isExpanded: true,
-                          hint: const Text('Kategori Seç'),
-                          items: categories.map((category) {
-                            return DropdownMenuItem<String>(
-                              value: category.name,
-                              child: Text(
-                                category.name,
-                                style: const TextStyle(fontSize: 14),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            );
-                          }).toList(),
-                          onChanged: (String? newValue) {
-                            if (newValue != null) {
-                              viewModel.updateSelectedEventCategory(newValue);
-                            }
-                          },
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+              _buildHeaderWithDropdown(
+                title: "Şehrimde Ne Var?",
+                value: viewModel.selectedEventCategory ?? categories.first.name,
+                items: categories.map((category) => category.name).toList(),
+                onChanged: (String? newValue) {
+                  if (newValue != null) {
+                    viewModel.updateSelectedEventCategory(newValue);
+                  }
+                },
+                hintText: 'Kategori Seç',
               ),
               const Expanded(
                 child: Center(

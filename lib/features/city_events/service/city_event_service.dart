@@ -74,4 +74,66 @@ class CityEventService {
       rethrow;
     }
   }
+
+  Future<List<Map<String, dynamic>>> getEvents({
+    required String categoryId,
+    required String cityId,
+  }) async {
+    final url = "https://backend.etkinlik.io/api/v2/events";
+
+    try {
+      final response = await _dio.get(
+        url,
+        options: Options(
+          headers: {
+            'X-Etkinlik-Token': _etkinlikIoKey,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        ),
+        queryParameters: {'category_ids': categoryId, 'city_ids': cityId},
+      );
+      debugPrint('Etkinlik.io API yanıtı: ${response.data}');
+      if (response.statusCode == 200) {
+        if (response.data != null) {
+          return List<Map<String, dynamic>>.from(
+            (response.data as List).map((e) => e),
+          );
+        }
+      }
+
+      throw Exception("Kategori verisi alınamadı: ${response.statusCode}");
+    } catch (e) {
+      debugPrint('Etkinlik.io API hatası: $e');
+      rethrow;
+    }
+  }
+
+  Future<List<EventCategoryModel>> getEventCities() async {
+    final url = "https://backend.etkinlik.io/api/v2/cities";
+
+    try {
+      final response = await _dio.get(
+        url,
+        options: Options(
+          headers: {
+            'X-Etkinlik-Token': _etkinlikIoKey,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        ),
+      );
+      if (response.statusCode == 200) {
+        if (response.data != null) {
+          return List<EventCategoryModel>.from(
+            (response.data as List).map((e) => EventCategoryModel.fromJson(e)),
+          );
+        }
+      }
+      throw Exception("Şehir verisi alınamadı: ${response.statusCode}");
+    } catch (e) {
+      debugPrint('Etkinlik.io API hatası: $e');
+      rethrow;
+    }
+  }
 }
