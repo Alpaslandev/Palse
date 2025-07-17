@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:palseapp/core/localization/app_localizations.dart';
+import 'package:palseapp/core/models/advert.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
@@ -9,6 +10,7 @@ import 'package:palseapp/core/utils/app_theme.dart';
 import 'package:palseapp/core/widgets/advert/advert_card_view.dart';
 import 'package:palseapp/core/widgets/advert/advert_card_view_model.dart';
 import 'package:palseapp/core/keys/global_keys.dart';
+import 'package:palseapp/features/city_events/view/city_events_view.dart';
 import 'package:palseapp/features/home/viewmodel/home_view_model.dart';
 import 'package:palseapp/features/home/widgets/explore_tab_bar.dart';
 import 'package:palseapp/features/story/view/storys_view.dart';
@@ -143,6 +145,7 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
+            spacing: 8,
             children: [
               GestureDetector(
                 onTap: () {
@@ -151,7 +154,7 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                 },
                 child: Text("Keşfet",
                     style: TextStyle(
-                      fontSize: 20,
+                      fontSize: 14,
                       fontWeight: _selectedHeaderIndex == 0
                           ? FontWeight.bold
                           : FontWeight.w400,
@@ -160,7 +163,6 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                           : Theme.of(context).textTheme.bodyLarge?.color,
                     )),
               ),
-              const SizedBox(width: 16),
               GestureDetector(
                 onTap: () {
                   // Takiptekiler başlığına geçiş
@@ -168,7 +170,7 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                 },
                 child: Text("Takiptekiler",
                     style: TextStyle(
-                      fontSize: 20,
+                      fontSize: 14,
                       fontWeight: _selectedHeaderIndex == 1
                           ? FontWeight.bold
                           : FontWeight.w400,
@@ -177,7 +179,6 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                           : Theme.of(context).textTheme.bodyLarge?.color,
                     )),
               ),
-              const SizedBox(width: 16),
               GestureDetector(
                 onTap: () {
                   // Şehrimde Ne Var başlığına geçiş
@@ -185,7 +186,7 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                 },
                 child: Text("Şehrimde Ne Var",
                     style: TextStyle(
-                      fontSize: 20,
+                      fontSize: 14,
                       fontWeight: _selectedHeaderIndex == 2
                           ? FontWeight.bold
                           : FontWeight.w400,
@@ -274,56 +275,80 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
             ),
           );
         } else if (_selectedHeaderIndex == 1) {
-          // Takiptekiler başlığı - kendi içeriği
-          return SliverFillRemaining(
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.people_outline,
-                      size: 64, color: AppTheme.primaryColor),
-                  const SizedBox(height: 16),
-                  Text(
-                    "Takiptekiler",
-                    style: const TextStyle(
-                        fontSize: 20, fontWeight: FontWeight.bold),
+          // Takiptekiler başlığı - takip edilen kişilerin ilanları
+          return FutureBuilder<List<Advert>>(
+            future: viewModel.loadFollowingsAdverts(_user),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const SliverFillRemaining(
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+
+              if (snapshot.hasError) {
+                return SliverFillRemaining(
+                  child: Center(
+                    child: Text(
+                      'Bir hata oluştu: ${snapshot.error}',
+                      style: TextStyle(color: Colors.red),
+                    ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Takip ettiğin kişilerin ilanları burada görünecek',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        color: Theme.of(context).textTheme.bodySmall?.color),
+                );
+              }
+
+              final adverts = snapshot.data ?? [];
+
+              if (adverts.isEmpty) {
+                return SliverFillRemaining(
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.people_outline,
+                            size: 64, color: AppTheme.primaryColor),
+                        const SizedBox(height: 16),
+                        Text(
+                          "Takiptekiler",
+                          style: const TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Takip ettiğin kişilerin ilanları burada görünecek',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              color:
+                                  Theme.of(context).textTheme.bodySmall?.color),
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-              ),
-            ),
+                );
+              }
+
+              // Takip edilen kişilerin ilanlarını göster
+              return SliverPadding(
+                padding: const EdgeInsets.fromLTRB(0, 12, 0, 80),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final advert = adverts[index];
+                      return AdvertCardView(
+                        key: ValueKey('${advert.advertID}_following'),
+                        advert: advert,
+                        mode: AdvertCardMode.home,
+                      );
+                    },
+                    childCount: adverts.length,
+                  ),
+                ),
+              );
+            },
           );
         } else {
-          // Şehrimde Ne Var başlığı - kendi içeriği
+          // Şehrimde Ne Var başlığı - CityEventsView
           return SliverFillRemaining(
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.location_city,
-                      size: 64, color: AppTheme.primaryColor),
-                  const SizedBox(height: 16),
-                  Text(
-                    "Şehrimde Ne Var",
-                    style: const TextStyle(
-                        fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Şehrinizdeki etkinlikler burada görünecek',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        color: Theme.of(context).textTheme.bodySmall?.color),
-                  ),
-                ],
-              ),
-            ),
+            child: CityEventsView(user: _user),
           );
         }
       },

@@ -105,6 +105,23 @@ class HomeViewModel extends ChangeNotifier {
     }
   }
 
+  // Takip edilen kişilerin ilanlarını yükle
+  Future<List<Advert>> loadFollowingsAdverts(Customer user) async {
+    try {
+      // Takip edilen kişilerin ID'lerini al
+      final followingIds = user.followings;
+
+      // Takip edilen kişilerin ilanlarını getir
+      final adverts =
+          await _advertService.fetchFollowingUserAdverts(followingIds);
+
+      return adverts;
+    } catch (e) {
+      debugPrint('Takip edilen kişilerin ilanları yüklenirken hata: $e');
+      return [];
+    }
+  }
+
   // Tab loading durumunu güncelle
   void _setTabLoading(int tabIndex, bool isLoading) {
     _tabLoadingStates[tabIndex] = isLoading;

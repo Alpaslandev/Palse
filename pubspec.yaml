@@ -21,7 +21,6 @@ dependencies:
   google_sign_in: ^6.2.2
   firebase_analytics: ^11.4.5
   firebase_remote_config: ^5.4.5
-  
 
   provider: ^6.1.2
   image_picker: ^1.1.2
@@ -31,11 +30,10 @@ dependencies:
 
   geolocator: ^13.0.2
   geocoding: ^3.0.0
-  flutter_map: ^8.0.0
 
   dio: ^5.8.0+1
 
-  flutter_svg: ^2.0.17
+  flutter_svg: ^2.2.0
 
   url_launcher: ^6.3.1
   flutter_local_notifications: ^19.3.0
@@ -57,7 +55,6 @@ dev_dependencies:
 
   package_rename: ^1.8.0
 
- 
   flutter_lints: ^5.0.0
 
 flutter:

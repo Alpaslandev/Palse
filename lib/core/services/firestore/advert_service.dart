@@ -166,6 +166,53 @@ class AdvertService {
     }
   }
 
+  // Takip edilen kişilerin ilanlarını getir
+  Future<List<Advert>> fetchFollowingUserAdverts(
+      List<String>? followingIds) async {
+    try {
+      // Takip edilen kişi yoksa boş liste döndür
+      if (followingIds == null || followingIds.isEmpty) {
+        return [];
+      }
+
+      debugPrint('Takip edilen kullanıcı sayısı: ${followingIds.length}');
+
+      // Firestore'da whereIn sorgusu en fazla 10 öğe ile çalışır
+      // Bu yüzden takip edilen kişileri 10'arlı gruplar halinde sorgulamalıyız
+      List<Advert> allAdverts = [];
+
+      // Takip edilen kişileri 10'arlı gruplara böl
+      for (int i = 0; i < followingIds.length; i += 10) {
+        final endIndex =
+            (i + 10 < followingIds.length) ? i + 10 : followingIds.length;
+        final batch = followingIds.sublist(i, endIndex);
+
+        // Bu gruptaki kullanıcıların ilanlarını sorgula
+        final query = _firestore
+            .collection('events')
+            .where('creatorUserID', whereIn: batch)
+            .orderBy('isCreatorPremium',
+                descending: true) // Premium ilanlar önce
+            .orderBy('createdAt',
+                descending: true); // Aynı premium durumunda yeni ilanlar önce
+
+        final querySnapshot = await query.get();
+        final batchAdverts = querySnapshot.docs
+            .map((doc) => Advert.fromJson(doc.data(), doc.id))
+            .toList();
+
+        allAdverts.addAll(batchAdverts);
+      }
+
+      debugPrint(
+          'Takip edilen kişilerin toplam ilan sayısı: ${allAdverts.length}');
+      return allAdverts;
+    } catch (e) {
+      debugPrint('Takip edilen kişilerin ilanları çekilirken hata: $e');
+      return [];
+    }
+  }
+
 // İlan adverts koleksiyonlarında arar
   Future<Advert?> fetchAdvertById(String advertID) async {
     try {
