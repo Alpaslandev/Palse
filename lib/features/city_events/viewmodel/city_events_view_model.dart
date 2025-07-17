@@ -1,52 +1,75 @@
 import 'package:flutter/material.dart';
 import 'package:palseapp/core/models/customer.dart';
+import 'package:palseapp/features/city_events/model/event_category_model.dart';
 import 'package:palseapp/features/city_events/service/city_event_service.dart';
 
-// Şehrimdeki etkinlikler için ViewModel
+// Şehir etkinlikleri için view model
 class CityEventsViewModel extends ChangeNotifier {
-  final CityEventService _cityEventService = CityEventService();
-
+  final CityEventService _service = CityEventService();
   List<Map<String, dynamic>> _cityEvents = [];
+  List<EventCategoryModel> _eventCategories = [];
   bool _isLoading = false;
+  String? _selectedEventCategory;
 
-  // Getter'lar
+  // Getters
   List<Map<String, dynamic>> get cityEvents => _cityEvents;
+  List<EventCategoryModel> get eventCategories => _eventCategories;
   bool get isLoading => _isLoading;
+  String? get selectedEventCategory => _selectedEventCategory;
 
-  // Şehirdeki etkinlikleri yükle
-  Future<void> loadCityEvents(
-    Customer user, {
-    required String type,
-  }) async {
-    if (_isLoading) return;
-
-    _setLoading(true);
-
+  // Etkinlik kategorilerini yükle
+  Future<void> loadEventCategories(Customer user) async {
     try {
-      _cityEvents = await _cityEventService.getNearbyPlaces(
-          lat: user.location!.lat, lng: user.location!.lon, type: type);
+      _isLoading = true;
+      notifyListeners();
 
-      debugPrint('Şehirdeki etkinlik sayısı: ${_cityEvents.length}');
+      debugPrint('Kategoriler yükleniyor...');
+      _eventCategories = await _service.getEventsCategories();
+      debugPrint('Yüklenen kategori sayısı: ${_eventCategories.length}');
+
+      if (_eventCategories.isNotEmpty) {
+        _selectedEventCategory = _eventCategories.first.name;
+        debugPrint('Seçili kategori: $_selectedEventCategory');
+      }
     } catch (e) {
-      debugPrint('Şehirdeki etkinlikler yüklenirken hata: $e');
+      debugPrint('Kategoriler yüklenirken hata: $e');
+      _eventCategories = [];
     } finally {
-      _setLoading(false);
+      _isLoading = false;
+      notifyListeners();
     }
   }
 
-  String generatePhotoUrl(String photoReference) {
-    return _cityEventService.generatePhotoUrl(photoReference);
-  }
-
-  // Yükleme durumunu güncelle
-  void _setLoading(bool loading) {
-    _isLoading = loading;
+  // Seçili kategoriyi güncelle
+  void updateSelectedEventCategory(String category) {
+    _selectedEventCategory = category;
     notifyListeners();
   }
 
-  // Yenile
-  Future<void> refresh(Customer user, {required String type}) async {
-    _cityEvents.clear();
-    await loadCityEvents(user, type: type);
+  // Mevcut metodlar...
+  String generatePhotoUrl(String photoReference) {
+    return _service.generatePhotoUrl(photoReference);
+  }
+
+  Future<void> loadCityEvents(Customer user, {required String type}) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      final lat = user.location?.lat ?? 41.0082;
+      final lng = user.location?.lon ?? 28.9784;
+
+      _cityEvents = await _service.getNearbyPlaces(
+        lat: lat,
+        lng: lng,
+        type: type,
+      );
+    } catch (e) {
+      debugPrint('Mekanlar yüklenirken hata: $e');
+      _cityEvents = [];
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 }

@@ -1,3 +1,4 @@
+// Etkinlik kategorileri için model sınıfı
 class EventCategoryModel {
   final int id;
   final String name;
@@ -11,9 +12,9 @@ class EventCategoryModel {
 
   factory EventCategoryModel.fromJson(Map<String, dynamic> json) {
     return EventCategoryModel(
-      id: json['id'],
-      name: json['name'],
-      slug: json['slug'],
+      id: json['id'] as int,
+      name: json['name'] as String,
+      slug: json['slug'] as String,
     );
   }
 }

@@ -7,6 +7,10 @@ class CityEventService {
   final String _apiKey = 'AIzaSyC8PCN-nERTdquXI0Ueyl_DL6gP1QQrg6M';
   final String _etkinlikIoKey = '32b8cd063ea854ffbf510af8e10a2899';
 
+  CityEventService() {
+    _dio.options.headers['Content-Type'] = 'application/json';
+  }
+
   Future<List<Map<String, dynamic>>> getNearbyPlaces({
     required double lat,
     required double lng,
@@ -24,7 +28,7 @@ class CityEventService {
     });
 
     if (response.statusCode == 200 && response.data['status'] == "OK") {
-      debugPrint(response.data.toString());
+      //  debugPrint(response.data.toString());
       return List<Map<String, dynamic>>.from(response.data['results']);
     } else {
       throw Exception("Places API hatası: ${response.data['status']}");
@@ -39,21 +43,34 @@ class CityEventService {
         "&key=$apiKey";
   }
 
-  Future<List<EventCategoryModel>> getEventsCategories({
-    required String city,
-  }) async {
+  Future<List<EventCategoryModel>> getEventsCategories() async {
     final url = "https://backend.etkinlik.io/api/v2/categories";
-    final response = await _dio.get(url, queryParameters: {
-      "city": city,
-      "key": _etkinlikIoKey,
-    });
 
-    if (response.statusCode == 200 && response.data['status'] == "OK") {
-      return List<EventCategoryModel>.from(
-        response.data['data'].map((e) => EventCategoryModel.fromJson(e)),
+    try {
+      final response = await _dio.get(
+        url,
+        options: Options(
+          headers: {
+            'X-Etkinlik-Token': _etkinlikIoKey,
+          },
+        ),
       );
-    } else {
-      throw Exception("Events API hatası: ${response.data['status']}");
+
+      debugPrint('Etkinlik.io API yanıtı: ${response.data}');
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data != null && data['data'] != null) {
+          return List<EventCategoryModel>.from(
+            data['data'].map((e) => EventCategoryModel.fromJson(e)),
+          );
+        }
+      }
+
+      throw Exception("Kategori verisi alınamadı: ${response.statusCode}");
+    } catch (e) {
+      debugPrint('Etkinlik.io API hatası: $e');
+      rethrow;
     }
   }
 }

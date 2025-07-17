@@ -40,6 +40,7 @@ class _CityEventsViewState extends State<CityEventsView>
     _viewModel = CityEventsViewModel();
     _tabController = TabController(length: 2, vsync: this);
     _loadCityEvents();
+    _loadEventCategories();
   }
 
   @override
@@ -50,6 +51,10 @@ class _CityEventsViewState extends State<CityEventsView>
 
   Future<void> _loadCityEvents() async {
     await _viewModel.loadCityEvents(widget.user, type: selectedType);
+  }
+
+  Future<void> _loadEventCategories() async {
+    await _viewModel.loadEventCategories(widget.user);
   }
 
   @override
@@ -184,67 +189,84 @@ class _CityEventsViewState extends State<CityEventsView>
     );
   }
 
-  // Şehrimdeki etkinlikleri gösterecek boş sekme
+  // Şehrimdeki etkinlikleri gösterecek sekme
   Widget _buildEventsTab() {
     return ChangeNotifierProvider.value(
       value: _viewModel,
       child: Consumer<CityEventsViewModel>(
         builder: (context, viewModel, child) {
+          debugPrint('Events tab building... Loading: ${viewModel.isLoading}');
+          debugPrint('Categories count: ${viewModel.eventCategories.length}');
+
           if (viewModel.isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final events = viewModel.cityEvents;
+          final categories = viewModel.eventCategories;
 
-          if (events.isEmpty) {
-            return _buildEmptyState();
+          if (categories.isEmpty) {
+            return const Center(
+              child: Text('Kategoriler yüklenemedi'),
+            );
           }
+
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: const Text(
-                  "Şehrimde Ne Var?",
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  children: [
+                    const Text(
+                      "Şehrimde Ne Var?",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const Spacer(),
+                    Container(
+                      constraints: const BoxConstraints(minWidth: 150),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: viewModel.selectedEventCategory,
+                          isExpanded: true,
+                          hint: const Text('Kategori Seç'),
+                          items: categories.map((category) {
+                            return DropdownMenuItem<String>(
+                              value: category.name,
+                              child: Text(
+                                category.name,
+                                style: const TextStyle(fontSize: 14),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (String? newValue) {
+                            if (newValue != null) {
+                              viewModel.updateSelectedEventCategory(newValue);
+                            }
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: events.length,
-                  shrinkWrap: true,
-                  itemBuilder: (context, index) {
-                    final place = events[index];
-                    final name = place['name'] ?? 'İsimsiz';
-                    final location = place['geometry']['location'];
-                    final lat = location['lat'] as double;
-                    final lng = location['lng'] as double;
-                    final photoRef =
-                        (place['photos'] as List?)?.first['photo_reference'];
-                    final types = place['types'] != null &&
-                            (place['types'] as List).isNotEmpty
-                        ? (place['types'] as List).first.toString()
-                        : 'Tür bilgisi yok';
-
-                    final photoUrl = photoRef != null
-                        ? viewModel.generatePhotoUrl(photoRef)
-                        : null;
-
-                    final iconUrl = place['icon'];
-
-                    return CityVenueView(
-                      name: name,
-                      types: types,
-                      photoUrl: photoUrl,
-                      iconUrl: iconUrl,
-                      lat: lat,
-                      lng: lng,
-                    );
-                  },
+              const Expanded(
+                child: Center(
+                  child: Text(
+                    'Etkinlikler yakında burada listelenecek!',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey,
+                    ),
+                  ),
                 ),
               ),
             ],
