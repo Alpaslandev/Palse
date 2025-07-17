@@ -73,22 +73,34 @@ class CityEventsViewModel extends ChangeNotifier {
 
   // Seçili kategoriyi güncelle ve etkinlikleri yeniden yükle
   Future<void> updateSelectedEventCategory(String categoryName) async {
-    _selectedEventCategory = categoryName;
-    notifyListeners();
+    try {
+      _selectedEventCategory = categoryName;
+      notifyListeners();
 
-    final selectedCategory = _eventCategories.firstWhere(
-      (c) => c.name == categoryName,
-      orElse: () => _eventCategories.first,
-    );
+      // Seçilen kategorinin ID'sini bul
+      final selectedCategory = _eventCategories.firstWhere(
+        (c) => c.name == categoryName,
+        orElse: () => _eventCategories.first,
+      );
 
-    if (_matchedCityId != null) {
-      await loadEventsForCategory(selectedCategory.id, _matchedCityId!);
+      debugPrint(
+          'Seçilen kategori: ${selectedCategory.name} (ID: ${selectedCategory.id})');
+
+      if (_matchedCityId != null) {
+        await loadEventsForCategory(selectedCategory.id, _matchedCityId!);
+      } else {
+        debugPrint('Şehir ID bulunamadı, etkinlikler yüklenemedi.');
+      }
+    } catch (e) {
+      debugPrint('Kategori güncellenirken hata: $e');
     }
   }
 
   // Belirli bir kategori için etkinlikleri yükle
   Future<void> loadEventsForCategory(int categoryId, int cityId) async {
     try {
+      debugPrint(
+          'Etkinlikler yükleniyor... Kategori ID: $categoryId, Şehir ID: $cityId');
       _isLoading = true;
       notifyListeners();
 
