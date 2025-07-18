@@ -580,4 +580,26 @@ const Map<String, String> tr = {
   'to_next_premium': 'Bir sonraki premium ödüle',
   'premium_thresholds': 'Premium Eşikler',
   'total': 'Toplam',
+  'home_header_explore': 'Keşfet',
+  'home_header_following': 'Takiptekiler',
+  'home_header_city_events': 'Şehrimde Ne Var',
+  'home_header_refresh': 'Yenile',
+  'home_following_title': 'Takiptekiler',
+  'home_following_empty_message':
+      'Takip ettiğin kişilerin ilanları burada görünecek',
+  'home_error_message': 'Bir hata oluştu: {error}',
+
+  // Eşleşme Ekranı
+  'match_title': 'Eşleş',
+  'match_login_required': 'Giriş yapmalısınız.',
+  'match_history': 'Eşleşme Geçmişi',
+  'match_history_tooltip': 'Geçmiş',
+  'match_date': 'Eşleşme Tarihi: {date}',
+  'match_no_matches': 'Henüz kimseyle eşleşmedin.',
+  'match_find_someone': 'Hadi yeni birini bul!',
+  'match_next_match': 'Sonraki Eşleşme: {date}',
+  'match_find_new': 'Yeni Eşleşme Bul',
+  'match_premium_tired': 'Beklemekten Sıkıldın mı?',
+  'match_premium_info':
+      'Premium üye olarak hemen yeni eşleşmeler bulabilirsin!',
 };

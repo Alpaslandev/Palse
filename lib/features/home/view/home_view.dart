@@ -152,7 +152,7 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                   // Keşfet başlığına geçiş
                   _onHeaderSelected(0);
                 },
-                child: Text("Keşfet",
+                child: Text(context.tr("home_header_explore"),
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: _selectedHeaderIndex == 0
@@ -168,7 +168,7 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                   // Takiptekiler başlığına geçiş
                   _onHeaderSelected(1);
                 },
-                child: Text("Takiptekiler",
+                child: Text(context.tr("home_header_following"),
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: _selectedHeaderIndex == 1
@@ -184,7 +184,7 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                   // Şehrimde Ne Var başlığına geçiş
                   _onHeaderSelected(2);
                 },
-                child: Text("Şehrimde Ne Var",
+                child: Text(context.tr("home_header_city_events"),
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: _selectedHeaderIndex == 2
@@ -203,7 +203,7 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                 onPressed: () =>
                     _viewModel.refreshTab(_user, _exploreTabController.index),
                 icon: const Icon(Icons.refresh),
-                tooltip: 'Yenile',
+                tooltip: context.tr('home_header_refresh'),
               ),
               IconButton(
                 onPressed: () => context.pushNamed(filter),
@@ -289,7 +289,9 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                 return SliverFillRemaining(
                   child: Center(
                     child: Text(
-                      'Bir hata oluştu: ${snapshot.error}',
+                      context
+                          .tr('home_error_message')
+                          .replaceAll('{error}', snapshot.error.toString()),
                       style: TextStyle(color: Colors.red),
                     ),
                   ),
@@ -308,13 +310,13 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                             size: 64, color: AppTheme.primaryColor),
                         const SizedBox(height: 16),
                         Text(
-                          "Takiptekiler",
+                          context.tr('home_following_title'),
                           style: const TextStyle(
                               fontSize: 20, fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Takip ettiğin kişilerin ilanları burada görünecek',
+                          context.tr('home_following_empty_message'),
                           textAlign: TextAlign.center,
                           style: TextStyle(
                               color:

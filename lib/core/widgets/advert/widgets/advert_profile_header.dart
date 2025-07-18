@@ -21,6 +21,7 @@ class AdvertProfileHeader extends StatelessWidget {
     required this.isFollowRequestSent,
     required this.isLoading,
     required this.onFollowTap,
+    this.isFriendProfile = false,
   });
 
   final Customer? customer;
@@ -30,6 +31,7 @@ class AdvertProfileHeader extends StatelessWidget {
   final bool isFollowRequestSent;
   final bool isLoading;
   final VoidCallback onFollowTap;
+  final bool isFriendProfile;
 
   @override
   Widget build(BuildContext context) {
@@ -39,8 +41,9 @@ class AdvertProfileHeader extends StatelessWidget {
     }
 
     return InkWell(
-      onTap: () =>
-          context.pushNamed(Routes.friendProfile, extra: customer!.userID),
+      onTap: () => !isFriendProfile
+          ? context.pushNamed(Routes.friendProfile, extra: customer!.userID)
+          : null,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8.0),
         child: Column(

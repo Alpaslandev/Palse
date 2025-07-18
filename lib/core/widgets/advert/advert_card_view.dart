@@ -79,6 +79,7 @@ class AdvertCardView extends StatelessWidget {
                   isFollowRequestSent: viewModel.isFollowRequestSent,
                   isLoading: viewModel.isLoading,
                   onFollowTap: () async => await viewModel.toggleFollow(),
+                  isFriendProfile: mode == AdvertCardMode.friendProfile,
                 ),
 
                 // İlan Detayları

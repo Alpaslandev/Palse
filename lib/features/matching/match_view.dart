@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/provider/auth_provider.dart';
 import 'package:palseapp/core/routes/routes.dart';
+import 'package:palseapp/core/routes/routes.dart' as Routes;
 import 'package:palseapp/core/widgets/animated_list_view.dart';
 import 'package:palseapp/features/matching/match_view_model.dart';
 import 'package:provider/provider.dart';
@@ -16,8 +18,8 @@ class MatchView extends StatelessWidget {
     final user = context.watch<AuthProvider>().user;
     final bool isPremium = user?.isPremium ?? false;
     if (user == null) {
-      return const Scaffold(
-        body: Center(child: Text('Giriş yapmalısınız.')),
+      return Scaffold(
+        body: Center(child: Text(context.tr('match_login_required'))),
       );
     }
 
@@ -30,7 +32,7 @@ class MatchView extends StatelessWidget {
         builder: (context, viewModel, child) {
           return Scaffold(
             appBar: AppBar(
-              title: const Text('Eşleşmeler'),
+              title: Text(context.tr('match_title')),
               actions: [
                 // Geçmiş butonu
                 IconButton(
@@ -67,7 +69,7 @@ class MatchView extends StatelessWidget {
                                   const Icon(Icons.history, size: 24),
                                   const SizedBox(width: 12),
                                   Text(
-                                    'Eşleşme Geçmişi',
+                                    context.tr('match_history'),
                                     style: Theme.of(context)
                                         .textTheme
                                         .titleLarge
@@ -97,29 +99,49 @@ class MatchView extends StatelessWidget {
                                     ),
                                     title: Text(match.name ?? ''),
                                     subtitle: Text(
-                                      'Eşleşme Tarihi: ${DateFormat.yMMMd('tr_TR').format(match.matchedAt)}',
+                                      context.tr('match_date').replaceAll(
+                                          '{date}',
+                                          DateFormat.yMMMd('tr_TR')
+                                              .format(match.matchedAt)),
                                       style: TextStyle(
                                         color: Colors.grey.shade600,
                                         fontSize: 13,
                                       ),
                                     ),
-                                    trailing: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 6,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Theme.of(context)
-                                            .primaryColor
-                                            .withValues(alpha: 0.1),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Text(
-                                        'Puan: ${match.score}',
-                                        style: TextStyle(
-                                          color: Theme.of(context).primaryColor,
-                                          fontWeight: FontWeight.w600,
-                                        ),
+                                    trailing: SizedBox(
+                                      width: 100,
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            '%${((match.score / 140.0) * 100).clamp(0, 100).round()}',
+                                            style: TextStyle(
+                                              color: Theme.of(context)
+                                                  .primaryColor,
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 15,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(2),
+                                            child: LinearProgressIndicator(
+                                              value: (match.score / 140.0)
+                                                  .clamp(0.0, 1.0),
+                                              backgroundColor:
+                                                  Colors.grey.shade200,
+                                              valueColor:
+                                                  AlwaysStoppedAnimation<Color>(
+                                                Theme.of(context)
+                                                    .primaryColor
+                                                    .withOpacity(0.7),
+                                              ),
+                                              minHeight: 3.0,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   );
@@ -131,7 +153,7 @@ class MatchView extends StatelessWidget {
                       ),
                     );
                   },
-                  tooltip: 'Geçmiş',
+                  tooltip: context.tr('match_history_tooltip'),
                 ),
                 const SizedBox(width: 8), // Sağ kenar boşluğu
               ],
@@ -158,7 +180,7 @@ class MatchView extends StatelessWidget {
                             ),
                             const SizedBox(height: 24),
                             Text(
-                              'Henüz kimseyle eşleşmedin.',
+                              context.tr('match_no_matches'),
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w600,
@@ -168,7 +190,7 @@ class MatchView extends StatelessWidget {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Hadi yeni birini bul!',
+                              context.tr('match_find_someone'),
                               style: TextStyle(
                                 fontSize: 14,
                                 color: Colors.grey.shade600,
@@ -215,20 +237,60 @@ class MatchView extends StatelessWidget {
                                   fontSize: 16,
                                 ),
                               ),
-                              subtitle: Padding(
-                                padding: const EdgeInsets.only(top: 4),
-                                child: Text(
-                                  'Puan: ${match.score} - ${DateFormat.yMd().format(match.matchedAt)}',
-                                  style: TextStyle(
-                                    color: Colors.grey.shade600,
-                                    fontSize: 13,
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: ClipRRect(
+                                          borderRadius:
+                                              BorderRadius.circular(2),
+                                          child: LinearProgressIndicator(
+                                            value: (match.score / 140.0)
+                                                .clamp(0.0, 1.0),
+                                            backgroundColor:
+                                                Colors.grey.shade200,
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                              Theme.of(context)
+                                                  .primaryColor
+                                                  .withOpacity(0.7),
+                                            ),
+                                            minHeight: 3.0,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        '%${((match.score / 140.0) * 100).clamp(0, 100).round()}',
+                                        style: TextStyle(
+                                          color: Theme.of(context).primaryColor,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    DateFormat.yMd().format(match.matchedAt),
+                                    style: TextStyle(
+                                      color: Colors.grey.shade600,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
                               ),
                               trailing: const Icon(
                                 Icons.chevron_right,
                                 color: Colors.grey,
                               ),
+                              onTap: () {
+                                context.pushNamed(Routes.friendProfile,
+                                    extra: match.uid);
+                              },
                             ),
                           );
                         },
@@ -301,16 +363,16 @@ class MatchView extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Beklemekten Sıkıldın mı?',
-                          style: TextStyle(
+                        Text(
+                          context.tr('match_premium_tired'),
+                          style: const TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: 15,
                           ),
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'Premium üye olarak hemen yeni eşleşmeler bulabilirsin!',
+                          context.tr('match_premium_info'),
                           style: TextStyle(
                             color: Colors.grey.shade600,
                             fontSize: 13,
@@ -339,7 +401,9 @@ class MatchView extends StatelessWidget {
             child: ElevatedButton(
               onPressed: null,
               style: buttonStyle,
-              child: Text('Sonraki Eşleşme: $formattedDate'),
+              child: Text(context
+                  .tr('match_next_match')
+                  .replaceAll('{date}', formattedDate)),
             ),
           ),
         ],
@@ -354,7 +418,7 @@ class MatchView extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('Yeni Eşleşme Bul'),
+            Text(context.tr('match_find_new')),
             if (viewModel.isPremium) ...[
               const SizedBox(width: 8),
               const Icon(Icons.star, size: 20, color: Colors.amber),

@@ -172,6 +172,27 @@ const Map<String, String> en = {
   'no_more_listings_in_category': 'No more listings in this category.',
   'click_to_see_other_listings': 'Click to see other listings',
   'create_listing': 'Create Listing',
+  'home_header_explore': 'Explore',
+  'home_header_following': 'Following',
+  'home_header_city_events': 'Events in My City',
+  'home_header_refresh': 'Refresh',
+  'home_following_title': 'Following',
+  'home_following_empty_message':
+      'Posts from people you follow will appear here',
+  'home_error_message': 'An error occurred: {error}',
+
+  // Match Screen
+  'match_title': 'Match',
+  'match_login_required': 'You need to login first.',
+  'match_history': 'Match History',
+  'match_history_tooltip': 'History',
+  'match_date': 'Match Date: {date}',
+  'match_no_matches': 'You haven\'t matched with anyone yet.',
+  'match_find_someone': 'Let\'s find someone new!',
+  'match_next_match': 'Next Match: {date}',
+  'match_find_new': 'Find New Match',
+  'match_premium_tired': 'Tired of waiting?',
+  'match_premium_info': 'Get premium to find new matches immediately!',
 
   // Messages
   'no_messages': 'No messages yet',
