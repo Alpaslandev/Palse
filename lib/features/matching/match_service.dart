@@ -12,7 +12,7 @@ class MatchService {
   /// Kullanıcının eşleştiği kişileri getirir
   Future<List<MatchModel>> getMatches() async {
     final snapshot = await _firestore
-        .collection('users')
+        .collection('customers')
         .doc(uid)
         .collection('matches')
         .orderBy('matchedAt', descending: true)
@@ -26,7 +26,7 @@ class MatchService {
     final now = DateTime.now();
     final monday = DateTime(now.year, now.month, now.day - (now.weekday - 1));
     final snapshot = await _firestore
-        .collection('users')
+        .collection('customers')
         .doc(uid)
         .collection('matches')
         .where('matchedAt', isGreaterThanOrEqualTo: Timestamp.fromDate(monday))
@@ -44,7 +44,7 @@ class MatchService {
   /// Bir sonraki eşleşme hakkı ne zaman olacak?
   Future<DateTime?> getNextMatchDate({int limit = 5}) async {
     final snapshot = await _firestore
-        .collection('users')
+        .collection('customers')
         .doc(uid)
         .collection('matches')
         .orderBy('matchedAt', descending: true)
