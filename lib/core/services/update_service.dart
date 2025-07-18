@@ -7,7 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 class UpdateService {
   final FirebaseRemoteConfig remoteConfig = FirebaseRemoteConfig.instance;
-  final String currentVersion = '1.0.0'; // Elle tanımladığın app versiyonu
+  final String currentVersion = '2.0.0';
 
   Future<void> checkForUpdate() async {
     try {

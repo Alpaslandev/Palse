@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:palseapp/core/routes/routes.dart' as Routes;
 import 'package:palseapp/core/utils/app_theme.dart';
 import 'package:palseapp/features/city_events/model/event_model.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -14,6 +16,12 @@ class CityEventView extends StatelessWidget {
     if (await canLaunchUrl(Uri.parse(event.url))) {
       await launchUrl(Uri.parse(event.url));
     }
+  }
+
+  // İlan oluşturma sayfasına yönlendir
+  void _createAdvert(BuildContext context) {
+    debugPrint('İlan oluşturma sayfasına yönlendirilecek');
+    context.pushNamed(Routes.createAdvert);
   }
 
   // Tarih formatını düzenle
@@ -111,6 +119,21 @@ class CityEventView extends StatelessWidget {
                       ),
                     ),
                   ],
+                ),
+
+                const SizedBox(height: 16),
+
+                // İlan oluşturma teşvik metni
+                GestureDetector(
+                  onTap: () => _createAdvert(context),
+                  child: Text(
+                    'İlgini mi çekti? Sen de hemen bir ilan oluştur!',
+                    style: TextStyle(
+                      color: AppTheme.primaryColor,
+                      fontSize: 13,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
                 ),
 
                 const SizedBox(height: 16),

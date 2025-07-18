@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:flutter/material.dart';
 import 'package:palseapp/features/matching/match_model.dart';
 
 class MatchService {
@@ -18,7 +19,7 @@ class MatchService {
         .orderBy('matchedAt', descending: true)
         .get();
 
-    return snapshot.docs.map(MatchModel.fromDoc).toList();
+    return snapshot.docs.map((doc) => MatchModel.fromJson(doc.data())).toList();
   }
 
   /// Bu haftaki eşleşme sayısını getirir
@@ -66,9 +67,26 @@ class MatchService {
     try {
       final callable = _functions.httpsCallable('getSmartMatches');
       final result = await callable();
-      final List matches = result.data['matches'];
-      return List<MatchModel>.from(matches);
+
+      // Gelen yanıtı terminalde görmek için print ifadesi
+      debugPrint("--- RAW RESPONSE FROM getSmartMatches ---");
+      debugPrint("result.data type: ${result.data.runtimeType}");
+      debugPrint("result.data: ${result.data}");
+
+      if (result.data is Map) {
+        debugPrint("result.data keys: ${(result.data as Map).keys}");
+        debugPrint("result.data values: ${(result.data as Map).values}");
+      }
+      debugPrint("---------------------------------------");
+
+      // Gelen 'matches' listesini alıyoruz.
+      final List<dynamic> matchesData = result.data['matches'];
+      // Her bir map elemanını MatchModel.fromJson kullanarak MatchModel nesnesine çeviriyoruz.
+      return matchesData
+          .map((data) => MatchModel.fromJson(Map<String, dynamic>.from(data)))
+          .toList();
     } catch (e) {
+      debugPrint("Error triggering smart match: $e");
       rethrow;
     }
   }

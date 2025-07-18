@@ -1,6 +1,6 @@
 // functions/src/match/getSmartMatches.ts
 import {onCall, HttpsError} from "firebase-functions/v2/https";
-import {getFirestore} from "firebase-admin/firestore";
+import {getFirestore, Timestamp} from "firebase-admin/firestore";
 import * as logger from "firebase-functions/logger";
 
 const db = getFirestore();
@@ -25,10 +25,10 @@ export const getSmartMatches = onCall(
     const user = userSnap.data()!;
     logger.info("Kullanıcı verisi alındı.", {uid});
 
+    const now = new Date(); // 'now' değişkenini burada bir kez tanımla
     const isPremium = user.isPremium === true;
 
     /* Haftalık limit kontrolü */
-    const now = new Date();
     const startOfWeek = new Date(now);
     startOfWeek.setDate(now.getDate() - now.getDay()); // Pazar günü referans alınır
     startOfWeek.setHours(0, 0, 0, 0);
@@ -73,7 +73,16 @@ export const getSmartMatches = onCall(
 
     /* Skorlama */
     const scored = candidatesSnap.docs
-      .filter((doc) => doc.id !== uid && !existingMatchIds.has(doc.id)) // Kendini ve daha önce eşleşmiş olanları hariç tut
+      .filter((doc) => {
+        const c = doc.data();
+        // Profil fotoğrafı kontrolü: URL null/undefined değilse ve 10 karakterden uzunsa geçerli say.
+        const hasProfilePicture =
+          c.profilePictureUrl && c.profilePictureUrl.length >= 10;
+
+        return (
+          doc.id !== uid && !existingMatchIds.has(doc.id) && hasProfilePicture
+        );
+      }) // Kendini, daha önce eşleşmiş olanları ve profil fotosu olmayanları hariç tut
       .map((doc) => {
         const c = doc.data();
         let score = 0;
@@ -107,51 +116,80 @@ export const getSmartMatches = onCall(
           score,
           name: c.nickname,
           photoUrl: c.profilePictureUrl,
+          gender: c.gender, // Cinsiyet bilgisini ekle
         };
       });
 
     // Puanlamaya göre teorik olarak ulaşılabilecek maksimum skor.
     // Konum(40) + Cinsiyet(30) + Kategori(3*15=45) + Doğrulama(25) = 140
-    const maxScore = 140;
 
-    /* En yüksek 5 skoru seç, yüzdeye çevir ve null kontrolü yap */
-    const top5 = scored
+    /* En yüksek 5 skoru seç, en az bir kadın profil olacak şekilde ayarla */
+    const sortedCandidates = scored
       .filter((m) => m.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 5)
-      .map((m) => ({
-        uid: m.uid,
-        name: m.name ?? null,
-        photoUrl: m.photoUrl ?? null,
-        score: Math.round((m.score / maxScore) * 100), // Puanı yüzdeye çevir
-      }));
+      .sort((a, b) => b.score - a.score);
+
+    const top5WithDetails = sortedCandidates.slice(0, 5);
+
+    // Seçilen ilk 5'te kadın var mı kontrol et (cinsiyet 'Female' veya 'Kadın' olabilir)
+    const hasFemaleInTop5 = top5WithDetails.some(
+      (m) =>
+        typeof m.gender === "string" &&
+        (m.gender.toLowerCase() === "female" ||
+          m.gender.toLowerCase() === "kadın")
+    );
+
+    // Eğer ilk 5'te kadın yoksa ve genel listede kadın aday varsa
+    if (!hasFemaleInTop5) {
+      const highestScoringFemale = sortedCandidates.find(
+        (m) =>
+          typeof m.gender === "string" &&
+          (m.gender.toLowerCase() === "female" ||
+            m.gender.toLowerCase() === "kadın")
+      );
+
+      if (highestScoringFemale) {
+        if (top5WithDetails.length < 5) {
+          // Eğer liste 5'ten azsa, direkt ekle
+          top5WithDetails.push(highestScoringFemale);
+        } else {
+          // Eğer liste doluysa, en düşük skorluyu çıkar ve kadını ekle
+          top5WithDetails.pop(); // En düşük skorlu (sıralı olduğu için sonda)
+          top5WithDetails.push(highestScoringFemale);
+        }
+        // Puan bütünlüğünü korumak için listeyi tekrar puana göre sırala
+        top5WithDetails.sort((a, b) => b.score - a.score);
+      }
+    }
+
+    /* Son listeyi oluştur ve veritabanı/yanıt formatına çevir */
+    const finalMatches = top5WithDetails.map((m) => ({
+      matchedUserId: m.uid,
+      name: m.name ?? null,
+      photoUrl: m.photoUrl ?? null,
+      score: m.score, // Yüzdeye çevirmeyi kaldır, ham puanı kullan
+      matchedAt: Timestamp.fromDate(now),
+    }));
 
     /* Kaydet */
     const batch = db.batch();
-    top5.forEach((m) => {
+    finalMatches.forEach((matchData) => {
       const ref = db
         .collection("customers")
         .doc(uid)
         .collection("matches")
-        .doc(m.uid);
-      batch.set(ref, {
-        matchedUserId: m.uid,
-        matchedAt: new Date(),
-        score: m.score, // Yüzdelik skor
-        name: m.name,
-        photoUrl: m.photoUrl,
-      });
+        .doc(matchData.matchedUserId);
+      batch.set(ref, matchData);
     });
     await batch.commit();
 
     logger.info("Eşleşmeler başarıyla oluşturuldu ve kaydedildi.", {
       uid,
-      count: top5.length,
+      count: finalMatches.length,
     });
 
     /* Response */
     return {
-      matches: top5,
+      matches: finalMatches,
     };
   }
 );

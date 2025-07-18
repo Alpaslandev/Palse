@@ -5,8 +5,9 @@ import 'package:palseapp/features/matching/match_service.dart';
 // Eşleşme görünümünün durumunu ve iş mantığını yönetir.
 class MatchViewModel extends ChangeNotifier {
   late final MatchService _matchService;
+  final bool isPremium;
 
-  MatchViewModel({required String uid}) {
+  MatchViewModel({required String uid, required this.isPremium}) {
     _matchService = MatchService(uid: uid);
     initialize();
   }
@@ -23,7 +24,8 @@ class MatchViewModel extends ChangeNotifier {
   DateTime? _nextMatchDate;
   DateTime? get nextMatchDate => _nextMatchDate;
 
-  bool get canMatch => _nextMatchDate == null;
+  // Premium kullanıcılar her zaman eşleşebilir
+  bool get canMatch => isPremium || _nextMatchDate == null;
 
   // İlk veri yüklemesi için kullanılır.
   Future<void> initialize() async {
@@ -46,9 +48,15 @@ class MatchViewModel extends ChangeNotifier {
   Future<void> _fetchData() async {
     try {
       _matches = await _matchService.getMatches();
-      final hasReachedLimit = await _matchService.hasReachedWeeklyLimit();
-      if (hasReachedLimit) {
-        _nextMatchDate = await _matchService.getNextMatchDate();
+
+      // Premium kullanıcılar için limit kontrolü yapma
+      if (!isPremium) {
+        final hasReachedLimit = await _matchService.hasReachedWeeklyLimit();
+        if (hasReachedLimit) {
+          _nextMatchDate = await _matchService.getNextMatchDate();
+        } else {
+          _nextMatchDate = null;
+        }
       } else {
         _nextMatchDate = null;
       }
