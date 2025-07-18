@@ -194,6 +194,26 @@ const Map<String, String> en = {
   'match_premium_tired': 'Tired of waiting?',
   'match_premium_info': 'Get premium to find new matches immediately!',
 
+  // City Events
+  'city_events_tab_venues': 'Places in my city',
+  'city_events_tab_events': 'Events in my city',
+  'city_events_venues_title': 'Places to Visit in My City',
+  'city_events_title': 'What\'s in My City?',
+  'city_events_select_category': 'Select Category',
+  'city_events_no_venues': 'No Places Found for Your Criteria',
+  'city_events_change_filter': 'Change your filter to discover new places',
+  'city_events_no_events': 'No Events Found in This Category',
+  'city_events_try_different':
+      'Select a different category to discover new events',
+  'city_events_categories_error': 'Could not load categories',
+  'city_venue_show_on_map': 'Show on Map',
+  'city_venue_powered_by': 'Powered by Google',
+  'city_venue_no_type': 'No type information',
+  'city_venue_unnamed': 'Unnamed',
+  'city_event_create_advert': 'Interested? Create your own listing now!',
+  'city_event_source': 'Etkinlik.io',
+  'city_event_details': 'More Details',
+
   // Messages
   'no_messages': 'No messages yet',
   'type_message': 'Type a message...',

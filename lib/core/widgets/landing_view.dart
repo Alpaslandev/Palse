@@ -114,8 +114,8 @@ class _LandingViewState extends State<LandingView>
                   backgroundColor: Colors.grey[800],
                   shape: const StadiumBorder(),
                   onPressed: () => context.pushNamed(match),
-                  label: const Text(
-                    'Eşleş',
+                  label: Text(
+                    context.tr('match_title'),
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,

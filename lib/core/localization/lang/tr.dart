@@ -602,4 +602,24 @@ const Map<String, String> tr = {
   'match_premium_tired': 'Beklemekten Sıkıldın mı?',
   'match_premium_info':
       'Premium üye olarak hemen yeni eşleşmeler bulabilirsin!',
+
+  // Şehir Etkinlikleri
+  'city_events_tab_venues': 'Şehrimdeki mekanlar',
+  'city_events_tab_events': 'Şehrimdeki etkinlikler',
+  'city_events_venues_title': 'Şehrimde Gidilecek Yerler',
+  'city_events_title': 'Şehrimde Ne Var?',
+  'city_events_select_category': 'Kategori Seç',
+  'city_events_no_venues': 'Aradığın Kriterde Mekan Bulunamadı',
+  'city_events_change_filter': 'Filtreni değiştirerek yeni mekanlar keşfet',
+  'city_events_no_events': 'Bu Kategoride Etkinlik Bulunamadı',
+  'city_events_try_different':
+      'Farklı bir kategori seçerek yeni etkinlikler keşfet',
+  'city_events_categories_error': 'Kategoriler yüklenemedi',
+  'city_venue_show_on_map': 'Haritada Göster',
+  'city_venue_powered_by': 'Powered by Google',
+  'city_venue_no_type': 'Tür bilgisi yok',
+  'city_venue_unnamed': 'İsimsiz',
+  'city_event_create_advert': 'İlgini mi çekti? Sen de hemen bir ilan oluştur!',
+  'city_event_source': 'Etkinlik.io',
+  'city_event_details': 'Detaylı Bilgi',
 };

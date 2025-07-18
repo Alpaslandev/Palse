@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -95,9 +96,9 @@ class CityVenueView extends StatelessWidget {
                       border: Border.all(color: AppTheme.primaryColor),
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: const Text(
-                      "Haritada Göster",
-                      style: TextStyle(
+                    child: Text(
+                      context.tr('city_venue_show_on_map'),
+                      style: const TextStyle(
                         color: AppTheme.primaryColor,
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
@@ -110,7 +111,7 @@ class CityVenueView extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.only(right: 12.0, top: 4),
                     child: Text(
-                      'Powered by Google',
+                      context.tr('city_venue_powered_by'),
                       style: TextStyle(fontSize: 11, color: Colors.grey[500]),
                     ),
                   ),

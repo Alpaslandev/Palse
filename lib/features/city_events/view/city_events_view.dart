@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/models/customer.dart';
 import 'package:palseapp/core/utils/app_theme.dart';
 import 'package:palseapp/features/city_events/view/widgets/city_event_view.dart';
@@ -77,8 +78,8 @@ class _CityEventsViewState extends State<CityEventsView>
               dividerColor: Colors.transparent,
               labelPadding: const EdgeInsets.symmetric(horizontal: 4),
               tabs: [
-                _buildTab('Şehrimdeki mekanlar', 0),
-                _buildTab('Şehrimdeki etkinlikler', 1),
+                _buildTab(context.tr('city_events_tab_venues'), 0),
+                _buildTab(context.tr('city_events_tab_events'), 1),
               ],
             ),
           ),
@@ -171,7 +172,7 @@ class _CityEventsViewState extends State<CityEventsView>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHeaderWithDropdown(
-                title: "Şehrimde Gidilecek Yerler",
+                title: context.tr('city_events_venues_title'),
                 value: selectedType,
                 items: placeTypes
                     .map((type) => type)
@@ -197,7 +198,8 @@ class _CityEventsViewState extends State<CityEventsView>
                   shrinkWrap: true,
                   itemBuilder: (context, index) {
                     final place = events[index];
-                    final name = place['name'] ?? 'İsimsiz';
+                    final name =
+                        place['name'] ?? context.tr('city_venue_unnamed');
                     final location = place['geometry']['location'];
                     final lat = location['lat'] as double;
                     final lng = location['lng'] as double;
@@ -206,7 +208,7 @@ class _CityEventsViewState extends State<CityEventsView>
                     final types = place['types'] != null &&
                             (place['types'] as List).isNotEmpty
                         ? (place['types'] as List).first.toString()
-                        : 'Tür bilgisi yok';
+                        : context.tr('city_venue_no_type');
 
                     final photoUrl = photoRef != null
                         ? viewModel.generatePhotoUrl(photoRef)
@@ -245,8 +247,8 @@ class _CityEventsViewState extends State<CityEventsView>
           final categories = viewModel.eventCategories;
 
           if (categories.isEmpty) {
-            return const Center(
-              child: Text('Kategoriler yüklenemedi'),
+            return Center(
+              child: Text(context.tr('city_events_categories_error')),
             );
           }
 
@@ -254,7 +256,7 @@ class _CityEventsViewState extends State<CityEventsView>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHeaderWithDropdown(
-                title: "Şehrimde Ne Var?",
+                title: context.tr('city_events_title'),
                 value: viewModel.selectedEventCategory ?? categories.first.name,
                 items: categories.map((category) => category.name).toList(),
                 onChanged: (String? newValue) {
@@ -262,7 +264,7 @@ class _CityEventsViewState extends State<CityEventsView>
                     viewModel.updateSelectedEventCategory(newValue);
                   }
                 },
-                hintText: 'Kategori Seç',
+                hintText: context.tr('city_events_select_category'),
               ),
               Expanded(
                 child: viewModel.events.isEmpty
@@ -319,12 +321,12 @@ class _CityEventsViewState extends State<CityEventsView>
           Icon(Icons.location_city, size: 64, color: AppTheme.primaryColor),
           const SizedBox(height: 16),
           Text(
-            "Aradığın Kriterde Mekan Bulunamadı",
+            context.tr('city_events_no_venues'),
             style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Text(
-            'Filtreni değiştirerek yeni mekanlar keşfet',
+            context.tr('city_events_change_filter'),
             textAlign: TextAlign.center,
             style:
                 TextStyle(color: Theme.of(context).textTheme.bodySmall?.color),
@@ -342,13 +344,13 @@ class _CityEventsViewState extends State<CityEventsView>
         children: [
           Icon(Icons.event_busy, size: 64, color: AppTheme.primaryColor),
           const SizedBox(height: 16),
-          const Text(
-            "Bu Kategoride Etkinlik Bulunamadı",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          Text(
+            context.tr('city_events_no_events'),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Text(
-            'Farklı bir kategori seçerek yeni etkinlikler keşfet',
+            context.tr('city_events_try_different'),
             textAlign: TextAlign.center,
             style:
                 TextStyle(color: Theme.of(context).textTheme.bodySmall?.color),

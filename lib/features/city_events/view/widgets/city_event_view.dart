@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:palseapp/core/localization/app_localizations.dart';
 import 'package:palseapp/core/routes/routes.dart' as Routes;
 import 'package:palseapp/core/utils/app_theme.dart';
 import 'package:palseapp/features/city_events/model/event_model.dart';
@@ -127,7 +128,7 @@ class CityEventView extends StatelessWidget {
                 GestureDetector(
                   onTap: () => _createAdvert(context),
                   child: Text(
-                    'İlgini mi çekti? Sen de hemen bir ilan oluştur!',
+                    context.tr('city_event_create_advert'),
                     style: TextStyle(
                       color: AppTheme.primaryColor,
                       fontSize: 13,
@@ -152,7 +153,7 @@ class CityEventView extends StatelessWidget {
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        'Etkinlik.io',
+                        context.tr('city_event_source'),
                         style: TextStyle(
                           color: AppTheme.darkHintTextColor,
                           fontSize: 12,
@@ -170,7 +171,7 @@ class CityEventView extends StatelessWidget {
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child: const Text('Detaylı Bilgi'),
+                      child: Text(context.tr('city_event_details')),
                     ),
                   ],
                 ),
