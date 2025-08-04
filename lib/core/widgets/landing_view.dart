@@ -15,8 +15,7 @@ class LandingView extends StatefulWidget {
   State<LandingView> createState() => _LandingViewState();
 }
 
-class _LandingViewState extends State<LandingView>
-    with TickerProviderStateMixin {
+class _LandingViewState extends State<LandingView> with TickerProviderStateMixin {
   // Master animasyon controller'ı - tüm nav item'ları koordine eder
   late AnimationController _masterAnimationController;
   late List<GlobalKey<AnimatedNavItemState>> _navItemKeys;
@@ -32,15 +31,13 @@ class _LandingViewState extends State<LandingView>
     );
 
     // Her nav item için anahtar oluştur
-    _navItemKeys =
-        List.generate(4, (index) => GlobalKey<AnimatedNavItemState>());
+    _navItemKeys = List.generate(4, (index) => GlobalKey<AnimatedNavItemState>());
   }
 
   @override
   void didUpdateWidget(LandingView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.navigationShell.currentIndex !=
-        widget.navigationShell.currentIndex) {
+    if (oldWidget.navigationShell.currentIndex != widget.navigationShell.currentIndex) {
       _triggerSynchronizedAnimation();
     }
   }
@@ -109,18 +106,10 @@ class _LandingViewState extends State<LandingView>
           ? Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                FloatingActionButton.extended(
+                _ShimmerGradientFAB(
                   heroTag: 'match',
-                  backgroundColor: Colors.grey[800],
-                  shape: const StadiumBorder(),
+                  label: context.tr('match_title'),
                   onPressed: () => context.pushNamed(match),
-                  label: Text(
-                    context.tr('match_title'),
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
                 ),
                 FloatingActionButton.extended(
                   heroTag: 'create_advert',
@@ -188,6 +177,102 @@ class _LandingViewState extends State<LandingView>
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// Gradient arka plan ve shimmer efekti ile yeni FAB widget'ı
+class _ShimmerGradientFAB extends StatefulWidget {
+  final String heroTag;
+  final String label;
+  final VoidCallback onPressed;
+
+  const _ShimmerGradientFAB({
+    required this.heroTag,
+    required this.label,
+    required this.onPressed,
+  });
+
+  @override
+  State<_ShimmerGradientFAB> createState() => _ShimmerGradientFABState();
+}
+
+class _ShimmerGradientFABState extends State<_ShimmerGradientFAB> with SingleTickerProviderStateMixin {
+  late AnimationController _shimmerController;
+
+  @override
+  void initState() {
+    super.initState();
+    _shimmerController = AnimationController(
+      duration: const Duration(milliseconds: 2000),
+      vsync: this,
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _shimmerController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(28),
+        gradient: LinearGradient(
+          colors: [
+            AppTheme.primaryColor,
+            AppTheme.primaryColor.withOpacity(0.8),
+            Colors.purple,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primaryColor.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: FloatingActionButton.extended(
+        heroTag: widget.heroTag,
+        onPressed: widget.onPressed,
+        shape: const StadiumBorder(),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        extendedPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        label: AnimatedBuilder(
+          animation: _shimmerController,
+          builder: (context, child) {
+            return ShaderMask(
+              shaderCallback: (bounds) {
+                return LinearGradient(
+                  colors: [
+                    Colors.white.withOpacity(0.5),
+                    Colors.white,
+                    Colors.white.withOpacity(0.5),
+                  ],
+                  stops: const [0.0, 0.5, 1.0],
+                  begin: Alignment(-1.0 + _shimmerController.value * 2.0, 0),
+                  end: Alignment(0.0 + _shimmerController.value * 2.0, 0),
+                ).createShader(bounds);
+              },
+              blendMode: BlendMode.srcIn,
+              child: Text(
+                widget.label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+            );
+          },
         ),
       ),
     );

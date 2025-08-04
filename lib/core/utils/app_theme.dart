@@ -193,7 +193,7 @@ class AppTheme {
       dividerColor: dividerColor,
       iconTheme: IconThemeData(color: iconColor),
 
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: cardColor,
         elevation: 0,
         shape: RoundedRectangleBorder(
@@ -292,7 +292,7 @@ class AppTheme {
       ),
 
       // TabBar teması
-      tabBarTheme: TabBarTheme(
+      tabBarTheme: TabBarThemeData(
         labelColor: primaryColor,
         unselectedLabelColor: isDark ? Colors.grey.shade400 : Colors.grey.shade700,
         indicatorColor: primaryColor,

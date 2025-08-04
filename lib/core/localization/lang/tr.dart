@@ -15,8 +15,7 @@ const Map<String, String> tr = {
   'or': 'Veya',
   'login_successful': 'Giriş başarılı',
   'login_failed': 'Giriş başarısız',
-  'privacy_terms_agreement':
-      'Giriş yaparak Gizlilik Politikasını ve Kullanım Koşullarını kabul etmiş sayılırsınız.',
+  'privacy_terms_agreement': 'Giriş yaparak Gizlilik Politikasını ve Kullanım Koşullarını kabul etmiş sayılırsınız.',
   'create_account': 'Hesap Oluştur',
   'login_subtitle': 'Hesabınıza giriş yapın veya sosyal medya ile devam edin',
   'signup_subtitle': 'Yeni bir hesap oluşturun ve etkinliklere katılın',
@@ -40,21 +39,16 @@ const Map<String, String> tr = {
   'profile_setup_back': 'Geri',
   'profile_setup_next': 'İleri',
   'profile_setup_finish': 'Tamamla',
-  'profile_setup_error_name':
-      'Lütfen ad ve soyadınızı doğru şekilde girin (en az 3 karakter)',
-  'profile_setup_error_birthday_gender':
-      'Lütfen doğum tarihinizi ve cinsiyetinizi seçin',
-  'profile_setup_error_location':
-      'Lütfen bir konum seçin veya mevcut konumunuzu kullanın',
-  'profile_setup_error_nickname':
-      'Lütfen geçerli bir takma ad girin (en az 3 karakter)',
+  'profile_setup_error_name': 'Lütfen ad ve soyadınızı doğru şekilde girin (en az 3 karakter)',
+  'profile_setup_error_birthday_gender': 'Lütfen doğum tarihinizi ve cinsiyetinizi seçin',
+  'profile_setup_error_location': 'Lütfen bir konum seçin veya mevcut konumunuzu kullanın',
+  'profile_setup_error_nickname': 'Lütfen geçerli bir takma ad girin (en az 3 karakter)',
   'profile_setup_error_categories': 'Lütfen en az 3 kategori seçin',
 
   // Profil Kurulum Adımları
   // 1. Adım: Kullanıcı Bilgileri
   'user_info_welcome': 'Hoşgeldin!',
-  'user_info_description':
-      'Deneyimini hazırlamak için birkaç bilgi girmeni rica ediyoruz.',
+  'user_info_description': 'Deneyimini hazırlamak için birkaç bilgi girmeni rica ediyoruz.',
   'user_info_first_name': 'Adınız',
   'user_info_last_name': 'Soyad',
   'user_info_first_name_hint': 'Adınızı girin',
@@ -62,15 +56,13 @@ const Map<String, String> tr = {
   'user_info_perfect': 'Mükemmel!',
   'user_info_hello': 'Merhaba {firstName}, şimdi diğer adımlara geçebilirsin.',
   'user_info_info': 'Bilgi',
-  'user_info_please_enter':
-      'Lütfen adınızı girin. Bu bilgi profilinizde görünecektir.',
+  'user_info_please_enter': 'Lütfen adınızı girin. Bu bilgi profilinizde görünecektir.',
 
   // 2. Adım: Doğum Tarihi ve Cinsiyet
   'birthday_gender_title': 'Sizi tanıyalım',
   'birthday_gender_birthday': 'Doğum Tarihi',
   'birthday_gender_select_date': 'Tarih Seçin',
-  'birthday_gender_age_restriction':
-      'Bu uygulamayı kullanmak için en az 18 yaşında olmalısınız',
+  'birthday_gender_age_restriction': 'Bu uygulamayı kullanmak için en az 18 yaşında olmalısınız',
   'birthday_gender_gender': 'Cinsiyet',
   'birthday_gender_male': 'Erkek',
   'birthday_gender_female': 'Kadın',
@@ -82,11 +74,9 @@ const Map<String, String> tr = {
   'birthday_gender_select_birth_date': 'Lütfen doğum tarihinizi seçin',
   'birthday_gender_select_gender': 'Lütfen cinsiyetinizi seçin',
   'birthday_gender_awesome': 'Harika!',
-  'birthday_gender_basics_completed':
-      'Temel bilgileriniz tamamlandı, şimdi diğer adımlara geçebilirsiniz.',
+  'birthday_gender_basics_completed': 'Temel bilgileriniz tamamlandı, şimdi diğer adımlara geçebilirsiniz.',
   'birthday_gender_info': 'Bilgi',
-  'birthday_gender_info_text':
-      'Doğum tarihiniz ve cinsiyetiniz size uygun etkinlikleri önerirken kullanılacaktır.',
+  'birthday_gender_info_text': 'Doğum tarihiniz ve cinsiyetiniz size uygun etkinlikleri önerirken kullanılacaktır.',
 
   // 3. Adım: Konum
   'location_info': 'Bilgi',
@@ -95,13 +85,11 @@ const Map<String, String> tr = {
   'location_current': 'Mevcut Konumu Kullan',
   'location_search': 'Ara',
   'location_search_hint': 'Şehir, ilçe vs. ara',
-  'location_permission_text':
-      'Size yakın etkinlikleri bulmak için konum izni verin',
+  'location_permission_text': 'Size yakın etkinlikleri bulmak için konum izni verin',
   'location_permission_button': 'Konum İzni Ver',
   'location_required': 'Zorunlu',
   'location_optional': 'Opsiyonel',
-  'location_optional_info':
-      'Konum bilgisi opsiyoneldir. Dilerseniz daha sonra profil ayarlarından güncelleyebilirsiniz.',
+  'location_optional_info': 'Konum bilgisi opsiyoneldir. Dilerseniz daha sonra profil ayarlarından güncelleyebilirsiniz.',
   'location_please_select': 'Lütfen bir konum seçin',
   'location_search_label': 'Konum Ara',
   'location_search_hint_detailed': 'Şehir veya ilçe adı girin',
@@ -129,21 +117,16 @@ const Map<String, String> tr = {
 
   // 5. Adım: Profil Fotoğrafı
   'profile_picture_title': 'Profil Resmi Ekleyin',
-  'profile_picture_description':
-      'Bu, başkalarının sizi tanımasına yardımcı olur',
+  'profile_picture_description': 'Bu, başkalarının sizi tanımasına yardımcı olur',
   'profile_picture_upload': 'Fotoğraf Yükle',
   'profile_picture_take': 'Fotoğraf Çek',
   'profile_picture_skip': 'Şimdilik Geç',
   'profile_picture_almost_done': 'Neredeyse Bitti!',
-  'profile_picture_add_photo':
-      'Seni tanımak için bir fotoğraf eklemek ister misin?',
-  'profile_picture_tip':
-      'Profil fotoğrafı olan kullanıcılar %70 daha fazla etkileşim alıyor!',
+  'profile_picture_add_photo': 'Seni tanımak için bir fotoğraf eklemek ister misin?',
+  'profile_picture_tip': 'Profil fotoğrafı olan kullanıcılar %70 daha fazla etkileşim alıyor!',
   'profile_picture_add': 'Fotoğraf Ekle',
-  'profile_picture_looks_great':
-      'Harika görünüyor! Fotoğrafını değiştirmek istersen tekrar dokunabilirsin.',
-  'profile_picture_skip_info':
-      'Bu adımı atlayabilirsin, daha sonra profil ayarlarından ekleyebilirsin',
+  'profile_picture_looks_great': 'Harika görünüyor! Fotoğrafını değiştirmek istersen tekrar dokunabilirsin.',
+  'profile_picture_skip_info': 'Bu adımı atlayabilirsin, daha sonra profil ayarlarından ekleyebilirsin',
 
   // 6. Adım: Kategoriler
   'categories_title': 'İlgi Alanlarınızı Seçin',
@@ -195,8 +178,7 @@ const Map<String, String> tr = {
   'user_blocked': 'Kullanıcı engellendi',
   'unblock_user': 'Engeli Kaldır',
   'user_unblocked': 'Kullanıcının engeli kaldırıldı',
-  'user_blocked_message':
-      'Bu kullanıcıyı engellediniz. Mesaj göndermek için engeli kaldırmanız gerekiyor.',
+  'user_blocked_message': 'Bu kullanıcıyı engellediniz. Mesaj göndermek için engeli kaldırmanız gerekiyor.',
   'listings': 'İlanlar',
   'send_message': 'Mesaj Gönder',
   'report_abuse': 'Kötüye Kullanım Bildir',
@@ -226,8 +208,7 @@ const Map<String, String> tr = {
   'gallery_permission_denied': 'Galeri izni verilmedi.',
   'story_deletion_error': 'Hikaye silinirken hata oluştu: {error}',
   'delete_story': 'Hikayenizi Silin',
-  'delete_story_confirmation':
-      'Hikayeniz kalıcı olarak silinecektir. Bu işlem geri alınamaz. Emin misiniz?',
+  'delete_story_confirmation': 'Hikayeniz kalıcı olarak silinecektir. Bu işlem geri alınamaz. Emin misiniz?',
   'cancel': 'İptal',
   'people_viewed': 'kişi tarafından görüldü',
   'story_upload_error': 'Hikaye yüklenemedi.',
@@ -252,13 +233,11 @@ const Map<String, String> tr = {
   'event_type_required': 'Etkinlik tipi seçiniz',
   'select_photo': 'Fotoğraf Seç',
   'use_ready_photo': 'Hazır Fotoğraf Kullan',
-  'only_premium_users_can_select_photo':
-      'Yalnızca premium üyeler fotoğraf seçebilir.',
+  'only_premium_users_can_select_photo': 'Yalnızca premium üyeler fotoğraf seçebilir.',
   'premium_subscription': 'Premium Abonelik',
   'finish': 'Tamamla',
   'back': 'Geri',
-  'advert_created_successfully_non_premium':
-      'Bundan sonraki ilanlarınızda reklam izlememek için premium üye olabilirsiniz.',
+  'advert_created_successfully_non_premium': 'Bundan sonraki ilanlarınızda reklam izlememek için premium üye olabilirsiniz.',
   'advert_created_successfully_premium': 'İlanınız başarıyla oluşturuldu.',
   'please_select_photo': 'Lütfen bir fotoğraf seçin',
   // Mesajlar
@@ -279,8 +258,7 @@ const Map<String, String> tr = {
   'daily_task_step1': 'Bir ilan oluştur ve bir mesaj gönder!',
   'daily_task_step2': 'Görevi tamamla, toplamda +100 XP kazan!',
   'complete_task': 'Görevi Tamamla',
-  'verify_profile_text':
-      'Gerçek bir profil olduğunu doğrula ve\nekstra görünürlük kazan!',
+  'verify_profile_text': 'Gerçek bir profil olduğunu doğrula ve\nekstra görünürlük kazan!',
   'error_loading_users': 'Kullanıcılar yüklenirken hata oluştu',
   'no_one_yet': 'Henüz kimse yok',
   'anonymous_user': 'İsimsiz Kullanıcı',
@@ -313,12 +291,10 @@ const Map<String, String> tr = {
   'first_message_description': 'İlk mesajını gönderme',
   'create_listing_description': 'Yeni ilan oluştur',
   'receive_first_message_description': 'İlanınıza gelen her ilk mesaj',
-  'send_first_message_description':
-      'İlk defa mesaj gönderilen kullanıcı başına',
+  'send_first_message_description': 'İlk defa mesaj gönderilen kullanıcı başına',
   'write_comment_description': 'Birine yorum yazma',
   'receive_comment_description': 'Profiline yorum alma',
-  'daily_task_listing_and_message_description':
-      'Bir ilan oluştur ve bir mesaj gönder',
+  'daily_task_listing_and_message_description': 'Bir ilan oluştur ve bir mesaj gönder',
   'daily_login_description': 'Uygulamaya günlük giriş',
   'daily_create_listing_description': 'Bir ilan oluştur',
   'daily_send_message_description': 'Bir mesaj gönder',
@@ -331,20 +307,17 @@ const Map<String, String> tr = {
   'daily_task_create_listing': 'Bir ilan oluştur',
   'daily_task_send_message': 'Bir mesaj gönder',
   'notification_daily_tasks_reset_title': 'Günlük Görevler Yenilendi',
-  'notification_daily_tasks_reset_body':
-      'Yeni günlük görevler hazır! Hemen tamamla ve XP kazan.',
+  'notification_daily_tasks_reset_body': 'Yeni günlük görevler hazır! Hemen tamamla ve XP kazan.',
 
   // Ödül Bildirimleri
   'comment_reward_earned': 'Yorum yazdığın için +{xp} XP kazandın!',
   'comment_error': 'Yorum eklenirken bir hata oluştu',
   'comment_received_title': 'Yeni Yorum Aldın!',
-  'comment_received_body':
-      '{commenter} profiline yorum yazdı ve +{xp} XP kazandın!',
+  'comment_received_body': '{commenter} profiline yorum yazdı ve +{xp} XP kazandın!',
 
   // Dil Ayarları
   'language_settings': 'Dil Ayarları',
-  'language_change_info':
-      'Dil değişikliği anında uygulanır ve otomatik olarak kaydedilir.',
+  'language_change_info': 'Dil değişikliği anında uygulanır ve otomatik olarak kaydedilir.',
   'app_language': 'Uygulama Dili',
 
   // Ayarlar Sayfası
@@ -361,29 +334,23 @@ const Map<String, String> tr = {
   'about_us': 'Hakkımızda',
   'app_version': 'Uygulama Versiyonu',
   'delete_account': 'Hesabımı Sil',
-  'delete_account_confirmation':
-      'Hesabınızı silmek istediğinize emin misiniz? Bu işlem geri alınamaz.',
+  'delete_account_confirmation': 'Hesabınızı silmek istediğinize emin misiniz? Bu işlem geri alınamaz.',
   // Başarı Bildirimleri
   'notification_task_completed_title': 'Yeni Görev Tamamlandı!',
-  'notification_task_completed_body':
-      '{task} görevini tamamladınız ve {xp} XP kazandınız.',
+  'notification_task_completed_body': '{task} görevini tamamladınız ve {xp} XP kazandınız.',
   'notification_xp_earned_title': 'XP Kazandınız!',
   'notification_xp_earned_body': '{task} görevinden {xp} XP kazandınız.',
   'notification_rank_up_title': 'Yeni Seviye!',
   'notification_rank_up_body':
       'Tebrikler! {xp} XP\'ye ulaştın ve artık bir {rank} {icon} oldun! Daha fazla keşfet ve liderliğe bir adım daha yaklaş!',
   'notification_premium_reward_title': 'Premium Ödül Kazandınız!',
-  'notification_premium_reward_body':
-      'Tebrikler! {xp} XP\'ye ulaştın ve 1 Haftalık Premium Üyelik kazandın! Keyfini çıkar! 🎉',
+  'notification_premium_reward_body': 'Tebrikler! {xp} XP\'ye ulaştın ve 1 Haftalık Premium Üyelik kazandın! Keyfini çıkar! 🎉',
   'notification_next_premium_title': 'Durmak Yok!',
-  'notification_next_premium_body':
-      'Bir sonraki premium ödül için sadece {xp} XP kaldı! Hemen bir ilan oluştur ve mesaj gönder!',
+  'notification_next_premium_body': 'Bir sonraki premium ödül için sadece {xp} XP kaldı! Hemen bir ilan oluştur ve mesaj gönder!',
   'notification_daily_task_reset_title': 'Günlük Görevler Sıfırlandı',
-  'notification_daily_task_reset_body':
-      'Günlük görevler sıfırlandı, yeni görevleri tamamlayarak XP kazanabilirsiniz.',
+  'notification_daily_task_reset_body': 'Günlük görevler sıfırlandı, yeni görevleri tamamlayarak XP kazanabilirsiniz.',
   'notification_xp_reset_title': 'XP Sıfırlandı',
-  'notification_xp_reset_body':
-      'XP\'niz sıfırlandı. Yeniden XP kazanmaya başlayabilirsiniz.',
+  'notification_xp_reset_body': 'XP\'niz sıfırlandı. Yeniden XP kazanmaya başlayabilirsiniz.',
 
   // Kategoriler
   'categories': 'Kategoriler',
@@ -487,8 +454,7 @@ const Map<String, String> tr = {
 
   // Profil - Günlük Görev
   'daily_task_next_reset_time': '24 saat',
-  'daily_tasks_reset_success':
-      'Günlük görevler sıfırlandı! Yeni görevleri tamamlayabilirsiniz.',
+  'daily_tasks_reset_success': 'Günlük görevler sıfırlandı! Yeni görevleri tamamlayabilirsiniz.',
 
   // Rapor Etme
   'please_explain_reason': 'Lütfen şikayet nedeninizi açıklayın',
@@ -511,18 +477,15 @@ const Map<String, String> tr = {
   'phone_verification': 'Telefon Doğrulama',
   'login_required': 'Önce oturum açmanız gerekiyor',
   'verify_your_phone': 'Telefon Numaranızı Doğrulayın',
-  'verify_phone_subtitle':
-      'Hesabınızı güvence altına almak için telefon numaranızı doğrulayın',
+  'verify_phone_subtitle': 'Hesabınızı güvence altına almak için telefon numaranızı doğrulayın',
   'phone_number': 'Telefon Numarası',
   'phone_number_hint': '5XX XXX XX XX',
   'phone_number_info': 'Lütfen başında 0 olmadan girin (örn: 5XX XXX XX XX)',
   'send_verification_code': 'Doğrulama Kodu Gönder',
   'sending': 'Gönderiliyor...',
   'info': 'Bilgi',
-  'sms_delay_info':
-      'SMS kodunun gelmesi biraz zaman alabilir. Lütfen en az 2 dakika bekleyin.',
-  'check_number_retry':
-      'Kod gelmediyse numaranızı kontrol edip tekrar deneyin.',
+  'sms_delay_info': 'SMS kodunun gelmesi biraz zaman alabilir. Lütfen en az 2 dakika bekleyin.',
+  'check_number_retry': 'Kod gelmediyse numaranızı kontrol edip tekrar deneyin.',
   'enter_verification_code': 'Doğrulama Kodunu Girin',
   'enter_6_digit_code': 'Telefonunuza gönderilen 6 haneli kodu girin',
   'code_sent_to': 'Kod {phoneNumber} numarasına gönderildi',
@@ -532,33 +495,26 @@ const Map<String, String> tr = {
   'verifying': 'Doğrulanıyor...',
   'resend_code': 'Kodu Tekrar Gönder',
   'important': 'Önemli',
-  'verification_in_progress':
-      'Doğrulama işlemi devam ederken lütfen uygulamadan çıkmayın.',
-  'resend_code_info':
-      'Kod gelmediyse "Kodu Tekrar Gönder" butonuna tıklayabilirsiniz.',
+  'verification_in_progress': 'Doğrulama işlemi devam ederken lütfen uygulamadan çıkmayın.',
+  'resend_code_info': 'Kod gelmediyse "Kodu Tekrar Gönder" butonuna tıklayabilirsiniz.',
   'verification_error': 'Doğrulama hatası oluştu',
   'invalid_phone_format': 'Geçersiz telefon numarası formatı',
-  'too_many_requests':
-      'Çok fazla istek gönderildi. Lütfen daha sonra tekrar deneyin',
+  'too_many_requests': 'Çok fazla istek gönderildi. Lütfen daha sonra tekrar deneyin',
   'quota_exceeded': 'SMS kotası aşıldı. Lütfen daha sonra tekrar deneyin',
   'captcha_failed': 'Captcha doğrulaması başarısız oldu. Tekrar deneyin',
-  'app_not_authorized':
-      'Uygulama Firebase Authentication kullanmaya yetkili değil',
+  'app_not_authorized': 'Uygulama Firebase Authentication kullanmaya yetkili değil',
   'understood': 'ANLADIM',
   'code_sent': 'Doğrulama kodu gönderildi',
   'please_enter_code': 'Lütfen doğrulama kodunu girin',
-  'verification_id_not_found':
-      'Doğrulama ID\'si bulunamadı. Lütfen tekrar deneyin.',
+  'verification_id_not_found': 'Doğrulama ID\'si bulunamadı. Lütfen tekrar deneyin.',
   'user_session_not_found': 'Kullanıcı oturumu bulunamadı',
   'phone_verified_success': 'Telefon numarası başarıyla doğrulandı',
   'phone_already_verified': 'Telefon numarası zaten doğrulanmış',
   'error_prefix': 'Hata: ',
   'please_enter_phone': 'Lütfen telefon numaranızı girin',
-  'invalid_characters':
-      'Geçersiz karakterler içeriyor (sadece rakam, + ve boşluk kullanın)',
+  'invalid_characters': 'Geçersiz karakterler içeriyor (sadece rakam, + ve boşluk kullanın)',
   'phone_too_short': 'Telefon numarası çok kısa',
-  'verification_in_progress_enter_code':
-      'Doğrulama işlemi devam ediyor. Lütfen kodu girin veya işlemi tamamlayın.',
+  'verification_in_progress_enter_code': 'Doğrulama işlemi devam ediyor. Lütfen kodu girin veya işlemi tamamlayın.',
 
   // Yorum Sistemi
   'please_select_rating': 'Lütfen bir puan seçin',
@@ -585,8 +541,7 @@ const Map<String, String> tr = {
   'home_header_city_events': 'Şehrimde Ne Var',
   'home_header_refresh': 'Yenile',
   'home_following_title': 'Takiptekiler',
-  'home_following_empty_message':
-      'Takip ettiğin kişilerin ilanları burada görünecek',
+  'home_following_empty_message': 'Takip ettiğin kişilerin ilanları burada görünecek',
   'home_error_message': 'Bir hata oluştu: {error}',
 
   // Eşleşme Ekranı
@@ -600,8 +555,17 @@ const Map<String, String> tr = {
   'match_next_match': 'Sonraki Eşleşme: {date}',
   'match_find_new': 'Yeni Eşleşme Bul',
   'match_premium_tired': 'Beklemekten Sıkıldın mı?',
-  'match_premium_info':
-      'Premium üye olarak hemen yeni eşleşmeler bulabilirsin!',
+  'match_premium_info': 'Premium üye olarak hemen yeni eşleşmeler bulabilirsin!',
+  'match_feature_smart': 'Akıllı Eşleşme',
+  'match_feature_smart_desc': 'AI tabanlı algoritma ile ilgi alanlarına en uygun kişileri bulur',
+  'match_feature_local': 'Yerel Bağlantılar',
+  'match_feature_local_desc': 'Yakınınızdaki kişilerle eşleşme yapın',
+  'match_feature_safe': 'Güvenli Ortam',
+  'match_feature_safe_desc': 'Doğrulanmış kullanıcılarla güvenli eşleşme',
+  'match_premium_benefit': 'Premium Avantajı',
+  'match_premium_benefit_desc': 'Daha fazla eşleşme hakkı ve öncelikli eşleşme',
+  'match_searching_title': 'Eşleşme Aranıyor...',
+  'match_searching_desc': 'İlgi alanlarına en uygun kişiler aranıyor. Bu işlem birkaç saniye sürebilir.',
 
   // Şehir Etkinlikleri
   'city_events_tab_venues': 'Şehrimdeki mekanlar',
@@ -612,8 +576,7 @@ const Map<String, String> tr = {
   'city_events_no_venues': 'Aradığın Kriterde Mekan Bulunamadı',
   'city_events_change_filter': 'Filtreni değiştirerek yeni mekanlar keşfet',
   'city_events_no_events': 'Bu Kategoride Etkinlik Bulunamadı',
-  'city_events_try_different':
-      'Farklı bir kategori seçerek yeni etkinlikler keşfet',
+  'city_events_try_different': 'Farklı bir kategori seçerek yeni etkinlikler keşfet',
   'city_events_categories_error': 'Kategoriler yüklenemedi',
   'city_venue_show_on_map': 'Haritada Göster',
   'city_venue_powered_by': 'Powered by Google',
