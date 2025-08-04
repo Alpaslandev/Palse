@@ -24,49 +24,49 @@ class MatchListItemWidget extends StatelessWidget {
         horizontal: 16,
         vertical: 8,
       ),
-      elevation: 3,
+      elevation: 4,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
       ),
       child: InkWell(
         onTap: () {
           context.pushNamed(Routes.friendProfile, extra: match.uid);
         },
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
+          padding: const EdgeInsets.all(20),
+          child: Column(
             children: [
-              // Progress ring ile kullanıcı fotoğrafı
+              // Kullanıcı fotoğrafı ve progress ring
               Stack(
                 alignment: Alignment.center,
                 children: [
                   // Progress ring
                   SizedBox(
-                    width: 70,
-                    height: 70,
+                    width: 100,
+                    height: 100,
                     child: CircularProgressIndicator(
                       value: progressValue,
-                      strokeWidth: 3,
+                      strokeWidth: 4,
                       backgroundColor: Colors.grey.shade200,
                       valueColor: AlwaysStoppedAnimation<Color>(progressColor),
                     ),
                   ),
                   // Kullanıcı fotoğrafı
                   Container(
-                    width: 60,
-                    height: 60,
+                    width: 80,
+                    height: 80,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
                         color: Colors.white,
-                        width: 2,
+                        width: 3,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
+                          color: Colors.black.withValues(alpha: 0.15),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
                         ),
                       ],
                     ),
@@ -80,7 +80,7 @@ class MatchListItemWidget extends StatelessWidget {
                                   color: Colors.grey.shade300,
                                   child: const Icon(
                                     Icons.person,
-                                    size: 30,
+                                    size: 40,
                                     color: Colors.grey,
                                   ),
                                 );
@@ -90,7 +90,7 @@ class MatchListItemWidget extends StatelessWidget {
                               color: Colors.grey.shade300,
                               child: const Icon(
                                 Icons.person,
-                                size: 30,
+                                size: 40,
                                 color: Colors.grey,
                               ),
                             ),
@@ -102,21 +102,21 @@ class MatchListItemWidget extends StatelessWidget {
                     right: 0,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
+                        horizontal: 8,
+                        vertical: 4,
                       ),
                       decoration: BoxDecoration(
                         color: progressColor,
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: Colors.white,
-                          width: 1.5,
+                          width: 2,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            blurRadius: 2,
-                            offset: const Offset(0, 1),
+                            color: Colors.black.withValues(alpha: 0.2),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
                           ),
                         ],
                       ),
@@ -125,70 +125,70 @@ class MatchListItemWidget extends StatelessWidget {
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
-                          fontSize: 10,
+                          fontSize: 12,
                         ),
                       ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(width: 16),
-              // Kullanıcı bilgileri
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      match.name ?? '',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _getMatchText(percentage),
-                      style: TextStyle(
-                        color: progressColor,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.calendar_today,
-                          size: 14,
-                          color: Colors.grey.shade500,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          DateFormat.yMd().format(match.matchedAt),
-                          style: TextStyle(
-                            color: Colors.grey.shade500,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+              const SizedBox(height: 16),
+              // Kullanıcı adı
+              Text(
+                match.name ?? '',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 8),
+              // Eşleşme metni
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: progressColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: progressColor.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Text(
+                  _getMatchText(percentage),
+                  style: TextStyle(
+                    color: progressColor,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
               ),
-              // Ok ikonu
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: progressColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  Icons.arrow_forward_ios,
-                  size: 16,
-                  color: progressColor,
-                ),
+              const SizedBox(height: 12),
+              // Eşleşme tarihi
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.calendar_today,
+                    size: 16,
+                    color: Colors.grey.shade600,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    DateFormat.yMd().format(match.matchedAt),
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

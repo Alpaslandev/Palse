@@ -27,8 +27,7 @@ class AnimatedListView<T> extends StatefulWidget {
   State<AnimatedListView<T>> createState() => _AnimatedListViewState<T>();
 }
 
-class _AnimatedListViewState<T> extends State<AnimatedListView<T>>
-    with TickerProviderStateMixin {
+class _AnimatedListViewState<T> extends State<AnimatedListView<T>> with TickerProviderStateMixin {
   late List<AnimationController> _controllers;
   late List<Animation<double>> _fadeAnimations;
   late List<Animation<Offset>> _slideAnimations;
@@ -107,6 +106,7 @@ class _AnimatedListViewState<T> extends State<AnimatedListView<T>>
     return ListView.builder(
       padding: widget.padding,
       physics: widget.physics,
+      scrollDirection: Axis.horizontal,
       shrinkWrap: widget.shrinkWrap,
       itemCount: widget.items.length,
       itemBuilder: (context, index) {
