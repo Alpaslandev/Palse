@@ -566,6 +566,8 @@ const Map<String, String> tr = {
   'match_premium_benefit_desc': 'Daha fazla eşleşme hakkı ve öncelikli eşleşme',
   'match_searching_title': 'Eşleşme Aranıyor...',
   'match_searching_desc': 'İlgi alanlarına en uygun kişiler aranıyor. Bu işlem birkaç saniye sürebilir.',
+  'match_premium_unlimited': 'Sınırsız eşleşme',
+  'match_premium_no_wait': 'Bekleme yok',
 
   // Şehir Etkinlikleri
   'city_events_tab_venues': 'Şehrimdeki mekanlar',

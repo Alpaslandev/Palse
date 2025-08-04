@@ -184,6 +184,8 @@ const Map<String, String> en = {
   'match_premium_benefit_desc': 'More match opportunities and priority matching',
   'match_searching_title': 'Searching for Matches...',
   'match_searching_desc': 'Finding people who match your interests. This may take a few seconds.',
+  'match_premium_unlimited': 'Unlimited matches',
+  'match_premium_no_wait': 'No waiting',
 
   // City Events
   'city_events_tab_venues': 'Places in my city',
