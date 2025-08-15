@@ -29,12 +29,10 @@ class MatchListItemWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       child: InkWell(
-        onTap: () {
-          context.pushNamed(Routes.friendProfile, extra: match.uid);
-        },
+        onTap: () => context.pushNamed(Routes.friendProfile, extra: match.uid),
         borderRadius: BorderRadius.circular(20),
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(16),
           child: Column(
             children: [
               // Kullanıcı fotoğrafı ve progress ring
@@ -43,30 +41,30 @@ class MatchListItemWidget extends StatelessWidget {
                 children: [
                   // Progress ring
                   SizedBox(
-                    width: 100,
-                    height: 100,
+                    width: 80,
+                    height: 80,
                     child: CircularProgressIndicator(
                       value: progressValue,
-                      strokeWidth: 4,
+                      strokeWidth: 3,
                       backgroundColor: Colors.grey.shade200,
                       valueColor: AlwaysStoppedAnimation<Color>(progressColor),
                     ),
                   ),
                   // Kullanıcı fotoğrafı
                   Container(
-                    width: 80,
-                    height: 80,
+                    width: 65,
+                    height: 65,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
                         color: Colors.white,
-                        width: 3,
+                        width: 2,
                       ),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withValues(alpha: 0.15),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
+                          blurRadius: 6,
+                          offset: const Offset(0, 3),
                         ),
                       ],
                     ),
@@ -80,7 +78,7 @@ class MatchListItemWidget extends StatelessWidget {
                                   color: Colors.grey.shade300,
                                   child: const Icon(
                                     Icons.person,
-                                    size: 40,
+                                    size: 32,
                                     color: Colors.grey,
                                   ),
                                 );
@@ -90,7 +88,7 @@ class MatchListItemWidget extends StatelessWidget {
                               color: Colors.grey.shade300,
                               child: const Icon(
                                 Icons.person,
-                                size: 40,
+                                size: 32,
                                 color: Colors.grey,
                               ),
                             ),
@@ -102,21 +100,21 @@ class MatchListItemWidget extends StatelessWidget {
                     right: 0,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
+                        horizontal: 6,
+                        vertical: 3,
                       ),
                       decoration: BoxDecoration(
                         color: progressColor,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                         border: Border.all(
                           color: Colors.white,
-                          width: 2,
+                          width: 1.5,
                         ),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.2),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
+                            blurRadius: 3,
+                            offset: const Offset(0, 1),
                           ),
                         ],
                       ),
@@ -125,35 +123,35 @@ class MatchListItemWidget extends StatelessWidget {
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
-                          fontSize: 12,
+                          fontSize: 10,
                         ),
                       ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               // Kullanıcı adı
               Text(
                 match.name ?? '',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: 18,
+                  fontSize: 16,
                 ),
                 textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               // Eşleşme metni
               Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
+                  horizontal: 10,
+                  vertical: 4,
                 ),
                 decoration: BoxDecoration(
                   color: progressColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: progressColor.withValues(alpha: 0.3),
                     width: 1,
@@ -163,28 +161,28 @@ class MatchListItemWidget extends StatelessWidget {
                   _getMatchText(percentage),
                   style: TextStyle(
                     color: progressColor,
-                    fontSize: 14,
+                    fontSize: 12,
                     fontWeight: FontWeight.w600,
                   ),
                   textAlign: TextAlign.center,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               // Eşleşme tarihi
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
                     Icons.calendar_today,
-                    size: 16,
+                    size: 14,
                     color: Colors.grey.shade600,
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 4),
                   Text(
                     DateFormat.yMd().format(match.matchedAt),
                     style: TextStyle(
                       color: Colors.grey.shade600,
-                      fontSize: 13,
+                      fontSize: 12,
                       fontWeight: FontWeight.w500,
                     ),
                   ),

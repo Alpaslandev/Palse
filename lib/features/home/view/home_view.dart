@@ -38,8 +38,7 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _exploreTabController = TabController(
-        length: 3, vsync: this, initialIndex: widget.initialTabIndex);
+    _exploreTabController = TabController(length: 3, vsync: this, initialIndex: widget.initialTabIndex);
     _viewModel = HomeViewModel();
     _exploreTabController.addListener(_onExploreTabChanged);
   }
@@ -123,8 +122,7 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                       children: [
                         _buildDiscoverHeader(),
                         // Sadece Keşfet başlığı seçiliyken ExploreTabBar'ı göster
-                        if (_selectedHeaderIndex == 0)
-                          ExploreTabBar(controller: _exploreTabController),
+                        if (_selectedHeaderIndex == 0) ExploreTabBar(controller: _exploreTabController),
                       ],
                     ),
                   ),
@@ -144,80 +142,81 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            spacing: 8,
-            children: [
-              GestureDetector(
-                onTap: () {
-                  // Keşfet başlığına geçiş
-                  _onHeaderSelected(0);
-                },
-                child: Text(context.tr("home_header_explore"),
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: _selectedHeaderIndex == 0
-                          ? FontWeight.bold
-                          : FontWeight.w400,
-                      color: _selectedHeaderIndex == 0
-                          ? AppTheme.primaryColor
-                          : Theme.of(context).textTheme.bodyLarge?.color,
-                    )),
+          // Tab container - resimdeki gibi yuvarlak köşeli tab tasarımı
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(25),
               ),
-              GestureDetector(
-                onTap: () {
-                  // Takiptekiler başlığına geçiş
-                  _onHeaderSelected(1);
-                },
-                child: Text(context.tr("home_header_following"),
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: _selectedHeaderIndex == 1
-                          ? FontWeight.bold
-                          : FontWeight.w400,
-                      color: _selectedHeaderIndex == 1
-                          ? AppTheme.primaryColor
-                          : Theme.of(context).textTheme.bodyLarge?.color,
-                    )),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Expanded(
+                    child: _buildTabItem(
+                      text: context.tr("home_header_explore"),
+                      isSelected: _selectedHeaderIndex == 0,
+                      onTap: () => _onHeaderSelected(0),
+                    ),
+                  ),
+                  Expanded(
+                    child: _buildTabItem(
+                      text: context.tr("home_header_following"),
+                      isSelected: _selectedHeaderIndex == 1,
+                      onTap: () => _onHeaderSelected(1),
+                    ),
+                  ),
+                  Expanded(
+                    child: _buildTabItem(
+                      text: context.tr("home_header_city_events"),
+                      isSelected: _selectedHeaderIndex == 2,
+                      onTap: () => _onHeaderSelected(2),
+                    ),
+                  ),
+                ],
               ),
-              GestureDetector(
-                onTap: () {
-                  // Şehrimde Ne Var başlığına geçiş
-                  _onHeaderSelected(2);
-                },
-                child: Text(context.tr("home_header_city_events"),
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: _selectedHeaderIndex == 2
-                          ? FontWeight.bold
-                          : FontWeight.w400,
-                      color: _selectedHeaderIndex == 2
-                          ? AppTheme.primaryColor
-                          : Theme.of(context).textTheme.bodyLarge?.color,
-                    )),
-              ),
-            ],
+            ),
           ),
-          Row(
-            children: [
-              IconButton(
-                onPressed: () =>
-                    _viewModel.refreshTab(_user, _exploreTabController.index),
-                icon: const Icon(Icons.refresh),
-                tooltip: context.tr('home_header_refresh'),
-              ),
-              IconButton(
-                onPressed: () => context.pushNamed(filter),
-                icon: SvgPicture.asset(
-                  'assets/vectors/filter_x2.svg',
-                  width: 24,
-                  height: 24,
-                  colorFilter: const ColorFilter.mode(
-                      AppTheme.primaryColor, BlendMode.srcIn),
-                ),
-              ),
-            ],
+          IconButton(
+            onPressed: () => context.pushNamed(filter),
+            icon: SvgPicture.asset(
+              'assets/vectors/filter_x2.svg',
+              width: 18,
+              height: 18,
+              colorFilter: const ColorFilter.mode(AppTheme.primaryColor, BlendMode.srcIn),
+            ),
+            constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
           ),
         ],
+      ),
+    );
+  }
+
+  // Tab item widget'ı - resimdeki gibi aktif/pasif durumları için
+  Widget _buildTabItem({
+    required String text,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 14),
+        decoration: BoxDecoration(
+          color: isSelected ? AppTheme.primaryColor : Colors.transparent,
+          borderRadius: BorderRadius.circular(25),
+        ),
+        child: Center(
+          child: Text(
+            text,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: isSelected ? 12 : 10,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+              color: isSelected ? Colors.white : AppTheme.primaryColor,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -259,9 +258,7 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                         : const SizedBox.shrink();
                   }
                   final advert = adverts[index];
-                  if (advert.creatorUserID == _user.userID ||
-                      (_user.blockUsers != null &&
-                          _user.blockUsers!.contains(advert.creatorUserID))) {
+                  if (advert.creatorUserID == _user.userID || (_user.blockUsers != null && _user.blockUsers!.contains(advert.creatorUserID))) {
                     return const SizedBox.shrink();
                   }
                   return AdvertCardView(
@@ -289,9 +286,7 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                 return SliverFillRemaining(
                   child: Center(
                     child: Text(
-                      context
-                          .tr('home_error_message')
-                          .replaceAll('{error}', snapshot.error.toString()),
+                      context.tr('home_error_message').replaceAll('{error}', snapshot.error.toString()),
                       style: TextStyle(color: Colors.red),
                     ),
                   ),
@@ -306,21 +301,17 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.people_outline,
-                            size: 64, color: AppTheme.primaryColor),
+                        Icon(Icons.people_outline, size: 64, color: AppTheme.primaryColor),
                         const SizedBox(height: 16),
                         Text(
                           context.tr('home_following_title'),
-                          style: const TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold),
+                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           context.tr('home_following_empty_message'),
                           textAlign: TextAlign.center,
-                          style: TextStyle(
-                              color:
-                                  Theme.of(context).textTheme.bodySmall?.color),
+                          style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color),
                         ),
                       ],
                     ),
@@ -376,8 +367,7 @@ class HomeViewState extends State<HomeView> with TickerProviderStateMixin {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Text(message,
-            textAlign: TextAlign.center, style: const TextStyle(fontSize: 16)),
+        child: Text(message, textAlign: TextAlign.center, style: const TextStyle(fontSize: 16)),
       ),
     );
   }
@@ -401,15 +391,12 @@ class _StickyHeaderDelegate extends SliverPersistentHeaderDelegate {
   double get maxExtent => maxHeight;
 
   @override
-  Widget build(
-      BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
     return SizedBox.expand(child: child);
   }
 
   @override
   bool shouldRebuild(_StickyHeaderDelegate oldDelegate) {
-    return maxHeight != oldDelegate.maxHeight ||
-        minHeight != oldDelegate.minHeight ||
-        child != oldDelegate.child;
+    return maxHeight != oldDelegate.maxHeight || minHeight != oldDelegate.minHeight || child != oldDelegate.child;
   }
 }

@@ -106,7 +106,7 @@ class _AnimatedListViewState<T> extends State<AnimatedListView<T>> with TickerPr
     return ListView.builder(
       padding: widget.padding,
       physics: widget.physics,
-      scrollDirection: Axis.horizontal,
+      scrollDirection: Axis.vertical,
       shrinkWrap: widget.shrinkWrap,
       itemCount: widget.items.length,
       itemBuilder: (context, index) {

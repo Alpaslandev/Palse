@@ -44,15 +44,13 @@ class _ExploreTabBarState extends State<ExploreTabBar> {
         decoration: BoxDecoration(
           color: isSelected ? AppTheme.primaryColor : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
-          border: isSelected
-              ? null
-              : Border.all(color: Colors.grey.shade300, width: 1.5),
+          border: isSelected ? null : Border.all(color: Colors.grey.shade300, width: 1.5),
         ),
         child: Center(
           child: Text(
             text,
             style: TextStyle(
-              fontSize: 13,
+              fontSize: 12,
               color: isSelected ? Colors.white : Colors.grey[700],
               fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
             ),

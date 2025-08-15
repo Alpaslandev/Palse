@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -32,8 +31,7 @@ void main() async {
   ]);
 
   try {
-    await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform);
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   } catch (e) {
     if (e.toString().contains('duplicate-app')) {
       debugPrint('Firebase already initialized');
@@ -47,11 +45,9 @@ void main() async {
   await Purchases.setLogLevel(LogLevel.error);
   // RevenueCat ayarlarını platform bazlı ayarlama
   if (Platform.isIOS) {
-    await Purchases.configure(
-        PurchasesConfiguration('appl_nqgFBnNbiUeCvilAmLqKsvbZNal'));
+    await Purchases.configure(PurchasesConfiguration('appl_nqgFBnNbiUeCvilAmLqKsvbZNal'));
   } else if (Platform.isAndroid) {
-    await Purchases.configure(
-        PurchasesConfiguration('goog_PEygpHUWqHBCeYbZdjULShUAQfz'));
+    await Purchases.configure(PurchasesConfiguration('goog_PEygpHUWqHBCeYbZdjULShUAQfz'));
     debugPrint('RevenueCat gecikmeli başlatıldı');
   }
   await Future.delayed(const Duration(milliseconds: 200));
@@ -119,8 +115,7 @@ class MyApp extends StatelessWidget {
       darkTheme: AppTheme.darkTheme, // Koyu tema
       themeMode: themeProvider.themeMode, // Tema modunu provider'dan al
       routerConfig: AppRouter.router,
-      scaffoldMessengerKey: GlobalKeys.instance
-          .scaffoldMessengerKey, // Burada router'ın navigatorKey'ini kullanıyoruz
+      scaffoldMessengerKey: GlobalKeys.instance.scaffoldMessengerKey, // Burada router'ın navigatorKey'ini kullanıyoruz
       locale: localeProvider.locale, // Dil ayarını provider'dan al
       localizationsDelegates: const [
         AppLocalizations.delegate, // Kendi localization delegemiz

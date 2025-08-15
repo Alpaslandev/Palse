@@ -103,28 +103,32 @@ class _LandingViewState extends State<LandingView> with TickerProviderStateMixin
       appBar: const ProjectAppBar(),
       body: widget.navigationShell,
       floatingActionButton: isHomePage
-          ? Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _ShimmerGradientFAB(
-                  heroTag: 'match',
-                  label: context.tr('match_title'),
-                  onPressed: () => context.pushNamed(match),
-                ),
-                FloatingActionButton.extended(
-                  heroTag: 'create_advert',
-                  backgroundColor: AppTheme.primaryColor,
-                  shape: const StadiumBorder(),
-                  onPressed: () => context.pushNamed(createAdvert),
-                  label: Text(
-                    context.tr('create_listing'),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+          ? Padding(
+              padding: const EdgeInsets.only(left: 32.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _ShimmerGradientFAB(
+                    heroTag: 'match',
+                    label: context.tr('match_title'),
+                    onPressed: () => context.pushNamed(match),
+                  ),
+                  const SizedBox(width: 16.0),
+                  FloatingActionButton.extended(
+                    heroTag: 'create_advert',
+                    backgroundColor: AppTheme.primaryColor,
+                    shape: const StadiumBorder(),
+                    onPressed: () => context.pushNamed(createAdvert),
+                    label: Text(
+                      context.tr('create_listing'),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             )
           : null,
       bottomNavigationBar: SafeArea(
@@ -225,7 +229,7 @@ class _ShimmerGradientFABState extends State<_ShimmerGradientFAB> with SingleTic
         gradient: LinearGradient(
           colors: [
             AppTheme.primaryColor,
-            AppTheme.primaryColor.withOpacity(0.8),
+            AppTheme.primaryColor.withValues(alpha: 0.8),
             Colors.purple,
           ],
           begin: Alignment.topLeft,
@@ -233,7 +237,7 @@ class _ShimmerGradientFABState extends State<_ShimmerGradientFAB> with SingleTic
         ),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryColor.withOpacity(0.3),
+            color: AppTheme.primaryColor.withValues(alpha: 0.3),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -245,7 +249,7 @@ class _ShimmerGradientFABState extends State<_ShimmerGradientFAB> with SingleTic
         shape: const StadiumBorder(),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        extendedPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        extendedPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         label: AnimatedBuilder(
           animation: _shimmerController,
           builder: (context, child) {
@@ -253,9 +257,9 @@ class _ShimmerGradientFABState extends State<_ShimmerGradientFAB> with SingleTic
               shaderCallback: (bounds) {
                 return LinearGradient(
                   colors: [
-                    Colors.white.withOpacity(0.5),
+                    Colors.white.withValues(alpha: 0.5),
                     Colors.white,
-                    Colors.white.withOpacity(0.5),
+                    Colors.white.withValues(alpha: 0.5),
                   ],
                   stops: const [0.0, 0.5, 1.0],
                   begin: Alignment(-1.0 + _shimmerController.value * 2.0, 0),
@@ -263,13 +267,24 @@ class _ShimmerGradientFABState extends State<_ShimmerGradientFAB> with SingleTic
                 ).createShader(bounds);
               },
               blendMode: BlendMode.srcIn,
-              child: Text(
-                widget.label,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
+              child: Row(
+                children: [
+                  Image.asset(
+                    'assets/images/5045251.png',
+                    color: Colors.white,
+                    width: 24,
+                    height: 24,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    widget.label,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
               ),
             );
           },
